@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 
 const links = [
   ["/empresas", "Empresas"],
-  ["/marketplace", "Marketplace"],
+  ["/marketplace", "Produtos e serviços"],
   ["/concursos", "Concursos"],
   ["/oportunidades", "Oportunidades"],
-  ["/repositorio", "Repositório"],
+  ["/repositorio", "Informação"],
 ];
 
 export function Header() {
@@ -24,7 +24,7 @@ export function Header() {
         </nav>
         <div className="header-actions">
           <Link className="btn ghost desktop-only" href="/login">Entrar</Link>
-          <Link className="btn primary" href="/registo">Criar conta</Link>
+          <Link className="btn primary" href="/registo">Registar empresa</Link>
         </div>
       </div>
     </header>
