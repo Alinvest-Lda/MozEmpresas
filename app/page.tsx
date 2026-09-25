@@ -2,30 +2,30 @@ import Link from "next/link";
 import { AdvertisingHero } from "@/components/advertising-hero";
 
 const categories = [
-  ["Construção e engenharia", "Empresas e fornecedores para obras, projectos e manutenção."],
-  ["Consultoria e serviços", "Consultoras, serviços profissionais e apoio empresarial."],
-  ["Tecnologia", "Software, TI, telecomunicações e soluções digitais."],
-  ["Contabilidade e finanças", "Serviços financeiros, contabilidade, auditoria e seguros."],
-  ["Comércio e distribuição", "Produtos, distribuidores, grossistas e retalhistas."],
-  ["Logística e transportes", "Transporte, armazenagem, carga e cadeia de abastecimento."],
-  ["Agricultura e agro-negócio", "Produtores, fornecedores e soluções para o sector."],
-  ["Hotelaria e turismo", "Hotéis, turismo, restauração e serviços associados."],
-  ["Saúde", "Clínicas, laboratórios, fornecedores e serviços de saúde."],
-  ["Educação e formação", "Instituições, formação profissional e serviços educativos."],
-  ["Energia e ambiente", "Energia, água, ambiente e soluções sustentáveis."],
-  ["Outros serviços empresariais", "Explore outras actividades e fornecedores."],
+  ["Construção e engenharia", "Obras, projectos e manutenção"],
+  ["Consultoria e serviços", "Serviços profissionais e empresariais"],
+  ["Tecnologia", "TI, software e soluções digitais"],
+  ["Contabilidade e finanças", "Contabilidade, auditoria e finanças"],
+  ["Comércio e distribuição", "Produtos, grossistas e retalhistas"],
+  ["Logística e transportes", "Transporte, carga e armazenagem"],
+  ["Agricultura e agro-negócio", "Produção e soluções para o sector"],
+  ["Hotelaria e turismo", "Hotéis, turismo e restauração"],
+  ["Saúde", "Clínicas, laboratórios e fornecedores"],
+  ["Educação e formação", "Instituições e formação profissional"],
+  ["Energia e ambiente", "Energia, água e ambiente"],
+  ["Outros serviços", "Outras actividades empresariais"],
 ];
 
 const opportunities = [
-  ["CONCURSO", "Concursos e processos de contratação", "Consulte oportunidades publicadas e acompanhe os prazos.", "/concursos"],
-  ["PROCURA", "Necessidades de empresas", "Descubra empresas que procuram produtos, serviços ou parceiros.", "/oportunidades"],
-  ["PARCERIA", "Parcerias e colaboração", "Encontre possibilidades de cooperação entre empresas.", "/oportunidades"],
+  ["CONCURSOS", "Processos de contratação", "Consulte concursos, chamadas e oportunidades.", "/concursos"],
+  ["PROCURA", "Empresas à procura", "Descubra necessidades de produtos, serviços ou parceiros.", "/oportunidades"],
+  ["PARCERIAS", "Cooperação empresarial", "Encontre possibilidades de colaboração entre empresas.", "/oportunidades"],
 ];
 
 const information = [
-  ["Informação empresarial", "Recursos e referências úteis para pesquisa e actividade empresarial.", "/repositorio"],
-  ["Concursos", "Chamadas, concursos e processos de candidatura.", "/concursos"],
-  ["Oportunidades", "Necessidades, parcerias e novas possibilidades de negócio.", "/oportunidades"],
+  ["Informação empresarial", "Pesquise referências e recursos úteis.", "/repositorio"],
+  ["Concursos", "Acompanhe chamadas e processos de candidatura.", "/concursos"],
+  ["Oportunidades", "Veja necessidades e possibilidades de negócio.", "/oportunidades"],
 ];
 
 export default function Home() {
@@ -33,34 +33,28 @@ export default function Home() {
     <>
       <AdvertisingHero />
 
-      <section className="home-hero">
+      <section className="home-search-hero">
         <div className="container">
-          <div className="home-hero-layout">
-            <div className="home-hero-copy">
-              <span className="eyebrow">Directório empresarial de Moçambique</span>
-              <h1>Encontre empresas.<br /><span>Encontre oportunidades.</span></h1>
-              <p>Pesquise empresas, fornecedores, produtos, serviços e oportunidades de negócio em Moçambique.</p>
-            </div>
-            <div className="home-hero-image">
-              <img src="https://images.pexels.com/photos/3862089/pexels-photo-3862089.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Profissionais a colaborar numa reunião empresarial" />
-              <div className="image-caption"><strong>Conecte-se ao mercado</strong><span>Empresas, fornecedores e oportunidades.</span></div>
-            </div>
+          <div className="search-hero-copy">
+            <span className="eyebrow">Directório empresarial de Moçambique</span>
+            <h1>Encontre quem pode <span>fazer negócio consigo.</span></h1>
+            <p>Pesquise empresas, fornecedores, produtos, serviços e oportunidades em Moçambique.</p>
           </div>
 
-          <form action="/empresas" className="market-search">
+          <form action="/empresas" className="market-search market-search-main">
             <div className="search-field">
               <span className="search-symbol" aria-hidden="true">⌕</span>
-              <input name="q" placeholder="O que procura? Empresa, serviço, fornecedor..." aria-label="O que procura" />
+              <input name="q" placeholder="Empresa, produto, serviço ou actividade" aria-label="Empresa, produto, serviço ou actividade" />
             </div>
             <div className="search-field location-field">
               <span className="search-symbol" aria-hidden="true">⌖</span>
-              <input name="location" placeholder="Localização ou província" aria-label="Localização ou província" />
+              <input name="location" placeholder="Província ou localização" aria-label="Província ou localização" />
             </div>
             <button className="btn primary search-button">Pesquisar</button>
           </form>
 
           <div className="popular-searches">
-            <span>Pesquisas populares:</span>
+            <span>Pesquisas populares</span>
             <Link href="/empresas?q=construção">Construção</Link>
             <Link href="/empresas?q=contabilidade">Contabilidade</Link>
             <Link href="/empresas?q=tecnologia">Tecnologia</Link>
@@ -70,12 +64,12 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="trust-strip">
-        <div className="container trust-strip-inner">
-          <div><strong>EMPRESAS</strong><span>Descubra fornecedores e parceiros</span></div>
-          <div><strong>PRODUTOS &amp; SERVIÇOS</strong><span>Compare ofertas disponíveis</span></div>
-          <div><strong>OPORTUNIDADES</strong><span>Encontre novas possibilidades</span></div>
-          <div><strong>INFORMAÇÃO</strong><span>Pesquise antes de decidir</span></div>
+      <section className="portal-stats">
+        <div className="container portal-stats-grid">
+          <div><strong>Empresas</strong><span>Directório empresarial</span></div>
+          <div><strong>Produtos &amp; serviços</strong><span>Ofertas para o mercado</span></div>
+          <div><strong>Concursos</strong><span>Processos e oportunidades</span></div>
+          <div><strong>Necessidades</strong><span>Procura empresarial</span></div>
         </div>
       </section>
 
@@ -83,59 +77,67 @@ export default function Home() {
         <div className="container">
           <div className="section-head home-section-head">
             <div>
-              <span className="eyebrow">Explore por actividade</span>
-              <h2>Encontre empresas por sector</h2>
-              <p className="section-intro">Comece por uma actividade para descobrir empresas e fornecedores relacionados.</p>
+              <span className="eyebrow">Explore o mercado</span>
+              <h2>Pesquise por actividade</h2>
+              <p className="section-intro">Escolha uma área para encontrar empresas, fornecedores e soluções relacionados.</p>
             </div>
             <Link href="/empresas" className="text-link">Ver todas as empresas →</Link>
           </div>
 
-          <div className="category-grid">
+          <div className="category-list">
             {categories.map(([title, text]) => (
-              <Link href={`/empresas?q=${encodeURIComponent(title)}`} className="category-item" key={title}>
-                <span className="category-mark">›</span>
+              <Link href={`/empresas?q=${encodeURIComponent(title)}`} className="category-row" key={title}>
+                <span className="category-icon">›</span>
                 <span><strong>{title}</strong><small>{text}</small></span>
+                <span className="category-arrow">→</span>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="ad-slot ad-slot-wide"><div className="container"><div className="ad-slot-inner"><span>ESPAÇO PUBLICITÁRIO</span><strong>Publicidade horizontal / campanha institucional</strong><small>Posição disponível para marcas, eventos e serviços empresariais.</small></div></div></section>
+      <section className="ad-slot ad-slot-wide">
+        <div className="container">
+          <div className="ad-slot-inner">
+            <span>ESPAÇO PUBLICITÁRIO</span>
+            <strong>Publicidade horizontal / campanha institucional</strong>
+            <small>Posição disponível para marcas, eventos e serviços empresariais.</small>
+          </div>
+        </div>
+      </section>
 
       <section className="section home-section section-soft">
         <div className="container">
           <div className="section-head home-section-head">
             <div>
-              <span className="eyebrow">Para quem procura</span>
-              <h2>O mercado começa com uma pesquisa.</h2>
-              <p className="section-intro">Use o directório para identificar empresas, fornecedores e soluções antes de iniciar um contacto comercial.</p>
+              <span className="eyebrow">Como usar o portal</span>
+              <h2>Da pesquisa ao contacto.</h2>
+              <p className="section-intro">O MozEmpresas organiza informação empresarial para tornar a descoberta mais simples.</p>
             </div>
-            <Link href="/empresas" className="btn">Pesquisar empresas</Link>
           </div>
 
-          <div className="portal-columns">
-            <div className="portal-image-strip">
-              <img src="https://images.pexels.com/photos/10375947/pexels-photo-10375947.jpeg?auto=compress&cs=tinysrgb&w=900" alt="Equipa de profissionais em reunião" loading="lazy" />
-              <div><strong>Descobrir</strong><span>Conheça empresas e soluções.</span></div>
-              <img src="https://images.pexels.com/photos/5668778/pexels-photo-5668778.jpeg?auto=compress&cs=tinysrgb&w=900" alt="Profissional a apresentar resultados" loading="lazy" />
-              <div><strong>Decidir</strong><span>Encontre informação para avançar.</span></div>
+          <div className="market-discovery">
+            <div className="market-discovery-image">
+              <img src="https://central.bvm.co.mz/storage/app/public/files/notice/140/_MG_8266.JPG" alt="Profissionais negros numa reunião empresarial em Moçambique" loading="lazy" />
+              <div className="image-tag">Mercado empresarial</div>
             </div>
-            <Link href="/empresas" className="portal-feature">
-              <span className="portal-index">01</span>
-              <div><h3>Empresas</h3><p>Pesquise por nome, actividade ou localização e conheça a presença empresarial disponível na plataforma.</p></div>
-              <span className="portal-arrow">→</span>
-            </Link>
-            <Link href="/marketplace" className="portal-feature">
-              <span className="portal-index">02</span>
-              <div><h3>Produtos e serviços</h3><p>Descubra ofertas apresentadas por empresas e encontre soluções para as suas necessidades.</p></div>
-              <span className="portal-arrow">→</span>
-            </Link>
-            <Link href="/oportunidades" className="portal-feature">
-              <span className="portal-index">03</span>
-              <div><h3>Oportunidades</h3><p>Explore necessidades empresariais, parcerias e possibilidades de ligação comercial.</p></div>
-              <span className="portal-arrow">→</span>
-            </Link>
+            <div className="discovery-steps">
+              <Link href="/empresas" className="discovery-step">
+                <span>01</span>
+                <div><strong>Descubra empresas</strong><p>Pesquise por nome, actividade ou localização.</p></div>
+                <b>→</b>
+              </Link>
+              <Link href="/marketplace" className="discovery-step">
+                <span>02</span>
+                <div><strong>Compare soluções</strong><p>Explore produtos e serviços publicados.</p></div>
+                <b>→</b>
+              </Link>
+              <Link href="/oportunidades" className="discovery-step">
+                <span>03</span>
+                <div><strong>Encontre oportunidades</strong><p>Acompanhe necessidades, concursos e parcerias.</p></div>
+                <b>→</b>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -145,39 +147,48 @@ export default function Home() {
           <div className="section-head home-section-head">
             <div>
               <span className="eyebrow">Oportunidades para empresas</span>
-              <h2>Há mais do que um directório.</h2>
-              <p className="section-intro">O MozEmpresas foi pensado para aproximar procura e oferta empresarial.</p>
+              <h2>Onde a procura encontra a oferta.</h2>
+              <p className="section-intro">Além do directório, o portal pode aproximar empresas com necessidades concretas de quem pode responder.</p>
             </div>
+            <Link href="/oportunidades" className="text-link">Ver oportunidades →</Link>
           </div>
 
-          <div className="opportunity-visual">
-            <img src="https://images.pexels.com/photos/7156242/pexels-photo-7156242.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Profissionais a analisar documentos numa reunião" loading="lazy" />
-            <div><span className="eyebrow">Ligação empresarial</span><h3>Do primeiro contacto à oportunidade.</h3><p>Use o portal para pesquisar, descobrir e iniciar novas relações comerciais.</p></div>
-          </div>
-
-          <div className="opportunity-grid">
-            {opportunities.map(([label, title, text, href]) => (
-              <Link href={href} className="opportunity-card" key={title}>
-                <span className="opportunity-label">{label}</span>
-                <h3>{title}</h3>
-                <p>{text}</p>
-                <span className="card-link">Explorar →</span>
-              </Link>
-            ))}
+          <div className="opportunity-layout">
+            <div className="opportunity-visual">
+              <img src="https://central.bvm.co.mz/storage/app/public/files/notice/123/7.JPG" alt="Profissionais negros num encontro empresarial em Moçambique" loading="lazy" />
+            </div>
+            <div className="opportunity-grid">
+              {opportunities.map(([label, title, text, href]) => (
+                <Link href={href} className="opportunity-card" key={title}>
+                  <span className="opportunity-label">{label}</span>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                  <span className="card-link">Explorar →</span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="ad-slot ad-slot-medium"><div className="container"><div className="ad-slot-inner compact"><span>PUBLICIDADE</span><strong>Espaço para banners, campanhas e ofertas especiais</strong><small>Posicionamento entre conteúdos para maior visibilidade.</small></div></div></section>
+      <section className="ad-slot ad-slot-medium">
+        <div className="container">
+          <div className="ad-slot-inner compact">
+            <span>PUBLICIDADE</span>
+            <strong>Espaço para banners, campanhas e ofertas especiais</strong>
+            <small>Posicionamento entre conteúdos para maior visibilidade.</small>
+          </div>
+        </div>
+      </section>
 
       <section className="request-section">
         <div className="container request-panel">
           <div>
             <span className="eyebrow inverse-eyebrow">Precisa de um fornecedor?</span>
-            <h2>Apresente a sua necessidade e deixe o mercado chegar até si.</h2>
-            <p>Uma evolução natural da plataforma é permitir que empresas publiquem necessidades e recebam propostas de fornecedores interessados.</p>
+            <h2>Publique o que procura e deixe empresas responderem.</h2>
+            <p>Uma área dedicada a necessidades empresariais permite transformar o directório num ponto de ligação entre procura e oferta.</p>
           </div>
-          <Link href="/oportunidades" className="btn light-btn">Ver oportunidades</Link>
+          <Link href="/oportunidades" className="btn light-btn">Explorar oportunidades</Link>
         </div>
       </section>
 
@@ -186,10 +197,11 @@ export default function Home() {
           <div className="section-head home-section-head">
             <div>
               <span className="eyebrow">Informação empresarial</span>
-              <h2>Mais contexto para melhores decisões.</h2>
+              <h2>Mais contexto para pesquisar melhor.</h2>
             </div>
             <Link href="/repositorio" className="text-link">Ver informação →</Link>
           </div>
+
           <div className="information-grid">
             {information.map(([title, text, href], index) => (
               <Link href={href} className="information-card" key={title}>
@@ -203,7 +215,15 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="ad-slot ad-slot-bottom"><div className="container"><div className="ad-slot-inner compact"><span>ESPAÇO PATROCINADO</span><strong>Divulgue a sua empresa junto do público empresarial.</strong><small>Formatos publicitários para diferentes posições do portal.</small></div></div></section>
+      <section className="ad-slot ad-slot-bottom">
+        <div className="container">
+          <div className="ad-slot-inner compact">
+            <span>ESPAÇO PATROCINADO</span>
+            <strong>Divulgue a sua empresa junto do público empresarial.</strong>
+            <small>Formatos publicitários para diferentes posições do portal.</small>
+          </div>
+        </div>
+      </section>
 
       <section className="section company-cta">
         <div className="container company-cta-inner">
