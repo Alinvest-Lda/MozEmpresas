@@ -22,7 +22,7 @@ const ads = [
     title: "Promova uma campanha, evento ou oportunidade.",
     text: "Use posições estratégicas ao longo do portal.",
     action: "Publicitar",
-    image: "https://acqf.africa/news/screenshot-2024-01-30-at-13-24-30.png/%40%40images/abfd7f6d-9f93-4223-99a9-29888912f982.png",
+    image: "https://central.bvm.co.mz/storage/app/public/files/notice/140/_MG_8266.JPG",
   },
 ];
 
