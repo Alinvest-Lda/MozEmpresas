@@ -284,3 +284,98 @@
   .advertising-content{padding:46px 0 55px}
   .advertising-content h2{font-size:39px}
 }
+
+/* UX polish: compact advertising CTA and responsive portal layout */
+.ad-cta{padding:8px 11px;font-size:12px;line-height:1;border-radius:7px;min-height:32px}
+.ad-cta span{margin-left:5px}
+.advertising-content p{margin-bottom:15px}
+.advertising-backdrop{background-position:center 42%}
+.market-search-main{transition:box-shadow .18s ease,border-color .18s ease}
+.market-search-main:focus-within{border-color:#9bbab5;box-shadow:0 14px 34px #172c2a18}
+.category-row,.opportunity-card,.information-card,.discovery-step{min-width:0}
+.category-row strong,.category-row small,.opportunity-card h3,.opportunity-card p,.information-card h3,.information-card p{overflow-wrap:anywhere}
+.request-panel,.company-cta-inner{min-width:0}
+.ad-slot-inner strong{max-width:680px}
+@media(max-width:950px){
+  .topbar{height:70px}
+  .nav{gap:17px;margin-left:25px;font-size:13px}
+  .nav a{padding:26px 0 23px}
+  .home-search-hero{padding-top:58px}
+  .search-hero-copy{padding:0 10px}
+  .search-hero-copy h1{font-size:clamp(40px,6.5vw,58px)}
+  .market-search-main{margin-left:auto;margin-right:auto}
+  .category-row{min-height:82px}
+  .market-discovery{gap:22px}
+  .discovery-step{padding:20px 2px}
+  .opportunity-layout{gap:14px}
+}
+@media(max-width:760px){
+  .topbar-inner{gap:10px}
+  .nav{display:none}
+  .header-actions{gap:6px}
+  .header-actions .btn{padding:8px 11px;font-size:12px}
+  .home-search-hero{padding:50px 0 28px}
+  .search-hero-copy h1{font-size:clamp(36px,10vw,48px);letter-spacing:-.055em}
+  .search-hero-copy p{font-size:15px}
+  .market-search-main{display:block;margin-top:25px}
+  .search-field{border-right:0;border-bottom:1px solid var(--line)}
+  .search-button{width:calc(100% - 10px);margin:5px;border-radius:9px}
+  .popular-searches{gap:8px 12px;line-height:1.4}
+  .popular-searches span{width:100%}
+  .portal-stats-grid{grid-template-columns:1fr 1fr}
+  .portal-stats-grid>div{padding:16px 14px}
+  .category-list{grid-template-columns:1fr 1fr;gap:8px}
+  .category-row{grid-template-columns:25px 1fr 16px;gap:8px;padding:12px;min-height:76px}
+  .category-row small{font-size:9px}
+  .category-icon{width:24px;height:24px}
+  .market-discovery-image{min-height:280px}
+  .discovery-step{grid-template-columns:30px 1fr 18px;gap:10px;padding:18px 0}
+  .discovery-step strong{font-size:17px}
+  .opportunity-grid{grid-template-columns:1fr 1fr}
+  .opportunity-card{padding:18px;min-height:185px}
+  .opportunity-card:last-child{grid-column:1/-1;min-height:150px}
+  .request-section{padding:42px 0}
+  .request-panel{gap:24px}
+  .request-panel .light-btn{width:100%}
+  .information-grid{grid-template-columns:1fr}
+  .information-card{min-height:165px}
+  .company-cta-inner{gap:24px}
+  .cta-actions{flex-direction:row;width:auto}
+}
+@media(max-width:560px){
+  .container{width:calc(100% - 28px)}
+  .topbar{height:66px}
+  .brand{font-size:20px}
+  .header-actions .desktop-only{display:none}
+  .header-actions .btn.primary{padding:8px 10px;font-size:11px}
+  .advertising-hero,.advertising-hero .container{min-height:360px}
+  .advertising-content{padding:42px 0 52px}
+  .advertising-content h2{font-size:35px;max-width:100%}
+  .advertising-content p{font-size:13px;max-width:420px}
+  .ad-cta{font-size:11px;padding:7px 10px;min-height:30px}
+  .ad-dots{left:0;bottom:18px}
+  .portal-stats-grid{grid-template-columns:1fr}
+  .portal-stats-grid>div{border-left:0!important;border-right:0!important}
+  .category-list{grid-template-columns:1fr}
+  .category-row{min-height:68px}
+  .market-discovery-image{min-height:245px}
+  .discovery-step strong{font-size:16px}
+  .opportunity-layout{grid-template-columns:1fr}
+  .opportunity-visual{min-height:250px}
+  .opportunity-grid{grid-template-columns:1fr}
+  .opportunity-card,.opportunity-card:last-child{grid-column:auto;min-height:165px}
+  .cta-actions{flex-direction:column;width:100%}
+  .cta-actions .btn{width:100%}
+  .section h2{font-size:28px}
+  .home-section{padding-top:48px;padding-bottom:48px}
+  .ad-slot-inner{padding:16px 13px}
+  .ad-slot-inner strong{font-size:13px}
+}
+@media(max-width:380px){
+  .container{width:calc(100% - 22px)}
+  .brand{font-size:19px}
+  .header-actions .btn.primary{padding:7px 8px;font-size:10px}
+  .search-hero-copy h1{font-size:34px}
+  .search-field input{font-size:13px}
+  .popular-searches{font-size:11px}
+}
