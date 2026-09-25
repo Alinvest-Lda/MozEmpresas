@@ -8,21 +8,21 @@ const ads = [
     title: "Apresente a sua empresa onde o mercado procura.",
     text: "Reserve uma posição de destaque no MozEmpresas.",
     action: "Anunciar no MozEmpresas",
-    image: "https://images.pexels.com/photos/3869649/pexels-photo-3869649.jpeg?auto=compress&cs=tinysrgb&w=1400",
+    image: "https://images.pexels.com/photos/4427622/pexels-photo-4427622.jpeg?auto=compress&cs=tinysrgb&w=1400",
   },
   {
     label: "DESTAQUE EMPRESARIAL",
     title: "Dê visibilidade aos seus produtos e serviços.",
     text: "Publicidade pensada para o público empresarial em Moçambique.",
     action: "Conhecer espaços",
-    image: "https://images.pexels.com/photos/5668778/pexels-photo-5668778.jpeg?auto=compress&cs=tinysrgb&w=1400",
+    image: "https://images.pexels.com/photos/5668508/pexels-photo-5668508.jpeg?auto=compress&cs=tinysrgb&w=1400",
   },
   {
     label: "PUBLICIDADE",
     title: "Promova uma campanha, evento ou oportunidade.",
     text: "Use posições estratégicas ao longo do portal.",
     action: "Publicitar",
-    image: "https://images.pexels.com/photos/3869649/pexels-photo-3869649.jpeg?auto=compress&cs=tinysrgb&w=1400",
+    image: "https://images.pexels.com/photos/4427622/pexels-photo-4427622.jpeg?auto=compress&cs=tinysrgb&w=1400",
   },
 ];
 
