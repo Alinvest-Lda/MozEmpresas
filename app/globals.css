@@ -456,13 +456,16 @@
 }
 
 
-/* Final landing review: billboard reaches the directory heading */
-.advertising-hero{min-height:650px}
-.advertising-hero .container{min-height:650px}
+/* Final landing review: billboard aligned to directory heading */
+.advertising-hero{min-height:450px}
+.advertising-hero .container{min-height:450px}
 @media(max-width:950px){
-  .advertising-hero{min-height:560px}
-  .advertising-hero .container{min-height:560px}
+  .advertising-hero{min-height:400px}
+  .advertising-hero .container{min-height:400px}
 }
 @media(max-width:650px){
-  .advertising-hero,.advertising-hero .container{min-height:380px}
+  .advertising-hero,.advertising-hero .container{min-height:360px}
+}
+@media(max-width:560px){
+  .advertising-hero,.advertising-hero .container{min-height:340px}
 }
