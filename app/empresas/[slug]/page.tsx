@@ -1,0 +1,7 @@
+import Link from "next/link";
+import {notFound} from "next/navigation";
+import {createClient} from "@/lib/supabase/server";
+export default async function BusinessDetail({params}:{params:Promise<{slug:string}>}){
+ const{slug}=await params; const supabase=await createClient(); const{data:business}=await supabase.from("businesses").select("id,name,slug,description,location,phone,email,website").eq("slug",slug).eq("is_public",true).maybeSingle(); if(!business)notFound();
+ return <div className="page"><div className="container"><Link href="/empresas" className="muted">← Voltar ao diretório</Link><div className="card" style={{marginTop:20,maxWidth:900}}><div className="icon" style={{width:72,height:72,fontSize:30}}>{business.name[0]}</div><span className="eyebrow" style={{display:"block",marginTop:22}}>Empresa</span><h1>{business.name}</h1><p className="muted">{business.location||"Moçambique"}</p><p style={{marginTop:22,whiteSpace:"pre-wrap"}}>{business.description||"Este perfil ainda não tem descrição."}</p><div className="meta" style={{marginTop:24}}>{business.phone&&<span className="tag">{business.phone}</span>}{business.email&&<span className="tag">{business.email}</span>}{business.website&&<a className="tag" href={business.website} target="_blank" rel="noreferrer">Website</a>}</div></div></div></div>
+}
