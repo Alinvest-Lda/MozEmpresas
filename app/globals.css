@@ -550,3 +550,12 @@
 .page-lead{max-width:720px;font-size:16px;line-height:1.6}.page-section{padding:18px 0 38px}.listing-business{font-size:12px;margin-top:10px}.item-category{margin-top:12px;width:max-content}.listing-meta{margin-top:12px}.page-request{margin-top:45px}
 @media(max-width:900px){.contact-layout{grid-template-columns:1fr}.contact-hero{grid-template-columns:1fr}.contact-hero-side{max-width:400px}.contact-company{align-items:flex-start;flex-direction:column}.contact-company .btn{margin:0 7px 0 0}}
 @media(max-width:560px){.contact-hero{padding:40px 0 28px}.contact-hero h1{font-size:39px}.contact-layout{padding:30px 0 40px;gap:34px}.contact-form{padding:21px;border-radius:14px}.form-grid{grid-template-columns:1fr}.form-full{grid-column:auto}.contact-form-footer{align-items:flex-start;flex-direction:column}.contact-form-footer .btn{width:100%}.contact-links{grid-template-columns:1fr}.contact-links a:nth-child(odd){margin-right:0}.contact-company{padding:25px 22px}.contact-company h2{font-size:24px}.contact-company>div:last-child{width:100%}.contact-company .btn{display:block;width:100%;margin:8px 0 0}}
+
+.contact-topics{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+.contact-topic{display:grid;grid-template-columns:36px 1fr 18px;gap:12px;padding:22px 18px 22px 0;border-top:1px solid var(--line);align-items:start}
+.contact-topic+ .contact-topic{border-left:1px solid var(--line);padding-left:20px}
+.contact-topic>span{font-size:10px;font-weight:800;color:var(--brand)}
+.contact-topic strong{font-size:13px}.contact-topic p{font-size:11px;line-height:1.5;color:var(--muted);margin:5px 0 0}.contact-topic b{color:var(--brand)}
+.contact-side>h2{font-size:30px;letter-spacing:-.045em;line-height:1.08;margin:12px 0 9px}.contact-side>p{font-size:12px;line-height:1.6;color:var(--muted);max-width:430px}
+@media(max-width:900px){.contact-topics{grid-template-columns:1fr}.contact-topic+ .contact-topic{border-left:0;padding-left:0}}
+@media(max-width:560px){.contact-topic{padding-right:0}}
