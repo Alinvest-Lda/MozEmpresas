@@ -118,7 +118,7 @@ export default function Home() {
 
           <div className="market-discovery">
             <div className="market-discovery-image">
-              <img src="https://images.pexels.com/photos/3869649/pexels-photo-3869649.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="Profissionais negros numa reunião empresarial em Moçambique" loading="lazy" />
+              <img src="https://images.pexels.com/photos/5668496/pexels-photo-5668496.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="Profissionais negros numa reunião empresarial em Moçambique" loading="lazy" />
               <div className="image-tag">Mercado empresarial</div>
             </div>
             <div className="discovery-steps">
@@ -155,7 +155,7 @@ export default function Home() {
 
           <div className="opportunity-layout">
             <div className="opportunity-visual">
-              <img src="https://images.pexels.com/photos/5668778/pexels-photo-5668778.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="Profissionais negros num encontro empresarial em Moçambique" loading="lazy" />
+              <img src="https://images.pexels.com/photos/12911253/pexels-photo-12911253.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="Profissionais negros num encontro empresarial em Moçambique" loading="lazy" />
             </div>
             <div className="opportunity-grid">
               {opportunities.map(([label, title, text, href]) => (
