@@ -1,12 +1,12 @@
 import Link from "next/link";
 
 const modules = [
-  ["01","Empresas","Encontre empresas, fornecedores e prestadores em Moçambique.","/empresas"],
-  ["02","Marketplace","Pesquise produtos e serviços e descubra novas ofertas.","/marketplace"],
-  ["03","Concursos","Acompanhe concursos, oportunidades e processos de candidatura.","/concursos"],
-  ["04","Oportunidades","Publique ou descubra necessidades empresariais.","/oportunidades"],
-  ["05","Repositório","Organize documentos, recursos e informação empresarial.","/repositorio"],
-  ["06","Área empresarial","Crie o perfil da sua empresa e gira as suas ofertas.","/dashboard"],
+  ["01","Empresas","Directório de empresas, fornecedores e prestadores de serviços em Moçambique.","/empresas"],
+  ["02","Produtos e serviços","Encontre ofertas e soluções apresentadas por empresas locais.","/marketplace"],
+  ["03","Concursos","Consulte concursos, chamadas e processos de candidatura.","/concursos"],
+  ["04","Oportunidades","Descubra necessidades empresariais, parcerias e novas oportunidades.","/oportunidades"],
+  ["05","Informação empresarial","Consulte recursos, referências e informação útil para negócios.","/repositorio"],
+  ["06","Área empresarial","Apresente a sua empresa, publique ofertas e acompanhe oportunidades.","/dashboard"],
 ];
 
 export default function Home() {
@@ -15,40 +15,51 @@ export default function Home() {
       <section className="hero">
         <div className="container hero-grid">
           <div>
-            <span className="eyebrow">Ecossistema empresarial de Moçambique</span>
-            <h1>Encontre. Conecte. Faça negócio.</h1>
-            <p>Uma plataforma para descobrir empresas, produtos, serviços, oportunidades e recursos num único espaço.</p>
+            <span className="eyebrow">Directório empresarial de Moçambique</span>
+            <h1>Empresas, oportunidades e negócios num só lugar.</h1>
+            <p>O MozEmpresas organiza informação empresarial para facilitar a pesquisa, a descoberta de fornecedores e a ligação entre empresas em Moçambique.</p>
             <form action="/empresas" className="searchbox">
-              <input name="q" placeholder="O que procura? Ex.: empresa, serviço, fornecedor..." aria-label="Pesquisar" />
+              <input name="q" placeholder="Pesquisar empresa, serviço ou fornecedor..." aria-label="Pesquisar" />
               <button className="btn primary">Pesquisar</button>
             </form>
             <div className="hero-links">
-              <Link href="/empresas">Explorar empresas →</Link>
-              <Link href="/marketplace">Ver marketplace →</Link>
+              <Link href="/empresas">Consultar empresas →</Link>
+              <Link href="/marketplace">Consultar ofertas →</Link>
             </div>
           </div>
-          <div className="hero-card">
+          <aside className="hero-card">
             <span className="hero-label">MOZEMPRESAS</span>
-            <h3>O ponto de encontro entre quem procura e quem oferece.</h3>
-            <p>Comece pelo diretório. Depois, evolua para ofertas, oportunidades e relações comerciais.</p>
+            <h3>Informação empresarial para decisões mais rápidas.</h3>
+            <p>Comece por pesquisar uma empresa ou categoria. A plataforma será progressivamente enriquecida com ofertas, oportunidades e informação de mercado.</p>
             <div className="stats">
-              <div className="stat"><strong>01</strong><span>Conta empresarial</span></div>
-              <div className="stat"><strong>∞</strong><span>Possibilidades</span></div>
-              <div className="stat"><strong>MZ</strong><span>Foco local</span></div>
+              <div className="stat"><strong>01</strong><span>Directório</span></div>
+              <div className="stat"><strong>MZ</strong><span>Mercado local</span></div>
+              <div className="stat"><strong>∞</strong><span>Conexões</span></div>
             </div>
-          </div>
+          </aside>
         </div>
       </section>
+
       <section className="section">
         <div className="container">
-          <div className="section-head"><div><span className="eyebrow">Primeiros módulos</span><h2>Uma plataforma, vários caminhos</h2></div><Link href="/registo" className="btn">Começar agora</Link></div>
-          <div className="grid">{modules.map(([n,title,text,href]) => <Link className="card module-card" href={href} key={title}><span className="module-number">{n}</span><h3>{title}</h3><p>{text}</p><span className="card-link">Abrir módulo →</span></Link>)}</div>
+          <div className="section-head">
+            <div><span className="eyebrow">Explore a plataforma</span><h2>Informação organizada para o mercado</h2></div>
+            <Link href="/registo" className="btn">Registar empresa</Link>
+          </div>
+          <div className="grid">
+            {modules.map(([n,title,text,href]) => (
+              <Link className="card module-card" href={href} key={title}>
+                <span className="module-number">{n}</span><h3>{title}</h3><p>{text}</p><span className="card-link">Consultar →</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
+
       <section className="section section-soft">
         <div className="container split">
-          <div><span className="eyebrow">Para empresas</span><h2>Crie uma presença digital empresarial.</h2><p className="muted">Registe a sua empresa, apresente o que faz e prepare a base para receber contactos, oportunidades e propostas.</p></div>
-          <Link href="/registo" className="btn primary">Criar conta empresarial</Link>
+          <div><span className="eyebrow">Para empresas</span><h2>Tenha a sua empresa representada no ecossistema digital.</h2><p className="muted">Crie um perfil público, apresente a sua actividade e prepare a empresa para receber contactos e oportunidades comerciais.</p></div>
+          <Link href="/registo" className="btn primary">Registar empresa</Link>
         </div>
       </section>
     </>
