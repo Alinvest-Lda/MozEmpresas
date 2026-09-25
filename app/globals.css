@@ -435,3 +435,24 @@
 .advertising-hero-inner{min-height:520px}
 @media(max-width:850px){.advertising-hero-inner{min-height:520px}}
 @media(max-width:650px){.advertising-hero,.advertising-hero .container{min-height:430px}.advertising-hero-inner{min-height:430px}}
+
+
+/* Reapply approved billboard advertising hero */
+.advertising-hero{position:relative;min-height:350px;padding:0;background:#102925;color:#fff;overflow:hidden}
+.advertising-backdrop{position:absolute;inset:0;background-size:cover;background-position:center;transition:background-image .3s ease}
+.advertising-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0b2926f2 0%,#0b2926d8 38%,#0b292680 70%,#0b292635 100%)}
+.advertising-hero .container{position:relative;z-index:2;min-height:350px;display:flex;align-items:center}
+.advertising-content{max-width:650px;padding:45px 0 50px}
+.advertising-content h2{font-size:clamp(35px,4.2vw,54px);line-height:1.03;letter-spacing:-.055em;margin:12px 0 10px}
+.advertising-content p{color:#d0dfdc;font-size:15px;line-height:1.55;max-width:540px;margin:0 0 21px}
+.ad-cta{border:0;background:#fff;color:var(--navy);padding:11px 16px;border-radius:9px;font-weight:800;cursor:pointer}
+.ad-cta span{color:var(--brand);margin-left:7px}
+.ad-dots{position:absolute;z-index:3;left:0;bottom:24px;display:flex;gap:7px}
+.ad-dots button{width:28px;height:4px;border:0;border-radius:10px;background:#ffffff66;padding:0;cursor:pointer}
+.ad-dots button.active{background:#fff}
+@media(max-width:650px){
+  .advertising-hero,.advertising-hero .container{min-height:310px}
+  .advertising-content{padding:36px 0 45px}
+  .advertising-content h2{font-size:34px}
+  .advertising-backdrop{background-position:58% center}
+}
