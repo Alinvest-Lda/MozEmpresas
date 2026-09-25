@@ -27,3 +27,4 @@ export function ContactForm() {
     <div className="contact-form-footer"><span>Os seus dados são utilizados apenas para responder ao pedido.</span><button className="btn primary" type="submit">Enviar mensagem <b>→</b></button></div>
     {sent&&<p className="form-note" role="status">A mensagem foi preparada no seu programa de email. Reveja-a e confirme o envio.</p>}
   </form>
+}
