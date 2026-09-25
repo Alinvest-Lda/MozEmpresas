@@ -22,11 +22,6 @@ const opportunities = [
   ["PARCERIAS", "Parcerias empresariais", "Descubra oportunidades de cooperação entre empresas.", "/oportunidades"],
 ];
 
-const information = [
-  ["Directório empresarial", "Consulte perfis, actividades e contactos de empresas.", "/empresas"],
-  ["Concursos e oportunidades", "Acompanhe processos de contratação e novas oportunidades.", "/concursos"],
-  ["Informação empresarial", "Consulte referências e conteúdos úteis para o mercado.", "/repositorio"],
-];
 
 export default function Home() {
   return (
@@ -118,7 +113,7 @@ export default function Home() {
 
           <div className="market-discovery">
             <div className="market-discovery-image">
-              <img src="https://images.pexels.com/photos/3869649/pexels-photo-3869649.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="Profissionais negros numa reunião empresarial em Moçambique" loading="lazy" />
+              <img src="https://images.pexels.com/photos/3862089/pexels-photo-3862089.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="Profissionais negros numa reunião empresarial em Moçambique" loading="lazy" />
               <div className="image-tag">Mercado empresarial</div>
             </div>
             <div className="discovery-steps">
@@ -192,28 +187,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section home-section">
-        <div className="container">
-          <div className="section-head home-section-head">
-            <div>
-              <span className="eyebrow">Recursos empresariais</span>
-              <h2>Informação útil para encontrar e decidir.</h2>
-            </div>
-            <Link href="/repositorio" className="text-link">Ver recursos →</Link>
-          </div>
-
-          <div className="information-grid">
-            {information.map(([title, text, href], index) => (
-              <Link href={href} className="information-card" key={title}>
-                <span className="information-number">0{index + 1}</span>
-                <h3>{title}</h3>
-                <p>{text}</p>
-                <span className="card-link">Ver recurso →</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
 
       <section className="ad-slot ad-slot-bottom">
         <div className="container">
