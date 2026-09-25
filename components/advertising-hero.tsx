@@ -5,24 +5,24 @@ import { useEffect, useState } from "react";
 const ads = [
   {
     label: "ESPAÇO PUBLICITÁRIO",
-    title: "Apresente a sua empresa onde o mercado procura.",
-    text: "Reserve uma posição de destaque no MozEmpresas.",
+    title: "Apresente a sua empresa a quem procura fornecedores.",
+    text: "Reserve um espaço de destaque no MozEmpresas.",
     action: "Anunciar no MozEmpresas",
-    image: "https://images.pexels.com/photos/3869649/pexels-photo-3869649.jpeg?auto=compress&cs=tinysrgb&w=1400",
+    image: "https://images.pexels.com/photos/10375947/pexels-photo-10375947.jpeg?auto=compress&cs=tinysrgb&w=1200",
   },
   {
     label: "DESTAQUE EMPRESARIAL",
-    title: "Dê visibilidade aos seus produtos e serviços.",
-    text: "Publicidade pensada para o público empresarial em Moçambique.",
+    title: "Coloque a sua marca onde o mercado pesquisa.",
+    text: "Publicidade para empresas, produtos, serviços e eventos.",
     action: "Conhecer espaços",
-    image: "https://images.pexels.com/photos/5668778/pexels-photo-5668778.jpeg?auto=compress&cs=tinysrgb&w=1400",
+    image: "https://images.pexels.com/photos/3862089/pexels-photo-3862089.jpeg?auto=compress&cs=tinysrgb&w=1200",
   },
   {
     label: "PUBLICIDADE",
-    title: "Promova uma campanha, evento ou oportunidade.",
-    text: "Use posições estratégicas ao longo do portal.",
+    title: "Promova uma oferta, campanha ou oportunidade.",
+    text: "Use posições estratégicas ao longo do portal para aumentar a visibilidade.",
     action: "Publicitar",
-    image: "https://images.pexels.com/photos/3869649/pexels-photo-3869649.jpeg?auto=compress&cs=tinysrgb&w=1400",
+    image: "https://images.pexels.com/photos/5668778/pexels-photo-5668778.jpeg?auto=compress&cs=tinysrgb&w=1200",
   },
 ];
 
@@ -38,18 +38,31 @@ export function AdvertisingHero() {
 
   return (
     <section className="advertising-hero" aria-label="Publicidade em destaque">
-      <div className="advertising-backdrop" style={{ backgroundImage: `url("${item.image}")` }} />
       <div className="container">
-        <div className="advertising-content">
-          <span className="ad-kicker">{item.label}</span>
-          <h2>{item.title}</h2>
-          <p>{item.text}</p>
-          <button className="ad-cta">{item.action} <span>→</span></button>
-        </div>
-        <div className="ad-dots" aria-label="Anúncios">
-          {ads.map((adItem, index) => (
-            <button key={adItem.title} aria-label={`Ver anúncio ${index + 1}`} className={index === active ? "active" : ""} onClick={() => setActive(index)} />
-          ))}
+        <div className="advertising-hero-inner">
+          <div className="advertising-copy" key={item.title}>
+            <span className="ad-kicker">{item.label}</span>
+            <h2>{item.title}</h2>
+            <p>{item.text}</p>
+            <button className="ad-cta">{item.action} <span>→</span></button>
+          </div>
+
+          <div className="ad-visual" aria-hidden="true">
+            {ads.map((adItem, index) => (
+              <div
+                key={adItem.image}
+                className={index === active ? "ad-visual-image active" : "ad-visual-image"}
+                style={{ backgroundImage: `linear-gradient(90deg, rgba(9,42,39,.12), rgba(9,42,39,.05)), url("${adItem.image}")` }}
+              />
+            ))}
+            <span className="ad-visual-badge">PUBLICIDADE</span>
+          </div>
+
+          <div className="ad-dots" aria-label="Anúncios">
+            {ads.map((adItem, index) => (
+              <button key={adItem.title} aria-label={`Ver anúncio ${index + 1}`} className={index === active ? "active" : ""} onClick={() => setActive(index)} />
+            ))}
+          </div>
         </div>
       </div>
     </section>
