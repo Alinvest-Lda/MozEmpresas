@@ -1,1 +1,32 @@
-import Link from "next/link"; export function Header(){return <header className="topbar"><div className="container" style={{display:"flex",alignItems:"center",width:"100%"}}><Link href="/" className="brand">Moz<span>Empresas</span></Link><nav className="nav"><Link href="/empresas">Empresas</Link><Link href="/marketplace">Marketplace</Link><Link href="/concursos">Concursos</Link><Link href="/oportunidades">Oportunidades</Link><Link href="/repositorio">Repositório</Link></nav><div className="header-actions"><Link className="btn ghost" href="/login">Entrar</Link><Link className="btn primary" href="/registo">Criar conta</Link></div></div></header>}
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const links = [
+  ["/empresas", "Empresas"],
+  ["/marketplace", "Marketplace"],
+  ["/concursos", "Concursos"],
+  ["/oportunidades", "Oportunidades"],
+  ["/repositorio", "Repositório"],
+];
+
+export function Header() {
+  const pathname = usePathname();
+  return (
+    <header className="topbar">
+      <div className="container topbar-inner">
+        <Link href="/" className="brand" aria-label="MozEmpresas">Moz<span>Empresas</span></Link>
+        <nav className="nav" aria-label="Navegação principal">
+          {links.map(([href, label]) => (
+            <Link key={href} href={href} className={pathname.startsWith(href) ? "active" : ""}>{label}</Link>
+          ))}
+        </nav>
+        <div className="header-actions">
+          <Link className="btn ghost desktop-only" href="/login">Entrar</Link>
+          <Link className="btn primary" href="/registo">Criar conta</Link>
+        </div>
+      </div>
+    </header>
+  );
+}
