@@ -456,3 +456,15 @@
   .advertising-content h2{font-size:34px}
   .advertising-backdrop{background-position:58% center}
 }
+
+
+/* Final landing review: billboard reaches the directory heading */
+.advertising-hero{min-height:650px}
+.advertising-hero .container{min-height:650px}
+@media(max-width:950px){
+  .advertising-hero{min-height:560px}
+  .advertising-hero .container{min-height:560px}
+}
+@media(max-width:650px){
+  .advertising-hero,.advertising-hero .container{min-height:380px}
+}
