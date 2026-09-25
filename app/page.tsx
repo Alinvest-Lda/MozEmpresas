@@ -64,7 +64,7 @@ export default function Home() {
           <Link href="/empresas"><strong>Encontrar empresas</strong><span>Pesquise por nome, sector ou localização</span><b>→</b></Link>
           <Link href="/marketplace"><strong>Encontrar produtos e serviços</strong><span>Explore ofertas publicadas por empresas</span><b>→</b></Link>
           <Link href="/concursos"><strong>Ver concursos</strong><span>Acompanhe processos e chamadas</span><b>→</b></Link>
-          <Link href="/oportunidades"><strong>Publicar uma necessidade</strong><span>Encontre empresas para responder ao que procura</span><b>→</b></Link>
+          <Link href="/oportunidades"><strong>Publicar uma necessidade</strong><span>Encontre empresas que possam responder ao que procura</span><b>→</b></Link>
         </div>
       </section>
 
@@ -74,7 +74,7 @@ export default function Home() {
             <div>
               <span className="eyebrow">Explore o mercado</span>
               <h2>Pesquise por actividade</h2>
-              <p className="section-intro">Escolha uma área para encontrar empresas, fornecedores e soluções relacionados.</p>
+              <p className="section-intro">Escolha uma área para encontrar empresas, fornecedores e soluções.</p>
             </div>
             <Link href="/empresas" className="text-link">Ver todas as empresas →</Link>
           </div>
@@ -143,7 +143,7 @@ export default function Home() {
             <div>
               <span className="eyebrow">Negócios e oportunidades</span>
               <h2>Encontre oportunidades de negócio.</h2>
-              <p className="section-intro">Veja onde existem necessidades, processos de contratação e possibilidades de parceria entre empresas.</p>
+              <p className="section-intro">Veja necessidades de empresas, processos de contratação e oportunidades de parceria.</p>
             </div>
             <Link href="/oportunidades" className="text-link">Ver oportunidades →</Link>
           </div>
