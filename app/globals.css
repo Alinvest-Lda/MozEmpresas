@@ -399,6 +399,8 @@
   .portal-actions-grid>a:nth-child(-n+2){border-bottom:1px solid var(--line)}
 }
 @media(max-width:950px){
+  .nav{display:none}
+  .header-actions .desktop-only{display:none}
   .header-actions .desktop-register{display:none}
   .mobile-menu{display:block}
   .portal-actions-grid{grid-template-columns:1fr 1fr}
