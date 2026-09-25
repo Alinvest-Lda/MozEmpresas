@@ -1,1 +1,56 @@
-import Link from "next/link"; const modules=[["01","Empresas","Perfis públicos, diretório empresarial e presença digital."],["02","Marketplace","Produtos e serviços publicados por empresas e profissionais."],["03","Concursos","Publicação, candidaturas, avaliação e resultados."],["04","Oportunidades","Chamadas, funding, parcerias, eventos e negócios."],["05","Repositório","Documentos, guias, modelos, relatórios e recursos."],["06","Uma conta","A mesma identidade para comprar, vender e participar."]]; export default function Home(){return <><section className="hero"><div className="container hero-grid"><div><span className="eyebrow">Ecossistema empresarial de Moçambique</span><h1>Encontre. Apresente. Negocie. Cresça.</h1><p>O MozEmpresas reúne empresas, profissionais, produtos, serviços, concursos, oportunidades e recursos numa única presença digital.</p><div className="searchbox"><input placeholder="Pesquise empresas, produtos, serviços ou oportunidades"/><Link className="btn primary" href="/empresas">Pesquisar</Link></div></div><div className="hero-card"><small>UMA CONTA, MÚLTIPLAS CAPACIDADES</small><h3>Da presença pública à transação.</h3><p style={{color:"#c8d8d6"}}>Crie o seu perfil, represente uma empresa, publique ofertas, compre, venda e participe em oportunidades.</p><div className="stats"><div className="stat"><strong>1</strong><span>identidade</span></div><div className="stat"><strong>∞</strong><span>capacidades</span></div><div className="stat"><strong>24/7</strong><span>presença</span></div></div></div></div></section><section className="section"><div className="container"><div className="section-head"><div><h2>Um ecossistema, vários caminhos</h2><p className="muted">Arquitetura modular para crescer sem reescrever o núcleo.</p></div></div><div className="grid">{modules.map(([n,t,d])=><div className="card" key={t}><div className="icon">{n}</div><h3>{t}</h3><p>{d}</p></div>)}</div></div></section><section className="section" style={{paddingTop:0}}><div className="container"><div className="card" style={{background:"#102a2a",color:"#fff",padding:"34px"}}><div style={{display:"flex",justifyContent:"space-between",gap:24,alignItems:"center",flexWrap:"wrap"}}><div><h2 style={{margin:"0 0 8px"}}>Comece pela sua presença empresarial</h2><p style={{margin:0,color:"#bdd0cd"}}>Crie uma conta e prepare o seu perfil público.</p></div><Link className="btn primary" href="/registo">Criar conta gratuita</Link></div></div></div></section><footer className="footer"><div className="container">© 2026 MozEmpresas · Plataforma em desenvolvimento</div></footer></>}
+import Link from "next/link";
+
+const modules = [
+  ["01","Empresas","Encontre empresas, fornecedores e prestadores em Moçambique.","/empresas"],
+  ["02","Marketplace","Pesquise produtos e serviços e descubra novas ofertas.","/marketplace"],
+  ["03","Concursos","Acompanhe concursos, oportunidades e processos de candidatura.","/concursos"],
+  ["04","Oportunidades","Publique ou descubra necessidades empresariais.","/oportunidades"],
+  ["05","Repositório","Organize documentos, recursos e informação empresarial.","/repositorio"],
+  ["06","Área empresarial","Crie o perfil da sua empresa e gira as suas ofertas.","/dashboard"],
+];
+
+export default function Home() {
+  return (
+    <>
+      <section className="hero">
+        <div className="container hero-grid">
+          <div>
+            <span className="eyebrow">Ecossistema empresarial de Moçambique</span>
+            <h1>Encontre. Conecte. Faça negócio.</h1>
+            <p>Uma plataforma para descobrir empresas, produtos, serviços, oportunidades e recursos num único espaço.</p>
+            <form action="/empresas" className="searchbox">
+              <input name="q" placeholder="O que procura? Ex.: empresa, serviço, fornecedor..." aria-label="Pesquisar" />
+              <button className="btn primary">Pesquisar</button>
+            </form>
+            <div className="hero-links">
+              <Link href="/empresas">Explorar empresas →</Link>
+              <Link href="/marketplace">Ver marketplace →</Link>
+            </div>
+          </div>
+          <div className="hero-card">
+            <span className="hero-label">MOZEMPRESAS</span>
+            <h3>O ponto de encontro entre quem procura e quem oferece.</h3>
+            <p>Comece pelo diretório. Depois, evolua para ofertas, oportunidades e relações comerciais.</p>
+            <div className="stats">
+              <div className="stat"><strong>01</strong><span>Conta empresarial</span></div>
+              <div className="stat"><strong>∞</strong><span>Possibilidades</span></div>
+              <div className="stat"><strong>MZ</strong><span>Foco local</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="section">
+        <div className="container">
+          <div className="section-head"><div><span className="eyebrow">Primeiros módulos</span><h2>Uma plataforma, vários caminhos</h2></div><Link href="/registo" className="btn">Começar agora</Link></div>
+          <div className="grid">{modules.map(([n,title,text,href]) => <Link className="card module-card" href={href} key={title}><span className="module-number">{n}</span><h3>{title}</h3><p>{text}</p><span className="card-link">Abrir módulo →</span></Link>)}</div>
+        </div>
+      </section>
+      <section className="section section-soft">
+        <div className="container split">
+          <div><span className="eyebrow">Para empresas</span><h2>Crie uma presença digital empresarial.</h2><p className="muted">Registe a sua empresa, apresente o que faz e prepare a base para receber contactos, oportunidades e propostas.</p></div>
+          <Link href="/registo" className="btn primary">Criar conta empresarial</Link>
+        </div>
+      </section>
+    </>
+  );
+}
