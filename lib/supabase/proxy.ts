@@ -13,7 +13,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(...args: Parameters<SetAllCookies>) {
-          const [cookiesToSet, headers] = args;
+          const [cookiesToSet] = args;
 
           cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
@@ -23,10 +23,6 @@ export async function updateSession(request: NextRequest) {
 
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
-          );
-
-          Object.entries(headers).forEach(([key, value]) =>
-            response.headers.set(key, value)
           );
         },
       },
