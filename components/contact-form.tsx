@@ -31,7 +31,7 @@ export function ContactForm() {
   }
 
   return (
-    <form className="contact-form" onSubmit={submit}>
+    <form id="contact-form" className="contact-form" onSubmit={submit}>
       <div className="contact-form-heading">
         <span className="eyebrow">Enviar uma mensagem</span>
         <h2>Fale connosco.</h2>
