@@ -24,7 +24,17 @@ export function Header() {
         </nav>
         <div className="header-actions">
           <Link className="btn ghost desktop-only" href="/login">Entrar</Link>
-          <Link className="btn primary" href="/registo">Registar empresa</Link>
+          <Link className="btn primary desktop-register" href="/registo">Registar empresa</Link>
+          <details className="mobile-menu">
+            <summary aria-label="Abrir menu">Menu</summary>
+            <div className="mobile-menu-panel">
+              {links.map(([href, label]) => (
+                <Link key={href} href={href}>{label}</Link>
+              ))}
+              <Link href="/login">Entrar</Link>
+              <Link className="mobile-menu-register" href="/registo">Registar empresa</Link>
+            </div>
+          </details>
         </div>
       </div>
     </header>
