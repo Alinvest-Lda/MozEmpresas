@@ -35,10 +35,16 @@ export default function Home() {
 
       <section className="home-hero">
         <div className="container">
-          <div className="home-hero-copy">
-            <span className="eyebrow">Directório empresarial de Moçambique</span>
-            <h1>Encontre empresas.<br /><span>Encontre oportunidades.</span></h1>
-            <p>Pesquise empresas, fornecedores, produtos, serviços e oportunidades de negócio em Moçambique.</p>
+          <div className="home-hero-layout">
+            <div className="home-hero-copy">
+              <span className="eyebrow">Directório empresarial de Moçambique</span>
+              <h1>Encontre empresas.<br /><span>Encontre oportunidades.</span></h1>
+              <p>Pesquise empresas, fornecedores, produtos, serviços e oportunidades de negócio em Moçambique.</p>
+            </div>
+            <div className="home-hero-image">
+              <img src="https://images.pexels.com/photos/3862089/pexels-photo-3862089.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Profissionais a colaborar numa reunião empresarial" />
+              <div className="image-caption"><strong>Conecte-se ao mercado</strong><span>Empresas, fornecedores e oportunidades.</span></div>
+            </div>
           </div>
 
           <form action="/empresas" className="market-search">
@@ -109,6 +115,12 @@ export default function Home() {
           </div>
 
           <div className="portal-columns">
+            <div className="portal-image-strip">
+              <img src="https://images.pexels.com/photos/10375947/pexels-photo-10375947.jpeg?auto=compress&cs=tinysrgb&w=900" alt="Equipa de profissionais em reunião" loading="lazy" />
+              <div><strong>Descobrir</strong><span>Conheça empresas e soluções.</span></div>
+              <img src="https://images.pexels.com/photos/5668778/pexels-photo-5668778.jpeg?auto=compress&cs=tinysrgb&w=900" alt="Profissional a apresentar resultados" loading="lazy" />
+              <div><strong>Decidir</strong><span>Encontre informação para avançar.</span></div>
+            </div>
             <Link href="/empresas" className="portal-feature">
               <span className="portal-index">01</span>
               <div><h3>Empresas</h3><p>Pesquise por nome, actividade ou localização e conheça a presença empresarial disponível na plataforma.</p></div>
@@ -136,6 +148,11 @@ export default function Home() {
               <h2>Há mais do que um directório.</h2>
               <p className="section-intro">O MozEmpresas foi pensado para aproximar procura e oferta empresarial.</p>
             </div>
+          </div>
+
+          <div className="opportunity-visual">
+            <img src="https://images.pexels.com/photos/7156242/pexels-photo-7156242.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Profissionais a analisar documentos numa reunião" loading="lazy" />
+            <div><span className="eyebrow">Ligação empresarial</span><h3>Do primeiro contacto à oportunidade.</h3><p>Use o portal para pesquisar, descobrir e iniciar novas relações comerciais.</p></div>
           </div>
 
           <div className="opportunity-grid">
