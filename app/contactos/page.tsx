@@ -1,39 +1,32 @@
 import Link from "next/link";
+import { ContactForm } from "@/components/contact-form";
 
 const contactChannels = [
-  ["Contacto geral","info@mozempresas.co.mz","Envie dúvidas, sugestões ou pedidos de informação.", "mailto:info@mozempresas.co.mz"],
-  ["Parcerias","parcerias@mozempresas.co.mz","Fale connosco sobre parcerias, conteúdos e colaboração.", "mailto:parcerias@mozempresas.co.mz"],
-  ["Publicidade","publicidade@mozempresas.co.mz","Consulte possibilidades de publicidade e destaque no portal.", "mailto:publicidade@mozempresas.co.mz"],
+  ["Contacto geral","info@mozempresas.co.mz","Dúvidas, sugestões e pedidos de informação.","mailto:info@mozempresas.co.mz"],
+  ["Parcerias","parcerias@mozempresas.co.mz","Parcerias, conteúdos e colaboração.","mailto:parcerias@mozempresas.co.mz"],
+  ["Publicidade","publicidade@mozempresas.co.mz","Publicidade e posições de destaque no portal.","mailto:publicidade@mozempresas.co.mz"],
 ];
 
 export default function ContactosPage() {
   return <main className="page"><div className="container">
-    <section className="page-header" style={{padding:"20px 0 20px"}}>
-      <span className="eyebrow">Contactos</span>
-      <h1>Fale com o MozEmpresas.</h1>
-      <p className="muted" style={{maxWidth:720,fontSize:16,lineHeight:1.6}}>Tem uma dúvida, quer apresentar a sua empresa, anunciar no portal ou explorar uma parceria? Escolha o canal adequado e entre em contacto connosco.</p>
+    <section className="contact-hero">
+      <div><span className="eyebrow">Contactos</span><h1>Fale com o MozEmpresas.</h1><p>Tem uma dúvida, quer apresentar a sua empresa, anunciar no portal ou propor uma parceria? Estamos disponíveis para receber a sua mensagem.</p></div>
+      <div className="contact-hero-side"><strong>Um canal para cada assunto.</strong><span>Escolha uma opção ou envie a sua mensagem através do formulário.</span></div>
     </section>
 
-    <div className="grid" style={{marginBottom:48}}>
-      {contactChannels.map(([title,email,text,href])=><a className="card module-card" href={href} key={email}>
-        <span className="module-number">{title}</span><h3>{email}</h3><p>{text}</p><span className="card-link">Enviar mensagem →</span>
-      </a>)}
+    <div className="contact-layout">
+      <div>
+        <div className="contact-channels">
+          {contactChannels.map(([title,email,text,href])=><a className="contact-channel" href={href} key={email}><span className="contact-channel-index">0{contactChannels.findIndex(x=>x[1]===email)+1}</span><div><small>{title}</small><strong>{email}</strong><p>{text}</p></div><b>↗</b></a>)}
+        </div>
+        <section className="contact-quick">
+          <span className="eyebrow">Acesso rápido</span><h2>Procura algo no portal?</h2>
+          <div className="contact-links"><Link href="/empresas">Empresas <span>→</span></Link><Link href="/marketplace">Produtos e serviços <span>→</span></Link><Link href="/concursos">Concursos <span>→</span></Link><Link href="/oportunidades">Oportunidades <span>→</span></Link></div>
+        </section>
+      </div>
+      <ContactForm />
     </div>
 
-    <section className="section-soft" style={{padding:"34px",borderRadius:12,marginBottom:48}}>
-      <div className="split">
-        <div><span className="eyebrow">Empresas</span><h2>Quer colocar a sua empresa no portal?</h2><p className="muted" style={{maxWidth:650,lineHeight:1.6}}>Crie o seu perfil empresarial para apresentar actividade, produtos, serviços, localização e formas de contacto.</p></div>
-        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}><Link href="/registo" className="btn primary">Registar empresa</Link><Link href="/empresas" className="btn">Explorar empresas</Link></div>
-      </div>
-    </section>
-
-    <section>
-      <span className="eyebrow">Outros caminhos</span><h2>Encontre rapidamente o que procura</h2>
-      <div className="grid" style={{marginTop:18}}>
-        <Link href="/empresas" className="card"><h3>Empresas</h3><p>Pesquise empresas e fornecedores.</p><span className="card-link">Explorar →</span></Link>
-        <Link href="/marketplace" className="card"><h3>Produtos e serviços</h3><p>Descubra ofertas empresariais.</p><span className="card-link">Explorar →</span></Link>
-        <Link href="/oportunidades" className="card"><h3>Oportunidades</h3><p>Consulte chamadas e oportunidades de negócio.</p><span className="card-link">Explorar →</span></Link>
-      </div>
-    </section>
+    <section className="contact-company"><div><span className="eyebrow inverse-eyebrow">Para empresas</span><h2>Quer colocar a sua empresa no MozEmpresas?</h2><p>Crie o seu perfil empresarial e apresente actividade, produtos, serviços, localização e contactos.</p></div><div><Link href="/registo" className="btn light-btn">Registar empresa</Link><Link href="/empresas" className="btn contact-dark-btn">Explorar empresas</Link></div></section>
   </div></main>;
 }
