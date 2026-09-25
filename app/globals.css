@@ -429,10 +429,9 @@
 @media(max-width:520px){.advertising-hero-inner{padding:30px 25px;min-height:500px}.advertising-hero-inner h2{font-size:31px}.ad-visual{height:205px}}
 
 
-/* Hero size adjustment */
-/* Increase only the advertising hero so its visual block extends to the current search-title start. */
-.advertising-hero{min-height:510px}
-.advertising-hero .container{min-height:510px}
-.advertising-hero-inner{min-height:450px}
+/* Hero size adjustment: extend the approved advertising hero to the current search-title start. */
+.advertising-hero{min-height:580px}
+.advertising-hero .container{min-height:580px}
+.advertising-hero-inner{min-height:520px}
 @media(max-width:850px){.advertising-hero-inner{min-height:520px}}
 @media(max-width:650px){.advertising-hero,.advertising-hero .container{min-height:430px}.advertising-hero-inner{min-height:430px}}
