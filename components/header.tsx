@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 const links = [
@@ -13,6 +14,22 @@ const links = [
 
 export function Header() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleOutside = (event: PointerEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", handleOutside);
+    return () => document.removeEventListener("pointerdown", handleOutside);
+  }, [open]);
+
   return (
     <header className="topbar">
       <div className="container topbar-inner">
@@ -25,16 +42,20 @@ export function Header() {
         <div className="header-actions">
           <Link className="btn ghost desktop-only" href="/login">Entrar</Link>
           <Link className="btn primary desktop-register" href="/registo">Registar empresa</Link>
-          <details className="mobile-menu">
-            <summary aria-label="Abrir menu">Menu</summary>
-            <div className="mobile-menu-panel">
-              {links.map(([href, label]) => (
-                <Link key={href} href={href}>{label}</Link>
-              ))}
-              <Link href="/login">Entrar</Link>
-              <Link className="mobile-menu-register" href="/registo">Registar empresa</Link>
-            </div>
-          </details>
+          <div className="mobile-menu" ref={menuRef}>
+            <button type="button" className="mobile-menu-trigger" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen(value => !value)}>
+              {open ? "Fechar" : "Menu"}
+            </button>
+            {open && (
+              <div className="mobile-menu-panel">
+                {links.map(([href, label]) => (
+                  <Link key={href} href={href} onClick={() => setOpen(false)}>{label}</Link>
+                ))}
+                <Link href="/login" onClick={() => setOpen(false)}>Entrar</Link>
+                <Link className="mobile-menu-register" href="/registo" onClick={() => setOpen(false)}>Registar empresa</Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
