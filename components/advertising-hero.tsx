@@ -40,24 +40,15 @@ export function AdvertisingHero() {
     <section className="advertising-hero" aria-label="Publicidade em destaque">
       <div className="container">
         <div className="advertising-hero-inner">
-          <div className="advertising-copy" key={item.title}>
+          <div className="advertising-copy">
             <span className="ad-kicker">{item.label}</span>
             <h2>{item.title}</h2>
             <p>{item.text}</p>
             <button className="ad-cta">{item.action} <span>→</span></button>
           </div>
-
-          <div className="ad-visual" aria-hidden="true">
-            {ads.map((adItem, index) => (
-              <div
-                key={adItem.image}
-                className={index === active ? "ad-visual-image active" : "ad-visual-image"}
-                style={{ backgroundImage: `linear-gradient(90deg, rgba(9,42,39,.12), rgba(9,42,39,.05)), url("${adItem.image}")` }}
-              />
-            ))}
+          <div className="ad-visual" style={{ backgroundImage: `linear-gradient(90deg, rgba(9,42,39,.12), rgba(9,42,39,.05)), url("${item.image}")` }}>
             <span className="ad-visual-badge">PUBLICIDADE</span>
           </div>
-
           <div className="ad-dots" aria-label="Anúncios">
             {ads.map((adItem, index) => (
               <button key={adItem.title} aria-label={`Ver anúncio ${index + 1}`} className={index === active ? "active" : ""} onClick={() => setActive(index)} />
