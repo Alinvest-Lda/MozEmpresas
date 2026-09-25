@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdvertisingHero } from "@/components/advertising-hero";
 
 const categories = [
   ["Construção e engenharia", "Empresas e fornecedores para obras, projectos e manutenção."],
@@ -30,6 +31,8 @@ const information = [
 export default function Home() {
   return (
     <>
+      <AdvertisingHero />
+
       <section className="home-hero">
         <div className="container">
           <div className="home-hero-copy">
@@ -92,6 +95,8 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="ad-slot ad-slot-wide"><div className="container"><div className="ad-slot-inner"><span>ESPAÇO PUBLICITÁRIO</span><strong>Publicidade horizontal / campanha institucional</strong><small>Posição disponível para marcas, eventos e serviços empresariais.</small></div></div></section>
+
       <section className="section home-section section-soft">
         <div className="container">
           <div className="section-head home-section-head">
@@ -146,6 +151,8 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="ad-slot ad-slot-medium"><div className="container"><div className="ad-slot-inner compact"><span>PUBLICIDADE</span><strong>Espaço para banners, campanhas e ofertas especiais</strong><small>Posicionamento entre conteúdos para maior visibilidade.</small></div></div></section>
+
       <section className="request-section">
         <div className="container request-panel">
           <div>
@@ -178,6 +185,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <section className="ad-slot ad-slot-bottom"><div className="container"><div className="ad-slot-inner compact"><span>ESPAÇO PATROCINADO</span><strong>Divulgue a sua empresa junto do público empresarial.</strong><small>Formatos publicitários para diferentes posições do portal.</small></div></div></section>
 
       <section className="section company-cta">
         <div className="container company-cta-inner">
