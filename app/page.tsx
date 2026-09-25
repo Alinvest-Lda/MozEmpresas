@@ -17,15 +17,15 @@ const categories = [
 ];
 
 const opportunities = [
-  ["CONCURSOS", "Processos de contratação", "Consulte concursos, chamadas e oportunidades.", "/concursos"],
-  ["PROCURA", "Empresas à procura", "Descubra necessidades de produtos, serviços ou parceiros.", "/oportunidades"],
-  ["PARCERIAS", "Cooperação empresarial", "Encontre possibilidades de colaboração entre empresas.", "/oportunidades"],
+  ["CONCURSOS", "Concursos e contratação", "Consulte concursos e processos de contratação.", "/concursos"],
+  ["PROCURA", "Pedidos de empresas", "Encontre empresas que procuram produtos, serviços ou parceiros.", "/oportunidades"],
+  ["PARCERIAS", "Parcerias empresariais", "Descubra oportunidades de cooperação entre empresas.", "/oportunidades"],
 ];
 
 const information = [
-  ["Informação empresarial", "Pesquise referências e recursos úteis.", "/repositorio"],
-  ["Concursos", "Acompanhe chamadas e processos de candidatura.", "/concursos"],
-  ["Oportunidades", "Veja necessidades e possibilidades de negócio.", "/oportunidades"],
+  ["Directório empresarial", "Consulte perfis, actividades e contactos de empresas.", "/empresas"],
+  ["Concursos e oportunidades", "Acompanhe processos de contratação e novas oportunidades.", "/concursos"],
+  ["Informação empresarial", "Consulte referências e conteúdos úteis para o mercado.", "/repositorio"],
 ];
 
 export default function Home() {
@@ -64,12 +64,12 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="portal-stats">
-        <div className="container portal-stats-grid">
-          <div><strong>Empresas</strong><span>Directório empresarial</span></div>
-          <div><strong>Produtos &amp; serviços</strong><span>Ofertas para o mercado</span></div>
-          <div><strong>Concursos</strong><span>Processos e oportunidades</span></div>
-          <div><strong>Necessidades</strong><span>Procura empresarial</span></div>
+      <section className="portal-actions" aria-label="Acesso rápido">
+        <div className="container portal-actions-grid">
+          <Link href="/empresas"><strong>Encontrar empresas</strong><span>Pesquise por nome, sector ou localização</span><b>→</b></Link>
+          <Link href="/marketplace"><strong>Encontrar produtos e serviços</strong><span>Explore ofertas publicadas por empresas</span><b>→</b></Link>
+          <Link href="/concursos"><strong>Ver concursos</strong><span>Acompanhe processos e chamadas</span><b>→</b></Link>
+          <Link href="/oportunidades"><strong>Publicar uma necessidade</strong><span>Encontre empresas para responder ao que procura</span><b>→</b></Link>
         </div>
       </section>
 
@@ -110,31 +110,31 @@ export default function Home() {
         <div className="container">
           <div className="section-head home-section-head">
             <div>
-              <span className="eyebrow">Como usar o portal</span>
-              <h2>Da pesquisa ao contacto.</h2>
-              <p className="section-intro">O MozEmpresas organiza informação empresarial para tornar a descoberta mais simples.</p>
+              <span className="eyebrow">Descubra e compare</span>
+              <h2>Encontre. Compare. Contacte.</h2>
+              <p className="section-intro">Use o directório para encontrar empresas, conhecer as suas ofertas e chegar rapidamente ao contacto certo.</p>
             </div>
           </div>
 
           <div className="market-discovery">
             <div className="market-discovery-image">
-              <img src="https://images.pexels.com/photos/5668496/pexels-photo-5668496.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="Profissionais negros numa reunião empresarial em Moçambique" loading="lazy" />
+              <img src="https://images.pexels.com/photos/3869649/pexels-photo-3869649.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="Profissionais negros numa reunião empresarial em Moçambique" loading="lazy" />
               <div className="image-tag">Mercado empresarial</div>
             </div>
             <div className="discovery-steps">
               <Link href="/empresas" className="discovery-step">
                 <span>01</span>
-                <div><strong>Descubra empresas</strong><p>Pesquise por nome, actividade ou localização.</p></div>
+                <div><strong>Encontre empresas</strong><p>Pesquise por nome, sector ou localização.</p></div>
                 <b>→</b>
               </Link>
               <Link href="/marketplace" className="discovery-step">
                 <span>02</span>
-                <div><strong>Compare soluções</strong><p>Explore produtos e serviços publicados.</p></div>
+                <div><strong>Conheça ofertas</strong><p>Veja produtos e serviços apresentados pelas empresas.</p></div>
                 <b>→</b>
               </Link>
               <Link href="/oportunidades" className="discovery-step">
                 <span>03</span>
-                <div><strong>Encontre oportunidades</strong><p>Acompanhe necessidades, concursos e parcerias.</p></div>
+                <div><strong>Faça negócio</strong><p>Consulte concursos, necessidades e oportunidades de parceria.</p></div>
                 <b>→</b>
               </Link>
             </div>
@@ -146,16 +146,16 @@ export default function Home() {
         <div className="container">
           <div className="section-head home-section-head">
             <div>
-              <span className="eyebrow">Oportunidades para empresas</span>
-              <h2>Onde a procura encontra a oferta.</h2>
-              <p className="section-intro">Além do directório, o portal pode aproximar empresas com necessidades concretas de quem pode responder.</p>
+              <span className="eyebrow">Negócios e oportunidades</span>
+              <h2>Encontre oportunidades de negócio.</h2>
+              <p className="section-intro">Veja onde existem necessidades, processos de contratação e possibilidades de parceria entre empresas.</p>
             </div>
             <Link href="/oportunidades" className="text-link">Ver oportunidades →</Link>
           </div>
 
           <div className="opportunity-layout">
             <div className="opportunity-visual">
-              <img src="https://images.pexels.com/photos/12911253/pexels-photo-12911253.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="Profissionais negros num encontro empresarial em Moçambique" loading="lazy" />
+              <img src="https://images.pexels.com/photos/5668778/pexels-photo-5668778.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="Profissionais negros num encontro empresarial em Moçambique" loading="lazy" />
             </div>
             <div className="opportunity-grid">
               {opportunities.map(([label, title, text, href]) => (
@@ -184,11 +184,11 @@ export default function Home() {
       <section className="request-section">
         <div className="container request-panel">
           <div>
-            <span className="eyebrow inverse-eyebrow">Precisa de um fornecedor?</span>
-            <h2>Publique o que procura e deixe empresas responderem.</h2>
-            <p>Uma área dedicada a necessidades empresariais permite transformar o directório num ponto de ligação entre procura e oferta.</p>
+            <span className="eyebrow inverse-eyebrow">Procura um fornecedor?</span>
+            <h2>Diga o que precisa. Encontre quem pode fornecer.</h2>
+            <p>Publique a sua necessidade e permita que empresas com produtos ou serviços adequados encontrem a oportunidade.</p>
           </div>
-          <Link href="/oportunidades" className="btn light-btn">Explorar oportunidades</Link>
+          <Link href="/oportunidades" className="btn light-btn">Publicar uma necessidade</Link>
         </div>
       </section>
 
@@ -196,10 +196,10 @@ export default function Home() {
         <div className="container">
           <div className="section-head home-section-head">
             <div>
-              <span className="eyebrow">Informação empresarial</span>
-              <h2>Mais contexto para pesquisar melhor.</h2>
+              <span className="eyebrow">Recursos empresariais</span>
+              <h2>Informação útil para encontrar e decidir.</h2>
             </div>
-            <Link href="/repositorio" className="text-link">Ver informação →</Link>
+            <Link href="/repositorio" className="text-link">Ver recursos →</Link>
           </div>
 
           <div className="information-grid">
@@ -208,7 +208,7 @@ export default function Home() {
                 <span className="information-number">0{index + 1}</span>
                 <h3>{title}</h3>
                 <p>{text}</p>
-                <span className="card-link">Consultar →</span>
+                <span className="card-link">Ver recurso →</span>
               </Link>
             ))}
           </div>
@@ -229,12 +229,12 @@ export default function Home() {
         <div className="container company-cta-inner">
           <div>
             <span className="eyebrow">Para empresas</span>
-            <h2>A sua empresa ainda não está no MozEmpresas?</h2>
-            <p>Crie a presença da sua empresa no directório e apresente a sua actividade, produtos e serviços.</p>
+            <h2>Coloque a sua empresa onde os clientes e parceiros procuram.</h2>
+            <p>Crie o perfil da sua empresa e apresente actividade, produtos, serviços e formas de contacto.</p>
           </div>
           <div className="cta-actions">
             <Link href="/registo" className="btn primary">Registar empresa</Link>
-            <Link href="/empresas" className="btn">Consultar directório</Link>
+            <Link href="/empresas" className="btn">Explorar empresas</Link>
           </div>
         </div>
       </section>
