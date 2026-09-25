@@ -96,3 +96,56 @@
   .category-item{min-height:auto}
   .cta-actions{flex-direction:column;width:100%}
 }
+
+/* Softer portal geometry and advertising system */
+:root{--radius:14px;--radius-sm:10px}
+.container{width:min(1120px,calc(100% - 56px))}
+.btn{border-radius:9px}
+.home-hero{padding:58px 0 38px;background:linear-gradient(180deg,#fff 0%,#f8fbfa 100%)}
+.home-hero-copy h1{max-width:820px}
+.market-search{border-radius:15px;overflow:hidden}
+.search-button{border-radius:10px}
+.category-grid{border:0;gap:12px}
+.category-item{border:1px solid var(--line);border-radius:var(--radius-sm);min-height:118px}
+.category-item:hover{border-color:#a9c5c0;transform:translateY(-2px);box-shadow:0 8px 22px #172c2a0b}
+.portal-columns{border:0}
+.portal-feature{padding:25px 22px;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;background:#fff}
+.opportunity-grid{gap:16px}
+.opportunity-card{border-radius:var(--radius);box-shadow:0 3px 14px #172c2a07}
+.information-grid{gap:16px}
+.information-card{border-radius:var(--radius);border:1px solid var(--line);border-top:3px solid var(--brand)}
+.company-cta{background:linear-gradient(135deg,#e8efed,#f4f8f7)}
+.advertising-hero{background:#132f2c;padding:24px 0}
+.advertising-hero-inner{min-height:250px;border-radius:18px;padding:34px 38px;background:linear-gradient(105deg,#1d4944,#0b6b63);color:#fff;display:grid;grid-template-columns:1.35fr .65fr;gap:30px;align-items:center;position:relative;overflow:hidden}
+.advertising-hero-inner h2{font-size:34px;line-height:1.1;letter-spacing:-.04em;margin:10px 0 8px;max-width:650px}
+.advertising-hero-inner p{color:#c7dad7;margin:0 0 18px;max-width:580px;font-size:14px}
+.ad-kicker{font-size:10px;letter-spacing:.12em;font-weight:800;color:#b7d7d2}
+.ad-cta{border:1px solid #ffffff55;background:#fff;color:var(--navy);padding:10px 15px;border-radius:9px;font-weight:800;cursor:pointer}
+.ad-cta span{color:var(--brand);margin-left:7px}
+.ad-visual{height:165px;border:1px dashed #ffffff55;border-radius:14px;background:#ffffff0c;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#b7d7d2}
+.ad-visual span{font-size:45px;font-weight:800;letter-spacing:-.06em}
+.ad-visual small{font-size:10px;letter-spacing:.08em}
+.ad-dots{position:absolute;left:38px;bottom:17px;display:flex;gap:6px}
+.ad-dots button{width:22px;height:4px;border:0;border-radius:10px;background:#ffffff55;padding:0;cursor:pointer}
+.ad-dots button.active{background:#fff}
+.ad-slot{background:#eef2f0;padding:17px 0}
+.ad-slot-inner{min-height:104px;border:1px dashed #b8c8c4;border-radius:14px;background:#f7f9f8;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:18px}
+.ad-slot-inner span{font-size:9px;letter-spacing:.13em;color:#71817d;font-weight:800}
+.ad-slot-inner strong{font-size:15px;margin:6px 0 3px;color:#4a5855}
+.ad-slot-inner small{font-size:11px;color:#87928f}
+.ad-slot-medium{background:#fff}
+.ad-slot-medium .ad-slot-inner{min-height:90px}
+.ad-slot-bottom{background:#f4f5f3}
+.site-footer{background:#132724;color:#d5e0de;margin-top:0;padding-top:48px}
+.footer-grid{display:grid;grid-template-columns:1.7fr 1fr 1fr 1fr;gap:40px;padding-bottom:38px}
+.footer-logo{font-size:24px;font-weight:800;letter-spacing:-.04em;color:#fff}
+.footer-logo span{color:#73b7ae}
+.footer-brand p{font-size:13px;line-height:1.6;color:#9fb1ad;max-width:300px;margin-top:12px}
+.footer-grid h3{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#fff;margin:2px 0 13px}
+.footer-grid a,.footer-grid>div>span{display:block;font-size:12px;color:#aebfbc;margin:9px 0}
+.footer-grid a:hover{color:#fff}
+.footer-bottom{border-top:1px solid #ffffff18;padding:17px 0;display:flex;justify-content:space-between;gap:20px;font-size:10px;color:#8ea19d}
+.footer-bottom div{display:flex;gap:20px}
+@media(max-width:950px){.container{width:min(100% - 40px,1120px)}.advertising-hero-inner{grid-template-columns:1fr}.ad-visual{display:none}.footer-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.container{width:calc(100% - 30px)}.advertising-hero-inner{min-height:270px;padding:27px 24px}.advertising-hero-inner h2{font-size:28px}.ad-dots{left:24px}.footer-grid{grid-template-columns:1fr 1fr;gap:28px 20px}.footer-bottom{flex-direction:column}.category-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:430px){.category-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr}.advertising-hero-inner{border-radius:14px}}
