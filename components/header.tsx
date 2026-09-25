@@ -8,7 +8,7 @@ const links = [
   ["/marketplace", "Produtos e serviços"],
   ["/concursos", "Concursos"],
   ["/oportunidades", "Oportunidades"],
-  ["/repositorio", "Informação"],
+  ["/informacao", "Informação"],
 ];
 
 export function Header() {
