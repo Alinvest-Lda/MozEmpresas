@@ -388,8 +388,7 @@
 .portal-actions-grid span{font-size:10px;line-height:1.4;color:var(--muted);margin-top:4px}
 .portal-actions-grid b{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--brand)}
 .mobile-menu{display:none;position:relative}
-.mobile-menu summary{list-style:none;cursor:pointer;border:1px solid #cfd6d3;background:#fff;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:800;color:var(--navy)}
-.mobile-menu summary::-webkit-details-marker{display:none}
+.mobile-menu-trigger{cursor:pointer;border:1px solid #cfd6d3;background:#fff;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:800;color:var(--navy)}
 .mobile-menu-panel{position:absolute;right:0;top:calc(100% + 9px);width:min(290px,calc(100vw - 28px));background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 36px #172c2a20;padding:8px;z-index:50}
 .mobile-menu-panel a{display:block;padding:11px 12px;border-radius:8px;font-size:13px;color:var(--ink)}
 .mobile-menu-panel a:hover{background:var(--brand-soft);color:var(--brand)}
@@ -399,7 +398,7 @@
   .portal-actions-grid>a:nth-child(2){border-right:0}
   .portal-actions-grid>a:nth-child(-n+2){border-bottom:1px solid var(--line)}
 }
-@media(max-width:760px){
+@media(max-width:950px){
   .header-actions .desktop-register{display:none}
   .mobile-menu{display:block}
   .portal-actions-grid{grid-template-columns:1fr 1fr}
