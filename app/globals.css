@@ -273,3 +273,14 @@
   .opportunity-visual{min-height:280px}
   .market-discovery-image{min-height:270px}
 }
+
+/* Final homepage hero scale */
+.advertising-hero{min-height:440px}
+.advertising-hero .container{min-height:440px}
+.advertising-content{padding:58px 0 64px}
+.advertising-content h2{font-size:clamp(40px,4.8vw,62px);max-width:760px}
+@media(max-width:650px){
+  .advertising-hero,.advertising-hero .container{min-height:380px}
+  .advertising-content{padding:46px 0 55px}
+  .advertising-content h2{font-size:39px}
+}
