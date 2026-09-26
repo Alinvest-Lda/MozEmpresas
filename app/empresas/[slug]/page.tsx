@@ -30,7 +30,7 @@ export default async function BusinessDetail({ params }: { params: Promise<{ slu
       .select("name")
       .eq("id", business.category_id)
       .maybeSingle();
-    category = categoryRow?.name ?? null;
+    category = (categoryRow as { name: string } | null)?.name ?? null;
   }
 
   return (
