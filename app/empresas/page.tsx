@@ -103,11 +103,46 @@ export default async function Empresas({
           </div>
         </section>
 
+        <section className="directory-featured">
+          <div className="directory-section-head">
+            <div>
+              <span className="eyebrow">Em destaque</span>
+              <h2>Empresas com maior visibilidade</h2>
+            </div>
+            <span className="directory-sponsored-note">Espaço publicitário</span>
+          </div>
+          <div className="directory-featured-grid">
+            {data.slice(0, 3).map((business) => (
+              <Link href={"/empresas/" + business.slug} className="directory-featured-card" key={"featured-" + business.id}>
+                <div className="directory-featured-media">
+                  {business.logo_url ? <img src={business.logo_url} alt="" /> : <span>{business.name.charAt(0)}</span>}
+                  <small>Publicidade</small>
+                </div>
+                <div className="directory-featured-body">
+                  <span className="directory-featured-label">Empresa em destaque</span>
+                  <h3>{business.name}</h3>
+                  {business.location && <span className="directory-business-location">⌖ {business.location}</span>}
+                  <p>{business.description || "Perfil empresarial no ecossistema MozEmpresas."}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="directory-ad">
+          <div className="directory-ad-copy">
+            <span className="eyebrow">Publicidade</span>
+            <strong>Alcance empresas e profissionais que já estão à procura de soluções.</strong>
+            <span>Reserve este espaço para uma campanha, produto, serviço ou oportunidade.</span>
+          </div>
+          <Link href="/contactos" className="btn">Anunciar no MozEmpresas →</Link>
+        </section>
+
         <section className="directory-results">
           <div className="directory-results-head">
             <div>
-              <span className="eyebrow">{hasFilters ? "Resultados da pesquisa" : "Directório"}</span>
-              <h2>{hasFilters ? "Empresas que correspondem à sua pesquisa" : "Empresas no MozEmpresas"}</h2>
+              <span className="eyebrow">{hasFilters ? "Resultados da pesquisa" : "Directório empresarial"}</span>
+              <h2>{hasFilters ? "Empresas que correspondem à sua pesquisa" : "Explore o directório"}</h2>
             </div>
             <div className="directory-results-summary">
               <strong>{data.length}</strong>
@@ -123,60 +158,33 @@ export default async function Empresas({
             </div>
           )}
 
-          {error && (
-            <div className="notice">
-              O directório está temporariamente indisponível. Pode continuar a navegar pelo portal.
-            </div>
-          )}
+          {error && <div className="notice">O directório está temporariamente indisponível. Pode continuar a navegar pelo portal.</div>}
 
           {data.length > 0 ? (
             <div className="directory-results-layout">
               <div className="directory-results-list">
                 {data.map((business, index) => (
-                  <Link
-                    href={"/empresas/" + business.slug}
-                    className="directory-business-card"
-                    key={business.id}
-                  >
+                  <Link href={"/empresas/" + business.slug} className="directory-business-card" key={business.id}>
                     <div className="directory-business-number">{String(index + 1).padStart(2, "0")}</div>
                     <div className="directory-business-logo">
-                      {business.logo_url ? (
-                        <img src={business.logo_url} alt="" />
-                      ) : (
-                        business.name.charAt(0)
-                      )}
+                      {business.logo_url ? <img src={business.logo_url} alt="" /> : business.name.charAt(0)}
                     </div>
                     <div className="directory-business-content">
                       <div className="directory-business-title">
-                        <div>
-                          <h3>{business.name}</h3>
-                          <span>Empresa</span>
-                        </div>
-                        <b>→</b>
+                        <div><h3>{business.name}</h3><span>Empresa</span></div><b>→</b>
                       </div>
-                      {business.location && (
-                        <div className="directory-business-location">⌖ {business.location}</div>
-                      )}
-                      <p>
-                        {business.description ||
-                          "Perfil empresarial no ecossistema MozEmpresas."}
-                      </p>
+                      {business.location && <div className="directory-business-location">⌖ {business.location}</div>}
+                      <p>{business.description || "Perfil empresarial no ecossistema MozEmpresas."}</p>
                       <span className="directory-business-action">Ver perfil da empresa</span>
                     </div>
                   </Link>
                 ))}
               </div>
-
               <aside className="directory-side-card">
                 <span className="eyebrow">Para empresas</span>
                 <h3>A sua empresa ainda não está aqui?</h3>
-                <p>
-                  Crie um perfil no MozEmpresas para apresentar a sua actividade,
-                  produtos, serviços e contactos a potenciais clientes e parceiros.
-                </p>
-                <Link href="/registo" className="btn primary full">
-                  Registar empresa →
-                </Link>
+                <p>Crie um perfil no MozEmpresas para apresentar a sua actividade, produtos, serviços e contactos.</p>
+                <Link href="/registo" className="btn primary full">Registar empresa →</Link>
               </aside>
             </div>
           ) : (
@@ -184,10 +192,7 @@ export default async function Empresas({
               <div className="directory-empty-icon">⌕</div>
               <span className="eyebrow">Pesquisa sem resultados</span>
               <h3>Não encontrámos empresas para esta pesquisa.</h3>
-              <p>
-                Experimente retirar um termo, usar uma localização diferente ou
-                explorar uma actividade do directório.
-              </p>
+              <p>Experimente retirar um termo ou usar uma localização diferente.</p>
               <div className="directory-empty-actions">
                 <Link href="/empresas" className="btn">Ver todas as empresas</Link>
                 <Link href="/registo" className="btn primary">Registar empresa</Link>
