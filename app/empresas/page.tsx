@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { DirectoryAdSlider } from "@/components/directory-ad-slider";
 
 type Business = {
   id: string;
@@ -103,19 +104,7 @@ export default async function Empresas({
           </div>
         </section>
 
-        <section className="directory-ad-slider" aria-label="Publicidade em destaque">
-          <div className="directory-ad-slide">
-            <div>
-              <span className="eyebrow">Espaço publicitário</span>
-              <h2>Coloque a sua empresa diante de quem está a procurar.</h2>
-              <p>Posições de destaque no directório para campanhas, produtos, serviços e oportunidades.</p>
-            </div>
-            <Link href="/contactos" className="btn primary">Anunciar no MozEmpresas →</Link>
-          </div>
-          <div className="directory-ad-dots" aria-hidden="true">
-            <span className="active"></span><span></span><span></span>
-          </div>
-        </section>
+        <DirectoryAdSlider />
 
         <section className="directory-explore">
           <div className="directory-section-head">
