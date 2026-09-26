@@ -6,14 +6,30 @@ export default async function BusinessDetail({ params }: { params: Promise<{ slu
   const { slug } = await params;
   const supabase = await createClient();
 
-  const { data: business } = await supabase
+  type BusinessRecord = {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    location: string | null;
+    phone: string | null;
+    email: string | null;
+    website: string | null;
+    logo_url: string | null;
+    cover_url: string | null;
+    created_at: string;
+    category_id: string | null;
+  };
+
+  const { data: rawBusiness } = await supabase
     .from("businesses")
     .select("id,name,slug,description,location,phone,email,website,logo_url,cover_url,created_at,category_id")
     .eq("slug", slug)
     .eq("is_public", true)
     .maybeSingle();
 
-  if (!business) notFound();
+  if (!rawBusiness) notFound();
+  const business = rawBusiness as unknown as BusinessRecord;
 
   const { data: listings } = await supabase
     .from("listings")
@@ -23,7 +39,6 @@ export default async function BusinessDetail({ params }: { params: Promise<{ slu
     .order("created_at", { ascending: false })
     .limit(6);
 
-  type BusinessCategoryRow = { name: string };
   let category: string | null = null;
   if (business.category_id) {
     const { data: categoryRow } = await supabase
@@ -31,8 +46,7 @@ export default async function BusinessDetail({ params }: { params: Promise<{ slu
       .select("name")
       .eq("id", business.category_id)
       .maybeSingle();
-    const typedCategoryRow = categoryRow as unknown as BusinessCategoryRow | null;
-    category = typedCategoryRow?.name ?? null;
+    category = (categoryRow as unknown as { name: string } | null)?.name ?? null;
   }
 
   return (
