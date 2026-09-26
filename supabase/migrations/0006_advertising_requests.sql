@@ -21,23 +21,9 @@ create index advertising_requests_business_idx on public.advertising_requests(bu
 alter table public.advertising_requests enable row level security;
 
 grant insert on public.advertising_requests to anon, authenticated;
-grant select, update on public.advertising_requests to authenticated;
 
 create policy "public can request advertising"
   on public.advertising_requests
   for insert
   to anon, authenticated
-  with check (true);
-
-create policy "authenticated users can view advertising requests"
-  on public.advertising_requests
-  for select
-  to authenticated
-  using (true);
-
-create policy "authenticated users can update advertising requests"
-  on public.advertising_requests
-  for update
-  to authenticated
-  using (true)
   with check (true);
