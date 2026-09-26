@@ -25,9 +25,17 @@ create index business_promotions_business_idx
   on public.business_promotions(business_id);
 
 alter table public.business_promotions enable row level security;
+alter table public.business_categories enable row level security;
 
+grant select on public.business_categories to anon, authenticated;
 grant select on public.business_promotions to anon, authenticated;
 grant insert, update, delete on public.business_promotions to authenticated;
+
+create policy "public business categories are readable"
+  on public.business_categories
+  for select
+  to anon, authenticated
+  using (true);
 
 create policy "active business promotions are readable"
   on public.business_promotions
