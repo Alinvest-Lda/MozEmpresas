@@ -204,6 +204,7 @@ export default async function Empresas({
                   <Link
                     href={item.target_url || "/empresas/" + business.slug}
                     className="directory-featured-card"
+                    rel={item.target_url ? "sponsored" : undefined}
                     key={item.id}
                   >
                     <div className="directory-sponsored-label">Patrocinado</div>
