@@ -23,6 +23,7 @@ export default async function BusinessDetail({ params }: { params: Promise<{ slu
     .order("created_at", { ascending: false })
     .limit(6);
 
+  type BusinessCategoryRow = { name: string };
   let category: string | null = null;
   if (business.category_id) {
     const { data: categoryRow } = await supabase
@@ -30,7 +31,8 @@ export default async function BusinessDetail({ params }: { params: Promise<{ slu
       .select("name")
       .eq("id", business.category_id)
       .maybeSingle();
-    category = (categoryRow as { name: string } | null)?.name ?? null;
+    const typedCategoryRow = categoryRow as unknown as BusinessCategoryRow | null;
+    category = typedCategoryRow?.name ?? null;
   }
 
   return (
