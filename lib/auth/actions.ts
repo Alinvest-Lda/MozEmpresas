@@ -14,7 +14,7 @@ const registrationSchema = credentialsSchema.extend({
 });
 export type AuthState = { error?: string };
 
-async function createProfile(userId: string, fullName: string, email?: string | null) {
+async function createProfile(userId: string, fullName: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").upsert(
     {
@@ -49,7 +49,7 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
   }
 
   if (data.user) {
-    await createProfile(data.user.id, data.user.user_metadata?.full_name || "", data.user.email);
+    await createProfile(data.user.id, data.user.user_metadata?.full_name || "");
   }
 
   redirect("/dashboard");
@@ -94,7 +94,7 @@ export async function signUp(_state: AuthState, formData: FormData): Promise<Aut
   }
 
   if (data.session && data.user) {
-    await createProfile(data.user.id, parsed.data.fullName, data.user.email);
+    await createProfile(data.user.id, parsed.data.fullName);
     redirect("/dashboard");
   }
 
