@@ -34,7 +34,10 @@ export function AdvertisingHero() {
   const [active, setActive] = useState(0);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setActive((current) => (current + 1) % ads.length), 5500);
+    const timer = window.setInterval(() => {
+      setActive((current) => (current + 1) % ads.length);
+    }, 5500);
+
     return () => window.clearInterval(timer);
   }, []);
 
@@ -42,17 +45,30 @@ export function AdvertisingHero() {
 
   return (
     <section className="advertising-hero" aria-label="Publicidade em destaque">
-      <div className="advertising-backdrop" style={{ backgroundImage: `url("${images[active]}")` }} />
+      <div
+        className="advertising-backdrop"
+        aria-hidden="true"
+        style={{ backgroundImage: `url("${images[active]}")` }}
+      />
       <div className="container">
         <div className="advertising-content">
           <span className="ad-kicker">{item.label}</span>
           <h2>{item.title}</h2>
           <p>{item.text}</p>
-          <Link className="ad-cta" href="/contactos">{item.action} <span>→</span></Link>
+          <Link className="ad-cta" href="/contactos">
+            {item.action} <span>→</span>
+          </Link>
         </div>
         <div className="ad-dots" aria-label="Anúncios">
           {ads.map((adItem, index) => (
-            <button key={adItem.title} aria-label={`Ver anúncio ${index + 1}`} className={index === active ? "active" : ""} onClick={() => setActive(index)} />
+            <button
+              key={adItem.title}
+              type="button"
+              aria-label={`Ver anúncio ${index + 1}`}
+              aria-pressed={index === active}
+              className={index === active ? "active" : ""}
+              onClick={() => setActive(index)}
+            />
           ))}
         </div>
       </div>
