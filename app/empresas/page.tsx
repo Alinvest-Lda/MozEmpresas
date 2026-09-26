@@ -1,21 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-const sectors = [
-  ["Construção e engenharia", "Obras, projectos e manutenção"],
-  ["Consultoria e serviços", "Serviços profissionais e empresariais"],
-  ["Tecnologia", "TI, software e soluções digitais"],
-  ["Contabilidade e finanças", "Contabilidade, auditoria e finanças"],
-  ["Comércio e distribuição", "Produtos, grossistas e retalhistas"],
-  ["Logística e transportes", "Transporte, carga e armazenagem"],
-  ["Agricultura e agro-negócio", "Produção e soluções para o sector"],
-  ["Hotelaria e turismo", "Hotéis, turismo e restauração"],
-  ["Saúde", "Clínicas, laboratórios e fornecedores"],
-  ["Educação e formação", "Instituições e formação profissional"],
-  ["Energia e ambiente", "Energia, água e ambiente"],
-  ["Outros serviços", "Outras actividades empresariais"],
-];
-
 type Business = {
   id: string;
   name: string;
@@ -117,34 +102,6 @@ export default async function Empresas({
             )}
           </div>
         </section>
-
-        {!hasFilters && (
-          <section className="directory-discovery">
-            <div className="directory-section-intro">
-              <div>
-                <span className="eyebrow">Por onde começar</span>
-                <h2>Explore por actividade</h2>
-              </div>
-              <p>Escolha uma área para descobrir empresas que trabalham nesse mercado.</p>
-            </div>
-            <div className="directory-sector-grid">
-              {sectors.map(([title, description]) => (
-                <Link
-                  href={"/empresas?q=" + encodeURIComponent(title)}
-                  className="directory-sector"
-                  key={title}
-                >
-                  <span className="directory-sector-mark">›</span>
-                  <span>
-                    <strong>{title}</strong>
-                    <small>{description}</small>
-                  </span>
-                  <b>→</b>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
 
         <section className="directory-results">
           <div className="directory-results-head">
