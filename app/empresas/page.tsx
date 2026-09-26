@@ -103,39 +103,48 @@ export default async function Empresas({
           </div>
         </section>
 
-        <section className="directory-featured">
-          <div className="directory-section-head">
+        <section className="directory-ad-slider" aria-label="Publicidade em destaque">
+          <div className="directory-ad-slide">
             <div>
-              <span className="eyebrow">Em destaque</span>
-              <h2>Empresas com maior visibilidade</h2>
+              <span className="eyebrow">Espaço publicitário</span>
+              <h2>Coloque a sua empresa diante de quem está a procurar.</h2>
+              <p>Posições de destaque no directório para campanhas, produtos, serviços e oportunidades.</p>
             </div>
-            <span className="directory-sponsored-note">Espaço publicitário</span>
+            <Link href="/contactos" className="btn primary">Anunciar no MozEmpresas →</Link>
           </div>
-          <div className="directory-featured-grid">
-            {data.slice(0, 3).map((business) => (
-              <Link href={"/empresas/" + business.slug} className="directory-featured-card" key={"featured-" + business.id}>
-                <div className="directory-featured-media">
-                  {business.logo_url ? <img src={business.logo_url} alt="" /> : <span>{business.name.charAt(0)}</span>}
-                  <small>Publicidade</small>
-                </div>
-                <div className="directory-featured-body">
-                  <span className="directory-featured-label">Empresa em destaque</span>
-                  <h3>{business.name}</h3>
-                  {business.location && <span className="directory-business-location">⌖ {business.location}</span>}
-                  <p>{business.description || "Perfil empresarial no ecossistema MozEmpresas."}</p>
-                </div>
-              </Link>
-            ))}
+          <div className="directory-ad-dots" aria-hidden="true">
+            <span className="active"></span><span></span><span></span>
           </div>
         </section>
 
-        <section className="directory-ad">
-          <div className="directory-ad-copy">
-            <span className="eyebrow">Publicidade</span>
-            <strong>Alcance empresas e profissionais que já estão à procura de soluções.</strong>
-            <span>Reserve este espaço para uma campanha, produto, serviço ou oportunidade.</span>
+        <section className="directory-explore">
+          <div className="directory-section-head">
+            <div>
+              <span className="eyebrow">Explore o directório</span>
+              <h2>Encontre empresas por diferentes critérios.</h2>
+            </div>
+            <span className="directory-section-note">Pesquisa + localização</span>
           </div>
-          <Link href="/contactos" className="btn">Anunciar no MozEmpresas →</Link>
+          <div className="directory-explore-grid">
+            <div className="directory-explore-card">
+              <span className="directory-explore-index">01</span>
+              <strong>Por empresa ou actividade</strong>
+              <p>Pesquise pelo nome da empresa, actividade, produto ou serviço.</p>
+              <span>Use a pesquisa acima →</span>
+            </div>
+            <div className="directory-explore-card">
+              <span className="directory-explore-index">02</span>
+              <strong>Por localização</strong>
+              <p>Restrinja os resultados por província, cidade ou outra localização registada.</p>
+              <span>Use o campo “Onde?” →</span>
+            </div>
+            <div className="directory-explore-card">
+              <span className="directory-explore-index">03</span>
+              <strong>Por perfil empresarial</strong>
+              <p>Abra o perfil para conhecer a actividade, apresentação e formas de contacto.</p>
+              <span>Compare antes de contactar →</span>
+            </div>
+          </div>
         </section>
 
         <section className="directory-results">
