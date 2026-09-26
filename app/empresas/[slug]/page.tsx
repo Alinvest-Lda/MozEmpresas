@@ -8,7 +8,7 @@ export default async function BusinessDetail({ params }: { params: Promise<{ slu
 
   const { data: business } = await supabase
     .from("businesses")
-    .select("id,name,slug,description,location,phone,email,website,logo_url,cover_url,created_at,category_id,business_categories(name)")
+    .select("id,name,slug,description,location,phone,email,website,logo_url,cover_url,created_at,category_id")
     .eq("slug", slug)
     .eq("is_public", true)
     .maybeSingle();
@@ -23,9 +23,15 @@ export default async function BusinessDetail({ params }: { params: Promise<{ slu
     .order("created_at", { ascending: false })
     .limit(6);
 
-  const category = Array.isArray(business.business_categories)
-    ? business.business_categories[0]?.name
-    : business.business_categories?.name;
+  let category: string | null = null;
+  if (business.category_id) {
+    const { data: categoryRow } = await supabase
+      .from("business_categories")
+      .select("name")
+      .eq("id", business.category_id)
+      .maybeSingle();
+    category = categoryRow?.name ?? null;
+  }
 
   return (
     <main className="page">
