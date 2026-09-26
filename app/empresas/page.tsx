@@ -72,10 +72,6 @@ export default async function Empresas({
     categories = (categoryResult.data ?? []) as Category[];
     const promotions = (promotionResult.data ?? []) as unknown as Promotion[];
 
-    if (promotionResult.error) {
-      error = true;
-    }
-
     featured = promotions.filter((item) => item.placement === "DIRECTORY_FEATURED").slice(0, 3);
 
     billboardAds = promotions
