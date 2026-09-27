@@ -1460,3 +1460,20 @@
     padding: 30px 22px 34px;
   }
 }
+
+
+/* Auth readability refinement */
+.auth-brand-panel .auth-eyebrow {
+  color: #ffffff;
+  background: #ffffff14;
+  border: 1px solid #ffffff2b;
+  border-radius: 999px;
+  display: inline-flex;
+  width: fit-content;
+  padding: 8px 12px;
+  margin-top: 38px;
+  margin-bottom: 18px;
+  letter-spacing: .05em;
+}
+.auth-brand-panel h1 { text-shadow: 0 1px 18px #00000018; }
+.auth-brand-panel > p { color: #d8e3e0; }
