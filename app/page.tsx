@@ -20,7 +20,6 @@ const categories = [
 const opportunities = [
   ["CONCURSOS", "Concursos e contratação", "Consulte concursos e processos de contratação.", "/concursos"],
   ["PROCURA", "Pedidos de empresas", "Encontre empresas que procuram produtos, serviços ou parceiros.", "/oportunidades"],
-  ["PARCERIAS", "Parcerias empresariais", "Descubra oportunidades de cooperação entre empresas.", "/oportunidades"],
 ];
 
 export default function Home() {
