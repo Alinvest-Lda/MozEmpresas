@@ -8,7 +8,6 @@ export default function Registo() {
       <div className="auth-shell">
         <aside className="auth-brand-panel">
           <Link href="/" className="auth-logo">Moz<span>Empresas</span></Link>
-          <div className="auth-brand-kicker">PRESENÇA NO MERCADO</div>
           <h1>Crie a sua presença no ecossistema empresarial de Moçambique.</h1>
           <p>Registe-se para apresentar a sua empresa, publicar ofertas e oportunidades e acompanhar as interações que acontecem no MozEmpresas.</p>
           <div className="auth-points"><span>01 <b>Registo simples</b></span><span>02 <b>Presença empresarial</b></span><span>03 <b>Mais formas de ser encontrado</b></span></div>
