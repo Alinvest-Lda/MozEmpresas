@@ -18,9 +18,6 @@ export function Header() {
   const [signedIn, setSignedIn] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null;
