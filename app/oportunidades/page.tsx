@@ -147,9 +147,6 @@ export default async function Oportunidades({
               <Link href="/publicar-oportunidade">Publicar uma oportunidade →</Link>
             </div>
           </div>
-
-v>
-          </div>
         </section>
 
         <section className="opportunity-search-shell" id="explorar">
