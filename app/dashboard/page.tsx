@@ -7,6 +7,7 @@ import { signOut } from "@/lib/auth/actions";
 
 const mainActions = [
   { href: "/marketplace", title: "Comprar", text: "Encontre produtos e serviços para a sua actividade.", icon: "↗" },
+  { href: "/dashboard/servicos", title: "Serviços MozEmpresas", text: "Contrate serviços da própria plataforma quando precisar.", icon: "◆" },
   { href: "/marketplace", title: "Vender", text: "Publique produtos e serviços e seja encontrado.", icon: "◇" },
   { href: "/concursos", title: "Concursos", text: "Explore processos e, quando disponível, participe.", icon: "◈" },
   { href: "/oportunidades", title: "Oportunidades", text: "Descubra chamadas, parcerias e outras oportunidades.", icon: "⌘" },
