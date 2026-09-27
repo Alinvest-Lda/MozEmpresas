@@ -62,7 +62,6 @@ export default async function Dashboard() {
 
         <div className="dashboard-nav-group">
           <span>Ecossistema</span>
-          <Link className="dashboard-nav-link" href="/dashboard/parceiros"><i className="nav-dot" />Parceiros</Link>
           <Link className="dashboard-nav-link" href="/marketplace"><i className="nav-dot" />Recomendações</Link>
         </div>
 
