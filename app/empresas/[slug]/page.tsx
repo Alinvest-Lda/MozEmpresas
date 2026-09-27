@@ -4,7 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function BusinessDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const supabase = await createClient();
+  let supabase;
+  try {
+    supabase = await createClient();
+  } catch {
+    notFound();
+  }
 
   type BusinessRecord = {
     id: string;
