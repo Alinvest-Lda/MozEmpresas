@@ -35,23 +35,40 @@ const fallbackAds: DirectoryAd[] = [
 export function DirectoryAdSlider({ ads = [] }: { ads?: DirectoryAd[] }) {
   const items = ads.length > 0 ? ads : fallbackAds;
   const [active, setActive] = useState(0);
+  const [visible, setVisible] = useState(0);
+
+  useEffect(() => {
+    if (active >= items.length) {
+      setActive(0);
+      setVisible(0);
+    }
+  }, [active, items.length]);
 
   useEffect(() => {
     if (items.length < 2) return;
-    const timer = window.setInterval(() => {
-      setActive((current) => (current + 1) % items.length);
-    }, 5500);
+    const timer = window.setInterval(() => setActive((current) => (current + 1) % items.length), 5500);
     return () => window.clearInterval(timer);
   }, [items.length]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setVisible(active), 30);
+    return () => window.clearTimeout(timer);
+  }, [active]);
 
   const slide = items[Math.min(active, items.length - 1)];
 
   return (
     <section className="directory-ad-slider" aria-label="Publicidade em destaque">
-      <div
-        className="directory-ad-slide"
-        style={slide.image ? { backgroundImage: `linear-gradient(90deg, #102925ee 0%, #173a34dd 58%, #173a34b8 100%), url("${slide.image}")` } : undefined}
-      >
+      {items.map((item, index) => (
+        <div
+          key={item.title + index}
+          className={"directory-ad-slide directory-ad-layer " + (index === visible ? "is-visible" : "")}
+          aria-hidden="true"
+          style={item.image ? { backgroundImage: 'url("' + item.image + '")' } : undefined}
+        />
+      ))}
+      <div className="directory-ad-overlay" aria-hidden="true" />
+      <div className="directory-ad-content">
         <div className="directory-ad-copy">
           <span className="eyebrow">{slide.label}</span>
           <h2>{slide.title}</h2>
@@ -65,6 +82,7 @@ export function DirectoryAdSlider({ ads = [] }: { ads?: DirectoryAd[] }) {
             type="button"
             key={item.title + index}
             aria-label={"Ver publicidade " + (index + 1)}
+            aria-pressed={index === active}
             className={index === active ? "active" : ""}
             onClick={() => setActive(index)}
           />
