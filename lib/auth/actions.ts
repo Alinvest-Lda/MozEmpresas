@@ -33,7 +33,8 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
     email: formData.get("email"),
     password: formData.get("password"),
   });
-  const next = typeof formData.get("next") === "string" && /^\\/[A-Za-z0-9_\\-/?=&.%#]*$/.test(String(formData.get("next"))) ? String(formData.get("next")) : "/dashboard";
+  const requestedNext = formData.get("next");
+  const next = typeof requestedNext === "string" && requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/dashboard";
 
   if (!parsed.success) {
     return { error: "Indique um email válido e uma password com pelo menos 8 caracteres." };
