@@ -906,3 +906,48 @@
   .advertising-content{grid-template-rows:auto 3.2em 3.2em 42px}
   .advertising-content h2{font-size:31px}
 }
+
+
+/* MozEmpresas visual stabilization */
+.advertising-backdrop{
+  opacity:0;
+  transition:opacity 1.35s ease-in-out !important;
+  background-color:transparent !important;
+}
+.advertising-backdrop.is-visible{opacity:1}
+.advertising-overlay{
+  background:linear-gradient(90deg,rgba(11,41,38,.78) 0%,rgba(11,41,38,.52) 34%,rgba(11,41,38,.18) 68%,rgba(11,41,38,0) 100%) !important;
+}
+.advertising-content{
+  width:min(720px,100%);
+  min-height:270px;
+  grid-template-rows:28px 132px 50px 42px !important;
+  row-gap:10px !important;
+}
+.advertising-content h2{
+  height:132px !important;
+  overflow:hidden;
+  display:-webkit-box !important;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+}
+.advertising-content p{
+  height:50px !important;
+  overflow:hidden;
+  display:-webkit-box !important;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+}
+.opportunity-category-sections{display:grid;gap:46px}
+.opportunity-category-section{padding-top:8px}
+.opportunity-category-section .directory-section-head{margin-bottom:18px}
+.directory-commercial-slot{margin-top:28px;margin-bottom:34px}
+@media(max-width:850px){
+  .advertising-content{grid-template-rows:24px 100px 48px 42px !important}
+  .advertising-content h2{height:100px !important}
+}
+@media(max-width:650px){
+  .advertising-content{grid-template-rows:20px 86px 44px 42px !important}
+  .advertising-content h2{height:86px !important}
+  .advertising-content p{height:44px !important}
+}
