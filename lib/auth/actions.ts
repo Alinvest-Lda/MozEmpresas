@@ -33,6 +33,7 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
     email: formData.get("email"),
     password: formData.get("password"),
   });
+  const next = typeof formData.get("next") === "string" && /^\\/[A-Za-z0-9_\\-/?=&.%#]*$/.test(String(formData.get("next"))) ? String(formData.get("next")) : "/dashboard";
 
   if (!parsed.success) {
     return { error: "Indique um email válido e uma password com pelo menos 8 caracteres." };
@@ -57,7 +58,7 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
     await createProfile(data.user.id, data.user.user_metadata?.full_name || "");
   }
 
-  redirect("/dashboard");
+  redirect(next);
 }
 
 export async function signUp(_state: AuthState, formData: FormData): Promise<AuthState> {
