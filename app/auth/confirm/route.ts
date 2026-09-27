@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
       {
         id: user.id,
         full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "Utilizador",
+        user_type: user.user_metadata?.user_type === "profissional" ? "profissional" : "empresa",
       },
       { onConflict: "id" }
     );
