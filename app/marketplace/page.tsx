@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
 
 const types = [["PRODUCT", "Produtos"], ["SERVICE", "Serviços"]] as const;
 
@@ -25,10 +26,13 @@ export default async function Marketplace({
   const location = params.location?.trim() || "";
 
   let listings: Listing[] = [];
+  let billboardAds: DirectoryAd[] = [];
   let error = false;
 
   try {
     const supabase = await createClient();
+    const { data: promotions } = await supabase.from("business_promotions").select("id,title,text,image_url,target_url,priority").eq("status", "ACTIVE").lte("starts_at", new Date().toISOString()).gt("ends_at", new Date().toISOString()).eq("placement", "DIRECTORY_BILLBOARD").order("priority", { ascending: false }).limit(6);
+    billboardAds = (promotions ?? []).map((item) => ({ label: "Publicidade", title: item.title, text: item.text || "Apresente os seus produtos e serviços ao público empresarial.", image: item.image_url || undefined, href: item.target_url || "/contactos" }));
     let query = supabase
       .from("listings")
       .select("id,title,description,type,price,currency,location,business_id")
@@ -108,6 +112,8 @@ export default async function Marketplace({
             {hasFilters && <Link href="/marketplace" className="directory-clear">Limpar pesquisa</Link>}
           </div>
         </section>
+
+        <DirectoryAdSlider ads={billboardAds} />
 
         <section className="directory-discovery marketplace-shortcuts">
           <div className="directory-section-head">
