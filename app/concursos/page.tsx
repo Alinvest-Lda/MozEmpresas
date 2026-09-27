@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
 
 type Contest = {
   id: string;
@@ -21,16 +22,22 @@ export default async function Concursos({
   const category = params.category?.trim() || "";
 
   let data: Contest[] = [];
+  let billboardAds: DirectoryAd[] = [];
+  let signedIn = false;
   let error = false;
 
   try {
     const supabase = await createClient();
+    const { data: claimsData } = await supabase.auth.getClaims();
+    signedIn = Boolean(claimsData?.claims?.sub);
+    const { data: promotions } = await supabase.from("business_promotions").select("id,title,text,image_url,target_url,priority").eq("status","ACTIVE").lte("starts_at",new Date().toISOString()).gt("ends_at",new Date().toISOString()).eq("placement","DIRECTORY_BILLBOARD").order("priority",{ascending:false}).limit(6);
+    billboardAds = (promotions ?? []).map((item) => ({ label:"Publicidade empresarial", title:item.title, text:item.text || "Destaque a sua marca perante organizações e empresas.", image:item.image_url || undefined, href:item.target_url || "/contactos" }));
     let query = supabase
       .from("contests")
       .select("id,title,slug,description,status,category,closes_at")
       .eq("status", "OPEN")
       .order("created_at", { ascending: false })
-      .limit(48);
+      .limit(signedIn ? 48 : 6);
 
     if (q) {
       const safe = q.replace(/[%_,()']/g, " ").replace(/\s+/g, " ").trim();
@@ -54,10 +61,9 @@ export default async function Concursos({
         <section className="directory-hero">
           <div className="directory-hero-copy">
             <span className="eyebrow">Concursos e contratação</span>
-            <h1>Encontre concursos e processos de contratação.</h1>
+            <h1>Concursos abertos para empresas.</h1>
             <p>
-              Consulte chamadas, requisitos, prazos e estados dos processos
-              publicados por organizações e empresas no MozEmpresas.
+              Consulte os processos actualmente abertos. Visitantes vêem um resumo; membros registados têm acesso à área completa do processo.
             </p>
           </div>
 
@@ -83,6 +89,8 @@ export default async function Concursos({
             {hasFilters && <Link href="/concursos" className="directory-clear">Limpar pesquisa</Link>}
           </div>
         </section>
+
+        <DirectoryAdSlider ads={billboardAds} />
 
         <section className="directory-discovery">
           <div className="directory-section-head">
@@ -136,10 +144,10 @@ export default async function Concursos({
                         <b>→</b>
                       </div>
                       {item.category && <div className="directory-business-location">Categoria: {item.category}</div>}
-                      <p>{item.description}</p>
+                      <p>{signedIn ? item.description : (item.description.length > 180 ? item.description.slice(0, 180) + "…" : item.description)}</p>
                       <div className="contest-result-bottom">
                         {item.closes_at ? <span>Prazo: <strong>{new Date(item.closes_at).toLocaleDateString("pt-MZ")}</strong></span> : <span>Prazo não indicado</span>}
-                        <span>Consultar concurso →</span>
+                        <span>{signedIn ? "Abrir processo →" : "Ver preview →"}</span>
                       </div>
                     </div>
                   </Link>
