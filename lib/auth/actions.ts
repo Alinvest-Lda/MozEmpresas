@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
-const userTypeSchema = z.enum(["empresa", "profissional"]);
+const userTypeSchema = z.enum(["empresa", "organizacao"]);
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -16,7 +16,7 @@ const registrationSchema = credentialsSchema.extend({
 });
 export type AuthState = { error?: string };
 
-async function createProfile(userId: string, fullName: string, userType: "empresa" | "profissional") {
+async function createProfile(userId: string, fullName: string, userType: "empresa" | "organizacao") {
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").upsert(
     { id: userId, full_name: fullName, user_type: userType },
