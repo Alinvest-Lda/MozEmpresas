@@ -7,7 +7,13 @@ import { createBusiness } from "@/lib/businesses/actions";
 import { BusinessForm } from "@/components/business-form";
 
 export default async function MyBusinesses() {
-  const supabase = await createClient();
+  let supabase;
+  try {
+    supabase = await createClient();
+  } catch {
+    return <main className="page"><div className="container"><div className="notice">O serviço de gestão empresarial está temporariamente indisponível.</div></div></main>;
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
