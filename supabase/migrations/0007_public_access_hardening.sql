@@ -73,3 +73,5 @@ grant execute on function public.handle_new_user() to service_role;
 
 revoke select on public.listings, public.listing_media from anon;
 revoke select on public.contest_requirements from anon;
+
+-- Release boundary: application access rules are intentionally prepared for the next platform modules.
