@@ -18,8 +18,11 @@ const categories = [
 ];
 
 const opportunities = [
-  ["CONCURSOS", "Concursos e contratação", "Consulte concursos e processos de contratação.", "/concursos"],
-  ["PROCURA", "Pedidos de empresas", "Encontre empresas que procuram produtos, serviços ou parceiros.", "/oportunidades"],
+  ["CHAMADAS", "Chamadas e pedidos de propostas", "Encontre pedidos, chamadas e manifestações de interesse publicados por organizações.", "/oportunidades?type=CALL"],
+  ["FINANCIAMENTO", "Financiamentos e apoio", "Descubra financiamento, subvenções e programas de apoio ao crescimento.", "/oportunidades?type=FUNDING"],
+  ["PARCERIAS", "Parcerias e colaboração", "Encontre organizações à procura de parceiros, alianças e novas formas de colaboração.", "/oportunidades?type=PARTNERSHIP"],
+  ["CAPACITAÇÃO", "Capacitações e desenvolvimento", "Acompanhe cursos, workshops e programas para desenvolver competências.", "/oportunidades?type=TRAINING"],
+  ["EVENTOS", "Eventos e networking", "Descubra feiras, conferências, encontros e outros momentos relevantes para o mercado.", "/oportunidades?type=EVENT"],
 ];
 
 export default function Home() {
@@ -44,8 +47,8 @@ export default function Home() {
       <section className="portal-actions" aria-label="Acesso rápido"><div className="container portal-actions-grid">
         <Link href="/empresas"><strong>Encontrar empresas</strong><span>Pesquise por nome, sector ou localização</span><b>→</b></Link>
         <Link href="/marketplace"><strong>Encontrar produtos e serviços</strong><span>Explore ofertas publicadas por empresas</span><b>→</b></Link>
-        <Link href="/concursos"><strong>Ver concursos</strong><span>Acompanhe processos e chamadas</span><b>→</b></Link>
-        <Link href="/oportunidades"><strong>Publicar uma necessidade</strong><span>Encontre empresas que possam responder ao que procura</span><b>→</b></Link>
+        <Link href="/concursos"><strong>Explorar oportunidades</strong><span>Chamadas, financiamento, parcerias, capacitações e eventos</span><b>→</b></Link>
+        <Link href="/oportunidades"><strong>Publicar uma oportunidade</strong><span>Apresente uma chamada, necessidade ou iniciativa ao mercado</span><b>→</b></Link>
       </div></section>
       <section className="section home-section"><div className="container">
         <div className="section-head home-section-head"><div><span className="eyebrow">Explore o mercado</span><h2>Pesquise por actividade</h2><p className="section-intro">Escolha uma área para encontrar empresas, fornecedores e soluções.</p></div><Link href="/empresas" className="text-link">Ver todas as empresas →</Link></div>
@@ -60,7 +63,7 @@ export default function Home() {
         </div></div>
       </div></section>
       <section className="section home-section"><div className="container">
-        <div className="section-head home-section-head"><div><span className="eyebrow">Negócios e oportunidades</span><h2>Encontre oportunidades de negócio.</h2><p className="section-intro">Veja necessidades de empresas, processos de contratação e oportunidades de parceria.</p></div><Link href="/oportunidades" className="text-link">Ver oportunidades →</Link></div>
+        <div className="section-head home-section-head"><div><span className="eyebrow">Negócios e oportunidades</span><h2>Oportunidades para participar, crescer e fazer negócio.</h2><p className="section-intro">Descubra chamadas, financiamento, parcerias, capacitações e eventos que aproximam empresas e profissionais de novas possibilidades.</p></div><Link href="/oportunidades" className="text-link">Explorar oportunidades →</Link></div>
         <div className="opportunity-layout"><div className="opportunity-visual"><img src="https://central.bvm.co.mz/storage/app/public/files/notice/123/7.JPG" alt="Profissionais negros num encontro empresarial em Moçambique" loading="lazy" /></div><div className="opportunity-grid">{opportunities.map(([label,title,text,href]) => <Link href={href} className="opportunity-card" key={title}><span className="opportunity-label">{label}</span><h3>{title}</h3><p>{text}</p><span className="card-link">Explorar →</span></Link>)}</div></div>
       </div></section>
       <section className="section home-partner-section"><div className="container"><PartnerSpotlight /></div></section>\n      <section className="request-section"><div className="container request-panel"><div><span className="eyebrow inverse-eyebrow">Procura um fornecedor?</span><h2>Diga o que precisa. Encontre quem pode fornecer.</h2><p>Publique a sua necessidade e permita que empresas com produtos ou serviços adequados encontrem a oportunidade.</p></div><Link href="/oportunidades" className="btn light-btn">Publicar uma necessidade</Link></div></section>
