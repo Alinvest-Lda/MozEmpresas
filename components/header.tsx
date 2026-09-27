@@ -23,19 +23,29 @@ export function Header() {
   }, [pathname]);
 
   useEffect(() => {
-    const supabase = createClient();
+    let subscription: { unsubscribe: () => void } | null = null;
 
-    supabase.auth.getSession().then(({ data }) => {
-      setSignedIn(Boolean(data.session));
-    });
+    try {
+      const supabase = createClient();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSignedIn(Boolean(session));
-    });
+      supabase.auth.getSession().then(({ data }) => {
+        setSignedIn(Boolean(data.session));
+      }).catch(() => {
+        setSignedIn(false);
+      });
 
-    return () => subscription.unsubscribe();
+      const result = supabase.auth.onAuthStateChange((_event, session) => {
+        setSignedIn(Boolean(session));
+      });
+
+      subscription = result.data.subscription;
+    } catch {
+      // The public portal must remain usable if Supabase environment
+      // configuration is temporarily unavailable.
+      setSignedIn(false);
+    }
+
+    return () => subscription?.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -64,9 +74,7 @@ export function Header() {
 
         <div className="header-actions">
           {signedIn ? (
-            <Link className="btn primary" href="/dashboard">
-              Painel
-            </Link>
+            <Link className="btn primary" href="/dashboard">Painel</Link>
           ) : (
             <>
               <Link className="btn ghost desktop-only" href="/login">Entrar</Link>
@@ -88,14 +96,10 @@ export function Header() {
             {open && (
               <div className="mobile-menu-panel">
                 {links.map(([href, label]) => (
-                  <Link key={href} href={href} onClick={() => setOpen(false)}>
-                    {label}
-                  </Link>
+                  <Link key={href} href={href} onClick={() => setOpen(false)}>{label}</Link>
                 ))}
                 {signedIn ? (
-                  <Link href="/dashboard" onClick={() => setOpen(false)}>
-                    Painel do utilizador
-                  </Link>
+                  <Link href="/dashboard" onClick={() => setOpen(false)}>Painel do utilizador</Link>
                 ) : (
                   <>
                     <Link href="/login" onClick={() => setOpen(false)}>Entrar</Link>
