@@ -247,7 +247,7 @@ export default async function Oportunidades({
 
           {data.length > 0 ? (
             <div className="opportunity-results-grid">
-              {data.map((item, index) => {
+              {data.map((item) => {
                 const days = daysUntil(item.closes_at);
                 const urgent = days !== null && days >= 0 && days <= 7;
                 return (
