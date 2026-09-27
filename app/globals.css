@@ -1477,3 +1477,171 @@
 }
 .auth-brand-panel h1 { text-shadow: 0 1px 18px #00000018; }
 .auth-brand-panel > p { color: #d8e3e0; }
+
+
+/* Final responsive and visual pass — landing, auth and shared discovery surfaces */
+html,body{max-width:100%;overflow-x:hidden}
+img{max-width:100%}
+button,input,select,textarea{max-width:100%}
+
+/* Landing: opportunity block uses a compact editorial composition */
+.home-section .opportunity-layout{
+  display:grid;
+  grid-template-columns:minmax(280px,.72fr) minmax(0,1.28fr);
+  gap:16px;
+  align-items:stretch;
+}
+.home-section .opportunity-visual{
+  min-height:100%;
+  overflow:hidden;
+  position:relative;
+  background:#dfe9e6;
+}
+.home-section .opportunity-visual img{
+  width:100%;
+  height:100%;
+  min-height:350px;
+  display:block;
+  object-fit:cover;
+  object-position:center 38%;
+}
+.home-section .opportunity-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.home-section .opportunity-card{
+  min-height:166px;
+  padding:18px 19px;
+}
+.home-section .opportunity-card h3{
+  font-size:18px;
+  line-height:1.16;
+  margin:10px 0 6px;
+}
+.home-section .opportunity-card p{
+  font-size:12px;
+  line-height:1.45;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+}
+.home-section .opportunity-card .card-link{
+  padding-top:11px;
+  font-size:11px;
+}
+
+/* Landing billboard: allow the real heading to breathe on desktop */
+.advertising-content{
+  width:min(760px,100%);
+  min-height:330px;
+  grid-template-rows:auto auto minmax(3.1em,auto) 42px;
+  row-gap:11px;
+}
+.advertising-content h2{
+  height:auto;
+  max-height:none;
+  overflow:visible;
+  line-height:1.04;
+  text-wrap:balance;
+}
+.advertising-content p{
+  height:auto;
+  max-height:3.2em;
+}
+@media(min-width:951px){
+  .advertising-content h2{font-size:clamp(42px,4.3vw,60px);max-width:760px}
+  .advertising-content p{max-width:600px}
+}
+
+/* Auth: clearer two-column product-style entry screen */
+.auth-shell{
+  grid-template-columns:minmax(0,1fr) minmax(360px,.72fr);
+  min-height:600px;
+}
+.auth-brand-panel{
+  padding:54px 56px;
+}
+.auth-brand-kicker{
+  position:relative;
+  z-index:1;
+  width:max-content;
+  max-width:100%;
+  margin:58px 0 18px;
+  padding:7px 11px;
+  border:1px solid #ffffff2e;
+  border-radius:999px;
+  color:#fff;
+  background:#ffffff12;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.1em;
+}
+.auth-brand-panel h1{max-width:560px;font-size:clamp(36px,3.6vw,50px)}
+.auth-brand-panel>p{max-width:500px;font-size:14px}
+.auth-points{gap:7px;margin-top:30px}
+.auth-points span{padding:11px 13px}
+.auth-shell .auth-card{
+  padding:52px 48px;
+  min-width:0;
+}
+.auth-card h2{font-size:32px}
+.auth-card .muted{font-size:13px;line-height:1.5}
+.auth-card .field input{min-height:46px}
+
+/* Shared tablet safety: prevent wide grids and long headings from forcing overflow */
+@media(max-width:1000px){
+  .container{width:min(1180px,calc(100% - 32px))}
+  .section-head{align-items:flex-start}
+  .home-section-head{gap:15px}
+  .home-section .opportunity-layout{grid-template-columns:1fr}
+  .home-section .opportunity-visual{min-height:260px}
+  .home-section .opportunity-visual img{min-height:260px;max-height:320px}
+  .home-section .opportunity-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .auth-shell{grid-template-columns:1fr .82fr}
+  .auth-brand-panel{padding:44px}
+  .auth-shell .auth-card{padding:44px 36px}
+  .form-grid{grid-template-columns:1fr}
+  .form-full{grid-column:auto}
+}
+
+/* Phone layout: stack content before it becomes compressed */
+@media(max-width:800px){
+  .home-section .opportunity-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .home-section .opportunity-card{min-height:155px}
+  .advertising-content{width:100%;min-height:285px;grid-template-rows:auto auto auto 40px}
+  .advertising-content h2{font-size:39px}
+  .advertising-content p{max-height:4.7em}
+  .auth-shell{grid-template-columns:1fr}
+  .auth-brand-panel{padding:34px 30px 30px}
+  .auth-brand-kicker{margin-top:42px}
+  .auth-brand-panel h1{font-size:38px}
+  .auth-shell .auth-card{padding:36px 30px 40px}
+}
+@media(max-width:560px){
+  .container{width:calc(100% - 26px)}
+  .section-head{display:block}
+  .section-head .text-link{display:inline-block;margin-top:12px}
+  .home-section .opportunity-layout{gap:10px}
+  .home-section .opportunity-visual{min-height:235px}
+  .home-section .opportunity-visual img{min-height:235px;max-height:280px}
+  .home-section .opportunity-grid{grid-template-columns:1fr}
+  .home-section .opportunity-card,
+  .home-section .opportunity-card:last-child{min-height:145px}
+  .home-section .opportunity-card h3{font-size:17px}
+  .home-section .opportunity-card p{font-size:11px}
+  .advertising-hero,.advertising-hero-container{height:380px;min-height:380px}
+  .advertising-content{min-height:270px;padding:0!important;grid-template-rows:auto auto auto 38px;row-gap:8px}
+  .advertising-content h2{font-size:34px;line-height:1.04}
+  .advertising-content p{font-size:13px;line-height:1.5;max-height:none}
+  .auth-page{padding:20px 12px 36px}
+  .auth-brand-panel{padding:28px 22px}
+  .auth-brand-kicker{margin-top:34px;font-size:9px}
+  .auth-brand-panel h1{font-size:33px;margin-bottom:14px}
+  .auth-brand-panel>p{font-size:13px}
+  .auth-points{margin-top:22px}
+  .auth-points span{font-size:9px}
+  .auth-points b{font-size:10px}
+  .auth-shell .auth-card{padding:30px 22px 34px}
+  .auth-card h2{font-size:29px}
+}
