@@ -9,7 +9,6 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
       <div className="auth-shell">
         <aside className="auth-brand-panel">
           <Link href="/" className="auth-logo">Moz<span>Empresas</span></Link>
-          <div className="auth-brand-kicker">MOZEMPRESAS</div>
           <h1>Entre para continuar a construir a sua presença no mercado.</h1>
           <p>Uma conta para gerir o seu perfil, empresa, publicações, anúncios e interações dentro do MozEmpresas.</p>
           <div className="auth-points"><span>01 <b>Perfil empresarial</b></span><span>02 <b>Oportunidades</b></span><span>03 <b>Produtos e serviços</b></span></div>
