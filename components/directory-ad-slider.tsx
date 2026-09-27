@@ -38,13 +38,6 @@ export function DirectoryAdSlider({ ads = [] }: { ads?: DirectoryAd[] }) {
   const [visible, setVisible] = useState(0);
 
   useEffect(() => {
-    if (active >= items.length) {
-      setActive(0);
-      setVisible(0);
-    }
-  }, [active, items.length]);
-
-  useEffect(() => {
     if (items.length < 2) return;
     const timer = window.setInterval(() => setActive((current) => (current + 1) % items.length), 5500);
     return () => window.clearInterval(timer);
