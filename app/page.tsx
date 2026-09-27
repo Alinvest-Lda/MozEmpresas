@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdvertisingHero } from "@/components/advertising-hero";
+import { PartnerSpotlight } from "@/components/partner-spotlight";
 
 const categories = [
   ["Construção e engenharia", "Obras, projectos e manutenção"],
@@ -63,7 +64,7 @@ export default function Home() {
         <div className="section-head home-section-head"><div><span className="eyebrow">Negócios e oportunidades</span><h2>Encontre oportunidades de negócio.</h2><p className="section-intro">Veja necessidades de empresas, processos de contratação e oportunidades de parceria.</p></div><Link href="/oportunidades" className="text-link">Ver oportunidades →</Link></div>
         <div className="opportunity-layout"><div className="opportunity-visual"><img src="https://central.bvm.co.mz/storage/app/public/files/notice/123/7.JPG" alt="Profissionais negros num encontro empresarial em Moçambique" loading="lazy" /></div><div className="opportunity-grid">{opportunities.map(([label,title,text,href]) => <Link href={href} className="opportunity-card" key={title}><span className="opportunity-label">{label}</span><h3>{title}</h3><p>{text}</p><span className="card-link">Explorar →</span></Link>)}</div></div>
       </div></section>
-      <section className="request-section"><div className="container request-panel"><div><span className="eyebrow inverse-eyebrow">Procura um fornecedor?</span><h2>Diga o que precisa. Encontre quem pode fornecer.</h2><p>Publique a sua necessidade e permita que empresas com produtos ou serviços adequados encontrem a oportunidade.</p></div><Link href="/oportunidades" className="btn light-btn">Publicar uma necessidade</Link></div></section>
+      <section className="section home-partner-section"><div className="container"><PartnerSpotlight /></div></section>\n      <section className="request-section"><div className="container request-panel"><div><span className="eyebrow inverse-eyebrow">Procura um fornecedor?</span><h2>Diga o que precisa. Encontre quem pode fornecer.</h2><p>Publique a sua necessidade e permita que empresas com produtos ou serviços adequados encontrem a oportunidade.</p></div><Link href="/oportunidades" className="btn light-btn">Publicar uma necessidade</Link></div></section>
       <section className="section company-cta"><div className="container company-cta-inner"><div><span className="eyebrow">Para empresas</span><h2>Coloque a sua empresa onde os clientes e parceiros procuram.</h2><p>Crie o perfil da sua empresa e apresente actividade, produtos, serviços e formas de contacto.</p></div><div className="cta-actions"><Link href="/registo" className="btn primary">Registar empresa</Link><Link href="/empresas" className="btn">Explorar empresas</Link></div></div></section>
     </>
   );
