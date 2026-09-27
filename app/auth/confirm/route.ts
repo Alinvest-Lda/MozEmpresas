@@ -12,14 +12,9 @@ export async function GET(request: NextRequest) {
   let error: { message?: string } | null = null;
 
   if (tokenHash) {
-    const result = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type,
-    });
-    error = result.error;
+    error = (await supabase.auth.verifyOtp({ token_hash: tokenHash, type })).error;
   } else if (code) {
-    const result = await supabase.auth.exchangeCodeForSession(code);
-    error = result.error;
+    error = (await supabase.auth.exchangeCodeForSession(code)).error;
   } else {
     error = { message: "Missing confirmation token." };
   }
@@ -28,16 +23,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login?confirmed=error", url));
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (user) {
     await supabase.from("profiles").upsert(
       {
         id: user.id,
         full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "Utilizador",
-        user_type: user.user_metadata?.user_type === "organizacao" ? "organizacao" : "empresa",
       },
       { onConflict: "id" }
     );
