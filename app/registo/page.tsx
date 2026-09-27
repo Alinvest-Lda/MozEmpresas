@@ -9,13 +9,13 @@ export default function Registo() {
         <aside className="auth-brand-panel">
           <Link href="/" className="auth-logo">Moz<span>Empresas</span></Link>
           <h1>Crie a sua presença no ecossistema empresarial de Moçambique.</h1>
-          <p>Registe-se para apresentar a sua empresa, publicar ofertas e oportunidades e acompanhar as interações que acontecem no MozEmpresas.</p>
+          <p>Crie uma conta para apresentar a sua actividade, encontrar soluções, participar em oportunidades ou colocar necessidades no ecossistema empresarial.</p>
           <div className="auth-points"><span>01 <b>Registo simples</b></span><span>02 <b>Presença empresarial</b></span><span>03 <b>Mais formas de ser encontrado</b></span></div>
         </aside>
         <section className="auth-card">
           <span className="eyebrow">Começar</span>
           <h2>Criar conta</h2>
-          <p className="muted">Escolha primeiro o tipo de conta. Isto define a forma como o seu perfil será apresentado e gerido na plataforma.</p>
+          <p className="muted">Escolha primeiro como irá participar no ecossistema. O tipo de conta define as funções e o percurso de gestão disponíveis.</p>
           <AuthForm action={signUp} mode="signup" />
           <p className="auth-switch muted">Já tem conta? <Link href="/login">Entrar</Link></p>
         </section>
