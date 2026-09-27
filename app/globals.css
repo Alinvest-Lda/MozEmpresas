@@ -1834,3 +1834,56 @@ button,input,select,textarea{max-width:100%}
 @media(max-width:1000px){.dashboard-stat-grid{grid-template-columns:repeat(2,1fr)}.dashboard-action-grid{grid-template-columns:repeat(2,1fr)}.dashboard-lower-grid,.access-layout{grid-template-columns:1fr}}
 @media(max-width:850px){.dashboard-shell{display:block}.dashboard-sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:12px 14px}.dashboard-brand{display:none}.dashboard-nav-group{display:flex;gap:4px;overflow-x:auto;margin:0}.dashboard-nav-group>span{display:none}.dashboard-nav-link{white-space:nowrap!important}.dashboard-user{display:none}.dashboard-main{padding:23px 18px 45px}.topbar-app .nav{display:none}}
 @media(max-width:600px){.dashboard-topbar{display:block}.dashboard-actions{margin-top:15px}.dashboard-stat-grid,.dashboard-action-grid{grid-template-columns:1fr}.dashboard-topbar h1{font-size:31px}.dashboard-section{padding:17px}.access-table{min-width:620px}.access-table-wrap{overflow-x:auto}.header-account-actions{display:none}}
+
+/* Responsive governance + unified dashboard refinement */
+.access-invite-card{margin-bottom:14px}
+.access-invite-form{display:grid;grid-template-columns:1fr 1.2fr .8fr auto;gap:10px;align-items:end}
+.access-invite-form label,.access-role-form{display:grid;gap:6px}
+.access-invite-form label>span{font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--muted)}
+.access-invite-form input,.access-invite-form select,.access-role-form select{width:100%;min-height:42px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff;color:var(--ink)}
+.access-role-form{grid-template-columns:minmax(110px,1fr) auto;align-items:center}
+.access-role-form .btn{min-height:38px;padding:8px 12px;font-size:10px}
+.access-person small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+.access-role-list{display:grid;gap:0}
+.access-role-item{padding:13px 0;border-bottom:1px solid #edf0ef}
+.access-role-item:last-child{border-bottom:0}
+.access-role-item strong{font-size:12px}
+.access-role-item p{margin:4px 0 0;color:var(--muted);font-size:10px;line-height:1.45}
+.access-note{margin-top:15px;padding:13px;border-radius:12px;background:#f3f7f5;border:1px solid var(--line)}
+.access-note strong{font-size:10px;color:var(--brand-dark)}
+.access-note p{margin:5px 0 0;color:var(--muted);font-size:10px;line-height:1.5}
+.dashboard-shell{display:grid;grid-template-columns:238px minmax(0,1fr)}
+.dashboard-sidebar{grid-column:1;grid-row:1}
+.dashboard-main{grid-column:2;grid-row:1}
+@media(max-width:1000px){
+ .dashboard-shell{grid-template-columns:210px minmax(0,1fr)}
+ .dashboard-main{padding:25px 22px 50px}
+ .access-invite-form{grid-template-columns:1fr 1fr}
+ .access-invite-form .btn{width:100%}
+}
+@media(max-width:850px){
+ .dashboard-shell{display:block}
+ .dashboard-sidebar{display:flex;gap:10px;align-items:center;overflow-x:auto;position:static}
+ .dashboard-nav-group{display:contents}
+ .dashboard-nav-group>span{display:none}
+ .dashboard-nav-link{flex:0 0 auto}
+ .dashboard-main{padding:22px 16px 44px}
+}
+@media(max-width:600px){
+ .dashboard-main{padding:18px 13px 36px}
+ .dashboard-topbar h1{font-size:29px}
+ .dashboard-topbar p{font-size:12px}
+ .dashboard-section{padding:16px;border-radius:14px}
+ .dashboard-section-head{display:block}
+ .dashboard-section-head .text-link{display:inline-block;margin-top:10px}
+ .access-invite-form{grid-template-columns:1fr}
+ .access-role-form{grid-template-columns:1fr}
+ .access-role-form .btn{width:100%}
+ .access-table{min-width:680px}
+ .dashboard-stat{padding:15px}
+ .dashboard-action-card{min-height:74px}
+}
+@media(min-width:851px){
+ .dashboard-sidebar{grid-column:1;grid-row:1}
+ .dashboard-main{grid-column:2}
+}
