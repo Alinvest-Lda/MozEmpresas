@@ -20,13 +20,13 @@ export function AuthForm({ action, mode, next }: Props) {
         <label htmlFor="userType">Tipo de conta</label>
         <select id="userType" name="userType" defaultValue="" required>
           <option value="" disabled>Seleccione uma opção</option>
-          <option value="empresa">Representante de empresa</option>
-          <option value="profissional">Profissional / Prestador</option>
+          <option value="empresa">Empresa / Prestador</option>
+          <option value="organizacao">Organização / Comprador</option>
         </select>
         <small className="muted">
           {signup
-            ? "Escolha como irá utilizar o MozEmpresas."
-            : "Seleccione o mesmo tipo usado no registo desta conta."}
+            ? "Escolha como irá participar no ecossistema MozEmpresas."
+            : "Seleccione o mesmo tipo de conta usado no registo desta conta."}
         </small>
       </div>
 
