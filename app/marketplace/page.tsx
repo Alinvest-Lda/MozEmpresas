@@ -6,6 +6,15 @@ import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-s
 
 const types = [["PRODUCT", "Produtos"], ["SERVICE", "Serviços"]] as const;
 
+const discoveryCategories = [
+  ["Tecnologia & Software", "Soluções digitais, software, equipamentos e suporte.", "01"],
+  ["Construção & Engenharia", "Materiais, obras, projectos e serviços técnicos.", "02"],
+  ["Consultoria & Serviços", "Consultoria empresarial, financeira, jurídica e operacional.", "03"],
+  ["Logística & Transportes", "Transporte, distribuição, armazenagem e apoio logístico.", "04"],
+  ["Recursos Humanos", "Formação, recrutamento e soluções para equipas.", "05"],
+  ["Equipamentos & Fornecimento", "Equipamentos, consumíveis e fornecimento empresarial.", "06"],
+] as const;
+
 type Listing = {
   id: string;
   title: string;
@@ -89,84 +98,135 @@ export default async function Marketplace({
     error = true;
   }
 
-  if (!signedIn) {
-    return (
-      <main className="directory-page marketplace-public-page">
-        <div className="container">
-          <section className="directory-hero marketplace-landing-hero">
-            <div className="directory-hero-copy">
-              <span className="eyebrow">Produtos e serviços</span>
-              <h1>Um espaço comercial para descobrir fornecedores e soluções.</h1>
-              <p>O público visitante conhece o mercado. As empresas registadas acedem ao directório completo, publicam ofertas e desenvolvem relações comerciais dentro da plataforma.</p>
-              <div className="directory-empty-actions">
-                <Link href="/registo" className="btn primary">Registar empresa</Link>
-                <Link href="/login" className="btn">Entrar na plataforma</Link>
-              </div>
-            </div>
-            <div className="directory-side-card">
-              <span className="eyebrow">Área exclusiva</span>
-              <h3>Directório de produtos e serviços</h3>
-              <p>Pesquise, compare e consulte ofertas publicadas pela comunidade empresarial depois de iniciar sessão.</p>
-              <strong>Para empresas registadas</strong>
-            </div>
-          </section>
-
-          <DirectoryAdSlider ads={billboardAds} />
-
-          <section className="directory-featured marketplace-public-grid">
-            <div className="directory-section-head">
-              <div><span className="eyebrow">Como funciona</span><h2>Descoberta aberta, relacionamento dentro da comunidade.</h2></div>
-            </div>
-            <div className="directory-featured-grid">
-              <article className="directory-featured-card"><span className="directory-sponsored-label">01</span><h3>Visibilidade</h3><p>Empresas podem promover produtos, serviços e campanhas através de posições publicitárias.</p></article>
-              <article className="directory-featured-card"><span className="directory-sponsored-label">02</span><h3>Directório</h3><p>O catálogo completo é uma funcionalidade da comunidade registada.</p></article>
-              <article className="directory-featured-card"><span className="directory-sponsored-label">03</span><h3>Negócio</h3><p>Os membros podem avançar para contactos, oportunidades e funcionalidades comerciais futuras.</p></article>
-            </div>
-          </section>
-        </div>
-      </main>
-    );
-  }
-
   const hasFilters = Boolean(q || location || (type && type !== "all"));
   const resultLabel = listings.length === 1 ? "oferta encontrada" : "ofertas encontradas";
 
   return (
-    <main className="directory-page">
+    <main className="directory-page marketplace-page">
       <div className="container">
-        <section className="directory-hero">
-          <div className="directory-hero-copy">
-            <span className="eyebrow">Área da comunidade empresarial</span>
-            <h1>Encontre produtos e serviços para fazer negócio.</h1>
-            <p>Explore ofertas publicadas por empresas registadas no MozEmpresas e avance para o fornecedor.</p>
-          </div>
-          <div className="directory-search-panel">
-            <form className="directory-search marketplace-search" action="/marketplace">
-              <label className="directory-search-field directory-search-keyword"><span>O que procura?</span><div><b>⌕</b><input name="q" defaultValue={q} placeholder="Produto, serviço ou palavra-chave" /></div></label>
-              <label className="directory-search-field"><span>Tipo</span><div><b>◈</b><select name="type" defaultValue={type || "all"}><option value="all">Produtos e serviços</option>{types.map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></div></label>
-              <label className="directory-search-field"><span>Onde?</span><div><b>⌖</b><input name="location" defaultValue={location} placeholder="Província ou localização" /></div></label>
-              <button className="btn primary directory-search-button">Pesquisar</button>
+        <section className="marketplace-discovery-hero">
+          <div className="marketplace-hero-copy">
+            <span className="eyebrow">Produtos & serviços</span>
+            <h1>Descubra o que as empresas em Moçambique têm para oferecer.</h1>
+            <p>Encontre fornecedores, soluções e oportunidades comerciais num único espaço. Pesquise primeiro; aprofunde a relação com empresas registadas.</p>
+            <form className="marketplace-main-search" action="/marketplace">
+              <div className="marketplace-main-search-input">
+                <span>⌕</span>
+                <input name="q" defaultValue={q} placeholder="O que procura para o seu negócio?" />
+              </div>
+              <select name="type" defaultValue={type || "all"} aria-label="Tipo de oferta">
+                <option value="all">Produtos e serviços</option>
+                {types.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+              </select>
+              <button className="btn primary">Pesquisar →</button>
             </form>
-            {hasFilters && <Link href="/marketplace" className="directory-clear">Limpar pesquisa</Link>}
+            <div className="marketplace-quick-links">
+              <span>Procure rapidamente:</span>
+              <Link href="/marketplace?type=PRODUCT">Produtos</Link>
+              <Link href="/marketplace?type=SERVICE">Serviços</Link>
+              <Link href="/empresas">Fornecedores</Link>
+            </div>
+          </div>
+          <div className="marketplace-hero-panel">
+            <span className="marketplace-panel-kicker">Ecossistema comercial</span>
+            <strong>3 formas de descobrir oportunidades</strong>
+            <div className="marketplace-panel-item"><b>01</b><span>Produtos e serviços publicados</span></div>
+            <div className="marketplace-panel-item"><b>02</b><span>Empresas e fornecedores</span></div>
+            <div className="marketplace-panel-item"><b>03</b><span>Necessidades e oportunidades empresariais</span></div>
           </div>
         </section>
 
         <DirectoryAdSlider ads={billboardAds} />
 
-        <section className="directory-discovery marketplace-shortcuts">
-          <div className="directory-section-head"><div><span className="eyebrow">Exploração rápida</span><h2>Procure por tipo de oferta.</h2></div><span className="directory-section-note">Directório para membros</span></div>
-          <div className="directory-category-list">
-            <Link href="/marketplace" className={!type || type === "all" ? "active" : ""}>Todos <span>→</span></Link>
-            {types.map(([value,label])=><Link key={value} href={"/marketplace?type="+value} className={type===value?"active":""}>{label}<span>→</span></Link>)}
+        <section className="marketplace-section marketplace-categories">
+          <div className="marketplace-section-head">
+            <div>
+              <span className="eyebrow">Explore por categoria</span>
+              <h2>Comece pelo que o seu negócio precisa.</h2>
+            </div>
+            <span className="marketplace-section-note">Descoberta rápida</span>
+          </div>
+          <div className="marketplace-category-grid">
+            {discoveryCategories.map(([title, description, number]) => (
+              <Link href={"/empresas?q=" + encodeURIComponent(title.split(" & ")[0])} className="marketplace-category-card" key={title}>
+                <span className="marketplace-category-number">{number}</span>
+                <span className="marketplace-category-arrow">↗</span>
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </Link>
+            ))}
           </div>
         </section>
 
-        <section className="directory-results">
-          <div className="directory-results-head"><div><span className="eyebrow">{hasFilters?"Resultados da pesquisa":"Ofertas publicadas"}</span><h2>{hasFilters?"Ofertas que correspondem à sua pesquisa":"Produtos e serviços disponíveis"}</h2></div><div className="directory-results-summary"><strong>{listings.length}</strong><span>{resultLabel}</span></div></div>
-          {hasFilters && <div className="directory-active-filters">{q&&<span>Pesquisa: <b>{q}</b></span>}{location&&<span>Localização: <b>{location}</b></span>}{type&&type!=="all"&&<span>Tipo: <b>{types.find(([value])=>value===type)?.[1]||type}</b></span>}<Link href="/marketplace">× Limpar</Link></div>}
-          {error&&<div className="notice">Algumas funções comerciais estão temporariamente indisponíveis.</div>}
-          {listings.length>0 ? <div className="directory-results-layout"><div className="directory-results-list">{listings.map((item,index)=><Link href={"/marketplace/"+item.id} className="directory-business-card marketplace-result-card" key={item.id}><div className="directory-business-number">{String(index+1).padStart(2,"0")}</div><div className="marketplace-type-icon">{item.type==="PRODUCT"?"P":"S"}</div><div className="directory-business-content"><div className="directory-business-title"><div><h3>{item.title}</h3><span>{item.type==="PRODUCT"?"Produto":"Serviço"}</span></div><b>→</b></div>{item.location&&<div className="directory-business-location">⌖ {item.location}</div>}{item.business_id&&<div className="listing-provider">Fornecedor: {item.business_id}</div>}<p>{item.description}</p><div className="marketplace-result-bottom"><strong>{item.price!=null?`${item.price} ${item.currency||"MZN"}`:"Sob consulta"}</strong><span>Ver oferta →</span></div></div></Link>)}</div><aside className="directory-side-card"><span className="eyebrow">Para empresas</span><h3>Apresente os seus produtos e serviços.</h3><p>Publique ofertas, acompanhe a presença comercial e prepare-se para futuras funcionalidades de negociação.</p><Link href="/dashboard" className="btn primary full">Gerir presença →</Link></aside></div> : <div className="directory-empty"><div className="directory-empty-icon">◇</div><span className="eyebrow">Sem resultados</span><h3>Não encontrámos ofertas para esta pesquisa.</h3><p>Experimente retirar um filtro ou publicar uma nova oferta.</p><div className="directory-empty-actions"><Link href="/marketplace" className="btn">Ver todas</Link><Link href="/dashboard" className="btn primary">Publicar oferta</Link></div></div>}
+        <section className="marketplace-commercial-strip">
+          <div>
+            <span className="eyebrow">Publicidade empresarial</span>
+            <h2>Coloque a sua oferta onde os compradores estão a descobrir.</h2>
+            <p>Empresas podem promover produtos, serviços e campanhas em posições de destaque no ecossistema MozEmpresas.</p>
+          </div>
+          <Link href="/publicidade" className="btn primary">Conhecer publicidade →</Link>
         </section>
+
+        <section className="marketplace-section marketplace-needs">
+          <div className="marketplace-section-head">
+            <div>
+              <span className="eyebrow">Além do catálogo</span>
+              <h2>As empresas também procuram soluções.</h2>
+            </div>
+            <Link href="/oportunidades" className="marketplace-text-link">Ver oportunidades →</Link>
+          </div>
+          <div className="marketplace-needs-grid">
+            <article><span>NECESSIDADE EMPRESARIAL</span><h3>Encontre quem pode resolver um problema específico.</h3><p>O MozEmpresas pode ligar necessidades empresariais a fornecedores e prestadores adequados.</p><Link href="/oportunidades">Explorar oportunidades →</Link></article>
+            <article><span>FORNECEDORES</span><h3>Apresente a sua capacidade a outras empresas.</h3><p>Construa uma presença comercial com produtos, serviços, localização e contactos.</p><Link href="/registo">Registar empresa →</Link></article>
+          </div>
+        </section>
+
+        {signedIn ? (
+          <section className="marketplace-section marketplace-results-section">
+            <div className="marketplace-section-head">
+              <div>
+                <span className="eyebrow">{hasFilters ? "Resultados" : "Ofertas recentes"}</span>
+                <h2>{hasFilters ? "Ofertas que correspondem à sua pesquisa." : "O que está a ser publicado."}</h2>
+              </div>
+              <div className="directory-results-summary"><strong>{listings.length}</strong><span>{resultLabel}</span></div>
+            </div>
+            <form className="marketplace-filter-bar" action="/marketplace">
+              <input name="q" defaultValue={q} placeholder="Palavra-chave" />
+              <input name="location" defaultValue={location} placeholder="Localização" />
+              <select name="type" defaultValue={type || "all"}><option value="all">Todos</option>{types.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
+              <button className="btn primary">Filtrar</button>
+              {hasFilters && <Link href="/marketplace" className="btn">Limpar</Link>}
+            </form>
+            {error && <div className="notice">Algumas funções comerciais estão temporariamente indisponíveis.</div>}
+            {listings.length > 0 ? (
+              <div className="marketplace-results-gallery">
+                {listings.map((item, index) => (
+                  <Link href={"/marketplace/" + item.id} className="marketplace-offer-card" key={item.id}>
+                    <div className="marketplace-offer-visual"><span>{item.type === "PRODUCT" ? "P" : "S"}</span><small>{item.type === "PRODUCT" ? "PRODUTO" : "SERVIÇO"}</small></div>
+                    <div className="marketplace-offer-body">
+                      <div className="marketplace-offer-meta"><span>{String(index + 1).padStart(2, "0")}</span>{item.location && <span>⌖ {item.location}</span>}</div>
+                      <h3>{item.title}</h3>
+                      {item.business_id && <p className="marketplace-provider">Fornecedor: {item.business_id}</p>}
+                      <p>{item.description}</p>
+                      <div className="marketplace-offer-footer"><strong>{item.price != null ? item.price + " " + (item.currency || "MZN") : "Sob consulta"}</strong><span>Ver oferta →</span></div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="directory-empty"><div className="directory-empty-icon">◇</div><span className="eyebrow">Sem resultados</span><h3>Não encontrámos ofertas para esta pesquisa.</h3><p>Experimente alterar os filtros ou publicar uma nova oferta.</p><div className="directory-empty-actions"><Link href="/marketplace" className="btn">Ver todas</Link><Link href="/dashboard" className="btn primary">Publicar oferta</Link></div></div>
+            )}
+          </section>
+        ) : (
+          <section className="marketplace-member-gate">
+            <div>
+              <span className="eyebrow">Catálogo da comunidade</span>
+              <h2>Quer ver ofertas publicadas por empresas?</h2>
+              <p>Registe-se ou entre na sua conta para aceder ao directório completo de produtos e serviços e aos contactos comerciais da comunidade.</p>
+            </div>
+            <div className="marketplace-gate-actions"><Link href="/registo" className="btn primary">Registar empresa</Link><Link href={"/login?next=" + encodeURIComponent("/marketplace")} className="btn">Entrar</Link></div>
+          </section>
+        )}
       </div>
     </main>
   );
