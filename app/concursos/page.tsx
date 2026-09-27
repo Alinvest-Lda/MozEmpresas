@@ -22,11 +22,11 @@ type Contest = {
 export default async function Concursos({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; category?: string }>;
 }) {
   const params = await searchParams;
   const q = params.q?.trim() || "";
-  const status = params.status?.trim() || "";
+  const category = params.category?.trim() || "";
 
   let data: Contest[] = [];
   let error = false;
@@ -36,7 +36,7 @@ export default async function Concursos({
     let query = supabase
       .from("contests")
       .select("id,title,slug,description,status,category,closes_at")
-      .in("status", ["PUBLISHED", "OPEN", "CLOSED", "EVALUATION", "RESULTS"])
+      .eq("status", "OPEN")
       .order("created_at", { ascending: false })
       .limit(48);
 
@@ -44,7 +44,7 @@ export default async function Concursos({
       const safe = q.replace(/[%_,()']/g, " ").replace(/\s+/g, " ").trim();
       if (safe) query = query.or(`title.ilike.%${safe}%,description.ilike.%${safe}%,category.ilike.%${safe}%`);
     }
-    if (status && status !== "all") query = query.eq("status", status);
+    if (category) query = query.eq("category", category);
 
     const result = await query;
     data = (result.data ?? []) as Contest[];
@@ -53,7 +53,7 @@ export default async function Concursos({
     error = true;
   }
 
-  const hasFilters = Boolean(q || (status && status !== "all"));
+  const hasFilters = Boolean(q || category);
   const resultLabel = data.length === 1 ? "concurso encontrado" : "concursos encontrados";
 
   return (
@@ -79,14 +79,8 @@ export default async function Concursos({
                 </div>
               </label>
               <label className="directory-search-field">
-                <span>Estado</span>
-                <div>
-                  <b aria-hidden="true">◉</b>
-                  <select name="status" defaultValue={status || "all"}>
-                    <option value="all">Todos os estados</option>
-                    {Object.entries(statuses).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
-                  </select>
-                </div>
+                <span>Categoria</span>
+                <div><b aria-hidden="true">◈</b><input name="category" defaultValue={category} placeholder="Sector ou categoria" /></div>
               </label>
               <div className="directory-search-context">
                 <span>Foco</span>
@@ -120,7 +114,7 @@ export default async function Concursos({
           <div className="directory-results-head">
             <div>
               <span className="eyebrow">{hasFilters ? "Resultados da pesquisa" : "Processos publicados"}</span>
-              <h2>{hasFilters ? "Concursos que correspondem à sua pesquisa" : "Concursos e processos disponíveis"}</h2>
+              <h2>{hasFilters ? "Concursos abertos que correspondem à sua pesquisa" : "Concursos actualmente abertos"}</h2>
             </div>
             <div className="directory-results-summary">
               <strong>{data.length}</strong>
@@ -131,7 +125,7 @@ export default async function Concursos({
           {hasFilters && (
             <div className="directory-active-filters">
               {q && <span>Pesquisa: <b>{q}</b></span>}
-              {status && status !== "all" && <span>Estado: <b>{statuses[status] || status}</b></span>}
+              {category && <span>Categoria: <b>{category}</b></span>}
               <Link href="/concursos">× Limpar</Link>
             </div>
           )}
@@ -149,7 +143,7 @@ export default async function Concursos({
                       <div className="directory-business-title">
                         <div>
                           <h3>{item.title}</h3>
-                          <span>{statuses[item.status] || item.status}</span>
+                          <span>Aberto</span>
                         </div>
                         <b>→</b>
                       </div>
