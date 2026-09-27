@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
+import { PartnerSpotlight } from "@/components/partner-spotlight";
 
 const labels: Record<string, string> = {
   CALL: "Chamadas",
@@ -137,23 +138,23 @@ export default async function Oportunidades({
         <section className="opportunities-hero">
           <div className="opportunities-hero-copy">
             <span className="eyebrow">Ecossistema empresarial de Moçambique</span>
-            <h1>Oportunidades para <em>crescer, financiar, conectar e participar.</em></h1>
+            <h1>Encontre a próxima <em>oportunidade para avançar.</em></h1>
             <p>
-              Descubra chamadas, financiamentos, parcerias, capacitações e eventos publicados por organizações que procuram empresas, projectos e pessoas para participar.
+              Chamadas, financiamentos, parcerias, capacitações e eventos reunidos num só lugar para ajudar empresas, empreendedores e profissionais a encontrar o próximo passo.
             </p>
             <div className="opportunity-hero-links">
               <a href="#explorar">Explorar oportunidades ↓</a>
-              <Link href="/dashboard">Publicar uma oportunidade →</Link>
+              <Link href="/publicar-oportunidade">Publicar uma oportunidade →</Link>
             </div>
           </div>
 
           <div className="opportunities-hero-panel">
-            <span>O que está a acontecer agora</span>
+            <span>Panorama actual</span>
             <strong>{data.length}</strong>
-            <p>{resultLabel} no ecossistema</p>
+            <p>{resultLabel} disponíveis para explorar</p>
             <div className="opportunity-mini-stats">
-              <div><b>{activeCategories.length}</b><span>categorias activas</span></div>
-              <div><b>{data.filter((item) => (daysUntil(item.closes_at) ?? 99) <= 7 && (daysUntil(item.closes_at) ?? -1) >= 0).length}</b><span>fecham em 7 dias</span></div>
+              <div><b>{activeCategories.length}</b><span>dos 5 tipos activos</span></div>
+              <div><b>{data.filter((item) => (daysUntil(item.closes_at) ?? 99) <= 7 && (daysUntil(item.closes_at) ?? -1) >= 0).length}</b><span>com prazo até 7 dias</span></div>
             </div>
           </div>
         </section>
@@ -188,7 +189,7 @@ export default async function Oportunidades({
         <section className="opportunity-types-section">
           <div className="opportunity-section-heading">
             <div><span className="eyebrow">Encontre pelo que procura</span><h2>Uma porta de entrada para cada necessidade.</h2></div>
-            <p>Não sabe por onde começar? Escolha o tipo de oportunidade que procura.</p>
+            <p>Escolha uma categoria e vá directamente para chamadas, capital, parceiros, aprendizagem ou eventos.</p>
           </div>
           <div className="opportunity-type-grid">
             {Object.entries(labels).map(([value, label]) => {
@@ -207,7 +208,7 @@ export default async function Oportunidades({
         {featured.length > 0 && !hasFilters && (
           <section className="opportunity-featured-section">
             <div className="opportunity-section-heading">
-              <div><span className="eyebrow">Agora em destaque</span><h2>Oportunidades que merecem atenção.</h2></div>
+              <div><span className="eyebrow">Selecção actual</span><h2>Veja primeiro o que pode fazer sentido para si.</h2></div>
               <Link href="/oportunidades?sort=deadline">Ver por prazo →</Link>
             </div>
             <div className="opportunity-featured-grid">
@@ -229,7 +230,7 @@ export default async function Oportunidades({
 
         <section className="opportunity-results-section">
           <div className="opportunity-section-heading results-heading">
-            <div><span className="eyebrow">{hasFilters ? "Resultados filtrados" : "Todas as oportunidades"}</span><h2>{hasFilters ? "Oportunidades encontradas" : "Explore o que está disponível."}</h2></div>
+            <div><span className="eyebrow">{hasFilters ? "Pesquisa refinada" : "Oportunidades disponíveis"}</span><h2>{hasFilters ? "Resultados para a sua pesquisa." : "Explore oportunidades abertas."}</h2></div>
             <div className="opportunity-sort"><span>{data.length} {resultLabel}</span><Link href={"/oportunidades?" + new URLSearchParams({ ...(q ? {q} : {}), ...(type ? {type} : {}), ...(location ? {location} : {}), ...(deadline ? {deadline} : {}), sort: "deadline" }).toString()}>Ordenar por prazo ↓</Link></div>
           </div>
 
@@ -276,8 +277,8 @@ export default async function Oportunidades({
         </section>
 
         <section className="opportunity-publisher-cta">
-          <div><span className="eyebrow inverse-eyebrow">Para organizações</span><h2>Tem uma chamada, programa ou evento para divulgar?</h2><p>Publique no MozEmpresas e coloque a sua oportunidade diante de empresas, empreendedores e profissionais que procuram novas possibilidades.</p></div>
-          <Link href="/dashboard" className="btn light-btn">Publicar oportunidade →</Link>
+          <div><span className="eyebrow inverse-eyebrow">Para organizações</span><h2>Tem uma oportunidade para colocar no mercado?</h2><p>Publique chamadas, financiamentos, parcerias, capacitações ou eventos no MozEmpresas. A página de publicação foi preparada para evoluir para revisão, métricas, pagamentos e formatos de maior visibilidade.</p></div>
+          <Link href="/publicar-oportunidade" className="btn light-btn">Publicar oportunidade →</Link>
         </section>
       </div>
     </main>
