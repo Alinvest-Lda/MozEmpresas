@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { signOut } from "@/lib/auth/actions";
 
 const links = [
   ["/empresas", "Empresas"],
@@ -52,7 +53,7 @@ export function Header() {
           })}
         </nav>
         <div className="header-actions">
-          {signedIn ? <Link className="btn primary" href="/dashboard">Painel</Link> : <>
+          {signedIn ? <div className="header-account-actions"><Link className="btn primary" href="/dashboard">Painel</Link><form action={signOut}><button type="submit" className="btn header-signout">Sair</button></form></div> : <>
             <Link className="btn ghost desktop-only" href="/login">Entrar</Link>
             <Link className="btn primary desktop-register" href="/registo">Registar empresa</Link>
           </>}
@@ -65,7 +66,7 @@ export function Header() {
                 const active = pathname === href || pathname.startsWith(href + "/");
                 return <Link key={href} href={href} onClick={() => setOpen(false)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>{label}</Link>;
               })}
-              {signedIn ? <Link href="/dashboard" onClick={() => setOpen(false)}>Painel do utilizador</Link> : <>
+              {signedIn ? <><Link href="/dashboard" onClick={() => setOpen(false)}>Painel do utilizador</Link><form action={signOut}><button type="submit" className="mobile-menu-logout">Sair da conta</button></form></> : <>
                 <Link href="/login" onClick={() => setOpen(false)}>Entrar</Link>
                 <Link className="mobile-menu-register" href="/registo" onClick={() => setOpen(false)}>Registar empresa</Link>
               </>}
