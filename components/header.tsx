@@ -10,7 +10,7 @@ const links = [
   ["/marketplace", "Produtos e serviços"],
   ["/concursos", "Concursos"],
   ["/oportunidades", "Oportunidades"],
-];
+] as const;
 
 export function Header() {
   const pathname = usePathname();
@@ -66,7 +66,7 @@ export function Header() {
 
         <nav className="nav" aria-label="Navegação principal">
           {links.map(([href, label]) => (
-            <Link key={href} href={href} className={pathname.startsWith(href) ? "active" : ""}>
+            <Link key={href} href={href} className={pathname === href || pathname.startsWith(href + "/") ? "active" : ""} aria-current={pathname === href || pathname.startsWith(href + "/") ? "page" : undefined}>
               {label}
             </Link>
           ))}
@@ -95,9 +95,10 @@ export function Header() {
 
             {open && (
               <div className="mobile-menu-panel">
-                {links.map(([href, label]) => (
-                  <Link key={href} href={href} onClick={() => setOpen(false)}>{label}</Link>
-                ))}
+                {links.map(([href, label]) => {
+                  const active = pathname === href || pathname.startsWith(href + "/");
+                  return <Link key={href} href={href} onClick={() => setOpen(false)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>{label}</Link>;
+                })}
                 {signedIn ? (
                   <Link href="/dashboard" onClick={() => setOpen(false)}>Painel do utilizador</Link>
                 ) : (
