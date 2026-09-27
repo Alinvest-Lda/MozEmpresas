@@ -130,7 +130,6 @@ export default async function Oportunidades({
   const hasFilters = Boolean(q || location || (type && type !== "all") || deadline);
   const resultLabel = data.length === 1 ? "oportunidade encontrada" : "oportunidades encontradas";
   const featured = data.slice(0, 3);
-  const activeCategories = Object.keys(labels).filter((key) => data.some((item) => item.type === key));
 
   return (
     <main className="opportunities-page">
