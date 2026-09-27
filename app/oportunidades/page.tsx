@@ -148,14 +148,7 @@ export default async function Oportunidades({
             </div>
           </div>
 
-          <div className="opportunities-hero-panel">
-            <span>Panorama actual</span>
-            <strong>{data.length}</strong>
-            <p>{resultLabel} disponíveis para explorar</p>
-            <div className="opportunity-mini-stats">
-              <div><b>{activeCategories.length}</b><span>dos 5 tipos activos</span></div>
-              <div><b>{data.filter((item) => (daysUntil(item.closes_at) ?? 99) <= 7 && (daysUntil(item.closes_at) ?? -1) >= 0).length}</b><span>com prazo até 7 dias</span></div>
-            </div>
+v>
           </div>
         </section>
 
