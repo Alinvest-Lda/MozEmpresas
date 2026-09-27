@@ -55,10 +55,9 @@ export function AuthForm({ action, mode, next }: Props) {
       </div>
 
       {!signup && (
-        <label style={{ display: "flex", gap: 8, alignItems: "center", margin: "4px 0 16px", cursor: "pointer" }}>
-          <input type="checkbox" defaultChecked aria-label="Manter sessão iniciada" />
-          <span>Manter sessão iniciada neste dispositivo</span>
-        </label>
+        <p className="muted" style={{ margin: "4px 0 16px", fontSize: 13 }}>
+          A sessão será mantida neste dispositivo até sair da conta.
+        </p>
       )}
 
       {state.error && (
