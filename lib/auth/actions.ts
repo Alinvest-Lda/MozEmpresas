@@ -38,7 +38,12 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
     return { error: "Indique um email válido e uma password com pelo menos 8 caracteres." };
   }
 
-  const supabase = await createClient();
+  let supabase;
+  try {
+    supabase = await createClient();
+  } catch {
+    return { error: "O serviço de autenticação está temporariamente indisponível. Tente novamente mais tarde." };
+  }
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
@@ -66,7 +71,12 @@ export async function signUp(_state: AuthState, formData: FormData): Promise<Aut
     return { error: "Preencha nome, email e uma password com pelo menos 8 caracteres." };
   }
 
-  const supabase = await createClient();
+  let supabase;
+  try {
+    supabase = await createClient();
+  } catch {
+    return { error: "O serviço de autenticação está temporariamente indisponível. Tente novamente mais tarde." };
+  }
   const requestHeaders = await headers();
   const origin =
     requestHeaders.get("origin") ||
@@ -102,7 +112,11 @@ export async function signUp(_state: AuthState, formData: FormData): Promise<Aut
 }
 
 export async function signOut() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  try {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+  } catch {
+    // Continue to the public portal even if the auth service is unavailable.
+  }
   redirect("/");
 }
