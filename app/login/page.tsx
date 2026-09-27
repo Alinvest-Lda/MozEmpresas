@@ -16,7 +16,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
         <section className="auth-card">
           <span className="eyebrow">Acesso à plataforma</span>
           <h2>Entrar no MozEmpresas</h2>
-          <p className="muted">Aceda à sua área empresarial e continue de onde ficou.</p>
+          <p className="muted">Seleccione o tipo de conta, entre com as suas credenciais e continue de onde ficou. A sessão permanece activa neste dispositivo até sair.</p>
           {params.registered === "1" && <p className="notice" style={{ marginTop: 18 }}>Conta criada. Se a confirmação de email estiver activa, confirme o email antes de entrar.</p>}
           <AuthForm action={signIn} mode="login" next={params.next} />
           <p className="auth-switch muted">Ainda não tem conta? <Link href="/registo">Criar conta</Link></p>
