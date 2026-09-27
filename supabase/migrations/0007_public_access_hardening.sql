@@ -69,3 +69,7 @@ create policy "contest owners read applications"
 -- Trigger functions are internal implementation details, not public API endpoints.
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
 grant execute on function public.handle_new_user() to service_role;
+
+
+revoke select on public.listings, public.listing_media from anon;
+revoke select on public.contest_requirements from anon;
