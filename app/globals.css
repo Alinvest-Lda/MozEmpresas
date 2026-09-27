@@ -1645,3 +1645,88 @@ button,input,select,textarea{max-width:100%}
   .auth-shell .auth-card{padding:30px 22px 34px}
   .auth-card h2{font-size:29px}
 }
+
+
+/* Contact page refinement */
+.contact-hero{
+  padding:52px 0 34px;
+  border-bottom:0;
+  grid-template-columns:minmax(0,1fr) 340px;
+}
+.contact-hero h1{max-width:780px}
+.contact-hero-side{
+  align-self:center;
+  background:#f5f8f7;
+  border:1px solid var(--line);
+  border-left:3px solid var(--brand);
+  border-radius:14px;
+  padding:18px 20px;
+}
+.contact-topics{
+  gap:10px;
+  border-bottom:0;
+}
+.contact-topic{
+  background:#f7f9f8;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:20px;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+}
+.contact-topic + .contact-topic{
+  border-left:1px solid var(--line);
+  padding-left:20px;
+}
+.contact-topic:hover{
+  transform:translateY(-2px);
+  border-color:#a9bfba;
+  box-shadow:0 10px 26px #172c2a0d;
+}
+.contact-layout{
+  grid-template-columns:minmax(0,.82fr) minmax(440px,1.18fr);
+  gap:34px;
+  padding:46px 0 54px;
+}
+.contact-form{
+  border-radius:20px;
+  padding:34px;
+  background:#fff;
+}
+.contact-form-heading h2{font-size:34px}
+.contact-company{
+  border-radius:20px;
+  margin-bottom:60px;
+}
+@media(max-width:900px){
+  .contact-hero{grid-template-columns:1fr;gap:22px}
+  .contact-hero-side{max-width:none}
+  .contact-layout{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .contact-hero{padding:38px 0 28px}
+  .contact-hero-side{padding:16px}
+  .contact-topics{gap:8px}
+  .contact-topic{padding:17px}
+  .contact-topic + .contact-topic{padding-left:17px}
+  .contact-layout{padding:32px 0 42px;gap:28px}
+}
+
+/* Auth brand panel: remove decorative tag and lift the useful content */
+.auth-brand-panel{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.auth-brand-panel h1{
+  margin-top:20px;
+}
+.auth-brand-panel > p{
+  margin-top:16px;
+}
+.auth-points{
+  margin-top:26px;
+}
+@media(max-width:800px){
+  .auth-brand-panel{justify-content:flex-start}
+  .auth-brand-panel h1{margin-top:34px}
+}
