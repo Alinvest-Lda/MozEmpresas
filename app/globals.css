@@ -969,3 +969,5 @@
   .directory-ad-copy h2{height:60px;font-size:28px}
   .directory-ad-copy p{height:36px;font-size:11px}
 }
+
+.mobile-menu-panel a.active{background:var(--brand-soft);color:var(--brand);font-weight:800}
