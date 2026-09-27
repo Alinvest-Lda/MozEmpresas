@@ -19,8 +19,8 @@ const ads = [
   {
     label: "PUBLICIDADE",
     title: "Promova uma campanha, evento ou oportunidade.",
-    text: "Use posições estratégicas ao longo do portal.",
-    action: "Publicitar",
+    text: "Use uma posição estratégica no portal para chegar ao público empresarial.",
+    action: "Publicitar no portal",
   },
 ];
 
@@ -37,20 +37,20 @@ export function AdvertisingHero() {
     const timer = window.setInterval(() => {
       setActive((current) => (current + 1) % ads.length);
     }, 5500);
-
     return () => window.clearInterval(timer);
   }, []);
 
   const item = ads[active];
 
   return (
-    <section className="advertising-hero" aria-label="Publicidade em destaque">
+    <section className="advertising-hero" aria-label="Espaço publicitário em destaque">
       <div
         className="advertising-backdrop"
         aria-hidden="true"
         style={{ backgroundImage: `url("${images[active]}")` }}
       />
-      <div className="container">
+      <div className="advertising-overlay" aria-hidden="true" />
+      <div className="container advertising-hero-container">
         <div className="advertising-content">
           <span className="ad-kicker">{item.label}</span>
           <h2>{item.title}</h2>
@@ -59,7 +59,7 @@ export function AdvertisingHero() {
             {item.action} <span>→</span>
           </Link>
         </div>
-        <div className="ad-dots" aria-label="Anúncios">
+        <div className="ad-dots" aria-label="Publicidade em destaque">
           {ads.map((adItem, index) => (
             <button
               key={adItem.title}
