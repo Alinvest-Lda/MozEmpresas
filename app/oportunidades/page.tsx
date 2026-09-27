@@ -143,32 +143,33 @@ export default async function Oportunidades({
 
           {error && <div className="notice">Não foi possível carregar as oportunidades neste momento. Pode continuar a navegar pelo portal.</div>}
 
-          {Object.entries(labels).map(([value, label]) => {
-            const items = data.filter((item) => item.type === value);
-            if (!items.length) return null;
-            return (
-              <section className="opportunity-category-section" id={"categoria-" + value.toLowerCase()} key={value}>
-                <div className="directory-section-head">
-                  <div><span className="eyebrow">Categoria</span><h2>{label}</h2></div>
-                  <span className="directory-section-note">{items.length} {items.length === 1 ? "oportunidade" : "oportunidades"}</span>
-                </div>
-                <div className="directory-results-list">
-                  {items.map((item, index) => (
-                    <Link href={"/oportunidades/" + item.slug} className="directory-business-card opportunity-result-card" key={item.id}>
-                      <div className="directory-business-number">{String(index + 1).padStart(2, "0")}</div>
-                      <div className="opportunity-type-icon">↗</div>
-                      <div className="directory-business-content">
-                        <div className="directory-business-title"><div><h3>{item.title}</h3><span>{label}</span></div><b>→</b></div>
-                        {item.organization && <div className="directory-business-location">{item.organization}{item.location ? " · " + item.location : ""}</div>}
-                        <p>{item.description}</p>
-                        <div className="opportunity-result-bottom"><span>{item.closes_at ? "Prazo: " + new Date(item.closes_at).toLocaleDateString("pt-MZ") : "Sem prazo indicado"}</span><span>Ver oportunidade →</span></div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            );
-          })}
+          {data.length > 0 ? (
+            Object.entries(labels).map(([value, label]) => {
+              const items = data.filter((item) => item.type === value);
+              if (!items.length) return null;
+              return (
+                <section className="opportunity-category-section" id={"categoria-" + value.toLowerCase()} key={value}>
+                  <div className="directory-section-head">
+                    <div><span className="eyebrow">Categoria</span><h2>{label}</h2></div>
+                    <span className="directory-section-note">{items.length} {items.length === 1 ? "oportunidade" : "oportunidades"}</span>
+                  </div>
+                  <div className="directory-results-list">
+                    {items.map((item, index) => (
+                      <Link href={"/oportunidades/" + item.slug} className="directory-business-card opportunity-result-card" key={item.id}>
+                        <div className="directory-business-number">{String(index + 1).padStart(2, "0")}</div>
+                        <div className="opportunity-type-icon">↗</div>
+                        <div className="directory-business-content">
+                          <div className="directory-business-title"><div><h3>{item.title}</h3><span>{label}</span></div><b>→</b></div>
+                          {item.organization && <div className="directory-business-location">{item.organization}{item.location ? " · " + item.location : ""}</div>}
+                          <p>{item.description}</p>
+                          <div className="opportunity-result-bottom"><span>{item.closes_at ? "Prazo: " + new Date(item.closes_at).toLocaleDateString("pt-MZ") : "Sem prazo indicado"}</span><span>Ver oportunidade →</span></div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              );
+            })
           ) : (
             <div className="directory-empty">
               <div className="directory-empty-icon">↗</div>
