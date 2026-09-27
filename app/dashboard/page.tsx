@@ -62,13 +62,13 @@ export default async function Dashboard() {
 
         <div className="dashboard-nav-group">
           <span>Ecossistema</span>
-          <Link className="dashboard-nav-link" href="/marketplace"><i className="nav-dot" />Recomendações</Link>
+          <Link className="dashboard-nav-link" href="/marketplace"><i className="nav-dot" />Recomendações</Link>\n          <Link className="dashboard-nav-link" href="/dashboard/parceiros"><i className="nav-dot" />Parceiros</Link>
         </div>
 
         {platformAccess && (
           <div className="dashboard-nav-group">
             <span>Plataforma</span>
-            <Link className="dashboard-nav-link" href="/dashboard"><i className="nav-dot" />Administração · {platformAccess}</Link>
+            <Link className="dashboard-nav-link" href="/dashboard/admin"><i className="nav-dot" />Administração · {platformAccess}</Link>
           </div>
         )}
 
