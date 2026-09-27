@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { updateBusinessMemberRole } from "@/lib/businesses/access-actions";
+import { updateBusinessMemberRole } from "@/lib/businesses/access-actions";\nimport { inviteBusinessMember } from "@/lib/businesses/invitation-actions";
 
 const roleLabels: Record<string, string> = {
   owner: "Proprietário",
@@ -70,7 +70,7 @@ export default async function AcessosPage() {
           <Link href="/dashboard" className="btn">Voltar ao painel</Link>
         </div>
 
-        <div className="access-layout">
+        <div className="access-layout">\n          <section className="dashboard-section" style={{gridColumn:"1/-1"}}>\n            <div className="dashboard-section-head"><div><span className="dashboard-kicker">Novo acesso</span><h2>Convidar membro</h2><p>Envie um convite para alguém trabalhar em nome de uma empresa.</p></div></div>\n            {businesses?.length ? <form action={inviteBusinessMember} className="toolbar" style={{margin:0}}>\n              <select name="businessId" required aria-label="Empresa">{businesses.map((b)=><option value={b.id} key={b.id}>{b.name}</option>)}</select>\n              <input name="email" type="email" placeholder="email@empresa.co.mz" required aria-label="Email" />\n              <select name="role" defaultValue="operator" aria-label="Função"><option value="admin">Administrador</option><option value="operator">Operador</option><option value="member">Membro</option><option value="viewer">Consulta</option></select>\n              <button className="btn primary">Criar convite</button>\n            </form> : null}\n          </section>
           <section className="dashboard-section">
             <div className="dashboard-section-head"><div><span className="dashboard-kicker">Membros actuais</span><h2>Quem tem acesso</h2><p>O proprietário mantém o controlo da empresa. Os restantes acessos podem evoluir por função.</p></div></div>
             {businesses?.length ? (
