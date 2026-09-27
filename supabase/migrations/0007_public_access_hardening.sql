@@ -47,3 +47,25 @@ create index if not exists contests_public_open_idx
 
 create index if not exists business_promotions_public_idx
   on public.business_promotions(placement, status, starts_at, ends_at, priority desc);
+
+
+-- Tighten application ownership so applicants cannot self-edit workflow status.
+drop policy if exists "applicants manage own applications" on public.contest_applications;
+create policy "applicants read own contest applications"
+  on public.contest_applications for select to authenticated
+  using ((select auth.uid()) = applicant_id);
+create policy "applicants create contest applications"
+  on public.contest_applications for insert to authenticated
+  with check ((select auth.uid()) = applicant_id);
+create policy "applicants delete own contest applications"
+  on public.contest_applications for delete to authenticated
+  using ((select auth.uid()) = applicant_id);
+
+drop policy if exists "contest owners read applications" on public.contest_applications;
+create policy "contest owners read applications"
+  on public.contest_applications for select to authenticated
+  using (exists(select 1 from public.contests c where c.id = contest_id and c.owner_id = (select auth.uid())));
+
+-- Trigger functions are internal implementation details, not public API endpoints.
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+grant execute on function public.handle_new_user() to service_role;
