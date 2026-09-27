@@ -276,6 +276,8 @@ export default async function Oportunidades({
           )}
         </section>
 
+        <PartnerSpotlight />
+
         <section className="opportunity-publisher-cta">
           <div><span className="eyebrow inverse-eyebrow">Para organizações</span><h2>Tem uma oportunidade para colocar no mercado?</h2><p>Publique chamadas, financiamentos, parcerias, capacitações ou eventos no MozEmpresas. A página de publicação foi preparada para evoluir para revisão, métricas, pagamentos e formatos de maior visibilidade.</p></div>
           <Link href="/publicar-oportunidade" className="btn light-btn">Publicar oportunidade →</Link>
