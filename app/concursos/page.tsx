@@ -1,14 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-const statuses: Record<string, string> = {
-  PUBLISHED: "Publicado",
-  OPEN: "Aberto",
-  CLOSED: "Encerrado",
-  EVALUATION: "Em avaliação",
-  RESULTS: "Resultados",
-};
-
 type Contest = {
   id: string;
   title: string;
@@ -95,18 +87,14 @@ export default async function Concursos({
         <section className="directory-discovery">
           <div className="directory-section-head">
             <div>
-              <span className="eyebrow">Pesquisa rápida</span>
-              <h2>Filtre por estado.</h2>
+              <span className="eyebrow">Estado público</span>
+              <h2>Apenas concursos abertos.</h2>
             </div>
-            <span className="directory-section-note">Acompanhe o ciclo do processo</span>
+            <span className="directory-section-note">Avaliações e resultados são internos</span>
           </div>
           <div className="directory-category-list">
-            <Link href="/concursos" className={!status || status === "all" ? "active" : ""}>Todos <span>→</span></Link>
-            {Object.entries(statuses).map(([value, label]) => (
-              <Link key={value} href={"/concursos?status=" + value} className={status === value ? "active" : ""}>
-                {label}<span>→</span>
-              </Link>
-            ))}
+            <Link href="/concursos" className={!category ? "active" : ""}>Todos os concursos abertos <span>→</span></Link>
+            {category && <Link href="/concursos">Limpar categoria <span>×</span></Link>}
           </div>
         </section>
 
