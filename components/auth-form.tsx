@@ -16,19 +16,6 @@ export function AuthForm({ action, mode, next }: Props) {
   return (
     <form action={formAction} style={{ marginTop: 24 }}>
       {next && !signup && <input type="hidden" name="next" value={next} />}
-      <div className="field">
-        <label htmlFor="userType">Tipo de conta</label>
-        <select id="userType" name="userType" defaultValue="" required>
-          <option value="" disabled>Seleccione uma opção</option>
-          <option value="empresa">Empresa / Prestador</option>
-          <option value="organizacao">Organização / Comprador</option>
-        </select>
-        <small className="muted">
-          {signup
-            ? "Escolha como irá participar no ecossistema MozEmpresas."
-            : "Seleccione o mesmo tipo de conta usado no registo desta conta."}
-        </small>
-      </div>
 
       {signup && (
         <div className="field">
@@ -56,8 +43,16 @@ export function AuthForm({ action, mode, next }: Props) {
 
       {!signup && (
         <p className="muted" style={{ margin: "4px 0 16px", fontSize: 13 }}>
-          A sessão será mantida neste dispositivo até sair da conta.
+          Depois de entrar, pode usar as capacidades disponíveis para a sua conta e empresa.
         </p>
+      )}
+
+      {signup && (
+        <div className="notice" style={{ marginBottom: 16 }}>
+          <strong>Uma conta, várias possibilidades.</strong>
+          <br />
+          Depois do registo poderá criar ou associar a sua empresa e comprar, vender, publicar ou participar em oportunidades e concursos.
+        </div>
       )}
 
       {state.error && (
