@@ -5,21 +5,19 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
-const userTypeSchema = z.enum(["empresa", "organizacao"]);
 const credentialsSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().email(),
   password: z.string().min(8),
-  userType: userTypeSchema,
 });
 const registrationSchema = credentialsSchema.extend({
   fullName: z.string().trim().min(2).max(120),
 });
 export type AuthState = { error?: string };
 
-async function createProfile(userId: string, fullName: string, userType: "empresa" | "organizacao") {
+async function createProfile(userId: string, fullName: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").upsert(
-    { id: userId, full_name: fullName, user_type: userType },
+    { id: userId, full_name: fullName },
     { onConflict: "id" }
   );
   return !error;
@@ -29,13 +27,14 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
   const parsed = credentialsSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
-    userType: formData.get("userType"),
   });
   const requestedNext = formData.get("next");
-  const next = typeof requestedNext === "string" && requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/dashboard";
+  const next = typeof requestedNext === "string" && requestedNext.startsWith("/") && !requestedNext.startsWith("//")
+    ? requestedNext
+    : "/dashboard";
 
   if (!parsed.success) {
-    return { error: "Seleccione o tipo de conta e indique um email válido e uma password com pelo menos 8 caracteres." };
+    return { error: "Indique um email válido e uma password com pelo menos 8 caracteres." };
   }
 
   let supabase;
@@ -54,20 +53,12 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
     if (error.message.toLowerCase().includes("email not confirmed")) {
       return { error: "Confirme primeiro o email da sua conta. Depois volte a entrar." };
     }
-    return { error: "Não foi possível iniciar sessão. Verifique o email, a password e o tipo de conta seleccionado." };
+    return { error: "Não foi possível iniciar sessão. Verifique o email e a password." };
   }
 
   if (data.user) {
-    const storedType = data.user.user_metadata?.user_type;
-    const { data: profile } = await supabase.from("profiles").select("user_type,full_name").eq("id", data.user.id).maybeSingle();
-    const actualType = profile?.user_type || storedType;
-
-    if (actualType && actualType !== parsed.data.userType) {
-      await supabase.auth.signOut();
-      return { error: "O tipo de conta seleccionado não corresponde a esta conta. Seleccione o tipo correcto para entrar." };
-    }
-
-    await createProfile(data.user.id, profile?.full_name || data.user.user_metadata?.full_name || "", parsed.data.userType);
+    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", data.user.id).maybeSingle();
+    await createProfile(data.user.id, profile?.full_name || data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "Utilizador");
   }
 
   redirect(next);
@@ -78,11 +69,10 @@ export async function signUp(_state: AuthState, formData: FormData): Promise<Aut
     fullName: formData.get("fullName"),
     email: formData.get("email"),
     password: formData.get("password"),
-    userType: formData.get("userType"),
   });
 
   if (!parsed.success) {
-    return { error: "Seleccione o tipo de conta e preencha nome, email e uma password com pelo menos 8 caracteres." };
+    return { error: "Preencha o nome, um email válido e uma password com pelo menos 8 caracteres." };
   }
 
   let supabase;
@@ -100,7 +90,7 @@ export async function signUp(_state: AuthState, formData: FormData): Promise<Aut
     password: parsed.data.password,
     options: {
       emailRedirectTo: `${origin}/auth/confirm`,
-      data: { full_name: parsed.data.fullName, user_type: parsed.data.userType },
+      data: { full_name: parsed.data.fullName },
     },
   });
 
@@ -116,7 +106,7 @@ export async function signUp(_state: AuthState, formData: FormData): Promise<Aut
   }
 
   if (data.session && data.user) {
-    await createProfile(data.user.id, parsed.data.fullName, parsed.data.userType);
+    await createProfile(data.user.id, parsed.data.fullName);
     redirect("/dashboard");
   }
 
