@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
 
 const labels: Record<string, string> = {
   CONTEST: "Concurso",
@@ -35,10 +36,13 @@ export default async function Oportunidades({
   const location = params.location?.trim() || "";
 
   let data: Opportunity[] = [];
+  let billboardAds: DirectoryAd[] = [];
   let error = false;
 
   try {
     const supabase = await createClient();
+    const { data: promotions } = await supabase.from("business_promotions").select("id,title,text,image_url,target_url,priority").eq("status","ACTIVE").lte("starts_at",new Date().toISOString()).gt("ends_at",new Date().toISOString()).eq("placement","DIRECTORY_BILLBOARD").order("priority",{ascending:false}).limit(6);
+    billboardAds = (promotions ?? []).map((item) => ({ label:"Publicidade empresarial", title:item.title, text:item.text || "Conecte a sua organização ao sector privado através do MozEmpresas.", image:item.image_url || undefined, href:item.target_url || "/contactos" }));
     let query = supabase
       .from("opportunities")
       .select("id,title,slug,type,description,organization,location,closes_at")
@@ -68,11 +72,10 @@ export default async function Oportunidades({
       <div className="container">
         <section className="directory-hero">
           <div className="directory-hero-copy">
-            <span className="eyebrow">Oportunidades de negócio</span>
-            <h1>Descubra oportunidades para a sua empresa.</h1>
+            <span className="eyebrow">Ligação entre organizações e sector privado</span>
+            <h1>Transforme necessidades de organizações em oportunidades de negócio.</h1>
             <p>
-              Encontre chamadas, parcerias, financiamento, necessidades empresariais
-              e outras oportunidades publicadas no mercado moçambicano.
+              Organizações parceiras podem publicar chamadas, parcerias, contratação e outras oportunidades para se conectarem com empresas do mercado moçambicano.
             </p>
           </div>
 
@@ -107,6 +110,8 @@ export default async function Oportunidades({
             {hasFilters && <Link href="/oportunidades" className="directory-clear">Limpar pesquisa</Link>}
           </div>
         </section>
+
+        <DirectoryAdSlider ads={billboardAds}/>
 
         <section className="directory-discovery opportunity-categories">
           <div className="directory-section-head">
