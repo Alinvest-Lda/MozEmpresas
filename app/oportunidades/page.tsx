@@ -177,7 +177,7 @@ export default async function Oportunidades({
 
         <section className="opportunity-types-section">
           <div className="opportunity-section-heading">
-            <div><span className="eyebrow">Encontre pelo que procura</span><h2>Uma porta de entrada para cada necessidade.</h2></div>
+            <div><span className="eyebrow">Explore por categoria</span><h2>Uma porta de entrada para cada necessidade.</h2></div>
             <p>Escolha uma categoria e vá directamente para chamadas, capital, parceiros, aprendizagem ou eventos.</p>
           </div>
           <div className="opportunity-type-grid">
