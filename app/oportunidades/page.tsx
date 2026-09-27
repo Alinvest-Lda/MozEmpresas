@@ -108,20 +108,14 @@ export default async function Oportunidades({
           </div>
         </section>
 
-        <section className="directory-discovery">
+        <section className="directory-discovery opportunity-categories">
           <div className="directory-section-head">
-            <div>
-              <span className="eyebrow">Exploração rápida</span>
-              <h2>Procure por tipo de oportunidade.</h2>
-            </div>
-            <span className="directory-section-note">Caminhos de negócio</span>
+            <div><span className="eyebrow">Exploração rápida</span><h2>Explore por categoria.</h2></div>
+            <span className="directory-section-note">Oportunidades organizadas por finalidade</span>
           </div>
           <div className="directory-category-list">
-            <Link href="/oportunidades" className={!type || type === "all" ? "active" : ""}>Todas <span>→</span></Link>
             {Object.entries(labels).map(([value, label]) => (
-              <Link key={value} href={"/oportunidades?type=" + value} className={type === value ? "active" : ""}>
-                {label}<span>→</span>
-              </Link>
+              <a href={"#categoria-" + value.toLowerCase()} className={type === value ? "active" : ""} key={value}>{label}<span>→</span></a>
             ))}
           </div>
         </section>
@@ -149,39 +143,32 @@ export default async function Oportunidades({
 
           {error && <div className="notice">Não foi possível carregar as oportunidades neste momento. Pode continuar a navegar pelo portal.</div>}
 
-          {data.length > 0 ? (
-            <div className="directory-results-layout">
-              <div className="directory-results-list">
-                {data.map((item, index) => (
-                  <Link href={"/oportunidades/" + item.slug} className="directory-business-card opportunity-result-card" key={item.id}>
-                    <div className="directory-business-number">{String(index + 1).padStart(2, "0")}</div>
-                    <div className="opportunity-type-icon">↗</div>
-                    <div className="directory-business-content">
-                      <div className="directory-business-title">
-                        <div>
-                          <h3>{item.title}</h3>
-                          <span>{labels[item.type] || item.type}</span>
-                        </div>
-                        <b>→</b>
+          {Object.entries(labels).map(([value, label]) => {
+            const items = data.filter((item) => item.type === value);
+            if (!items.length) return null;
+            return (
+              <section className="opportunity-category-section" id={"categoria-" + value.toLowerCase()} key={value}>
+                <div className="directory-section-head">
+                  <div><span className="eyebrow">Categoria</span><h2>{label}</h2></div>
+                  <span className="directory-section-note">{items.length} {items.length === 1 ? "oportunidade" : "oportunidades"}</span>
+                </div>
+                <div className="directory-results-list">
+                  {items.map((item, index) => (
+                    <Link href={"/oportunidades/" + item.slug} className="directory-business-card opportunity-result-card" key={item.id}>
+                      <div className="directory-business-number">{String(index + 1).padStart(2, "0")}</div>
+                      <div className="opportunity-type-icon">↗</div>
+                      <div className="directory-business-content">
+                        <div className="directory-business-title"><div><h3>{item.title}</h3><span>{label}</span></div><b>→</b></div>
+                        {item.organization && <div className="directory-business-location">{item.organization}{item.location ? " · " + item.location : ""}</div>}
+                        <p>{item.description}</p>
+                        <div className="opportunity-result-bottom"><span>{item.closes_at ? "Prazo: " + new Date(item.closes_at).toLocaleDateString("pt-MZ") : "Sem prazo indicado"}</span><span>Ver oportunidade →</span></div>
                       </div>
-                      {item.organization && <div className="directory-business-location">{item.organization}{item.location ? " · " + item.location : ""}</div>}
-                      <p>{item.description}</p>
-                      <div className="opportunity-result-bottom">
-                        <span>{item.closes_at ? `Prazo: ${new Date(item.closes_at).toLocaleDateString("pt-MZ")}` : "Sem prazo indicado"}</span>
-                        <span>Ver oportunidade →</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-
-              <aside className="directory-side-card">
-                <span className="eyebrow">Para empresas</span>
-                <h3>Tem uma necessidade de negócio?</h3>
-                <p>Publique uma oportunidade para encontrar fornecedores, parceiros ou empresas capazes de responder ao que procura.</p>
-                <Link href="/dashboard" className="btn primary full">Publicar oportunidade →</Link>
-              </aside>
-            </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
           ) : (
             <div className="directory-empty">
               <div className="directory-empty-icon">↗</div>
