@@ -15,7 +15,7 @@ export default function Registo() {
         <section className="auth-card">
           <span className="eyebrow">Começar</span>
           <h2>Criar conta</h2>
-          <p className="muted">Crie a sua conta para começar a utilizar o MozEmpresas.</p>
+          <p className="muted">Escolha primeiro o tipo de conta. Isto define a forma como o seu perfil será apresentado e gerido na plataforma.</p>
           <AuthForm action={signUp} mode="signup" />
           <p className="auth-switch muted">Já tem conta? <Link href="/login">Entrar</Link></p>
         </section>
