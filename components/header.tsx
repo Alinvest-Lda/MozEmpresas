@@ -55,8 +55,8 @@ export function Header() {
     return () => document.removeEventListener("pointerdown", handleOutside);
   }, [open]);
 
-  const links = insideApp ? [] : (signedIn ? appLinks : publicLinks);
   const insideApp = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+  const links = insideApp ? [] : (signedIn ? appLinks : publicLinks);
 
   return (
     <header className={insideApp && signedIn ? "topbar topbar-app" : "topbar"}>
