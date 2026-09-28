@@ -62,19 +62,19 @@ export default async function MarketplaceWorkspace({
 
           <section className="dashboard-section">
             <div className="dashboard-section-head">
-              <div><span className="dashboard-kicker">Comprar</span><h2>Pedidos recentes</h2><p>Os pedidos ficam registados no seu histórico.</p></div>
+              <div><span className="dashboard-kicker">Comprar</span><h2>Solicitações recentes</h2><p>Registe interesses e acompanhe a relação comercial. A negociação e a compra acontecem fora do MozEmpresas.</p></div>
               <Link href="/marketplace" className="text-link">Encontrar ofertas →</Link>
             </div>
-            {purchases?.length ? <div className="dashboard-list">{purchases.map(p=><div key={p.id}><strong>Pedido #{p.id.slice(0,8)}</strong><span>{p.status} · {Number(p.total).toLocaleString("pt-MZ")} {p.currency} · {new Date(p.created_at).toLocaleDateString("pt-MZ")}</span>{["PENDING","AWAITING_PAYMENT","PROCESSING"].includes(p.status) && <form action={cancelOrder}><input type="hidden" name="order_id" value={p.id} /><button className="btn" type="submit">Cancelar</button></form>}</div>)}</div> : <div className="empty"><p>Ainda não fez pedidos. Explore produtos e serviços e inicie uma compra.</p><Link href="/marketplace" className="btn primary">Explorar ofertas</Link></div>}
+            {purchases?.length ? <div className="dashboard-list">{purchases.map(p=><div key={p.id}><strong>Solicitação #{p.id.slice(0,8)}</strong><span>{p.status} · {new Date(p.created_at).toLocaleDateString("pt-MZ")}</span>{["PENDING","AWAITING_PAYMENT","PROCESSING"].includes(p.status) && <form action={cancelOrder}><input type="hidden" name="order_id" value={p.id} /><button className="btn" type="submit">Cancelar interesse</button></form>}</div>)}</div> : <div className="empty"><p>Ainda não fez pedidos. Explore produtos e serviços e inicie uma compra.</p><Link href="/marketplace" className="btn primary">Explorar ofertas</Link></div>}
           </section>
         </div>
 
         <section className="dashboard-section">
-          <div className="dashboard-section-head"><div><span className="dashboard-kicker">Vendas</span><h2>Pedidos recebidos</h2><p>Veja as solicitações relacionadas com as ofertas das empresas que representa.</p></div></div>
-          {visibleSales.length ? <div className="dashboard-list">{visibleSales.map(s=><div key={s.id}><div><strong>{s.title}</strong><span>{s.quantity} × {Number(s.line_total).toLocaleString("pt-MZ")} {s.currency} · {new Date(s.created_at).toLocaleDateString("pt-MZ")}</span></div><form action={updateOrderStatus}><input type="hidden" name="order_id" value={s.order_id} /><select name="status" defaultValue="PROCESSING" aria-label="Novo estado do pedido"><option value="PROCESSING">Processar</option><option value="COMPLETED">Concluir</option><option value="CANCELLED">Cancelar</option></select><button className="btn" type="submit">Actualizar</button></form></div>)}</div> : <p className="muted">Ainda não existem pedidos recebidos para as suas empresas.</p>}
+          <div className="dashboard-section-head"><div><span className="dashboard-kicker">Solicitações recebidas</span><h2>Interesses recebidos</h2><p>Veja os interesses relacionados com as ofertas das empresas que representa.</p></div></div>
+          {visibleSales.length ? <div className="dashboard-list">{visibleSales.map(s=><div key={s.id}><div><strong>{s.title}</strong><span>{s.quantity} × {Number(s.line_total).toLocaleString("pt-MZ")} {s.currency} · {new Date(s.created_at).toLocaleDateString("pt-MZ")}</span></div><form action={updateOrderStatus}><input type="hidden" name="order_id" value={s.order_id} /><select name="status" defaultValue="PROCESSING" aria-label="Novo estado do pedido"><option value="CONTACTED">Contactar</option><option value="NEGOTIATING">Em negociação</option><option value="AGREED">Acordado</option><option value="COMPLETED">Concluído fora da plataforma</option><option value="CANCELLED">Encerrar</option></select><button className="btn" type="submit">Actualizar</button></form></div>)}</div> : <p className="muted">Ainda não existem pedidos recebidos para as suas empresas.</p>}
         </section>
 
-        {params.order && <section className="notice"><strong>Pedido criado.</strong> O pedido #{params.order.slice(0,8)} foi registado como PENDENTE. O pagamento e o processamento do pedido continuam como etapas próprias.</section>}
+        {params.order && <section className="notice"><strong>Solicitação registada.</strong> O pedido #{params.order.slice(0,8)} foi registado como PENDENTE. O pagamento e o processamento do pedido continuam como etapas próprias.</section>}
       </div>
     </main>
   );
