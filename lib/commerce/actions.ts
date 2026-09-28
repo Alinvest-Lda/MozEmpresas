@@ -76,7 +76,7 @@ export async function createListing(formData: FormData) {
     location,
   });
 
-  redirect(error ? "/dashboard/marketplace?publish=error" : "/marketplace?published=1");
+  redirect(error ? "/dashboard/marketplace?publish=error" : "/dashboard/marketplace?publish=success");
 }
 
 export async function createOrder(formData: FormData) {
