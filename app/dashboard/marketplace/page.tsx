@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { createListing, createOrder } from "@/lib/commerce/actions";
+import { createListing, updateOrderStatus } from "@/lib/commerce/actions";
 
 export default async function MarketplaceWorkspace({
   searchParams,
@@ -71,7 +71,7 @@ export default async function MarketplaceWorkspace({
 
         <section className="dashboard-section">
           <div className="dashboard-section-head"><div><span className="dashboard-kicker">Vendas</span><h2>Pedidos recebidos</h2><p>Veja as solicitações relacionadas com as ofertas das empresas que representa.</p></div></div>
-          {visibleSales.length ? <div className="dashboard-list">{visibleSales.map(s=><div key={s.id}><strong>{s.title}</strong><span>{s.quantity} × {Number(s.line_total).toLocaleString("pt-MZ")} {s.currency} · {new Date(s.created_at).toLocaleDateString("pt-MZ")}</span></div>)}</div> : <p className="muted">Ainda não existem pedidos recebidos para as suas empresas.</p>}
+          {visibleSales.length ? <div className="dashboard-list">{visibleSales.map(s=><div key={s.id}><div><strong>{s.title}</strong><span>{s.quantity} × {Number(s.line_total).toLocaleString("pt-MZ")} {s.currency} · {new Date(s.created_at).toLocaleDateString("pt-MZ")}</span></div><form action={updateOrderStatus}><input type="hidden" name="order_id" value={s.order_id} /><select name="status" defaultValue="PROCESSING" aria-label="Novo estado do pedido"><option value="PROCESSING">Processar</option><option value="COMPLETED">Concluir</option><option value="CANCELLED">Cancelar</option></select><button className="btn" type="submit">Actualizar</button></form></div>)}</div> : <p className="muted">Ainda não existem pedidos recebidos para as suas empresas.</p>}
         </section>
 
         {params.order && <section className="notice"><strong>Pedido criado.</strong> O pedido #{params.order.slice(0,8)} foi registado como PENDENTE. O pagamento e o processamento do pedido continuam como etapas próprias.</section>}
