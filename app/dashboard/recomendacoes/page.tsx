@@ -24,4 +24,3 @@ export default async function RecommendationsPage() {
     <section className="dashboard-section"><div className="dashboard-section-head"><div><span className="dashboard-kicker">Ofertas</span><h2>Produtos e serviços que podem interessar</h2></div><Link href="/marketplace" className="text-link">Ver mercado →</Link></div><div className="recommendation-offers">{(listings ?? []).map(l => <Link href={"/marketplace/"+l.id} key={l.id}><strong>{l.title}</strong><span>{l.price != null ? l.price+" "+l.currency : "Sob consulta"}</span><small>{l.description || "Oferta publicada no mercado."}</small></Link>)}</div></section>
   </div></main>;
 }
-;
