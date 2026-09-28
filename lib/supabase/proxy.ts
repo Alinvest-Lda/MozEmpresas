@@ -1,5 +1,5 @@
 import { createServerClient, type SetAllCookies } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function updateSession(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
