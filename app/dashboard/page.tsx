@@ -4,7 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 const workActions = [
-  { href: "/marketplace", title: "Comprar e vender", text: "Encontre ofertas, publique o que a sua empresa disponibiliza e desenvolva negócio.", icon: "↗" },
+  { href: "/dashboard/marketplace", title: "Comprar e vender", text: "Encontre ofertas, publique o que a sua empresa disponibiliza e desenvolva negócio.", icon: "↗" },
   { href: "/dashboard/empresas", title: "Gerir empresa", text: "Actualize a presença, contactos e informação pública da sua empresa.", icon: "□" },
   { href: "/oportunidades", title: "Encontrar oportunidades", text: "Acompanhe oportunidades e responda às que fazem sentido para a sua actividade.", icon: "⌘" },
   { href: "/concursos", title: "Concursos", text: "Consulte concursos e participe nos processos em que a sua empresa tem interesse.", icon: "◈" },
