@@ -17,3 +17,19 @@ export async function createBusiness(_state:BusinessState,formData:FormData):Pro
  if(memberError)return{error:"A empresa foi criada, mas não foi possível concluir a associação do proprietário."};
  revalidatePath("/empresas"); revalidatePath("/dashboard"); redirect("/dashboard/empresas");
 }
+
+export async function updateBusiness(_state:BusinessState,formData:FormData):Promise<BusinessState>{
+ const id=String(formData.get("businessId")||"");
+ const parsed=schema.safeParse({name:formData.get("name"),description:formData.get("description")||undefined,categoryId:formData.get("categoryId")||"",location:formData.get("location")||undefined,phone:formData.get("phone")||undefined,email:formData.get("email")||"",website:formData.get("website")||"",isPublic:formData.get("isPublic")||"true"});
+ if(!id || !parsed.success)return{error:"Verifique os dados introduzidos."};
+ const supabase=await createClient();
+ const {data:{user}}=await supabase.auth.getUser(); if(!user)redirect("/login");
+ const {data:business,error:loadError}=await supabase.from("businesses").select("id,slug").eq("id",id).eq("owner_id",user.id).maybeSingle();
+ if(loadError || !business)return{error:"Empresa não encontrada ou sem permissão para alterar."};
+ const {error}=await supabase.from("businesses").update({name:parsed.data.name,description:parsed.data.description||null,category_id:parsed.data.categoryId||null,location:parsed.data.location||null,phone:parsed.data.phone||null,email:parsed.data.email||null,website:parsed.data.website||null,is_public:parsed.data.isPublic==="true",updated_at:new Date().toISOString()}).eq("id",id).eq("owner_id",user.id);
+ if(error)return{error:"Não foi possível guardar as alterações."};
+ revalidatePath("/dashboard/empresas");
+ revalidatePath("/dashboard/empresas/"+id);
+ revalidatePath("/empresas/"+business.slug);
+ redirect("/dashboard/empresas");
+}
