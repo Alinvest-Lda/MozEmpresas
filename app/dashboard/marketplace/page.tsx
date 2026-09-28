@@ -41,7 +41,7 @@ export default async function MarketplaceWorkspace({
             <h1>Centro comercial</h1>
             <p>Pesquise no mercado, publique ofertas e acompanhe interesses, contactos e negociações. A compra é feita fora do MozEmpresas.</p>
           </div>
-          <div className="dashboard-topbar-actions"><Link href="/marketplace" className="btn">Explorar ofertas →</Link><a href="#publicar" className="btn primary">Publicar oferta →</a></div>
+          <div className="dashboard-topbar-actions"><Link href="/dashboard/marketplace/ofertas" className="btn">Explorar ofertas →</Link><a href="#publicar" className="btn primary">Publicar oferta →</a></div>
         </header>
 
         <div className="commerce-work-grid">
