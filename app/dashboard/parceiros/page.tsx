@@ -21,5 +21,3 @@ export default async function PartnersPage(){
  <section className="dashboard-section" style={{marginTop:14}}><div className="dashboard-section-head"><div><span className="dashboard-kicker">Descoberta</span><h2>Empresas para conhecer</h2><p>A próxima etapa é transformar estas descobertas em relações de negócio.</p></div><Link href="/empresas" className="text-link">Ver directório →</Link></div><div className="dashboard-action-grid">{(directory??[]).filter(b=>!(owned??[]).some(o=>o.id===b.id)).slice(0,6).map(b=><Link className="dashboard-action-card" href={"/empresas/"+b.id} key={b.id}><span className="dashboard-action-icon">{b.name.slice(0,1)}</span><div><strong>{b.name}</strong><small>{b.location||"Moçambique"} · {b.description||"Perfil empresarial público"}</small></div></Link>)}</div></section>
  </div></main>
 }
-
-}
