@@ -16,7 +16,7 @@ async function currentUser() {
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   const userId = claims?.claims?.sub;
-  if (!userId) redirect("/login?next=/marketplace");
+  if (!userId) redirect("/login?next=/dashboard/marketplace");
   return { supabase, userId };
 }
 
