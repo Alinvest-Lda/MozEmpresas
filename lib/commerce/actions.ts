@@ -51,13 +51,13 @@ export async function createListing(formData: FormData) {
   const price = priceRaw ? number(priceRaw, NaN) : null;
 
   if (!title || !description || !businessId || !["PRODUCT", "SERVICE"].includes(type)) {
-    redirect("/marketplace?publish=error");
+    redirect("/dashboard/marketplace?publish=error");
   }
   if (price !== null && (!Number.isFinite(price) || price < 0)) {
-    redirect("/marketplace?publish=error");
+    redirect("/dashboard/marketplace?publish=error");
   }
   if (!(await canManageBusiness(supabase, userId, businessId))) {
-    redirect("/marketplace?publish=forbidden");
+    redirect("/dashboard/marketplace?publish=forbidden");
   }
 
   const base = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "oferta";
@@ -76,7 +76,7 @@ export async function createListing(formData: FormData) {
     location,
   });
 
-  redirect(error ? "/marketplace?publish=error" : "/marketplace?published=1");
+  redirect(error ? "/dashboard/marketplace?publish=error" : "/marketplace?published=1");
 }
 
 export async function createOrder(formData: FormData) {
@@ -86,7 +86,7 @@ export async function createOrder(formData: FormData) {
   const quantity = number(formData.get("quantity"), 1);
   const notes = text(formData.get("notes")) || null;
 
-  if (!listingId || quantity <= 0) redirect("/marketplace?request=error");
+  if (!listingId || quantity <= 0) redirect("/dashboard/marketplace?request=error");
 
   const { data: listing } = await supabase
     .from("listings")
@@ -95,8 +95,8 @@ export async function createOrder(formData: FormData) {
     .eq("status", "PUBLISHED")
     .maybeSingle();
 
-  if (!listing || listing.owner_id === userId) redirect("/marketplace?request=error");
-  if (buyerBusinessId && !(await canManageBusiness(supabase, userId, buyerBusinessId))) redirect("/marketplace?request=forbidden");
+  if (!listing || listing.owner_id === userId) redirect("/dashboard/marketplace?request=error");
+  if (buyerBusinessId && !(await canManageBusiness(supabase, userId, buyerBusinessId))) redirect("/dashboard/marketplace?request=forbidden");
 
   const { data: order, error: orderError } = await supabase.from("commerce_orders").insert({
     buyer_user_id: userId,
@@ -108,7 +108,7 @@ export async function createOrder(formData: FormData) {
     notes,
   }).select("id").single();
 
-  if (orderError || !order) redirect("/marketplace?request=error");
+  if (orderError || !order) redirect("/dashboard/marketplace?request=error");
 
   const { error: itemError } = await supabase.from("commerce_order_items").insert({
     order_id: order.id,
@@ -125,7 +125,7 @@ export async function createOrder(formData: FormData) {
 
   if (itemError) {
     await supabase.from("commerce_orders").update({ status: "CANCELLED" }).eq("id", order.id);
-    redirect("/marketplace?request=error");
+    redirect("/dashboard/marketplace?request=error");
   }
 
   await supabase.from("commerce_order_events").insert({
