@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { signOut } from "@/lib/auth/actions";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
 
 const workActions = [
   { href: "/marketplace", title: "Comprar e vender", text: "Encontre ofertas, publique o que a sua empresa disponibiliza e desenvolva negócio.", icon: "↗" },
@@ -49,46 +49,7 @@ export default async function Dashboard() {
 
   return (
     <div className="dashboard-shell">
-      <aside className="dashboard-sidebar">
-        <div className="dashboard-brand">
-          <small>Área empresarial</small>
-          <strong>MozEmpresas</strong>
-        </div>
-        <nav className="dashboard-sidebar-nav" aria-label="Navegação da área empresarial">
-          <div className="dashboard-nav-group">
-            <span>Trabalho</span>
-            <Link className="dashboard-nav-link active" href="/dashboard"><i className="nav-dot" />Visão geral</Link>
-            <Link className="dashboard-nav-link" href="/marketplace"><i className="nav-dot" />Comprar e vender</Link>
-            <Link className="dashboard-nav-link" href="/oportunidades"><i className="nav-dot" />Oportunidades</Link>
-            <Link className="dashboard-nav-link" href="/concursos"><i className="nav-dot" />Concursos</Link>
-          </div>
-          <div className="dashboard-nav-group">
-            <span>Empresa</span>
-            <Link className="dashboard-nav-link" href="/dashboard/empresas"><i className="nav-dot" />Presença da empresa</Link>
-            <Link className="dashboard-nav-link" href="/dashboard/acessos"><i className="nav-dot" />Acessos e equipa</Link>
-            <Link className="dashboard-nav-link" href="/empresas"><i className="nav-dot" />Directório</Link>
-          </div>
-          <div className="dashboard-nav-group">
-            <span>Relações</span>
-            <Link className="dashboard-nav-link" href="/dashboard/parceiros"><i className="nav-dot" />Parceiros</Link>
-            <Link className="dashboard-nav-link" href="/dashboard/servicos"><i className="nav-dot" />Serviços MozEmpresas</Link>
-          </div>
-          {platformAccess && (
-            <div className="dashboard-nav-group">
-              <span>Plataforma</span>
-              <Link className="dashboard-nav-link" href="/dashboard/admin"><i className="nav-dot" />Administração · {platformAccess}</Link>
-            </div>
-          )}
-        </nav>
-        <div className="dashboard-user">
-          <strong>{name}</strong>
-          {user.email}
-          <form action={signOut} style={{ marginTop: 11 }}>
-            <button className="btn header-signout full" type="submit">Sair</button>
-          </form>
-        </div>
-      </aside>
-
+      <DashboardSidebar pathname="/dashboard" platformAccess={platformAccess} />
       <main className="dashboard-main">
         <div className="dashboard-content">
           <header className="dashboard-topbar">

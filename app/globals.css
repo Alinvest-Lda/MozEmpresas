@@ -2199,3 +2199,41 @@ button,input,select,textarea{font-size:16px}
   .dashboard-service-link{justify-content:center;min-height:40px}
   .dashboard-stat-grid,.dashboard-action-grid,.dashboard-lower-grid{grid-template-columns:1fr}
 }
+
+/* Final workspace rules: fixed lateral sidebar on tablet/desktop; horizontal navigation only on mobile. */
+.dashboard-shell{display:grid!important;grid-template-columns:252px minmax(0,1fr)!important;min-height:calc(100vh - 76px);align-items:stretch}
+.dashboard-sidebar{position:sticky!important;top:76px!important;height:calc(100vh - 76px)!important;align-self:start!important;overflow-y:auto!important;overflow-x:hidden!important;background:#fff!important;border-right:1px solid var(--line)!important;padding:22px 18px!important}
+.dashboard-sidebar-nav{display:flex!important;flex-direction:column!important;overflow:visible!important;width:100%!important}
+.dashboard-nav-group{display:flex!important;flex-direction:column!important;width:100%!important;gap:3px!important;margin:17px 0 0!important}
+.dashboard-nav-group:first-child{margin-top:0!important}
+.dashboard-nav-group>span{display:block!important}
+.dashboard-nav-link{width:100%!important;white-space:normal!important;min-height:40px}
+.dashboard-user{margin-top:auto}
+.business-registration-page{max-width:1100px}
+.business-registration-intro{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:30px;align-items:end;padding:6px 0 28px;border-bottom:1px solid var(--line);margin-bottom:26px}
+.business-registration-intro h1{font-size:clamp(38px,4.5vw,56px);letter-spacing:-.055em;margin:8px 0}
+.business-registration-intro p{max-width:700px;color:var(--muted);line-height:1.55;margin:0}
+.business-registration-steps{display:grid;gap:8px}
+.business-registration-steps span{background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px 12px;font-size:12px;color:var(--muted)}
+.business-registration-steps b{color:var(--brand);margin-right:8px}
+.business-owned-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:38px}
+.business-card-top,.business-card-actions{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.business-card-actions{margin-top:18px}
+.business-form-heading{margin:0 0 15px}
+.business-form-heading h2{font-size:28px;letter-spacing:-.035em;margin:7px 0}
+.business-form-heading p{color:var(--muted);line-height:1.55;max-width:700px}
+.business-empty{background:var(--brand-soft);border:1px solid #cfe1dd;border-radius:16px;padding:26px;margin-bottom:34px}
+.business-empty h2{margin:8px 0}.business-empty p{margin:0;color:var(--muted)}
+.business-form{max-width:900px!important;background:#fff;border:1px solid var(--line);border-radius:16px!important;padding:28px!important;box-shadow:0 10px 28px #172c2a0a}
+.business-form .field{margin:0 0 18px}
+.business-form .toolbar{margin:0 0 18px;padding:0;border:0;background:transparent;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.account-layout{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+.recommendation-hero{display:flex;justify-content:space-between;gap:30px;align-items:end;background:var(--navy);color:#fff;border-radius:16px;padding:30px;margin-bottom:16px}
+.recommendation-columns{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.recommendation-list{display:grid}.recommendation-list a{display:grid;grid-template-columns:1fr auto;gap:3px 14px;padding:15px 0;border-top:1px solid var(--line)}.recommendation-list strong{font-size:14px}.recommendation-list span,.recommendation-list small{grid-column:1;color:var(--muted);font-size:11px}.recommendation-list b{grid-column:2;grid-row:1/4;color:var(--brand)}
+.recommendation-offers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.recommendation-offers a{border:1px solid var(--line);border-radius:12px;padding:17px;background:#fff}.recommendation-offers strong,.recommendation-offers small,.recommendation-offers span{display:block}.recommendation-offers span{font-size:12px;color:var(--brand);font-weight:800;margin:7px 0}.recommendation-offers small{font-size:12px;color:var(--muted);line-height:1.45}
+.service-hub-intro{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:16px}.service-hub-intro h2{margin:7px 0;font-size:25px}.service-hub-intro p{margin:0;color:var(--muted)}
+.service-requests{margin-top:16px}.service-request-row{display:flex;justify-content:space-between;gap:18px;padding:15px 0;border-top:1px solid var(--line)}.service-request-row small{display:block;color:var(--muted);font-size:11px;margin-top:4px}.service-request-row>span{align-self:center;padding:6px 9px;border-radius:8px;background:var(--brand-soft);color:var(--brand-dark);font-size:10px;font-weight:800}
+@media (min-width:601px) and (max-width:1100px){.dashboard-shell{grid-template-columns:196px minmax(0,1fr)!important}.dashboard-sidebar{top:64px!important;height:calc(100vh - 64px)!important;padding:18px 12px!important}.dashboard-main{min-width:0}.business-registration-intro{grid-template-columns:1fr}.business-owned-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.account-layout,.recommendation-columns{grid-template-columns:1fr}}
+@media (min-width:601px) and (max-width:760px){.dashboard-shell{grid-template-columns:178px minmax(0,1fr)!important}.dashboard-nav-link{font-size:11px!important;padding:8px!important}.business-owned-grid{grid-template-columns:1fr}.dashboard-topbar{grid-template-columns:1fr}.dashboard-actions{justify-content:flex-start}}
+@media (max-width:600px){.dashboard-shell{display:block!important}.dashboard-sidebar{position:sticky!important;top:60px!important;height:auto!important;max-height:none!important;padding:7px 10px!important;overflow-x:auto!important;overflow-y:hidden!important;border-right:0!important;border-bottom:1px solid var(--line)!important}.dashboard-sidebar-nav{flex-direction:row!important;overflow-x:auto!important;gap:4px!important}.dashboard-nav-group{flex:0 0 auto!important;flex-direction:row!important;width:auto!important;margin:0!important}.dashboard-nav-group>span{display:none!important}.dashboard-nav-link{width:auto!important;white-space:nowrap!important}.dashboard-user{display:none!important}.business-registration-intro,.account-layout,.recommendation-columns{grid-template-columns:1fr}.business-owned-grid,.recommendation-offers{grid-template-columns:1fr}.business-form{padding:20px!important}.business-form .toolbar,.account-form-grid{grid-template-columns:1fr}.recommendation-hero{align-items:flex-start;flex-direction:column}}

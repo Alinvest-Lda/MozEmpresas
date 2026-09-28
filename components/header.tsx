@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { signOut } from "@/lib/auth/actions";
 
 const publicLinks = [
   ["/empresas", "Empresas"],
@@ -81,9 +80,6 @@ export function Header() {
             <div className="header-account-actions">
               {!insideApp && <Link className="btn primary header-panel-btn" href="/dashboard">Aceder ao painel</Link>}
               {insideApp && <Link className="btn ghost header-portal-btn" href="/">Portal público</Link>}
-              <form action={signOut}>
-                <button type="submit" className="btn header-signout">Sair</button>
-              </form>
             </div>
           ) : (
             <>
@@ -118,9 +114,6 @@ export function Header() {
                   <>
                     {!insideApp && <Link href="/dashboard" onClick={() => setOpen(false)} className="mobile-menu-panel-btn">Aceder ao painel</Link>}
                     {insideApp && <Link href="/" onClick={() => setOpen(false)}>Portal público</Link>}
-                    <form action={signOut}>
-                      <button type="submit" className="mobile-menu-logout">Sair da conta</button>
-                    </form>
                   </>
                 ) : (
                   <>

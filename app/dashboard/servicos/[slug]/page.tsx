@@ -4,18 +4,20 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requestPlatformService } from "@/lib/services/actions";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
 
 export default async function ServiceDetail({params}:{params:Promise<{slug:string}>}) {
   const {slug}=await params;
   const supabase=await createClient();
   const {data:{user}}=await supabase.auth.getUser();
   if(!user) redirect("/login");
-  const [{data:service},{data:businesses}]=await Promise.all([
+  const [{data:service},{data:businesses},{data:platformMember}]=await Promise.all([
     supabase.from("platform_services").select("id,slug,name,description,category,price,currency,billing").eq("slug",slug).eq("active",true).maybeSingle(),
-    supabase.from("businesses").select("id,name").eq("owner_id",user.id).order("name")
+    supabase.from("businesses").select("id,name").eq("owner_id",user.id).order("name"),
+    supabase.from("platform_members").select("role,active").eq("user_id",user.id).maybeSingle()
   ]);
   if(!service) notFound();
-  return <div className="dashboard-shell"><main className="dashboard-main"><div className="dashboard-content">
+  return <div className="dashboard-shell"><DashboardSidebar pathname={"/dashboard/servicos/"+slug} platformAccess={platformMember?.active ? platformMember.role : null} /><main className="dashboard-main"><div className="dashboard-content">
     <Link href="/dashboard/servicos" className="text-link">← Serviços MozEmpresas</Link>
     <section className="service-detail-card">
       <span className="dashboard-kicker">{service.category}</span><h1>{service.name}</h1><p>{service.description}</p>

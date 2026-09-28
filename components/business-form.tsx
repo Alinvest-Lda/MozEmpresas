@@ -15,7 +15,7 @@ export function BusinessForm({
   const [state, formAction, pending] = useActionState(action, {});
 
   return (
-    <form action={formAction} className="auth-card" style={{ maxWidth: 760 }}>
+    <form action={formAction} className="business-form">
       <div className="field">
         <label htmlFor="name">Nome da empresa</label>
         <input id="name" name="name" required maxLength={160} placeholder="Ex.: Empresa ABC, Lda." />
