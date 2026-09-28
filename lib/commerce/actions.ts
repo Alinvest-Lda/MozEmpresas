@@ -143,3 +143,40 @@ export async function createOrder(formData: FormData) {
 
   redirect("/dashboard/marketplace?order=" + order.id);
 }
+
+
+export async function updateOrderStatus(formData: FormData) {
+  const { supabase, userId } = await currentUser();
+  const orderId = text(formData.get("order_id"));
+  const status = text(formData.get("status")).toUpperCase();
+  const allowed = ["AWAITING_PAYMENT","PAID","PROCESSING","COMPLETED","CANCELLED","REFUNDED"];
+  if (!orderId || !allowed.includes(status)) redirect("/dashboard/marketplace?status=error");
+
+  const { data: items } = await supabase
+    .from("commerce_order_items")
+    .select("seller_business_id")
+    .eq("order_id", orderId);
+
+  const sellerIds = [...new Set((items ?? []).map(item => item.seller_business_id).filter(Boolean))];
+  let authorized = false;
+  for (const businessId of sellerIds) {
+    if (await canManageBusiness(supabase, userId, businessId)) { authorized = true; break; }
+  }
+  if (!authorized) redirect("/dashboard/marketplace?status=forbidden");
+
+  const { data: current } = await supabase.from("commerce_orders").select("status").eq("id",orderId).maybeSingle();
+  if (!current) redirect("/dashboard/marketplace?status=error");
+
+  const { error } = await supabase.from("commerce_orders").update({ status }).eq("id",orderId);
+  if (error) redirect("/dashboard/marketplace?status=error");
+
+  await supabase.from("commerce_order_events").insert({
+    order_id: orderId,
+    actor_user_id: userId,
+    from_status: current.status,
+    to_status: status,
+    note: "Estado actualizado pela empresa vendedora.",
+  });
+
+  redirect("/dashboard/marketplace?status=updated");
+}
