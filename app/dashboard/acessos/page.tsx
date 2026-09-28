@@ -100,5 +100,3 @@ export default async function AcessosPage() {
       </div></main>
   );
 }
-
-  )
