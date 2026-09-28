@@ -2,7 +2,10 @@ import { createServerClient, type SetAllCookies } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-moz-pathname", request.nextUrl.pathname);
+  const requestWithPath = new NextRequest(request, { headers: requestHeaders });
+  let response = NextResponse.next({ request: requestWithPath });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey =
@@ -27,10 +30,10 @@ export async function updateSession(request: NextRequest) {
           const [cookiesToSet] = args;
 
           cookiesToSet.forEach(({ name, value }) => {
-            request.cookies.set(name, value);
+            requestWithPath.cookies.set(name, value);
           });
 
-          response = NextResponse.next({ request });
+          response = NextResponse.next({ request: requestWithPath });
 
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
