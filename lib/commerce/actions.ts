@@ -86,7 +86,7 @@ export async function createOrder(formData: FormData) {
   const quantity = number(formData.get("quantity"), 1);
   const notes = text(formData.get("notes")) || null;
 
-  if (!listingId || quantity <= 0) redirect("/marketplace?order=error");
+  if (!listingId || quantity <= 0) redirect("/marketplace?request=error");
 
   const { data: listing } = await supabase
     .from("listings")
@@ -95,26 +95,20 @@ export async function createOrder(formData: FormData) {
     .eq("status", "PUBLISHED")
     .maybeSingle();
 
-  if (!listing || listing.owner_id === userId || listing.price === null || listing.price < 0) {
-    redirect("/marketplace?order=error");
-  }
+  if (!listing || listing.owner_id === userId) redirect("/marketplace?request=error");
+  if (buyerBusinessId && !(await canManageBusiness(supabase, userId, buyerBusinessId))) redirect("/marketplace?request=forbidden");
 
-  if (buyerBusinessId && !(await canManageBusiness(supabase, userId, buyerBusinessId))) {
-    redirect("/marketplace?order=forbidden");
-  }
-
-  const total = Number(listing.price) * quantity;
   const { data: order, error: orderError } = await supabase.from("commerce_orders").insert({
     buyer_user_id: userId,
     buyer_business_id: buyerBusinessId,
-    status: "PENDING",
+    status: "INTERESTED",
     currency: listing.currency || "MZN",
-    subtotal: total,
-    total,
+    subtotal: listing.price ?? 0,
+    total: listing.price ?? 0,
     notes,
   }).select("id").single();
 
-  if (orderError || !order) redirect("/marketplace?order=error");
+  if (orderError || !order) redirect("/marketplace?request=error");
 
   const { error: itemError } = await supabase.from("commerce_order_items").insert({
     order_id: order.id,
@@ -125,77 +119,71 @@ export async function createOrder(formData: FormData) {
     quantity,
     unit_price: listing.price,
     currency: listing.currency || "MZN",
-    line_total: total,
-    metadata: {},
+    line_total: listing.price === null ? 0 : Number(listing.price) * quantity,
+    metadata: { transaction_mode: "OFFLINE", quantity_requested: quantity },
   });
 
   if (itemError) {
     await supabase.from("commerce_orders").update({ status: "CANCELLED" }).eq("id", order.id);
-    redirect("/marketplace?order=error");
+    redirect("/marketplace?request=error");
   }
 
   await supabase.from("commerce_order_events").insert({
     order_id: order.id,
     actor_user_id: userId,
-    to_status: "PENDING",
-    note: "Pedido criado pelo comprador.",
+    to_status: "INTERESTED",
+    note: "Interesse comercial registado. A negociação e qualquer compra decorrem fora da plataforma.",
   });
 
-  redirect("/dashboard/marketplace?order=" + order.id);
+  redirect("/dashboard/marketplace?request=" + order.id);
 }
-
 
 export async function updateOrderStatus(formData: FormData) {
   const { supabase, userId } = await currentUser();
   const orderId = text(formData.get("order_id"));
   const status = text(formData.get("status")).toUpperCase();
-  const allowed = ["AWAITING_PAYMENT","PAID","PROCESSING","COMPLETED","CANCELLED","REFUNDED"];
-  if (!orderId || !allowed.includes(status)) redirect("/dashboard/marketplace?status=error");
+  const transitions: Record<string, string[]> = {
+    INTERESTED: ["CONTACTED", "CANCELLED"],
+    CONTACTED: ["NEGOTIATING", "CANCELLED"],
+    NEGOTIATING: ["AGREED", "CANCELLED"],
+    AGREED: ["COMPLETED", "CANCELLED"],
+  };
+  if (!orderId || !Object.values(transitions).flat().includes(status)) redirect("/dashboard/marketplace?status=error");
 
-  const { data: items } = await supabase
-    .from("commerce_order_items")
-    .select("seller_business_id")
-    .eq("order_id", orderId);
-
+  const { data: items } = await supabase.from("commerce_order_items").select("seller_business_id").eq("order_id", orderId);
   const sellerIds = [...new Set((items ?? []).map(item => item.seller_business_id).filter(Boolean))];
   let authorized = false;
-  for (const businessId of sellerIds) {
-    if (await canManageBusiness(supabase, userId, businessId)) { authorized = true; break; }
-  }
+  for (const businessId of sellerIds) if (await canManageBusiness(supabase, userId, businessId)) { authorized = true; break; }
   if (!authorized) redirect("/dashboard/marketplace?status=forbidden");
 
-  const { data: current } = await supabase.from("commerce_orders").select("status").eq("id",orderId).maybeSingle();
-  if (!current) redirect("/dashboard/marketplace?status=error");
+  const { data: current } = await supabase.from("commerce_orders").select("status").eq("id", orderId).maybeSingle();
+  if (!current || !transitions[current.status]?.includes(status)) redirect("/dashboard/marketplace?status=invalid-transition");
 
-  const { error } = await supabase.from("commerce_orders").update({ status }).eq("id",orderId);
+  const { error } = await supabase.from("commerce_orders").update({ status }).eq("id", orderId);
   if (error) redirect("/dashboard/marketplace?status=error");
 
   await supabase.from("commerce_order_events").insert({
-    order_id: orderId,
-    actor_user_id: userId,
-    from_status: current.status,
-    to_status: status,
-    note: "Estado actualizado pela empresa vendedora.",
+    order_id: orderId, actor_user_id: userId, from_status: current.status, to_status: status,
+    note: "Estado actualizado pela empresa vendedora. Qualquer negociação ou pagamento decorre fora do MozEmpresas.",
   });
 
   redirect("/dashboard/marketplace?status=updated");
 }
-
 
 export async function cancelOrder(formData: FormData) {
   const { supabase, userId } = await currentUser();
   const orderId = text(formData.get("order_id"));
   if (!orderId) redirect("/dashboard/marketplace?status=error");
 
-  const { data: order } = await supabase.from("commerce_orders").select("id,status").eq("id",orderId).eq("buyer_user_id",userId).maybeSingle();
-  if (!order || ["COMPLETED","CANCELLED","REFUNDED"].includes(order.status)) redirect("/dashboard/marketplace?status=error");
+  const { data: order } = await supabase.from("commerce_orders").select("id,status").eq("id", orderId).eq("buyer_user_id", userId).maybeSingle();
+  if (!order || !["INTERESTED","CONTACTED","NEGOTIATING"].includes(order.status)) redirect("/dashboard/marketplace?status=error");
 
   const { error } = await supabase.from("commerce_orders").update({status:"CANCELLED"}).eq("id",orderId).eq("buyer_user_id",userId);
   if (error) redirect("/dashboard/marketplace?status=error");
 
   await supabase.from("commerce_order_events").insert({
     order_id: orderId, actor_user_id: userId, from_status: order.status,
-    to_status: "CANCELLED", note: "Pedido cancelado pelo comprador."
+    to_status: "CANCELLED", note: "Interesse comercial cancelado pelo utilizador."
   });
   redirect("/dashboard/marketplace?status=cancelled");
 }
