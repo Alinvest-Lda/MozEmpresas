@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { applyToContest } from "@/lib/contests/actions";
 
 const statusLabel: Record<string,string> = {
   PUBLISHED:"Publicado", OPEN:"Aberto", CLOSED:"Encerrado", EVALUATION:"Em avaliação", RESULTS:"Resultados"
@@ -25,6 +26,9 @@ export default async function ContestDetail({params}:{params:Promise<{slug:strin
   const {data:reqs}=signedIn
     ? await supabase.from("contest_requirements").select("title,description,required").eq("contest_id",item.id).order("title")
     : {data:[]};
+  const {data:application}=signedIn
+    ? await supabase.from("contest_applications").select("status").eq("contest_id",item.id).eq("applicant_user_id",claimsData?.claims?.sub).maybeSingle()
+    : {data:null};
 
   const days=daysLeft(item.closes_at);
   const urgent=days !== null && days <= 7;
@@ -64,9 +68,15 @@ export default async function ContestDetail({params}:{params:Promise<{slug:strin
             <span className="eyebrow">Próximo passo</span>
             <h3>{signedIn ? "Preparar candidatura" : "Quer participar?"}</h3>
             <p>{signedIn ? "Consulte os requisitos completos e avance para a área de candidatura." : "Registe-se ou entre na sua conta para consultar o processo completo."}</p>
-            <Link href={signedIn ? "/dashboard" : "/login?next=/concursos/"+encodeURIComponent(slug)} className="btn primary full">
-              {signedIn ? "Ir para candidatura →" : "Entrar para continuar"}
-            </Link>
+            {signedIn ? (
+              application ? <div className="notice">Candidatura registada · {application.status}</div> :
+              <form action={applyToContest} className="detail-action-form">
+                <input type="hidden" name="contest_id" value={item.id} />
+                <input type="hidden" name="slug" value={item.slug} />
+                <textarea name="cover_note" rows={3} placeholder="Apresente a sua candidatura." aria-label="Mensagem de candidatura" />
+                <button className="btn primary full" type="submit">Submeter candidatura →</button>
+              </form>
+            ) : <Link href={"/login?next=/concursos/"+encodeURIComponent(slug)} className="btn primary full">Entrar para continuar</Link>}
             {!signedIn && <Link href="/registo" className="btn full">Criar conta</Link>}
           </aside>
         </div>
