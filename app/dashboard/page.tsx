@@ -40,7 +40,6 @@ export default async function Dashboard() {
   const businesses = [...(ownedBusinesses ?? []), ...(memberBusinesses ?? []).filter((item) => !(ownedBusinesses ?? []).some((owned) => owned.id === item.id))];
   const name = profile?.full_name || user.email?.split("@")[0] || "Utilizador";
   const ownedBusinessIds = new Set((ownedBusinesses ?? []).map((item) => item.id));
-  const managedMemberships = (memberships ?? []).filter((item) => !ownedBusinessIds.has(item.business_id));
   const platformAccess = platformMember?.active ? platformMember.role : null;
 
   return (
