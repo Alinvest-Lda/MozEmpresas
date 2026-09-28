@@ -4,8 +4,6 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requestPlatformService } from "@/lib/services/actions";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-
 export default async function ServiceDetail({params}:{params:Promise<{slug:string}>}) {
   const {slug}=await params;
   const supabase=await createClient();
@@ -16,7 +14,7 @@ export default async function ServiceDetail({params}:{params:Promise<{slug:strin
     supabase.from("businesses").select("id,name").eq("owner_id",user.id).order("name")
   ]);
   if(!service) notFound();
-  return <div className="dashboard-shell"><DashboardSidebar pathname={"/dashboard/servicos/"+slug} /><main className="dashboard-main"><div className="dashboard-content">
+  return <main className="dashboard-main"><div className="dashboard-content">
     <Link href="/dashboard/servicos" className="text-link">← Serviços MozEmpresas</Link>
     <section className="service-detail-card">
       <span className="dashboard-kicker">{service.category}</span><h1>{service.name}</h1><p>{service.description}</p>
@@ -28,5 +26,6 @@ export default async function ServiceDetail({params}:{params:Promise<{slug:strin
         <div className="service-detail-actions"><button className="btn primary" type="submit">Solicitar serviço</button><Link href="/dashboard/servicos" className="btn">Voltar</Link></div>
       </form>
     </section>
-  </div></main></div>;
+  </div></main>;
 }
+;
