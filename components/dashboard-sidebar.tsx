@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { signOut } from "@/lib/auth/actions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -9,7 +10,8 @@ const groups = [
   { label: "Conta", links: [["/dashboard/conta","A minha conta"]] },
 ] as const;
 
-export async function DashboardSidebar({ pathname }: { pathname: string }) {
+export async function DashboardSidebar() {
+  const pathname = (await headers()).get("x-moz-pathname") ?? "/dashboard";
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: platformMember } = user
