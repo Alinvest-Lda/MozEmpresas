@@ -3,8 +3,6 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-
 const workActions = [
   { href: "/marketplace", title: "Comprar e vender", text: "Encontre ofertas, publique o que a sua empresa disponibiliza e desenvolva negócio.", icon: "↗" },
   { href: "/dashboard/empresas", title: "Gerir empresa", text: "Actualize a presença, contactos e informação pública da sua empresa.", icon: "□" },
@@ -46,9 +44,7 @@ export default async function Dashboard() {
   const teamAccessCount = memberships?.length ?? 0;
 
   return (
-    <div className="dashboard-shell">
-      <DashboardSidebar pathname="/dashboard" />
-      <main className="dashboard-main">
+    <main className="dashboard-main">
         <div className="dashboard-content">
           <header className="dashboard-topbar">
             <div className="dashboard-welcome">
@@ -137,6 +133,7 @@ export default async function Dashboard() {
           </div>
         </div>
       </main>
-    </div>
   );
 }
+
+  )
