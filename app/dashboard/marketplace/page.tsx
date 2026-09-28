@@ -17,7 +17,7 @@ export default async function MarketplaceWorkspace({
   const [{ data: owned }, { data: memberships }, { data: purchases }, { data: sales }] = await Promise.all([
     supabase.from("businesses").select("id,name").eq("owner_id", user.id).order("name"),
     supabase.from("business_members").select("business_id,role").eq("user_id", user.id).in("role", ["owner","admin","operator"]),
-    supabase.from("commerce_orders").select("id,status,total,currency,created_at").eq("buyer_user_id", user.id).order("created_at",{ascending:false}).limit(8),
+    supabase.from("commerce_orders").select("id,status,notes,created_at").eq("buyer_user_id", user.id).order("created_at",{ascending:false}).limit(8),
     supabase.from("commerce_order_items").select("id,order_id,title,quantity,line_total,currency,seller_business_id,created_at").order("created_at",{ascending:false}).limit(20),
   ]);
 
@@ -37,7 +37,7 @@ export default async function MarketplaceWorkspace({
           <div>
             <span className="dashboard-kicker">Comprar e vender</span>
             <h1>Centro comercial</h1>
-            <p>Pesquise no mercado, publique ofertas e acompanhe pedidos feitos ou recebidos pela sua empresa.</p>
+            <p>Pesquise no mercado, publique ofertas e acompanhe interesses, contactos e negociações. A compra é feita fora do MozEmpresas.</p>
           </div>
           <Link href="/marketplace" className="btn">Explorar mercado →</Link>
         </header>
@@ -65,16 +65,16 @@ export default async function MarketplaceWorkspace({
               <div><span className="dashboard-kicker">Comprar</span><h2>Solicitações recentes</h2><p>Registe interesses e acompanhe a relação comercial. A negociação e a compra acontecem fora do MozEmpresas.</p></div>
               <Link href="/marketplace" className="text-link">Encontrar ofertas →</Link>
             </div>
-            {purchases?.length ? <div className="dashboard-list">{purchases.map(p=><div key={p.id}><strong>Solicitação #{p.id.slice(0,8)}</strong><span>{p.status} · {new Date(p.created_at).toLocaleDateString("pt-MZ")}</span>{["PENDING","AWAITING_PAYMENT","PROCESSING"].includes(p.status) && <form action={cancelOrder}><input type="hidden" name="order_id" value={p.id} /><button className="btn" type="submit">Cancelar interesse</button></form>}</div>)}</div> : <div className="empty"><p>Ainda não fez pedidos. Explore produtos e serviços e inicie uma compra.</p><Link href="/marketplace" className="btn primary">Explorar ofertas</Link></div>}
+            {purchases?.length ? <div className="dashboard-list">{purchases.map(p=><div key={p.id}><strong>Solicitação #{p.id.slice(0,8)}</strong><span>{p.status} · {new Date(p.created_at).toLocaleDateString("pt-MZ")}</span>{["INTERESTED","CONTACTED","NEGOTIATING"].includes(p.status) && <form action={cancelOrder}><input type="hidden" name="order_id" value={p.id} /><button className="btn" type="submit">Cancelar</button></form>}</div>)}</div> : <div className="empty"><p>Ainda não iniciou nenhuma relação comercial. Explore produtos e serviços e manifeste o seu interesse.</p><Link href="/marketplace" className="btn primary">Explorar ofertas</Link></div>}
           </section>
         </div>
 
         <section className="dashboard-section">
           <div className="dashboard-section-head"><div><span className="dashboard-kicker">Solicitações recebidas</span><h2>Interesses recebidos</h2><p>Veja os interesses relacionados com as ofertas das empresas que representa.</p></div></div>
-          {visibleSales.length ? <div className="dashboard-list">{visibleSales.map(s=><div key={s.id}><div><strong>{s.title}</strong><span>{s.quantity} × {Number(s.line_total).toLocaleString("pt-MZ")} {s.currency} · {new Date(s.created_at).toLocaleDateString("pt-MZ")}</span></div><form action={updateOrderStatus}><input type="hidden" name="order_id" value={s.order_id} /><select name="status" defaultValue="PROCESSING" aria-label="Novo estado do pedido"><option value="CONTACTED">Contactar</option><option value="NEGOTIATING">Em negociação</option><option value="AGREED">Acordado</option><option value="COMPLETED">Concluído fora da plataforma</option><option value="CANCELLED">Encerrar</option></select><button className="btn" type="submit">Actualizar</button></form></div>)}</div> : <p className="muted">Ainda não existem pedidos recebidos para as suas empresas.</p>}
+          {visibleSales.length ? <div className="dashboard-list">{visibleSales.map(s=><div key={s.id}><div><strong>{s.title}</strong><span>Interesse recebido · {new Date(s.created_at).toLocaleDateString("pt-MZ")}</span></div><form action={updateOrderStatus}><input type="hidden" name="order_id" value={s.order_id} /><select name="status" defaultValue="PROCESSING" aria-label="Novo estado da negociação"><option value="CONTACTED">Contactar</option><option value="NEGOTIATING">Em negociação</option><option value="AGREED">Acordado</option><option value="COMPLETED">Concluído fora da plataforma</option><option value="CANCELLED">Encerrar</option></select><button className="btn" type="submit">Actualizar</button></form></div>)}</div> : <p className="muted">Ainda não existem interesses recebidos para as suas empresas.</p>}
         </section>
 
-        {params.order && <section className="notice"><strong>Solicitação registada.</strong> O pedido #{params.order.slice(0,8)} foi registado como PENDENTE. O pagamento e o processamento do pedido continuam como etapas próprias.</section>}
+        {params.order && <section className="notice"><strong>Interesse registado.</strong> A outra empresa poderá entrar em contacto para continuar a negociação fora da plataforma.</section>}
       </div>
     </main>
   );
