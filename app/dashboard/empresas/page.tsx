@@ -13,7 +13,7 @@ export default async function MyBusinesses() {
   if (!user) redirect("/login");
 
   const [{ data: businesses }, { data: categories }] = await Promise.all([
-    supabase.from("businesses").select("id,name,slug,description,location,is_public,created_at").eq("owner_id", user.id).order("created_at",{ascending:false}),
+    supabase.from("businesses").select("id,name,slug,description,location,is_public,logo_url,cover_url,created_at").eq("owner_id", user.id).order("created_at",{ascending:false}),
     supabase.from("business_categories").select("id,name,slug").order("name").limit(100),
   ]);
 
@@ -46,12 +46,12 @@ export default async function MyBusinesses() {
         {businesses?.length ? <section className="business-owned-grid">
           {businesses.map((business) => <article className="business-management-card" key={business.id}>
             <div className="business-card-top">
-              <div className="icon">{business.name[0]}</div>
+              <div className="business-management-identity"><div className="business-management-logo">{business.logo_url ? <img src={business.logo_url} alt="" /> : business.name[0]}</div><div><strong>{business.name}</strong><span>{business.location || "Localização por definir"}</span></div></div>
               <span className="tag">{business.is_public ? "Publicado" : "Privado"}</span>
             </div>
-            <h3>{business.name}</h3>
-            <span className="muted">{business.location || "Localização por definir"}</span>
+            <div className="business-readiness"><span>Presença</span><strong>{[business.name,business.description,business.location,business.logo_url,business.cover_url].filter(Boolean).length >= 4 ? "Completa" : "A completar"}</strong></div>
             <p>{business.description || "Complete a apresentação da empresa para melhorar a informação disponível no directório."}</p>
+            <div className="business-management-next"><span>Próximo passo</span><strong>Adicionar portfólio e ofertas</strong></div>
             <div className="business-card-meta">
               <span>{business.is_public ? "Visível no directório" : "Não publicado"}</span>
               <span>Perfil empresarial</span>

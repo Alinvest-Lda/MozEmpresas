@@ -15,13 +15,22 @@ export function BusinessForm({
   const [state, formAction, pending] = useActionState(action, {});
 
   return (
-    <form action={formAction} className="business-form">
-      <div className="field">
+    <form action={formAction} className="business-form business-onboarding-form">
+      <div className="business-form-intro">
+        <span className="dashboard-kicker">Passo 1 · Identidade</span>
+        <h3>Comece pela presença da sua empresa</h3>
+        <p>Registe os dados essenciais agora. Depois poderá completar o portfólio e as ofertas sem repetir o processo.</p>
+      </div>
+      <div className="business-form-step">
+        <div className="field">
         <label htmlFor="name">Nome da empresa</label>
         <input id="name" name="name" required maxLength={160} placeholder="Ex.: Empresa ABC, Lda." />
       </div>
 
-      <div className="toolbar">
+      </div>
+      <div className="business-form-step">
+        <span className="business-step-label">Passo 2 · Descoberta</span>
+        <div className="toolbar">
         <div className="field" style={{ flex: 1 }}>
           <label htmlFor="categoryId">Actividade principal</label>
           <select id="categoryId" name="categoryId" defaultValue="">
@@ -35,6 +44,10 @@ export function BusinessForm({
         </div>
       </div>
 
+        </div>
+      </div>
+      <div className="business-form-step">
+        <span className="business-step-label">Passo 3 · Contacto e publicação</span>
       <div className="field">
         <label htmlFor="description">Apresentação da empresa</label>
         <textarea id="description" name="description" rows={5} maxLength={5000} placeholder="Explique brevemente o que a empresa faz, para quem trabalha e quais produtos ou serviços disponibiliza." />
@@ -64,10 +77,12 @@ export function BusinessForm({
         </select>
       </div>
 
-      <div className="notice">
-        <strong>O que será publicado?</strong>
+      </div>
+      <div className="business-publish-note">
+        <strong>Depois do registo</strong>
         <br />
         Nome, actividade, descrição, localização e contactos que fornecer. Pode começar público e depois completar o perfil com produtos e serviços.
+        <span>Será encaminhado para a gestão do perfil, onde poderá completar a apresentação e adicionar imagens do portfólio.</span>
       </div>
 
       {state.error && <p role="alert" className="notice">{state.error}</p>}

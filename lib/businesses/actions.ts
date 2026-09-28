@@ -28,6 +28,13 @@ export async function updateBusiness(_state:BusinessState,formData:FormData):Pro
  if(loadError || !business)return{error:"Empresa não encontrada ou sem permissão para alterar."};
  const {error}=await supabase.from("businesses").update({name:parsed.data.name,description:parsed.data.description||null,category_id:parsed.data.categoryId||null,location:parsed.data.location||null,phone:parsed.data.phone||null,email:parsed.data.email||null,website:parsed.data.website||null,is_public:parsed.data.isPublic==="true",updated_at:new Date().toISOString()}).eq("id",id).eq("owner_id",user.id);
  if(error)return{error:"Não foi possível guardar as alterações."};
+ const portfolio=Array.from({length:5},(_,index)=>({url:String(formData.get("portfolioImage"+index)||"").trim(),title:String(formData.get("portfolioTitle"+index)||"").trim()})).filter((item)=>item.url);
+ const {error:portfolioDeleteError}=await supabase.from("business_portfolio_media").delete().eq("business_id",id);
+ if(portfolioDeleteError)return{error:"Os dados foram guardados, mas não foi possível actualizar o portfólio."};
+ if(portfolio.length){
+   const {error:portfolioInsertError}=await supabase.from("business_portfolio_media").insert(portfolio.map((item,index)=>({business_id:id,image_url:item.url,title:item.title||null,sort_order:index})));
+   if(portfolioInsertError)return{error:"Os dados foram guardados, mas não foi possível guardar as imagens do portfólio."};
+ }
  revalidatePath("/dashboard/empresas");
  revalidatePath("/dashboard/empresas/"+id);
  revalidatePath("/empresas/"+business.slug);

@@ -9,7 +9,9 @@ type Business = {
   description: string | null;
   location: string | null;
   logo_url: string | null;
+  cover_url: string | null;
   category_id: string | null;
+  portfolio: { image_url:string; title:string|null }[];
 };
 
 type Category = {
@@ -87,7 +89,7 @@ export default async function Empresas({
 
     let query = supabase
       .from("businesses")
-      .select("id,name,slug,description,location,logo_url,category_id")
+      .select("id,name,slug,description,location,logo_url,cover_url,category_id")
       .eq("is_public", true)
       .order("name")
       .limit(60);
@@ -116,6 +118,13 @@ export default async function Empresas({
     const result = await query;
     data = (result.data ?? []) as Business[];
     error = error || Boolean(result.error);
+    if (data.length) {
+      const ids=data.map((item)=>item.id);
+      const {data:media}=await supabase.from("business_portfolio_media").select("business_id,image_url,title,sort_order").in("business_id",ids).order("sort_order");
+      const byBusiness=new Map<string,{image_url:string;title:string|null}[]>();
+      (media??[]).forEach((item)=>{const list=byBusiness.get(item.business_id)??[]; if(list.length<5) list.push({image_url:item.image_url,title:item.title}); byBusiness.set(item.business_id,list);});
+      data=data.map((item)=>({...item,portfolio:byBusiness.get(item.id)??[]}));
+    }
   } catch {
     error = true;
   }
@@ -290,6 +299,13 @@ export default async function Empresas({
                       {business.logo_url ? <img src={business.logo_url} alt="" /> : business.name.charAt(0)}
                     </div>
                     <div className="directory-business-content">
+                      <div className="directory-business-visuals" aria-hidden="true">
+                        <div className="directory-business-logo directory-business-logo-overlap">{business.logo_url ? <img src={business.logo_url} alt="" /> : business.name.charAt(0)}</div>
+                        <div className="directory-portfolio-strip">
+                          {(business.portfolio.length ? business.portfolio : business.cover_url ? [{image_url:business.cover_url,title:"Imagem de capa"}] : []).slice(0,5).map((image,index)=><span key={image.image_url+index}><img src={image.image_url} alt="" /></span>)}
+                          {!business.portfolio.length && !business.cover_url && <span className="directory-portfolio-empty">Portfólio</span>}
+                        </div>
+                      </div>
                       <div className="directory-business-title">
                         <div>
                           <h3>{business.name}</h3>
@@ -299,7 +315,7 @@ export default async function Empresas({
                       </div>
                       {business.location && <div className="directory-business-location">⌖ {business.location}</div>}
                       <p>{business.description || "Perfil empresarial no ecossistema MozEmpresas."}</p>
-                      <span className="directory-business-action">Ver perfil da empresa</span>
+                      <div className="directory-business-bottom"><span className="directory-business-action">Ver perfil da empresa</span><span className="directory-business-offer">Ver produtos e serviços →</span></div>
                     </div>
                   </Link>
                 ))}

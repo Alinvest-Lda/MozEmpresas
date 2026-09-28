@@ -13,9 +13,10 @@ export default async function ManageBusinessPage({ params }: { params: Promise<{
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: business }, { data: categories }] = await Promise.all([
+  const [{ data: business }, { data: categories }, { data: portfolio }] = await Promise.all([
     supabase.from("businesses").select("id,name,slug,description,category_id,location,phone,email,website,is_public").eq("id",id).eq("owner_id",user.id).maybeSingle(),
     supabase.from("business_categories").select("id,name,slug").order("name").limit(100),
+    supabase.from("business_portfolio_media").select("id,image_url,title,sort_order").eq("business_id",id).order("sort_order"),
   ]);
   if (!business) notFound();
 
@@ -43,7 +44,7 @@ export default async function ManageBusinessPage({ params }: { params: Promise<{
             <h2>Dados da empresa</h2>
             <p>Estes dados podem ser usados para apresentar a sua empresa a outros participantes do ecossistema.</p>
           </div>
-          <BusinessEditForm action={updateBusiness} business={business} categories={categories ?? []} />
+          <BusinessEditForm action={updateBusiness} business={business} categories={categories ?? []} portfolio={portfolio ?? []} />
         </div>
       </div>
     </main>
