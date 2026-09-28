@@ -1916,3 +1916,220 @@ button,input,select,textarea{max-width:100%}
 .marketplace-member-gate p{max-width:720px;margin:0;color:var(--muted);font-size:12px;line-height:1.6}
 .marketplace-gate-actions{display:flex;gap:8px;flex-wrap:wrap;flex:0 0 auto}
 @media(max-width:760px){.marketplace-member-gate{display:block}.marketplace-gate-actions{margin-top:18px}}
+
+
+/* =========================================================
+   MozEmpresas UI/UX v2 — responsive workspace system
+   Structural override: desktop / tablet / mobile
+   ========================================================= */
+
+:root{
+  --bg:#f5f7f6;
+  --surface:#fff;
+  --surface-soft:#eef4f2;
+  --ink:#172321;
+  --muted:#65716e;
+  --line:#dbe3e0;
+  --line-strong:#c7d2ce;
+  --brand:#0b6b63;
+  --brand-dark:#07544f;
+  --brand-soft:#e5f1ee;
+  --navy:#142c29;
+  --radius:16px;
+  --radius-sm:11px;
+  --shadow-sm:0 4px 16px rgba(20,44,41,.06);
+  --shadow-md:0 14px 38px rgba(20,44,41,.09);
+  --content:1240px;
+  --gutter:clamp(16px,3vw,32px);
+}
+
+body{background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+.container{width:min(var(--content),calc(100% - 2*var(--gutter)));margin-inline:auto}
+.btn{min-height:42px;border-radius:11px;padding:10px 16px;border-color:var(--line-strong);transition:background .16s,border-color .16s,transform .16s,box-shadow .16s}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.btn.primary{box-shadow:0 4px 12px rgba(11,107,99,.14)}
+.topbar{height:72px;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topbar-inner{gap:12px}
+.brand{font-size:22px;white-space:nowrap}
+.nav{gap:21px;margin-left:30px}
+.nav a{padding:26px 0 23px}
+.header-actions{gap:8px}
+.header-account-actions{display:flex;align-items:center;gap:8px}
+.header-panel-btn,.header-portal-btn,.header-signout{min-height:40px}
+.mobile-menu{display:none}
+
+/* Public discovery pages */
+.page,.marketplace-page,.contests-page,.opportunities-page{padding-top:clamp(30px,5vw,58px)}
+.page-header,.directory-hero,.marketplace-discovery-hero,.opportunities-hero,.contests-hero{margin-bottom:0}
+.page-header h1,.directory-hero-copy h1,.marketplace-hero-copy h1,.opportunities-hero h1{max-width:900px}
+.toolbar{border-radius:14px;padding:7px;background:var(--surface);box-shadow:var(--shadow-sm)}
+.toolbar input,.toolbar select{border-radius:9px;min-height:42px}
+.card,.business-card,.listing,.opportunity-list-card,.opportunity-featured-card,.opportunity-type-card,.marketplace-category-card,.marketplace-offer-card,.contest-card,.contest-side-card,.opportunity-side-card,.detail-card,.directory-business-card{border-radius:var(--radius)}
+.grid,.opportunity-results-grid,.marketplace-results-gallery,.marketplace-category-grid{gap:16px}
+
+/* Marketplace: one clear discovery hierarchy */
+.marketplace-discovery-hero{grid-template-columns:minmax(0,1fr) 300px;gap:28px;padding-bottom:34px}
+.marketplace-main-search{max-width:100%;border-radius:14px;box-shadow:var(--shadow-md)}
+.marketplace-hero-panel{border-radius:var(--radius);box-shadow:var(--shadow-md)}
+.marketplace-section{padding-top:44px}
+.marketplace-section-head{margin-bottom:16px}
+.marketplace-results-section{margin-top:42px;padding-top:34px}
+.marketplace-filter-bar{background:var(--surface);padding:8px;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-sm)}
+.marketplace-filter-bar input,.marketplace-filter-bar select{min-height:42px}
+.marketplace-offer-card{box-shadow:0 1px 0 rgba(20,44,41,.02)}
+.marketplace-offer-visual{height:160px}
+.marketplace-commercial-strip,.marketplace-member-gate{border-radius:var(--radius);box-shadow:none}
+
+/* Directory / contests / opportunities */
+.directory-page{padding-bottom:70px}
+.directory-hero{padding-top:clamp(32px,5vw,58px)}
+.directory-search-panel,.directory-search,.opportunity-search-shell{border-radius:14px}
+.directory-search{box-shadow:var(--shadow-md)}
+.directory-active-filters{border-radius:12px}
+.contest-command-bar{border-radius:14px;box-shadow:var(--shadow-sm)}
+.contest-results-layout{grid-template-columns:minmax(0,1fr) 290px;gap:20px}
+.contest-card{min-height:0}
+.contest-side-rail{top:90px}
+.opportunity-featured-grid,.opportunity-results-grid{gap:16px}
+.opportunity-list-card{min-height:245px;border-radius:var(--radius)}
+.opportunity-publisher-cta{border-radius:var(--radius);box-shadow:var(--shadow-md)}
+
+/* Dashboard = workspace, not card wall */
+.dashboard-shell{grid-template-columns:248px minmax(0,1fr);min-height:calc(100vh - 72px)}
+.dashboard-sidebar{position:sticky;top:72px;height:calc(100vh - 72px);overflow-y:auto;padding:24px 16px;background:#fbfcfc;border-right:1px solid var(--line)}
+.dashboard-main{padding:34px var(--gutter) 70px}
+.dashboard-content{width:min(1160px,100%)}
+.dashboard-topbar{padding-bottom:26px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.dashboard-topbar h1{font-size:clamp(30px,3.2vw,42px)}
+.dashboard-actions{max-width:470px;justify-content:flex-end}
+.dashboard-stat-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:22px}
+.dashboard-stat{border-radius:14px;padding:18px;box-shadow:0 1px 0 rgba(20,44,41,.02)}
+.dashboard-stat strong{font-size:29px}
+.dashboard-section{border-radius:18px;padding:24px;box-shadow:0 1px 0 rgba(20,44,41,.02)}
+.dashboard-action-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.dashboard-action-card{min-height:104px;border-radius:13px;padding:15px}
+.dashboard-action-card small{line-height:1.4}
+.dashboard-lower-grid{grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:14px}
+.dashboard-list a{border-radius:12px}
+.dashboard-checklist a{padding:13px 2px}
+
+/* Access / forms */
+.access-layout{gap:16px}
+.access-table-wrap{border:1px solid var(--line);border-radius:14px;overflow:auto;background:#fff}
+.access-table{min-width:650px}
+.access-invite-card{border-radius:16px}
+.access-invite-form{gap:8px}
+.service-detail-card{max-width:900px;border-radius:20px;box-shadow:var(--shadow-md);padding:clamp(24px,4vw,42px)}
+.platform-service-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.platform-service-card{border-radius:16px;box-shadow:0 1px 0 rgba(20,44,41,.02)}
+
+/* Better touch targets */
+button,input,select,textarea{font-size:16px}
+.btn{font-size:14px}
+.nav a,.dashboard-nav-link,.mobile-menu-panel a{min-height:40px}
+
+/* Tablet: preserve hierarchy instead of simply shrinking desktop */
+@media(max-width:1100px){
+  .marketplace-discovery-hero{grid-template-columns:1fr}
+  .marketplace-hero-panel{max-width:100%;display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+  .marketplace-panel-kicker,.marketplace-hero-panel>strong{grid-column:1/-1}
+  .marketplace-panel-item{margin-top:0}
+  .dashboard-shell{grid-template-columns:218px minmax(0,1fr)}
+  .dashboard-main{padding-inline:22px}
+  .dashboard-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dashboard-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .contest-results-layout{grid-template-columns:1fr}
+  .contest-side-rail{position:static;grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:850px){
+  .topbar{height:64px}
+  .nav,.header-account-actions{display:none}
+  .topbar-inner{height:64px}
+  .mobile-menu{display:block;margin-left:auto;position:relative}
+  .mobile-menu-trigger{border:1px solid var(--line-strong);background:#fff;border-radius:10px;min-height:40px;padding:8px 12px;font-weight:800;color:var(--ink)}
+  .mobile-menu-panel{position:absolute;right:0;top:48px;width:min(310px,calc(100vw - 28px));padding:8px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-md);z-index:60}
+  .mobile-menu-panel a,.mobile-menu-panel button{display:flex;width:100%;align-items:center;min-height:44px;padding:10px 12px;border-radius:10px;background:transparent;border:0;text-align:left;font-weight:700;color:#45524f}
+  .mobile-menu-panel a:hover,.mobile-menu-panel a.active{background:var(--brand-soft);color:var(--brand-dark)}
+  .mobile-menu-panel-btn,.mobile-menu-register{background:var(--brand)!important;color:#fff!important;justify-content:center!important}
+  .mobile-menu-logout{color:#a02d2d!important}
+  .dashboard-shell{display:block;min-height:0}
+  .dashboard-sidebar{position:sticky;top:64px;z-index:20;height:auto;min-height:0;padding:8px 12px;border-right:0;border-bottom:1px solid var(--line);box-shadow:0 4px 14px rgba(20,44,41,.04);overflow-x:auto;overflow-y:hidden;white-space:nowrap}
+  .dashboard-brand,.dashboard-user{display:none}
+  .dashboard-nav-group{display:flex;gap:5px;margin:0}
+  .dashboard-nav-link{flex:0 0 auto;padding:9px 11px!important}
+  .dashboard-main{padding:24px 18px 50px}
+  .dashboard-topbar{display:flex;align-items:flex-start}
+  .dashboard-actions{justify-content:flex-start}
+  .dashboard-section{padding:20px}
+  .directory-search{grid-template-columns:1fr 1fr}
+  .directory-search-button{grid-column:1/-1}
+  .platform-service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media(max-width:600px){
+  :root{--gutter:13px}
+  .container{width:calc(100% - 26px)}
+  .topbar{height:60px}
+  .topbar-inner{height:60px}
+  .brand{font-size:20px}
+  .mobile-menu-panel{top:44px}
+  .page,.marketplace-page,.contests-page,.opportunities-page{padding-top:26px}
+  .page-header h1,.directory-hero-copy h1,.marketplace-hero-copy h1,.opportunities-hero h1{font-size:clamp(34px,10vw,44px);line-height:1.02}
+  .page-header-row,.section-head,.marketplace-section-head,.opportunity-section-heading,.contest-discovery-head{align-items:flex-start;flex-direction:column}
+  .toolbar{display:grid;grid-template-columns:1fr;gap:7px}
+  .toolbar input,.toolbar select,.toolbar .btn{width:100%}
+  .marketplace-discovery-hero{padding:26px 0 24px;gap:18px}
+  .marketplace-main-search{display:block;padding:5px}
+  .marketplace-main-search-input{min-height:48px;border-bottom:1px solid var(--line)}
+  .marketplace-main-search select{height:48px;border-left:0;border-bottom:1px solid var(--line)}
+  .marketplace-main-search .btn{width:100%;height:44px;margin:5px 0}
+  .marketplace-hero-panel{display:block;padding:21px}
+  .marketplace-panel-item{padding-top:11px}
+  .marketplace-section{padding-top:34px}
+  .marketplace-category-grid,.marketplace-results-gallery,.platform-service-grid{grid-template-columns:1fr}
+  .marketplace-offer-visual{height:132px}
+  .marketplace-filter-bar{display:grid;grid-template-columns:1fr;padding:7px}
+  .marketplace-filter-bar .btn{width:100%}
+  .marketplace-commercial-strip,.marketplace-member-gate{padding:21px;display:block}
+  .marketplace-gate-actions{display:grid;grid-template-columns:1fr;margin-top:15px}
+  .dashboard-sidebar{top:60px}
+  .dashboard-main{padding:20px 13px 38px}
+  .dashboard-topbar{display:block;padding-bottom:20px}
+  .dashboard-actions{display:grid;grid-template-columns:1fr;margin-top:15px;max-width:none}
+  .dashboard-actions .btn{width:100%}
+  .dashboard-stat-grid,.dashboard-action-grid,.dashboard-lower-grid{grid-template-columns:1fr}
+  .dashboard-section{padding:17px;border-radius:15px}
+  .dashboard-section-head{display:block}
+  .dashboard-section-head .text-link{display:inline-block;margin-top:8px}
+  .dashboard-action-card{min-height:0}
+  .access-invite-form{grid-template-columns:1fr}
+  .access-role-form{grid-template-columns:1fr}
+  .access-role-form .btn{width:100%}
+  .access-table{min-width:660px}
+  .contest-side-rail{grid-template-columns:1fr}
+  .contest-card{grid-template-columns:1fr!important;padding:16px}
+  .contest-type-icon{display:none}
+  .contest-card .directory-business-content{grid-column:auto!important}
+  .contest-card .directory-business-title{display:block}
+  .contest-card .directory-business-title>b{display:none}
+  .contest-sort,.contest-sort form{width:100%}
+  .contest-sort form{display:grid;grid-template-columns:1fr auto}
+  .opportunity-featured-grid,.opportunity-results-grid{grid-template-columns:1fr}
+  .opportunity-detail-hero,.opportunity-detail-layout{gap:22px}
+  .opportunity-calendar{grid-template-columns:1fr}
+  .opportunity-calendar div{border-right:0;border-bottom:1px solid var(--line)}
+  .opportunity-calendar div:last-child{border-bottom:0}
+  .service-detail-card{margin-top:20px;padding:22px;border-radius:16px}
+  .service-detail-box{gap:8px}
+  .service-detail-actions{display:grid;grid-template-columns:1fr}
+  .service-detail-actions .btn{width:100%}
+}
+
+@media(max-width:380px){
+  .brand{font-size:18px}
+  .dashboard-nav-link{font-size:11px!important;padding-inline:9px!important}
+  .dashboard-topbar h1{font-size:27px}
+  .dashboard-section{padding:15px}
+  .btn{padding-inline:13px}
+}
