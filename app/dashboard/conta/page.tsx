@@ -11,7 +11,7 @@ export default async function AccountPage() {
   if (!user) redirect("/login");
   const { data: profile } = await supabase.from("profiles").select("full_name,location,website,bio").eq("id", user.id).maybeSingle();
   const name = profile?.full_name || user.email?.split("@")[0] || "Utilizador";
-  const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map((part) => part[0]).join("").toUpperCase();
+  const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map((part: string) => part[0]).join("").toUpperCase();
 
   return <div className="dashboard-shell">
     <DashboardSidebar pathname="/dashboard/conta" />
