@@ -11,12 +11,70 @@ export default async function AccountPage() {
   if (!user) redirect("/login");
   const { data: profile } = await supabase.from("profiles").select("full_name,location,website,bio").eq("id", user.id).maybeSingle();
   const name = profile?.full_name || user.email?.split("@")[0] || "Utilizador";
+  const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map((part) => part[0]).join("").toUpperCase();
 
-  return <div className="dashboard-shell"><DashboardSidebar pathname="/dashboard/conta" /><main className="dashboard-main"><div className="dashboard-content">
-    <header className="dashboard-topbar"><div><span className="dashboard-kicker">Conta</span><h1>A minha conta</h1><p>Gira os seus dados pessoais e as credenciais de acesso. As empresas que representa são geridas separadamente.</p></div></header>
-    <div className="account-layout">
-      <section className="dashboard-section"><span className="dashboard-kicker">Dados pessoais</span><h2>Perfil do utilizador</h2><p className="muted">Estes dados identificam a pessoa que acede à plataforma.</p><div className="account-email"><span>Email de acesso</span><strong>{user.email}</strong><small>O email actual é a credencial da sua conta.</small></div><ProfileForm initial={{fullName:name,location:profile?.location || "",website:profile?.website || "",bio:profile?.bio || ""}} /></section>
-      <section className="dashboard-section"><span className="dashboard-kicker">Segurança</span><h2>Acesso à conta</h2><p className="muted">Altere a sua password sempre que precisar.</p><PasswordForm /></section>
-    </div>
-  </div></main></div>;
+  return <div className="dashboard-shell">
+    <DashboardSidebar pathname="/dashboard/conta" />
+    <main className="dashboard-main">
+      <div className="dashboard-content account-page">
+        <header className="account-hero">
+          <div className="account-hero-main">
+            <span className="account-section-label">Conta pessoal</span>
+            <h1>A minha conta</h1>
+            <p>Um único espaço para gerir a sua identidade, os dados que apresenta aos outros utilizadores e a segurança do seu acesso. A presença das empresas que representa é gerida separadamente.</p>
+          </div>
+          <aside className="account-identity-card">
+            <div className="account-avatar">{initials || "U"}</div>
+            <strong>{name}</strong>
+            <span>{user.email}</span>
+          </aside>
+        </header>
+
+        <div className="account-layout">
+          <section className="account-panel">
+            <div className="account-panel-head">
+              <div>
+                <span className="account-section-label">Perfil</span>
+                <h2>Dados pessoais</h2>
+                <p>Informação usada para identificar a pessoa por trás da conta.</p>
+              </div>
+            </div>
+            <div className="account-email">
+              <span>Email de acesso</span>
+              <strong>{user.email}</strong>
+              <small>Este é o email associado à autenticação da conta.</small>
+            </div>
+            <ProfileForm initial={{fullName:name,location:profile?.location || "",website:profile?.website || "",bio:profile?.bio || ""}} />
+          </section>
+
+          <div>
+            <section className="account-panel">
+              <div className="account-panel-head">
+                <div>
+                  <span className="account-section-label">Segurança</span>
+                  <h2>Acesso e segurança</h2>
+                  <p>Mantenha as credenciais da sua conta sob controlo.</p>
+                </div>
+              </div>
+              <div className="account-security-stack">
+                <div className="account-security-item">
+                  <div><strong>Email de acesso</strong><p>Usado para entrar e recuperar o acesso à conta.</p></div>
+                  <span className="account-security-mark">✓</span>
+                </div>
+                <div className="account-security-item">
+                  <div><strong>Password</strong><p>Actualize-a periodicamente ou sempre que suspeitar de acesso indevido.</p></div>
+                  <span className="account-security-mark">•</span>
+                </div>
+              </div>
+              <div className="account-security-card">
+                <h3>Alterar password</h3>
+                <p>Escolha uma password com pelo menos 8 caracteres e confirme-a antes de guardar.</p>
+                <PasswordForm />
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>;
 }
