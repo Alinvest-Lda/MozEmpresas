@@ -4,6 +4,24 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { signOut } from "@/lib/auth/actions";
+
+const publicLinks = [
+  ["/empresas", "Empresas"],
+  ["/marketplace", "Produtos e serviços"],
+  ["/concursos", "Concursos"],
+  ["/oportunidades", "Oportunidades"],
+  ["/contactos", "Contactos"],
+] as const;
+
+const appLinks = [
+  ["/dashboard", "Painel"],
+  ["/marketplace", "Comprar e vender"],
+  ["/concursos", "Concursos"],
+  ["/oportunidades", "Oportunidades"],
+  ["/empresas", "Empresas"],
+  ["/dashboard/acessos", "Acessos"],
+] as const;
 
 export function Header() {
   const pathname = usePathname();
@@ -37,15 +55,26 @@ export function Header() {
     return () => document.removeEventListener("pointerdown", handleOutside);
   }, [open]);
 
+  const links = insideApp ? [] : (signedIn ? appLinks : publicLinks);
   const insideApp = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
 
   return (
-    <header className={insideApp && signedIn ? "topbar topbar-app dashboard-header" : "topbar"}>
+    <header className={insideApp && signedIn ? "topbar topbar-app" : "topbar"}>
       <div className="container topbar-inner">
         <Link href={signedIn ? "/dashboard" : "/"} className="brand" aria-label="MozEmpresas">
           Moz<span>Empresas</span>
         </Link>
 
+        <nav className="nav" aria-label={signedIn ? "Navegação do sistema" : "Navegação principal"}>
+          {links.map(([href, label]) => {
+            const active = pathname === href || pathname.startsWith(href + "/");
+            return (
+              <Link key={href} href={href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
 
         <div className="header-actions">
           {signedIn ? (
@@ -73,10 +102,22 @@ export function Header() {
 
             {open && (
               <div className="mobile-menu-panel">
+                {links.map(([href, label]) => {
+                  const active = pathname === href || pathname.startsWith(href + "/");
+                  return (
+                    <Link key={href} href={href} onClick={() => setOpen(false)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
+                      {label}
+                    </Link>
+                  );
+                })}
+
                 {signedIn ? (
                   <>
                     {!insideApp && <Link href="/dashboard" onClick={() => setOpen(false)} className="mobile-menu-panel-btn">Aceder ao painel</Link>}
                     {insideApp && <Link href="/" onClick={() => setOpen(false)}>Portal público</Link>}
+                    <form action={signOut}>
+                      <button type="submit" className="mobile-menu-logout">Sair da conta</button>
+                    </form>
                   </>
                 ) : (
                   <>
