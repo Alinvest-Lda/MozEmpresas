@@ -5,8 +5,6 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateBusiness } from "@/lib/businesses/actions";
 import { BusinessEditForm } from "@/components/business-edit-form";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-
 export default async function ManageBusinessPage({ params }: { params: Promise<{ id:string }> }) {
   const { id } = await params;
   const supabase = await createClient();
@@ -20,9 +18,7 @@ export default async function ManageBusinessPage({ params }: { params: Promise<{
   ]);
   if (!business) notFound();
 
-  return <div className="dashboard-shell">
-    <DashboardSidebar pathname={"/dashboard/empresas/" + id} />
-    <main className="dashboard-main">
+  return <main className="dashboard-main">
       <div className="dashboard-content business-registration-page">
         <header className="business-presence-hero">
           <div className="business-presence-copy">
@@ -47,6 +43,5 @@ export default async function ManageBusinessPage({ params }: { params: Promise<{
           <BusinessEditForm action={updateBusiness} business={business} categories={categories ?? []} portfolio={portfolio ?? []} />
         </div>
       </div>
-    </main>
-  </div>;
-}
+    </main>;
+};
