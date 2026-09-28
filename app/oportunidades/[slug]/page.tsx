@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { applyToOpportunity } from "@/lib/opportunities/actions";
 
 const labels: Record<string, string> = {
   CALL: "Chamada",
@@ -40,7 +41,7 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
   if (!item || !labels[item.type]) notFound();
 
   const { data: application } = userId
-    ? await supabase.from("opportunity_applications").select("status").eq("opportunity_id", item.id).eq("applicant_id", userId).maybeSingle()
+    ? await supabase.from("opportunity_applications").select("status").eq("opportunity_id", item.id).eq("applicant_user_id", userId).maybeSingle()
     : { data: null };
 
   const deadline = item.closes_at ? new Date(item.closes_at) : null;
@@ -67,9 +68,16 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
             <span>{isEvent ? "Data principal" : "Prazo de candidatura"}</span>
             <strong>{dateLabel(item.closes_at)}</strong>
             {deadline && <small>{deadline.toLocaleDateString("pt-MZ", { weekday: "long" })}</small>}
-            <Link href={userId ? "/dashboard" : "/login?next=/oportunidades/" + encodeURIComponent(slug)} className="btn primary full">
-              {userId ? "Participar / acompanhar" : "Entrar para participar"}
-            </Link>
+            {userId ? (
+              <form action={applyToOpportunity} className="detail-action-form">
+                <input type="hidden" name="opportunity_id" value={item.id} />
+                <input type="hidden" name="slug" value={item.slug} />
+                <textarea name="cover_note" rows={3} placeholder="Apresente brevemente a sua empresa ou interesse." aria-label="Mensagem de candidatura" />
+                <button className="btn primary full" type="submit">Enviar resposta →</button>
+              </form>
+            ) : (
+              <Link href={"/login?next=/oportunidades/" + encodeURIComponent(slug)} className="btn primary full">Entrar para participar</Link>
+            )}
           </aside>
         </section>
 
