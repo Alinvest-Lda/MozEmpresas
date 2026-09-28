@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createOrder } from "@/lib/commerce/actions";
 
 export default async function ListingPage({params}:{params:Promise<{id:string}>}) {
   const {id}=await params; const supabase=await createClient();
@@ -23,7 +24,16 @@ export default async function ListingPage({params}:{params:Promise<{id:string}>}
       {business?.slug&&<Link href={"/empresas/"+business.slug} className="btn primary full">Ver empresa</Link>}
       {business?.phone&&<a href={"tel:"+business.phone} className="btn full" style={{marginTop:9}}>Contactar por telefone</a>}
       {business?.email&&<a href={"mailto:"+business.email} className="btn full" style={{marginTop:9}}>Enviar email</a>}
-      <Link href="/login" className="btn full" style={{marginTop:9}}>Entrar para comprar/contactar</Link>
+      <div className="detail-action-panel">
+        <span className="eyebrow">Negociação comercial</span>
+        <p className="muted">O MozEmpresas não processa pagamentos. Registe o seu interesse e combine directamente com o fornecedor.</p>
+        <form action={createOrder} className="detail-action-form">
+          <input type="hidden" name="listing_id" value={item.id} />
+          <input type="number" name="quantity" min="1" step="1" defaultValue="1" aria-label="Quantidade" />
+          <textarea name="notes" rows={3} placeholder="Mensagem ou necessidade específica (opcional)." aria-label="Mensagem" />
+          <button className="btn primary full" type="submit">Tenho interesse →</button>
+        </form>
+      </div>
     </aside></div>
     <section className="detail-section"><span className="eyebrow">Sobre a oferta</span><h2>Informação da publicação</h2><div className="meta"><span className="tag">{item.type==="PRODUCT"?"Produto":"Serviço"}</span>{item.location&&<span className="tag">{item.location}</span>}<span className="tag">Publicado em {new Date(item.created_at).toLocaleDateString("pt-MZ")}</span></div></section>
   </div></main>;
