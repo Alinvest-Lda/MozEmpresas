@@ -7,9 +7,10 @@ import { createListing, updateOrderStatus, cancelOrder } from "@/lib/commerce/ac
 export default async function MarketplaceWorkspace({
   searchParams,
 }: {
-  searchParams: Promise<{ order?: string }>;
+  searchParams: Promise<{ order?: string; request?: string; publish?: string; status?: string }>;
 }) {
   const params = await searchParams;
+  const flash = params.request ? "Interesse registado. A negociação continuará directamente entre as empresas." : params.publish ? "Oferta publicada com sucesso." : params.status ? "Estado da negociação actualizado." : "";
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -33,17 +34,18 @@ export default async function MarketplaceWorkspace({
   return (
     <main className="dashboard-main">
       <div className="dashboard-content">
+        {flash && <div className="notice" role="status">{flash}</div>}
         <header className="dashboard-topbar">
           <div>
             <span className="dashboard-kicker">Comprar e vender</span>
             <h1>Centro comercial</h1>
             <p>Pesquise no mercado, publique ofertas e acompanhe interesses, contactos e negociações. A compra é feita fora do MozEmpresas.</p>
           </div>
-          <Link href="/marketplace" className="btn">Explorar mercado →</Link>
+          <div className="dashboard-topbar-actions"><Link href="/marketplace" className="btn">Explorar ofertas →</Link><a href="#publicar" className="btn primary">Publicar oferta →</a></div>
         </header>
 
         <div className="commerce-work-grid">
-          <section className="dashboard-section">
+          <section className="dashboard-section" id="publicar">
             <div className="dashboard-section-head">
               <div><span className="dashboard-kicker">Vender</span><h2>Publicar uma oferta</h2><p>Qualquer empresa que representa pode disponibilizar produtos ou serviços.</p></div>
             </div>
