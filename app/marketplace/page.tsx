@@ -40,23 +40,11 @@ export default async function Marketplace({
   let billboardAds: DirectoryAd[] = [];
   let signedIn = false;
   let error = false;
-  let buyerBusinesses: { id: string; name: string }[] = [];
 
   try {
     const supabase = await createClient();
     const { data: claimsData } = await supabase.auth.getClaims();
     signedIn = Boolean(claimsData?.claims?.sub);
-    if (signedIn && claimsData?.claims?.sub) {
-      const userId = String(claimsData.claims.sub);
-      const [{ data: owned }, { data: memberships }] = await Promise.all([
-        supabase.from("businesses").select("id,name").eq("owner_id", userId).order("name"),
-        supabase.from("business_members").select("business_id,role").eq("user_id", userId).in("role", ["owner","admin","operator"]),
-      ]);
-      const memberIds = [...new Set((memberships ?? []).map(item => item.business_id))];
-      const { data: memberBusinesses } = memberIds.length ? await supabase.from("businesses").select("id,name").in("id", memberIds) : { data: [] };
-      buyerBusinesses = [...(owned ?? []), ...(memberBusinesses ?? []).filter(item => !(owned ?? []).some(o => o.id === item.id))];
-    }
-
     const { data: promotions, error: promotionError } = await supabase
       .from("business_promotions")
       .select("id,title,text,image_url,target_url,priority")
