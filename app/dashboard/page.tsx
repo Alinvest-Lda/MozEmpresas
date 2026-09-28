@@ -135,5 +135,3 @@ export default async function Dashboard() {
       </main>
   );
 }
-
-  )
