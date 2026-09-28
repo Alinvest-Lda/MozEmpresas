@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
-import { createOrder } from "@/lib/commerce/actions";
 
 const types = [["PRODUCT", "Produtos"], ["SERVICE", "Serviços"]] as const;
 
@@ -213,17 +212,17 @@ export default async function Marketplace({
             {listings.length > 0 ? (
               <div className="marketplace-results-gallery">
                 {listings.map((item, index) => (
-                  <Link href={"/marketplace/" + item.id} className="marketplace-offer-card" key={item.id}>
+                  <article className="marketplace-offer-card" key={item.id}>
                     <div className="marketplace-offer-visual"><span>{item.type === "PRODUCT" ? "P" : "S"}</span><small>{item.type === "PRODUCT" ? "PRODUTO" : "SERVIÇO"}</small></div>
                     <div className="marketplace-offer-body">
                       <div className="marketplace-offer-meta"><span>{String(index + 1).padStart(2, "0")}</span>{item.location && <span>⌖ {item.location}</span>}</div>
                       <h3>{item.title}</h3>
                       {item.business_id && <p className="marketplace-provider">Fornecedor: {item.business_id}</p>}
                       <p>{item.description}</p>
-                      <div className="marketplace-offer-footer"><strong>{item.price != null ? item.price + " " + (item.currency || "MZN") : "Sob consulta"}</strong><span>Ver oferta →</span></div>
-                      {item.price != null && <form action={createOrder} className="marketplace-buy-form"><input type="hidden" name="listing_id" value={item.id} /><select name="buyer_business_id" aria-label="Empresa compradora" defaultValue=""><option value="">Compra pessoal</option>{buyerBusinesses.map(b=><option value={b.id} key={b.id}>{b.name}</option>)}</select><input name="quantity" type="number" min="1" step="1" defaultValue="1" aria-label="Quantidade" /><button className="btn primary" type="submit">Comprar →</button></form>}
+                      <div className="marketplace-offer-footer"><strong>{item.price != null ? item.price + " " + (item.currency || "MZN") : "Sob consulta"}</strong><Link href={"/marketplace/" + item.id}>Ver oferta →</Link></div>
+                      {item.price != null && <div className="marketplace-buy-form"><span>Negociação e compra fora da plataforma.</span><Link href={"/marketplace/" + item.id} className="btn primary">Tenho interesse →</Link></div>}
                     </div>
-                  </Link>
+                  </article>
                 ))}
               </div>
             ) : (
