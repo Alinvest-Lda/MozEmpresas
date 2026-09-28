@@ -221,7 +221,7 @@ export default async function Marketplace({
                       {item.business_id && <p className="marketplace-provider">Fornecedor: {item.business_id}</p>}
                       <p>{item.description}</p>
                       <div className="marketplace-offer-footer"><strong>{item.price != null ? item.price + " " + (item.currency || "MZN") : "Sob consulta"}</strong><span>Ver oferta →</span></div>
-                      {item.price != null && <form action={createOrder} className="marketplace-buy-form" onClick={(event) => event.preventDefault()}><input type="hidden" name="listing_id" value={item.id} /><select name="buyer_business_id" aria-label="Empresa compradora" defaultValue=""><option value="">Compra pessoal</option>{buyerBusinesses.map(b=><option value={b.id} key={b.id}>{b.name}</option>)}</select><input name="quantity" type="number" min="1" step="1" defaultValue="1" aria-label="Quantidade" /><button className="btn primary" type="submit">Comprar →</button></form>}
+                      {item.price != null && <form action={createOrder} className="marketplace-buy-form"><input type="hidden" name="listing_id" value={item.id} /><select name="buyer_business_id" aria-label="Empresa compradora" defaultValue=""><option value="">Compra pessoal</option>{buyerBusinesses.map(b=><option value={b.id} key={b.id}>{b.name}</option>)}</select><input name="quantity" type="number" min="1" step="1" defaultValue="1" aria-label="Quantidade" /><button className="btn primary" type="submit">Comprar →</button></form>}
                     </div>
                   </Link>
                 ))}
