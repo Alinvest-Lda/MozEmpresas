@@ -180,3 +180,22 @@ export async function updateOrderStatus(formData: FormData) {
 
   redirect("/dashboard/marketplace?status=updated");
 }
+
+
+export async function cancelOrder(formData: FormData) {
+  const { supabase, userId } = await currentUser();
+  const orderId = text(formData.get("order_id"));
+  if (!orderId) redirect("/dashboard/marketplace?status=error");
+
+  const { data: order } = await supabase.from("commerce_orders").select("id,status").eq("id",orderId).eq("buyer_user_id",userId).maybeSingle();
+  if (!order || ["COMPLETED","CANCELLED","REFUNDED"].includes(order.status)) redirect("/dashboard/marketplace?status=error");
+
+  const { error } = await supabase.from("commerce_orders").update({status:"CANCELLED"}).eq("id",orderId).eq("buyer_user_id",userId);
+  if (error) redirect("/dashboard/marketplace?status=error");
+
+  await supabase.from("commerce_order_events").insert({
+    order_id: orderId, actor_user_id: userId, from_status: order.status,
+    to_status: "CANCELLED", note: "Pedido cancelado pelo comprador."
+  });
+  redirect("/dashboard/marketplace?status=cancelled");
+}
