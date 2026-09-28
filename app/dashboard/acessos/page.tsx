@@ -5,8 +5,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateBusinessMemberRole } from "@/lib/businesses/access-actions";
 import { inviteBusinessMember } from "@/lib/businesses/invitation-actions";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-
 const roleLabels: Record<string, string> = {
   owner: "Proprietário", admin: "Administrador", operator: "Operador", member: "Membro", viewer: "Consulta",
 };
@@ -47,8 +45,7 @@ export default async function AcessosPage() {
   const businessMap = new Map((businesses ?? []).map((business) => [business.id, business]));
 
   return (
-    <div className="dashboard-shell"><DashboardSidebar pathname="/dashboard/acessos" />
-      <main className="dashboard-main"><div className="dashboard-content">
+    <main className="dashboard-main"><div className="dashboard-content">
         <div className="dashboard-topbar">
           <div><span className="dashboard-kicker">Governação</span><h1>Acessos e equipa</h1><p>Organize quem pode agir em nome de cada empresa. As funções controlam o que cada pessoa pode ver e executar.</p></div>
           <Link href="/dashboard" className="btn">Voltar ao painel</Link>
@@ -101,6 +98,7 @@ export default async function AcessosPage() {
           </aside>
         </div>
       </div></main>
-    </div>
   );
 }
+
+  )
