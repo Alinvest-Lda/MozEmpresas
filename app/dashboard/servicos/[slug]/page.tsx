@@ -20,7 +20,7 @@ export default async function ServiceDetail({params}:{params:Promise<{slug:strin
     <section className="service-detail-card">
       <span className="dashboard-kicker">{service.category}</span><h1>{service.name}</h1><p>{service.description}</p>
       <div className="service-detail-box"><strong>{service.price != null ? service.price+" "+service.currency : "Preço sob consulta"}</strong><span>{service.billing === "ONE_TIME" ? "Pagamento único" : service.billing === "MONTHLY" ? "Mensal" : service.billing === "ANNUAL" ? "Anual" : "Proposta personalizada"}</span></div>
-      <form action={requestPlatformService} className="service-request-form">
+      <form action={async (formData) => { await requestPlatformService(formData); }} className="service-request-form">
         <input type="hidden" name="serviceId" value={service.id}/>
         {businesses?.length ? <label><span>Solicitar em nome de</span><select name="businessId" defaultValue={businesses[0].id}>{businesses.map(b=><option value={b.id} key={b.id}>{b.name}</option>)}</select></label> : null}
         <label><span>O que precisa?</span><textarea name="notes" rows={5} placeholder="Descreva brevemente o objectivo, prazo ou contexto."></textarea></label>
