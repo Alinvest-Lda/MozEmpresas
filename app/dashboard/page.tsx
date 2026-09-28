@@ -5,15 +5,19 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/auth/actions";
 
-const mainActions = [
-  { href: "/marketplace", title: "Comprar", text: "Encontre produtos e serviços para a sua actividade.", icon: "↗" },
-  { href: "/dashboard/servicos", title: "Serviços MozEmpresas", text: "Contrate serviços da própria plataforma quando precisar.", icon: "◆" },
-  { href: "/marketplace", title: "Vender", text: "Publique produtos e serviços e seja encontrado.", icon: "◇" },
-  { href: "/concursos", title: "Concursos", text: "Explore processos e, quando disponível, participe.", icon: "◈" },
-  { href: "/oportunidades", title: "Oportunidades", text: "Descubra chamadas, parcerias e outras oportunidades.", icon: "⌘" },
-  { href: "/dashboard/empresas", title: "Empresa", text: "Mantenha a presença pública e os dados da empresa.", icon: "□" },
-  { href: "/dashboard/acessos", title: "Acessos", text: "Controle quem pode trabalhar em nome da empresa.", icon: "••" },
+const workActions = [
+  { href: "/marketplace", title: "Comprar e vender", text: "Encontre ofertas, publique o que a sua empresa disponibiliza e desenvolva negócio.", icon: "↗" },
+  { href: "/dashboard/empresas", title: "Gerir empresa", text: "Actualize a presença, contactos e informação pública da sua empresa.", icon: "□" },
+  { href: "/oportunidades", title: "Encontrar oportunidades", text: "Acompanhe oportunidades e responda às que fazem sentido para a sua actividade.", icon: "⌘" },
+  { href: "/concursos", title: "Concursos", text: "Consulte concursos e participe nos processos em que a sua empresa tem interesse.", icon: "◈" },
 ];
+
+const quickLinks = [
+  ["/dashboard/parceiros", "Parceiros", "Criar e acompanhar relações empresariais"],
+  ["/dashboard/acessos", "Acessos e equipa", "Definir quem pode actuar pela empresa"],
+  ["/dashboard/servicos", "Serviços MozEmpresas", "Contratar apoio e serviços da plataforma"],
+  ["/empresas", "Directório", "Pesquisar empresas e potenciais parceiros"],
+] as const;
 
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -37,9 +41,11 @@ export default async function Dashboard() {
   const { data: memberBusinesses } = memberBusinessIds.length
     ? await supabase.from("businesses").select("id,name,slug,location,is_public").in("id", memberBusinessIds)
     : { data: [] };
+
   const businesses = [...(ownedBusinesses ?? []), ...(memberBusinesses ?? []).filter((item) => !(ownedBusinesses ?? []).some((owned) => owned.id === item.id))];
   const name = profile?.full_name || user.email?.split("@")[0] || "Utilizador";
   const platformAccess = platformMember?.active ? platformMember.role : null;
+  const teamAccessCount = memberships?.length ?? 0;
 
   return (
     <div className="dashboard-shell">
@@ -48,35 +54,30 @@ export default async function Dashboard() {
           <small>Área empresarial</small>
           <strong>MozEmpresas</strong>
         </div>
-
         <div className="dashboard-nav-group">
-          <span>Principal</span>
+          <span>Trabalho</span>
           <Link className="dashboard-nav-link active" href="/dashboard"><i className="nav-dot" />Visão geral</Link>
           <Link className="dashboard-nav-link" href="/marketplace"><i className="nav-dot" />Comprar e vender</Link>
-          <Link className="dashboard-nav-link" href="/concursos"><i className="nav-dot" />Concursos</Link>
           <Link className="dashboard-nav-link" href="/oportunidades"><i className="nav-dot" />Oportunidades</Link>
+          <Link className="dashboard-nav-link" href="/concursos"><i className="nav-dot" />Concursos</Link>
         </div>
-
         <div className="dashboard-nav-group">
           <span>Empresa</span>
           <Link className="dashboard-nav-link" href="/dashboard/empresas"><i className="nav-dot" />Presença da empresa</Link>
           <Link className="dashboard-nav-link" href="/dashboard/acessos"><i className="nav-dot" />Acessos e equipa</Link>
           <Link className="dashboard-nav-link" href="/empresas"><i className="nav-dot" />Directório</Link>
         </div>
-
         <div className="dashboard-nav-group">
-          <span>Ecossistema</span>
-          <Link className="dashboard-nav-link" href="/marketplace"><i className="nav-dot" />Recomendações</Link>
+          <span>Relações</span>
           <Link className="dashboard-nav-link" href="/dashboard/parceiros"><i className="nav-dot" />Parceiros</Link>
+          <Link className="dashboard-nav-link" href="/dashboard/servicos"><i className="nav-dot" />Serviços MozEmpresas</Link>
         </div>
-
         {platformAccess && (
           <div className="dashboard-nav-group">
             <span>Plataforma</span>
             <Link className="dashboard-nav-link" href="/dashboard/admin"><i className="nav-dot" />Administração · {platformAccess}</Link>
           </div>
         )}
-
         <div className="dashboard-user">
           <strong>{name}</strong>
           {user.email}
@@ -88,39 +89,42 @@ export default async function Dashboard() {
 
       <main className="dashboard-main">
         <div className="dashboard-content">
-          <div className="dashboard-topbar">
-            <div>
+          <header className="dashboard-topbar">
+            <div className="dashboard-welcome">
               <span className="dashboard-kicker">Área empresarial</span>
-              <h1>Olá, {name}</h1>
-              <p>O seu espaço de trabalho para gerir a empresa, encontrar negócio e participar no ecossistema MozEmpresas.</p>
+              <h1>Bom trabalho, {name}.</h1>
+              <p>Encontre oportunidades, desenvolva relações comerciais e mantenha a presença da sua empresa organizada num só espaço.</p>
             </div>
             <div className="dashboard-actions">
               <Link href="/dashboard/empresas" className="btn primary">Gerir empresa</Link>
-              <Link href="/dashboard/servicos" className="btn">Serviços MozEmpresas</Link>
               <Link href="/marketplace" className="btn">Explorar mercado</Link>
+              <Link href="/dashboard/servicos" className="dashboard-service-link">Ver serviços MozEmpresas →</Link>
             </div>
-          </div>
+          </header>
 
-          <div className="dashboard-stat-grid">
-            <div className="dashboard-stat"><small>Empresas</small><strong>{businesses?.length ?? 0}</strong><span>Presenças que gere directamente</span></div>
-            <div className="dashboard-stat"><small>Ofertas</small><strong>{listings?.length ?? 0}</strong><span>Produtos e serviços publicados</span></div>
-            <div className="dashboard-stat"><small>Oportunidades</small><strong>{opportunities?.length ?? 0}</strong><span>Publicações da sua conta</span></div>
-            <div className="dashboard-stat"><small>Empresas acessíveis</small><strong>{businesses.length}</strong><span>Empresas onde tem uma função activa</span></div>
-          </div>
+          <section className="dashboard-overview">
+            <div className="dashboard-stat-grid">
+              <div className="dashboard-stat"><small>Empresas no espaço</small><strong>{businesses.length}</strong><span>Empresas que pode gerir ou representar</span></div>
+              <div className="dashboard-stat"><small>Ofertas publicadas</small><strong>{listings?.length ?? 0}</strong><span>Produtos e serviços associados à sua conta</span></div>
+              <div className="dashboard-stat"><small>Oportunidades publicadas</small><strong>{opportunities?.length ?? 0}</strong><span>Oportunidades criadas por si</span></div>
+              <div className="dashboard-stat"><small>Acessos de equipa</small><strong>{teamAccessCount}</strong><span>Associações de trabalho activas</span></div>
+            </div>
+          </section>
 
-          <section className="dashboard-section">
+          <section className="dashboard-section dashboard-work-section">
             <div className="dashboard-section-head">
               <div>
-                <span className="dashboard-kicker">Acções principais</span>
-                <h2>O que pretende fazer?</h2>
-                <p>As capacidades não estão presas a um único tipo de conta.</p>
+                <span className="dashboard-kicker">Centro de trabalho</span>
+                <h2>O que precisa de fazer hoje?</h2>
+                <p>Aceda directamente às actividades que geram valor para a sua empresa.</p>
               </div>
             </div>
             <div className="dashboard-action-grid">
-              {mainActions.map((item) => (
+              {workActions.map((item) => (
                 <Link href={item.href} className="dashboard-action-card" key={item.title}>
                   <span className="dashboard-action-icon">{item.icon}</span>
                   <div><strong>{item.title}</strong><small>{item.text}</small></div>
+                  <b>→</b>
                 </Link>
               ))}
             </div>
@@ -130,17 +134,17 @@ export default async function Dashboard() {
             <section className="dashboard-section">
               <div className="dashboard-section-head">
                 <div>
-                  <span className="dashboard-kicker">Presença</span>
-                  <h2>As suas empresas</h2>
+                  <span className="dashboard-kicker">Portefólio empresarial</span>
+                  <h2>Empresas que representa</h2>
                 </div>
-                <Link href="/dashboard/empresas" className="text-link">Gerir →</Link>
+                <Link href="/dashboard/empresas" className="text-link">Ver gestão →</Link>
               </div>
-              {businesses?.length ? (
+              {businesses.length ? (
                 <div className="dashboard-list">
                   {businesses.slice(0, 5).map((business) => (
                     <Link href={"/empresas/" + business.slug} key={business.id}>
                       <strong>{business.name}</strong>
-                      <span>{business.location || "Localização por definir"} · {business.is_public ? "Pública" : "Privada"}</span>
+                      <span>{business.location || "Localização por definir"} · {business.is_public ? "Visível no directório" : "Ainda não publicada"}</span>
                       <b>→</b>
                     </Link>
                   ))}
@@ -148,7 +152,7 @@ export default async function Dashboard() {
               ) : (
                 <div className="empty">
                   <div className="empty-icon">+</div>
-                  <p>Ainda não tem uma empresa associada ao seu espaço. Crie a primeira presença para começar a publicar e participar.</p>
+                  <p>Associe a primeira empresa para começar a apresentar a sua actividade, publicar ofertas e estabelecer relações.</p>
                   <Link href="/dashboard/empresas" className="btn primary">Criar empresa</Link>
                 </div>
               )}
@@ -157,15 +161,16 @@ export default async function Dashboard() {
             <section className="dashboard-section">
               <div className="dashboard-section-head">
                 <div>
-                  <span className="dashboard-kicker">Próximos passos</span>
-                  <h2>Complete o espaço</h2>
+                  <span className="dashboard-kicker">Acesso rápido</span>
+                  <h2>Outras ferramentas</h2>
                 </div>
               </div>
-              <div className="dashboard-checklist">
-                <Link href="/dashboard/empresas"><em>01</em><div><strong>Completar empresa</strong><small>Dados, contacto e presença pública.</small></div><b>→</b></Link>
-                <Link href="/marketplace"><em>02</em><div><strong>Publicar uma oferta</strong><small>Apresente um produto ou serviço.</small></div><b>→</b></Link>
-                <Link href="/dashboard/acessos"><em>03</em><div><strong>Organizar acessos</strong><small>Defina quem trabalha pela empresa.</small></div><b>→</b></Link>
-                <Link href="/oportunidades"><em>04</em><div><strong>Explorar oportunidades</strong><small>Descubra novas relações de negócio.</small></div><b>→</b></Link>
+              <div className="dashboard-quick-links">
+                {quickLinks.map(([href, title, text]) => (
+                  <Link href={href} key={title}>
+                    <div><strong>{title}</strong><small>{text}</small></div><b>→</b>
+                  </Link>
+                ))}
               </div>
             </section>
           </div>

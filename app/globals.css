@@ -2133,3 +2133,69 @@ button,input,select,textarea{font-size:16px}
   .dashboard-section{padding:15px}
   .btn{padding-inline:13px}
 }
+
+
+/* =========================================================
+   MozEmpresas dashboard correction — tablet, actions, utility
+   ========================================================= */
+
+.dashboard-welcome{min-width:0;max-width:760px}
+.dashboard-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:440px}
+.dashboard-actions .btn{white-space:nowrap}
+.dashboard-service-link{display:inline-flex;align-items:center;min-height:38px;padding:7px 2px;color:var(--brand-dark);font-size:12px;font-weight:800;text-decoration:none}
+.dashboard-service-link:hover{text-decoration:underline}
+.dashboard-work-section{margin-top:0}
+.dashboard-action-card{position:relative;grid-template-columns:auto minmax(0,1fr) auto;align-items:start}
+.dashboard-action-card>b{align-self:center;color:var(--brand);font-size:14px}
+.dashboard-quick-links{display:grid;gap:0}
+.dashboard-quick-links a{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px 2px;border-bottom:1px solid #edf0ef}
+.dashboard-quick-links a:last-child{border-bottom:0}
+.dashboard-quick-links strong{display:block;font-size:12px}
+.dashboard-quick-links small{display:block;color:var(--muted);font-size:10px;line-height:1.45;margin-top:3px}
+.dashboard-quick-links b{color:var(--brand);font-size:13px}
+
+/* Keep the workspace lateral on tablets. Mobile navigation starts only below 600px. */
+@media (min-width:601px) and (max-width:1100px){
+  .dashboard-shell{display:grid;grid-template-columns:196px minmax(0,1fr);align-items:stretch}
+  .dashboard-sidebar{position:sticky;top:64px;height:calc(100vh - 64px);padding:20px 12px;overflow-y:auto;overflow-x:hidden}
+  .dashboard-nav-group{display:grid;gap:2px;margin-top:16px}
+  .dashboard-nav-group>span{display:block;padding:0 9px 7px}
+  .dashboard-nav-link{width:100%;min-width:0;white-space:normal!important}
+  .dashboard-main{min-width:0;padding:28px 22px 56px}
+  .dashboard-content{width:min(100%,960px)}
+  .dashboard-topbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:start}
+  .dashboard-actions{width:190px;display:grid;grid-template-columns:1fr;justify-content:stretch}
+  .dashboard-actions .btn{width:100%;text-align:center;justify-content:center}
+  .dashboard-service-link{justify-content:center}
+  .dashboard-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dashboard-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dashboard-lower-grid{grid-template-columns:minmax(0,1.1fr) minmax(250px,.9fr)}
+}
+
+/* Small tablet portrait: keep the sidebar, make the content single-column where needed. */
+@media (min-width:601px) and (max-width:760px){
+  .dashboard-shell{grid-template-columns:178px minmax(0,1fr)}
+  .dashboard-sidebar{padding-inline:9px}
+  .dashboard-nav-link{font-size:11px!important;padding:9px 8px!important}
+  .dashboard-main{padding-inline:16px}
+  .dashboard-topbar{grid-template-columns:1fr}
+  .dashboard-actions{width:100%;display:flex;justify-content:flex-start}
+  .dashboard-actions .btn{width:auto}
+  .dashboard-service-link{justify-content:flex-start}
+  .dashboard-stat-grid,.dashboard-action-grid{grid-template-columns:1fr 1fr}
+}
+
+/* Mobile is intentionally different: no sidebar competing with content. */
+@media (max-width:600px){
+  .dashboard-shell{display:block}
+  .dashboard-sidebar{position:sticky;top:60px;height:auto;max-height:none;padding:7px 10px;overflow-x:auto;overflow-y:hidden}
+  .dashboard-nav-group{display:flex;gap:4px;margin:0}
+  .dashboard-nav-group>span{display:none}
+  .dashboard-nav-link{width:auto;white-space:nowrap!important}
+  .dashboard-main{padding:20px 13px 40px}
+  .dashboard-topbar{display:block}
+  .dashboard-actions{display:grid;grid-template-columns:1fr;gap:7px;width:100%;max-width:none}
+  .dashboard-actions .btn{width:100%;justify-content:center}
+  .dashboard-service-link{justify-content:center;min-height:40px}
+  .dashboard-stat-grid,.dashboard-action-grid,.dashboard-lower-grid{grid-template-columns:1fr}
+}
