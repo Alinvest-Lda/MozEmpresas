@@ -39,4 +39,3 @@ export default async function AdminPage() {
     <Link href="/dashboard" className="text-link" style={{display:"inline-block",marginTop:20}}>← Voltar ao painel empresarial</Link>
   </div></main>;
 }
-;
