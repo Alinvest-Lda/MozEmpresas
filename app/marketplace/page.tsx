@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
+import { createOrder } from "@/lib/commerce/actions";
 
 const types = [["PRODUCT", "Produtos"], ["SERVICE", "Serviços"]] as const;
 
@@ -40,11 +41,22 @@ export default async function Marketplace({
   let billboardAds: DirectoryAd[] = [];
   let signedIn = false;
   let error = false;
+  let buyerBusinesses: { id: string; name: string }[] = [];
 
   try {
     const supabase = await createClient();
     const { data: claimsData } = await supabase.auth.getClaims();
     signedIn = Boolean(claimsData?.claims?.sub);
+    if (signedIn && claimsData?.claims?.sub) {
+      const userId = String(claimsData.claims.sub);
+      const [{ data: owned }, { data: memberships }] = await Promise.all([
+        supabase.from("businesses").select("id,name").eq("owner_id", userId).order("name"),
+        supabase.from("business_members").select("business_id,role").eq("user_id", userId).in("role", ["owner","admin","operator"]),
+      ]);
+      const memberIds = [...new Set((memberships ?? []).map(item => item.business_id))];
+      const { data: memberBusinesses } = memberIds.length ? await supabase.from("businesses").select("id,name").in("id", memberIds) : { data: [] };
+      buyerBusinesses = [...(owned ?? []), ...(memberBusinesses ?? []).filter(item => !(owned ?? []).some(o => o.id === item.id))];
+    }
 
     const { data: promotions, error: promotionError } = await supabase
       .from("business_promotions")
@@ -209,6 +221,7 @@ export default async function Marketplace({
                       {item.business_id && <p className="marketplace-provider">Fornecedor: {item.business_id}</p>}
                       <p>{item.description}</p>
                       <div className="marketplace-offer-footer"><strong>{item.price != null ? item.price + " " + (item.currency || "MZN") : "Sob consulta"}</strong><span>Ver oferta →</span></div>
+                      {item.price != null && <form action={createOrder} className="marketplace-buy-form" onClick={(event) => event.preventDefault()}><input type="hidden" name="listing_id" value={item.id} /><select name="buyer_business_id" aria-label="Empresa compradora" defaultValue=""><option value="">Compra pessoal</option>{buyerBusinesses.map(b=><option value={b.id} key={b.id}>{b.name}</option>)}</select><input name="quantity" type="number" min="1" step="1" defaultValue="1" aria-label="Quantidade" /><button className="btn primary" type="submit">Comprar →</button></form>}
                     </div>
                   </Link>
                 ))}
