@@ -24,7 +24,7 @@ export default async function Dashboard() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: businesses }, { data: memberships }, { data: listings }, { data: opportunities }, { data: platformMember }] = await Promise.all([
+  const [{ data: profile }, { data: ownedBusinesses }, { data: memberships }, { data: listings }, { data: opportunities }, { data: platformMember }] = await Promise.all([
     supabase.from("profiles").select("full_name,location,website,bio").eq("id", user.id).maybeSingle(),
     supabase.from("businesses").select("id,name,slug,location,is_public").eq("owner_id", user.id).order("created_at", { ascending: false }),
     supabase.from("business_members").select("business_id,role").eq("user_id", user.id),
@@ -33,8 +33,13 @@ export default async function Dashboard() {
     supabase.from("platform_members").select("role,active").eq("user_id", user.id).maybeSingle(),
   ]);
 
+  const memberBusinessIds = [...new Set((memberships ?? []).map((item) => item.business_id))];
+  const { data: memberBusinesses } = memberBusinessIds.length
+    ? await supabase.from("businesses").select("id,name,slug,location,is_public").in("id", memberBusinessIds)
+    : { data: [] };
+  const businesses = [...(ownedBusinesses ?? []), ...(memberBusinesses ?? []).filter((item) => !(ownedBusinesses ?? []).some((owned) => owned.id === item.id))];
   const name = profile?.full_name || user.email?.split("@")[0] || "Utilizador";
-  const ownedBusinessIds = new Set((businesses ?? []).map((item) => item.id));
+  const ownedBusinessIds = new Set((ownedBusinesses ?? []).map((item) => item.id));
   const managedMemberships = (memberships ?? []).filter((item) => !ownedBusinessIds.has(item.business_id));
   const platformAccess = platformMember?.active ? platformMember.role : null;
 
@@ -93,6 +98,7 @@ export default async function Dashboard() {
             </div>
             <div className="dashboard-actions">
               <Link href="/dashboard/empresas" className="btn primary">Gerir empresa</Link>
+              <Link href="/dashboard/servicos" className="btn">Serviços MozEmpresas</Link>
               <Link href="/marketplace" className="btn">Explorar mercado</Link>
             </div>
           </div>
@@ -101,7 +107,7 @@ export default async function Dashboard() {
             <div className="dashboard-stat"><small>Empresas</small><strong>{businesses?.length ?? 0}</strong><span>Presenças que gere directamente</span></div>
             <div className="dashboard-stat"><small>Ofertas</small><strong>{listings?.length ?? 0}</strong><span>Produtos e serviços publicados</span></div>
             <div className="dashboard-stat"><small>Oportunidades</small><strong>{opportunities?.length ?? 0}</strong><span>Publicações da sua conta</span></div>
-            <div className="dashboard-stat"><small>Acessos</small><strong>{managedMemberships.length + (businesses?.length ?? 0)}</strong><span>Relações empresariais sob gestão</span></div>
+            <div className="dashboard-stat"><small>Empresas acessíveis</small><strong>{businesses.length}</strong><span>Empresas onde tem uma função activa</span></div>
           </div>
 
           <section className="dashboard-section">

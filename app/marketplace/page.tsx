@@ -65,7 +65,7 @@ export default async function Marketplace({
       href: item.target_url || "/contactos",
     }));
 
-    if (signedIn) {
+    {
       let query = supabase
         .from("listings")
         .select("id,title,description,type,price,currency,location,business_id")
@@ -220,11 +220,13 @@ export default async function Marketplace({
         ) : (
           <section className="marketplace-member-gate">
             <div>
-              <span className="eyebrow">Catálogo da comunidade</span>
-              <h2>Quer ver ofertas publicadas por empresas?</h2>
-              <p>Registe-se ou entre na sua conta para aceder ao directório completo de produtos e serviços e aos contactos comerciais da comunidade.</p>
+              <span className="eyebrow">Ecossistema comercial</span>
+              <h2>Encontre, compare e depois entre em contacto.</h2>
+              <p>O catálogo é público para facilitar a descoberta. Para publicar, guardar contactos, responder a necessidades ou iniciar uma compra, entre na sua conta.</p>
             </div>
-            <div className="marketplace-gate-actions"><Link href="/registo" className="btn primary">Registar empresa</Link><Link href={"/login?next=" + encodeURIComponent("/marketplace")} className="btn">Entrar</Link></div>
+            <div className="marketplace-gate-actions">
+              {signedIn ? <Link href="/dashboard" className="btn primary">Ir para o meu painel</Link> : <><Link href="/registo" className="btn primary">Criar conta</Link><Link href={"/login?next=" + encodeURIComponent("/marketplace")} className="btn">Entrar</Link></>}
+            </div>
           </section>
         )}
       </div>

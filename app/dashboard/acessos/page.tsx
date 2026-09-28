@@ -27,8 +27,12 @@ export default async function AcessosPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: businesses } = await supabase.from("businesses").select("id,name,slug").eq("owner_id", user.id).order("name");
-  const businessIds = (businesses ?? []).map((item) => item.id);
+  const { data: ownedBusinesses } = await supabase.from("businesses").select("id,name,slug").eq("owner_id", user.id).order("name");
+  const { data: memberships } = await supabase.from("business_members").select("business_id,role").eq("user_id", user.id).neq("role","viewer");
+  const memberIds = [...new Set((memberships ?? []).map(item => item.business_id))];
+  const { data: memberBusinesses } = memberIds.length ? await supabase.from("businesses").select("id,name,slug").in("id",memberIds) : { data: [] };
+  const businesses = [...(ownedBusinesses ?? []), ...(memberBusinesses ?? []).filter(item => !(ownedBusinesses ?? []).some(o => o.id === item.id))];
+  const businessIds = (ownedBusinesses ?? []).map((item) => item.id);
   const { data: members } = businessIds.length
     ? await supabase.from("business_members").select("business_id,user_id,role,created_at").in("business_id", businessIds).order("created_at")
     : { data: [] };

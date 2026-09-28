@@ -4,31 +4,22 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function PartnersPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: businesses } = await supabase.from("businesses").select("id,name,slug,location").eq("owner_id", user.id).order("name");
-  const businessIds = (businesses ?? []).map((b) => b.id);
-  const [{ data: listings }, { data: opportunities }] = await Promise.all([
-    businessIds.length ? supabase.from("listings").select("id,title,type,status").in("business_id", businessIds).limit(12) : Promise.resolve({data: [] as {id:string;title:string;type:string;status:string}[]}),
-    supabase.from("opportunities").select("id,title,status,type").eq("owner_id", user.id).limit(12),
-  ]);
-
-  return <div className="page"><div className="container">
-    <div className="page-header-row page-header">
-      <div><span className="eyebrow">Ecossistema</span><h1>Painel dos parceiros</h1><p className="muted">Uma área para acompanhar relações, ofertas, oportunidades e novas possibilidades de negócio.</p></div>
-      <Link href="/dashboard" className="btn">Voltar ao painel</Link>
-    </div>
-    <div className="grid">
-      <div className="card"><span className="muted">Empresas</span><h2>{businesses?.length ?? 0}</h2><p>Presenças sob a sua gestão.</p></div>
-      <div className="card"><span className="muted">Ofertas</span><h2>{listings?.length ?? 0}</h2><p>Produtos e serviços activos.</p></div>
-      <div className="card"><span className="muted">Oportunidades</span><h2>{opportunities?.length ?? 0}</h2><p>Oportunidades publicadas.</p></div>
-    </div>
-    <div className="grid" style={{marginTop:18}}>
-      <section className="card"><span className="eyebrow">Vender</span><h2 style={{marginTop:10}}>Ofertas da rede</h2>{listings?.length ? listings.map(x=><div key={x.id} style={{padding:"12px 0",borderBottom:"1px solid var(--line)"}}><strong>{x.title}</strong><p className="muted" style={{margin:"4px 0 0",fontSize:12}}>{x.type} · {x.status}</p></div>) : <p className="muted">Ainda não existem ofertas associadas às suas empresas.</p>}</section>
-      <section className="card"><span className="eyebrow">Oportunidades</span><h2 style={{marginTop:10}}>Actividade</h2>{opportunities?.length ? opportunities.map(x=><div key={x.id} style={{padding:"12px 0",borderBottom:"1px solid var(--line)"}}><strong>{x.title}</strong><p className="muted" style={{margin:"4px 0 0",fontSize:12}}>{x.type} · {x.status}</p></div>) : <p className="muted">Explore oportunidades para criar novas relações.</p>}</section>
-    </div>
-  </div></div>;
+export default async function PartnersPage(){
+ const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user) redirect("/login");
+ const {data:owned}=await supabase.from("businesses").select("id,name").eq("owner_id",user.id).order("name");
+ const ids=(owned??[]).map(b=>b.id);
+ const [{data:relations},{data:directory}]=await Promise.all([
+   ids.length?supabase.from("business_partner_relationships").select("id,business_id,partner_business_id,status,relationship_type,created_at").in("business_id",ids).order("created_at",{ascending:false}):Promise.resolve({data:[]}),
+   supabase.from("businesses").select("id,name,location,description").eq("is_public",true).order("name").limit(40)
+ ]);
+ const partnerIds=[...new Set((relations??[]).map(r=>r.partner_business_id))];
+ const {data:partnerBusinesses}=partnerIds.length?await supabase.from("businesses").select("id,name,location").in("id",partnerIds):{data:[]};
+ const names=new Map((partnerBusinesses??[]).map(b=>[b.id,b]));
+ return <div className="dashboard-shell"><aside className="dashboard-sidebar"><div className="dashboard-brand"><small>Área empresarial</small><strong>MozEmpresas</strong></div><div className="dashboard-nav-group"><span>Principal</span><Link className="dashboard-nav-link" href="/dashboard">Visão geral</Link><Link className="dashboard-nav-link" href="/marketplace">Comprar e vender</Link><Link className="dashboard-nav-link" href="/concursos">Concursos</Link><Link className="dashboard-nav-link" href="/oportunidades">Oportunidades</Link></div><div className="dashboard-nav-group"><span>Ecossistema</span><Link className="dashboard-nav-link active" href="/dashboard/parceiros">Parceiros</Link><Link className="dashboard-nav-link" href="/marketplace">Recomendações</Link><Link className="dashboard-nav-link" href="/dashboard/servicos">Serviços MozEmpresas</Link></div></aside>
+ <main className="dashboard-main"><div className="dashboard-content">
+ <div className="dashboard-topbar"><div><span className="dashboard-kicker">Ecossistema</span><h1>Parceiros</h1><p>Construa relações comerciais complementares e mantenha-as visíveis para a equipa.</p></div><Link href="/dashboard" className="btn">Voltar</Link></div>
+ <div className="dashboard-stat-grid"><div className="dashboard-stat"><small>Relações activas</small><strong>{(relations??[]).filter(r=>r.status==="ACTIVE").length}</strong><span>Parcerias actualmente activas</span></div><div className="dashboard-stat"><small>Empresas disponíveis</small><strong>{directory?.length??0}</strong><span>Perfis públicos para descoberta</span></div></div>
+ <section className="dashboard-section"><div className="dashboard-section-head"><div><span className="dashboard-kicker">As suas relações</span><h2>Parceiros activos</h2></div></div>{relations?.length?<div className="dashboard-list">{relations.map(r=>{const b=names.get(r.partner_business_id);return <Link href={b?"/empresas/"+b.id:"/dashboard/parceiros"} key={r.id}><strong>{b?.name||"Empresa parceira"}</strong><span>{b?.location||"Moçambique"} · {r.relationship_type} · {r.status}</span><b>→</b></Link>})}</div>:<div className="empty"><p>Ainda não existem relações. Explore empresas públicas e transforme relações comerciais em parcerias.</p><Link href="/empresas" className="btn primary">Explorar empresas</Link></div>}</section>
+ <section className="dashboard-section" style={{marginTop:14}}><div className="dashboard-section-head"><div><span className="dashboard-kicker">Descoberta</span><h2>Empresas para conhecer</h2><p>A próxima etapa é transformar estas descobertas em relações de negócio.</p></div><Link href="/empresas" className="text-link">Ver directório →</Link></div><div className="dashboard-action-grid">{(directory??[]).filter(b=>!(owned??[]).some(o=>o.id===b.id)).slice(0,6).map(b=><Link className="dashboard-action-card" href={"/empresas/"+b.id} key={b.id}><span className="dashboard-action-icon">{b.name.slice(0,1)}</span><div><strong>{b.name}</strong><small>{b.location||"Moçambique"} · {b.description||"Perfil empresarial público"}</small></div></Link>)}</div></section>
+ </div></main></div>
 }

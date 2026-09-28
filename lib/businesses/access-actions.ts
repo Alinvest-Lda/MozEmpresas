@@ -31,12 +31,16 @@ export async function updateBusinessMemberRole(formData: FormData) {
 
   if (!business) return;
 
-  await supabase
+  const { data: currentMember } = await supabase.from("business_members").select("role").eq("business_id", parsed.data.businessId).eq("user_id", parsed.data.userId).maybeSingle();
+  const { error: updateError } = await supabase
     .from("business_members")
     .update({ role: parsed.data.role })
     .eq("business_id", parsed.data.businessId)
     .eq("user_id", parsed.data.userId)
     .neq("role", "owner");
+  if (!updateError && currentMember?.role && currentMember.role !== parsed.data.role) {
+    await supabase.from("access_audit_log").insert({ business_id: parsed.data.businessId, actor_user_id: user.id, target_user_id: parsed.data.userId, action: "ROLE_CHANGED", role_from: currentMember.role, role_to: parsed.data.role, metadata: {} });
+  }
 
   revalidatePath("/dashboard/acessos");
   revalidatePath("/dashboard");
