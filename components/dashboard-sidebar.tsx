@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signOut } from "@/lib/auth/actions";
+import { createClient } from "@/lib/supabase/server";
 
 const groups = [
   { label: "Trabalho", links: [["/dashboard","Visão geral"],["/marketplace","Comprar e vender"],["/oportunidades","Oportunidades"],["/concursos","Concursos"]] },
@@ -8,7 +9,14 @@ const groups = [
   { label: "Conta", links: [["/dashboard/conta","A minha conta"]] },
 ] as const;
 
-export function DashboardSidebar({ pathname, platformAccess }: { pathname: string; platformAccess?: string | null }) {
+export async function DashboardSidebar({ pathname }: { pathname: string }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: platformMember } = user
+    ? await supabase.from("platform_members").select("role,active").eq("user_id", user.id).maybeSingle()
+    : { data: null };
+  const platformAccess = platformMember?.active ? platformMember.role : null;
+
   return <aside className="dashboard-sidebar">
     <div className="dashboard-brand"><small>Área empresarial</small><strong>MozEmpresas</strong></div>
     <nav className="dashboard-sidebar-nav" aria-label="Navegação da área empresarial">
@@ -26,5 +34,5 @@ export function DashboardSidebar({ pathname, platformAccess }: { pathname: strin
       <Link className="dashboard-account-link" href="/dashboard/conta">Gerir conta</Link>
       <form action={signOut} className="dashboard-signout-form"><button className="btn header-signout full" type="submit">Sair</button></form>
     </div>
-  </aside>;
+  </aside>; 
 }
