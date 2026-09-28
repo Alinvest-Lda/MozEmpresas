@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { createListing, updateOrderStatus } from "@/lib/commerce/actions";
+import { createListing, updateOrderStatus, cancelOrder } from "@/lib/commerce/actions";
 
 export default async function MarketplaceWorkspace({
   searchParams,
@@ -65,7 +65,7 @@ export default async function MarketplaceWorkspace({
               <div><span className="dashboard-kicker">Comprar</span><h2>Pedidos recentes</h2><p>Os pedidos ficam registados no seu histórico.</p></div>
               <Link href="/marketplace" className="text-link">Encontrar ofertas →</Link>
             </div>
-            {purchases?.length ? <div className="dashboard-list">{purchases.map(p=><div key={p.id}><strong>Pedido #{p.id.slice(0,8)}</strong><span>{p.status} · {Number(p.total).toLocaleString("pt-MZ")} {p.currency} · {new Date(p.created_at).toLocaleDateString("pt-MZ")}</span></div>)}</div> : <div className="empty"><p>Ainda não fez pedidos. Explore produtos e serviços e inicie uma compra.</p><Link href="/marketplace" className="btn primary">Explorar ofertas</Link></div>}
+            {purchases?.length ? <div className="dashboard-list">{purchases.map(p=><div key={p.id}><strong>Pedido #{p.id.slice(0,8)}</strong><span>{p.status} · {Number(p.total).toLocaleString("pt-MZ")} {p.currency} · {new Date(p.created_at).toLocaleDateString("pt-MZ")}</span>{["PENDING","AWAITING_PAYMENT","PROCESSING"].includes(p.status) && <form action={cancelOrder}><input type="hidden" name="order_id" value={p.id} /><button className="btn" type="submit">Cancelar</button></form>}</div>)}</div> : <div className="empty"><p>Ainda não fez pedidos. Explore produtos e serviços e inicie uma compra.</p><Link href="/marketplace" className="btn primary">Explorar ofertas</Link></div>}
           </section>
         </div>
 
