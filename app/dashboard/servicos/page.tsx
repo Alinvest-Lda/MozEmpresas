@@ -9,14 +9,13 @@ export default async function ServicesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const [{ data: serviceRows }, { data: requests }, { data: platformMember }] = await Promise.all([
+  const [{ data: serviceRows }, { data: requests }, ] = await Promise.all([
     supabase.from("platform_services").select("id,slug,name,description,category,price,currency,billing").eq("active",true).order("category").order("name"),
     supabase.from("service_requests").select("id,service_id,status,requested_price,currency,notes,created_at").eq("requester_user_id", user.id).order("created_at",{ascending:false}).limit(8),
-    supabase.from("platform_members").select("role,active").eq("user_id", user.id).maybeSingle(),
   ]);
   const services = serviceRows ?? [];
   return <div className="dashboard-shell">
-    <DashboardSidebar pathname="/dashboard/servicos" platformAccess={platformMember?.active ? platformMember.role : null} />
+    <DashboardSidebar pathname="/dashboard/servicos" />
     <main className="dashboard-main"><div className="dashboard-content">
       <header className="dashboard-topbar"><div><span className="dashboard-kicker">Serviços do ecossistema</span><h1>Serviços para a sua empresa</h1><p>Além do mercado entre empresas, pode contratar add-ons do próprio MozEmpresas para reforçar a presença, visibilidade e inteligência da sua empresa.</p></div></header>
       <section className="service-hub-intro"><div><span className="dashboard-kicker">Add-ons MozEmpresas</span><h2>Escolha o nível de apoio que precisa.</h2><p>Solicite um serviço, acompanhe o pedido e mantenha o histórico no mesmo espaço.</p></div></section>

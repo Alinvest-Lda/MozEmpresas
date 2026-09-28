@@ -7,7 +7,6 @@ import { DashboardSidebar } from "@/components/dashboard-sidebar";
 
 export default async function PartnersPage(){
  const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user) redirect("/login");
- const {data:platformMember}=await supabase.from("platform_members").select("role,active").eq("user_id",user.id).maybeSingle();
  const {data:owned}=await supabase.from("businesses").select("id,name").eq("owner_id",user.id).order("name");
  const ids=(owned??[]).map(b=>b.id);
  const [{data:relations},{data:directory}]=await Promise.all([

@@ -28,7 +28,7 @@ export default async function Dashboard() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: ownedBusinesses }, { data: memberships }, { data: listings }, { data: opportunities }, { data: platformMember }] = await Promise.all([
+  const [{ data: profile }, { data: ownedBusinesses }, { data: memberships }, { data: listings }, { data: opportunities }, ] = await Promise.all([
     supabase.from("profiles").select("full_name,location,website,bio").eq("id", user.id).maybeSingle(),
     supabase.from("businesses").select("id,name,slug,location,is_public").eq("owner_id", user.id).order("created_at", { ascending: false }),
     supabase.from("business_members").select("business_id,role").eq("user_id", user.id),
@@ -44,12 +44,11 @@ export default async function Dashboard() {
 
   const businesses = [...(ownedBusinesses ?? []), ...(memberBusinesses ?? []).filter((item) => !(ownedBusinesses ?? []).some((owned) => owned.id === item.id))];
   const name = profile?.full_name || user.email?.split("@")[0] || "Utilizador";
-  const platformAccess = platformMember?.active ? platformMember.role : null;
   const teamAccessCount = memberships?.length ?? 0;
 
   return (
     <div className="dashboard-shell">
-      <DashboardSidebar pathname="/dashboard" platformAccess={platformAccess} />
+      <DashboardSidebar pathname="/dashboard" />
       <main className="dashboard-main">
         <div className="dashboard-content">
           <header className="dashboard-topbar">
