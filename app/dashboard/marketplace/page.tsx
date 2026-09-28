@@ -65,7 +65,7 @@ export default async function MarketplaceWorkspace({
           <section className="dashboard-section">
             <div className="dashboard-section-head">
               <div><span className="dashboard-kicker">Comprar</span><h2>Solicitações recentes</h2><p>Registe interesses e acompanhe a relação comercial. A negociação e a compra acontecem fora do MozEmpresas.</p></div>
-              <Link href="/marketplace" className="text-link">Encontrar ofertas →</Link>
+              <Link href="/dashboard/marketplace/ofertas" className="text-link">Encontrar ofertas →</Link>
             </div>
             {purchases?.length ? <div className="dashboard-list">{purchases.map(p=><div key={p.id}><strong>Solicitação #{p.id.slice(0,8)}</strong><span>{p.status} · {new Date(p.created_at).toLocaleDateString("pt-MZ")}</span>{["INTERESTED","CONTACTED","NEGOTIATING"].includes(p.status) && <form action={cancelOrder}><input type="hidden" name="order_id" value={p.id} /><button className="btn" type="submit">Cancelar</button></form>}</div>)}</div> : <div className="empty"><p>Ainda não iniciou nenhuma relação comercial. Explore produtos e serviços e manifeste o seu interesse.</p><Link href="/marketplace" className="btn primary">Explorar ofertas</Link></div>}
           </section>
