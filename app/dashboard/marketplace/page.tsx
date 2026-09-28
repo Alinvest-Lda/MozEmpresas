@@ -15,11 +15,12 @@ export default async function MarketplaceWorkspace({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: owned }, { data: memberships }, { data: purchases }, { data: sales }] = await Promise.all([
+  const [{ data: owned }, { data: memberships }, { data: purchases }, { data: sales }, { data: listings }] = await Promise.all([
     supabase.from("businesses").select("id,name").eq("owner_id", user.id).order("name"),
     supabase.from("business_members").select("business_id,role").eq("user_id", user.id).in("role", ["owner","admin","operator"]),
     supabase.from("commerce_orders").select("id,status,notes,created_at").eq("buyer_user_id", user.id).order("created_at",{ascending:false}).limit(8),
     supabase.from("commerce_order_items").select("id,order_id,title,quantity,line_total,currency,seller_business_id,created_at").order("created_at",{ascending:false}).limit(20),
+    supabase.from("listings").select("id,title,description,type,price,currency,location,business_id").eq("status","PUBLISHED").order("created_at",{ascending:false}).limit(12),
   ]);
 
   const memberIds = [...new Set((memberships ?? []).map(x => x.business_id))];
@@ -41,7 +42,7 @@ export default async function MarketplaceWorkspace({
             <h1>Centro comercial</h1>
             <p>Pesquise no mercado, publique ofertas e acompanhe interesses, contactos e negociações. A compra é feita fora do MozEmpresas.</p>
           </div>
-          <div className="dashboard-topbar-actions"><Link href="/dashboard/marketplace/ofertas" className="btn">Explorar ofertas →</Link><a href="#publicar" className="btn primary">Publicar oferta →</a></div>
+          <div className="dashboard-topbar-actions"><Link href="#ofertas" className="btn">Explorar ofertas →</Link><a href="#publicar" className="btn primary">Publicar oferta →</a></div>
         </header>
 
         <div className="commerce-work-grid">
@@ -65,11 +66,19 @@ export default async function MarketplaceWorkspace({
           <section className="dashboard-section">
             <div className="dashboard-section-head">
               <div><span className="dashboard-kicker">Comprar</span><h2>Solicitações recentes</h2><p>Registe interesses e acompanhe a relação comercial. A negociação e a compra acontecem fora do MozEmpresas.</p></div>
-              <Link href="/dashboard/marketplace/ofertas" className="text-link">Encontrar ofertas →</Link>
+              <Link href="#ofertas" className="text-link">Encontrar ofertas →</Link>
             </div>
-            {purchases?.length ? <div className="dashboard-list">{purchases.map(p=><div key={p.id}><strong>Solicitação #{p.id.slice(0,8)}</strong><span>{p.status} · {new Date(p.created_at).toLocaleDateString("pt-MZ")}</span>{["INTERESTED","CONTACTED","NEGOTIATING"].includes(p.status) && <form action={cancelOrder}><input type="hidden" name="order_id" value={p.id} /><button className="btn" type="submit">Cancelar</button></form>}</div>)}</div> : <div className="empty"><p>Ainda não iniciou nenhuma relação comercial. Explore produtos e serviços e manifeste o seu interesse.</p><Link href="/dashboard/marketplace/ofertas" className="btn primary">Explorar ofertas</Link></div>}
+            {purchases?.length ? <div className="dashboard-list">{purchases.map(p=><div key={p.id}><strong>Solicitação #{p.id.slice(0,8)}</strong><span>{p.status} · {new Date(p.created_at).toLocaleDateString("pt-MZ")}</span>{["INTERESTED","CONTACTED","NEGOTIATING"].includes(p.status) && <form action={cancelOrder}><input type="hidden" name="order_id" value={p.id} /><button className="btn" type="submit">Cancelar</button></form>}</div>)}</div> : <div className="empty"><p>Ainda não iniciou nenhuma relação comercial. Explore produtos e serviços e manifeste o seu interesse.</p><Link href="#ofertas" className="btn primary">Explorar ofertas</Link></div>}
           </section>
         </div>
+
+        <section className="dashboard-section" id="ofertas">
+          <div className="dashboard-section-head"><div><span className="dashboard-kicker">Marketplace</span><h2>Ofertas publicadas</h2><p>Explore produtos e serviços sem sair da sua área empresarial. Para comprar, abra a oferta e manifeste o seu interesse.</p></div></div>
+          {(listings ?? []).length ? <div className="marketplace-results-gallery">{(listings ?? []).map((item, index) => <article className="marketplace-offer-card" key={item.id}>
+            <div className="marketplace-offer-visual"><span>{item.type === "PRODUCT" ? "P" : "S"}</span><small>{item.type === "PRODUCT" ? "PRODUTO" : "SERVIÇO"}</small></div>
+            <div className="marketplace-offer-body"><div className="marketplace-offer-meta"><span>{String(index + 1).padStart(2,"0")}</span>{item.location && <span>⌖ {item.location}</span>}</div><h3>{item.title}</h3><p>{item.description}</p><div className="marketplace-offer-footer"><strong>{item.price != null ? item.price + " " + (item.currency || "MZN") : "Sob consulta"}</strong><Link href={"/marketplace/" + item.id}>Ver oferta →</Link></div></div>
+          </article>)}</div> : <div className="empty"><p>Ainda não existem ofertas publicadas. Pode ser a primeira empresa a publicar uma.</p><a href="#publicar" className="btn primary">Publicar oferta</a></div>}
+        </section>
 
         <section className="dashboard-section">
           <div className="dashboard-section-head"><div><span className="dashboard-kicker">Solicitações recebidas</span><h2>Interesses recebidos</h2><p>Veja os interesses relacionados com as ofertas das empresas que representa.</p></div></div>
