@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateBusinessMemberRole } from "@/lib/businesses/access-actions";
 import { inviteBusinessMember } from "@/lib/businesses/invitation-actions";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
 
 const roleLabels: Record<string, string> = {
   owner: "Proprietário", admin: "Administrador", operator: "Operador", member: "Membro", viewer: "Consulta",
@@ -46,26 +47,7 @@ export default async function AcessosPage() {
   const businessMap = new Map((businesses ?? []).map((business) => [business.id, business]));
 
   return (
-    <div className="dashboard-shell">
-      <aside className="dashboard-sidebar">
-        <div className="dashboard-brand"><small>Área empresarial</small><strong>MozEmpresas</strong></div>
-        <div className="dashboard-nav-group"><span>Principal</span>
-          <Link className="dashboard-nav-link" href="/dashboard"><i className="nav-dot" />Visão geral</Link>
-          <Link className="dashboard-nav-link" href="/marketplace"><i className="nav-dot" />Comprar e vender</Link>
-          <Link className="dashboard-nav-link" href="/concursos"><i className="nav-dot" />Concursos</Link>
-          <Link className="dashboard-nav-link" href="/oportunidades"><i className="nav-dot" />Oportunidades</Link>
-        </div>
-        <div className="dashboard-nav-group"><span>Empresa</span>
-          <Link className="dashboard-nav-link" href="/dashboard/empresas"><i className="nav-dot" />Presença da empresa</Link>
-          <Link className="dashboard-nav-link active" href="/dashboard/acessos"><i className="nav-dot" />Acessos e equipa</Link>
-          <Link className="dashboard-nav-link" href="/empresas"><i className="nav-dot" />Directório</Link>
-        </div>
-        <div className="dashboard-nav-group"><span>Ecossistema</span>
-          <Link className="dashboard-nav-link" href="/marketplace"><i className="nav-dot" />Recomendações</Link>
-          <Link className="dashboard-nav-link" href="/dashboard/parceiros"><i className="nav-dot" />Parceiros</Link>
-        </div>
-      </aside>
-
+    <div className="dashboard-shell"><DashboardSidebar pathname="/dashboard/acessos" />
       <main className="dashboard-main"><div className="dashboard-content">
         <div className="dashboard-topbar">
           <div><span className="dashboard-kicker">Governação</span><h1>Acessos e equipa</h1><p>Organize quem pode agir em nome de cada empresa. As funções controlam o que cada pessoa pode ver e executar.</p></div>

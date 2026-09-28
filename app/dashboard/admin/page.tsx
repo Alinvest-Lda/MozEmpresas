@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -19,7 +20,7 @@ export default async function AdminPage() {
     supabase.from("opportunities").select("id", { count: "exact", head: true }),
   ]);
 
-  return <div className="page"><div className="container">
+  return <div className="dashboard-shell"><DashboardSidebar pathname="/dashboard/admin" platformAccess={member.role} /><main className="dashboard-main"><div className="dashboard-content">
     <div className="page-header">
       <span className="eyebrow">Administração MozEmpresas</span>
       <h1>Painel da plataforma</h1>
@@ -38,5 +39,5 @@ export default async function AdminPage() {
       </div>
     </section>
     <Link href="/dashboard" className="text-link" style={{display:"inline-block",marginTop:20}}>← Voltar ao painel empresarial</Link>
-  </div></div>;
+  </div></main></div>;
 }

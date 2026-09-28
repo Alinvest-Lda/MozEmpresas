@@ -3,9 +3,11 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
 
 export default async function PartnersPage(){
  const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user) redirect("/login");
+ const {data:platformMember}=await supabase.from("platform_members").select("role,active").eq("user_id",user.id).maybeSingle();
  const {data:owned}=await supabase.from("businesses").select("id,name").eq("owner_id",user.id).order("name");
  const ids=(owned??[]).map(b=>b.id);
  const [{data:relations},{data:directory}]=await Promise.all([
@@ -15,7 +17,7 @@ export default async function PartnersPage(){
  const partnerIds=[...new Set((relations??[]).map(r=>r.partner_business_id))];
  const {data:partnerBusinesses}=partnerIds.length?await supabase.from("businesses").select("id,name,location").in("id",partnerIds):{data:[]};
  const names=new Map((partnerBusinesses??[]).map(b=>[b.id,b]));
- return <div className="dashboard-shell"><aside className="dashboard-sidebar"><div className="dashboard-brand"><small>Área empresarial</small><strong>MozEmpresas</strong></div><div className="dashboard-nav-group"><span>Principal</span><Link className="dashboard-nav-link" href="/dashboard">Visão geral</Link><Link className="dashboard-nav-link" href="/marketplace">Comprar e vender</Link><Link className="dashboard-nav-link" href="/concursos">Concursos</Link><Link className="dashboard-nav-link" href="/oportunidades">Oportunidades</Link></div><div className="dashboard-nav-group"><span>Ecossistema</span><Link className="dashboard-nav-link active" href="/dashboard/parceiros">Parceiros</Link><Link className="dashboard-nav-link" href="/marketplace">Recomendações</Link><Link className="dashboard-nav-link" href="/dashboard/servicos">Serviços MozEmpresas</Link></div></aside>
+ return <div className="dashboard-shell"><DashboardSidebar pathname="/dashboard/parceiros" platformAccess={platformMember?.active ? platformMember.role : null} />
  <main className="dashboard-main"><div className="dashboard-content">
  <div className="dashboard-topbar"><div><span className="dashboard-kicker">Ecossistema</span><h1>Parceiros</h1><p>Construa relações comerciais complementares e mantenha-as visíveis para a equipa.</p></div><Link href="/dashboard" className="btn">Voltar</Link></div>
  <div className="dashboard-stat-grid"><div className="dashboard-stat"><small>Relações activas</small><strong>{(relations??[]).filter(r=>r.status==="ACTIVE").length}</strong><span>Parcerias actualmente activas</span></div><div className="dashboard-stat"><small>Empresas disponíveis</small><strong>{directory?.length??0}</strong><span>Perfis públicos para descoberta</span></div></div>
