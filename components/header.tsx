@@ -5,14 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-const publicLinks = [
-  ["/empresas", "Empresas"],
-  ["/marketplace", "Produtos e serviços"],
-  ["/concursos", "Concursos"],
-  ["/oportunidades", "Oportunidades"],
-  ["/contactos", "Contactos"],
-] as const;
-
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
