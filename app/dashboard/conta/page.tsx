@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { ProfileForm, PasswordForm } from "@/components/account-forms";
 
 export default async function AccountPage() {
@@ -13,9 +12,7 @@ export default async function AccountPage() {
   const name = profile?.full_name || user.email?.split("@")[0] || "Utilizador";
   const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map((part: string) => part[0]).join("").toUpperCase();
 
-  return <div className="dashboard-shell">
-    <DashboardSidebar pathname="/dashboard/conta" />
-    <main className="dashboard-main">
+  return <main className="dashboard-main">
       <div className="dashboard-content account-page">
         <header className="account-hero">
           <div className="account-hero-main">
@@ -75,6 +72,6 @@ export default async function AccountPage() {
           </div>
         </div>
       </div>
-    </main>
-  </div>;
+    </main>;
 }
+;
