@@ -5,8 +5,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createBusiness } from "@/lib/businesses/actions";
 import { BusinessForm } from "@/components/business-form";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-
 export default async function MyBusinesses() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -19,9 +17,7 @@ export default async function MyBusinesses() {
 
   const publicCount = businesses?.filter((business) => business.is_public).length ?? 0;
 
-  return <div className="dashboard-shell">
-    <DashboardSidebar pathname="/dashboard/empresas" />
-    <main className="dashboard-main">
+  return <main className="dashboard-main">
       <div className="dashboard-content business-registration-page">
         <section className="business-presence-hero">
           <div className="business-presence-copy">
@@ -76,6 +72,5 @@ export default async function MyBusinesses() {
           <BusinessForm action={createBusiness} categories={categories ?? []} />
         </div>
       </div>
-    </main>
-  </div>;
-}
+    </main>;
+};
