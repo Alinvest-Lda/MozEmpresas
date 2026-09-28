@@ -2199,26 +2199,3 @@ button,input,select,textarea{font-size:16px}
   .dashboard-service-link{justify-content:center;min-height:40px}
   .dashboard-stat-grid,.dashboard-action-grid,.dashboard-lower-grid{grid-template-columns:1fr}
 }
-
-/* =========================================================
-   Dashboard navigation — structural layout contract
-   The sidebar is vertical at every tablet/desktop width.
-   Only mobile (<600px) changes to horizontal overflow navigation.
-   ========================================================= */
-.dashboard-sidebar-nav{display:flex;flex-direction:column;align-items:stretch;min-width:0;width:100%;gap:0}
-.dashboard-sidebar-nav .dashboard-nav-group{display:flex;flex-direction:column;align-items:stretch;min-width:0;width:100%;gap:2px;margin:16px 0 0}
-.dashboard-sidebar-nav .dashboard-nav-group:first-child{margin-top:0}
-.dashboard-sidebar-nav .dashboard-nav-group>span{display:block;width:100%;box-sizing:border-box}
-.dashboard-sidebar-nav .dashboard-nav-link{display:flex;width:100%;box-sizing:border-box;min-width:0;white-space:normal;overflow-wrap:anywhere;align-items:center}
-.dashboard-sidebar-nav .dashboard-nav-link .nav-dot{flex:0 0 auto}
-@media (min-width:601px){
-  .dashboard-sidebar-nav{flex-direction:column!important;overflow:visible!important}
-  .dashboard-sidebar-nav .dashboard-nav-group{flex-direction:column!important;display:flex!important;overflow:visible!important}
-  .dashboard-sidebar-nav .dashboard-nav-link{width:100%!important;white-space:normal!important}
-}
-@media (max-width:600px){
-  .dashboard-sidebar-nav{flex-direction:row;align-items:stretch;gap:4px;overflow-x:auto;overflow-y:hidden;width:100%;padding-bottom:1px;-webkit-overflow-scrolling:touch}
-  .dashboard-sidebar-nav .dashboard-nav-group{flex:0 0 auto;width:auto;display:flex!important;flex-direction:row!important;align-items:center;margin:0;gap:4px}
-  .dashboard-sidebar-nav .dashboard-nav-group>span{display:none!important}
-  .dashboard-sidebar-nav .dashboard-nav-link{width:auto!important;flex:0 0 auto;white-space:nowrap!important;overflow-wrap:normal}
-}
