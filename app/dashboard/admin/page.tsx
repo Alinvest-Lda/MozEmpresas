@@ -20,7 +20,7 @@ export default async function AdminPage() {
     supabase.from("opportunities").select("id", { count: "exact", head: true }),
   ]);
 
-  return <div className="dashboard-shell"><DashboardSidebar pathname="/dashboard/admin" platformAccess={member.role} /><main className="dashboard-main"><div className="dashboard-content">
+  return <div className="dashboard-shell"><DashboardSidebar pathname="/dashboard/admin" /><main className="dashboard-main"><div className="dashboard-content">
     <div className="page-header">
       <span className="eyebrow">Administração MozEmpresas</span>
       <h1>Painel da plataforma</h1>
