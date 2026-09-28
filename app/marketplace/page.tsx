@@ -45,6 +45,10 @@ export default async function Marketplace({
     const supabase = await createClient();
     const { data: claimsData } = await supabase.auth.getClaims();
     signedIn = Boolean(claimsData?.claims?.sub);
+    if (signedIn) {
+      const { redirect } = await import("next/navigation");
+      redirect("/dashboard/marketplace");
+    }
     const { data: promotions, error: promotionError } = await supabase
       .from("business_promotions")
       .select("id,title,text,image_url,target_url,priority")
