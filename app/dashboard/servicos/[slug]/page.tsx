@@ -28,4 +28,3 @@ export default async function ServiceDetail({params}:{params:Promise<{slug:strin
     </section>
   </div></main>;
 }
-;
