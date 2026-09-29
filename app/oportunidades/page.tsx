@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
 import { PartnerSpotlight } from "@/components/partner-spotlight";
 
@@ -51,6 +52,9 @@ export default async function Oportunidades({
   searchParams: Promise<{ q?: string; type?: string; location?: string; deadline?: string; sort?: string }>;
 }) {
   const params = await searchParams;
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  if (claimsData?.claims?.sub) redirect("/dashboard/oportunidades");
   const q = params.q?.trim() || "";
   const type = params.type?.trim() || "";
   const location = params.location?.trim() || "";
@@ -62,7 +66,6 @@ export default async function Oportunidades({
   let error = false;
 
   try {
-    const supabase = await createClient();
     const now = new Date().toISOString();
 
     const { data: promotions } = await supabase
