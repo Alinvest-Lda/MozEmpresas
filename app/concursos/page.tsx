@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
+import { redirect } from "next/navigation";
 
 type Contest = {
   id: string;
@@ -58,6 +59,7 @@ export default async function Concursos({
     const supabase = await createClient();
     const { data: claimsData } = await supabase.auth.getClaims();
     signedIn = Boolean(claimsData?.claims?.sub);
+    if (signedIn) redirect("/dashboard/concursos");
 
     const { data: promotions } = await supabase
       .from("business_promotions")
