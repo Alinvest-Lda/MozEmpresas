@@ -103,7 +103,7 @@ export default async function MarketplaceWorkspace({
   const salesByOrder = new Map((sellerItems ?? []).map((item) => [item.order_id, item]));
   const activeBuyerOrders = orders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
   const activeSellerOrders = salesOrders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
-  const latestListings = (recentListings ?? []) as Listing[];
+  const latestListings = (recentListings ?? []) as Listing[];\n  if (latestListings.length) {\n    const { data: attachments } = await supabase.from("listing_attachments").select("listing_id,storage_path,kind,created_at").in("listing_id", latestListings.map((item) => item.id)).eq("kind", "IMAGE").order("created_at", { ascending: true });\n    const firstImage = new Map<string, string>();\n    for (const attachment of attachments ?? []) if (!firstImage.has(attachment.listing_id)) firstImage.set(attachment.listing_id, supabase.storage.from("listing-media").getPublicUrl(attachment.storage_path).data.publicUrl);\n    latestListings.forEach((item) => { item.image_url = firstImage.get(item.id) ?? null; });\n  }
 
   const listingCount = listings.length;
   const sellerInterestCount = activeSellerOrders.length;
@@ -171,7 +171,7 @@ export default async function MarketplaceWorkspace({
         .commerce-hub .commerce-form-grid textarea{resize:vertical}.commerce-hub .commerce-form-grid input:focus,.commerce-hub .commerce-form-grid select:focus,.commerce-hub .commerce-form-grid textarea:focus{border-color:#8f99a5;box-shadow:0 0 0 3px #f0f2f4}
         .commerce-hub .commerce-offer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
         .commerce-hub .commerce-offer{display:grid;grid-template-columns:110px minmax(0,1fr);border:1px solid #e4e7ea;border-radius:16px;overflow:hidden;background:#fff}
-        .commerce-hub .commerce-offer-art{min-height:150px;background:linear-gradient(145deg,#eef1f3,#dfe4e8);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+        .commerce-hub .commerce-offer-art{min-height:150px;background:linear-gradient(145deg,#eef1f3,#dfe4e8);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;overflow:hidden}.commerce-hub .commerce-offer-art img{width:100%;height:100%;min-height:150px;object-fit:cover}
         .commerce-hub .commerce-offer-art span{font-size:38px;font-weight:900;letter-spacing:-.06em;color:#333b43}.commerce-hub .commerce-offer-art small{font-size:9px;font-weight:900;letter-spacing:.08em;color:#68727d}
         .commerce-hub .commerce-offer-body{padding:16px;min-width:0}.commerce-hub .commerce-offer-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:#7a838e;font-size:11px}
         .commerce-hub .commerce-chip{border-radius:999px;padding:4px 8px;font-weight:800}.commerce-hub .chip-product{background:#eef5ff;color:#32679b}.commerce-hub .chip-service{background:#f3f0ff;color:#6750a0}
@@ -218,7 +218,7 @@ export default async function MarketplaceWorkspace({
           <section id="comprar" className="commerce-grid">
             <div className="commerce-panel">
               <div className="commerce-panel-head">
-                <div><span className="commerce-eyebrow">Comprar</span><h2>Descobrir ofertas</h2><p>Procure produtos e serviços publicados por empresas do ecossistema.</p></div>
+                <div><span className="commerce-eyebrow">Comprar</span><h2>Encontre o que precisa.</h2><p>Veja ofertas publicadas por empresas, compare o que está disponível e abra uma publicação para falar directamente com o fornecedor.</p></div>
                 <Link href="/marketplace" className="commerce-link">Ver marketplace →</Link>
               </div>
               {latestListings.length ? <div className="commerce-offer-grid">{latestListings.slice(0, 4).map((item) => <div key={item.id}>{renderOfferCard(item)}</div>)}</div> : <div className="commerce-empty"><strong>Ainda não existem ofertas publicadas.</strong><p>Quando empresas publicarem produtos ou serviços, eles aparecerão aqui.</p><Link href="#vender" className="btn primary">Publicar a primeira oferta</Link></div>}
@@ -234,13 +234,13 @@ export default async function MarketplaceWorkspace({
         {(activeTab === "overview" || activeTab === "vender") && (
           <section id="vender" className="commerce-split" style={{marginTop:18}}>
             <div className="commerce-panel">
-              <div className="commerce-panel-head"><div><span className="commerce-eyebrow">Vender</span><h2>Publicar uma nova oferta</h2><p>Crie uma publicação clara para que outras empresas encontrem o seu produto ou serviço.</p></div></div>
+              <div className="commerce-panel-head"><div><span className="commerce-eyebrow">Vender</span><h2>Apresente o que a sua empresa oferece.</h2><p>Crie uma publicação comercial completa, com informação clara, imagens e documentos de apoio para facilitar a avaliação por potenciais compradores.</p></div></div>
               {businesses.length ? (
-                <form action={createListing} className="commerce-form-grid">
+                <form action={createListing} className="commerce-form-grid" encType="multipart/form-data">
                   <label>Empresa<select name="business_id" required><option value="">Seleccione a empresa</option>{businesses.map((business) => <option value={business.id} key={business.id}>{business.name}</option>)}</select></label>
                   <label>Tipo<select name="type" required><option value="PRODUCT">Produto</option><option value="SERVICE">Serviço</option></select></label>
                   <label className="wide">Título<input name="title" required placeholder="Ex.: Equipamento de segurança industrial" /></label>
-                  <label className="wide">Descrição<textarea name="description" required rows={4} placeholder="Explique o que oferece, para quem e o que está incluído." /></label>
+                  <label className="wide">Descrição<textarea name="description" required rows={4} placeholder="Explique o que oferece, para quem, o que está incluído e porque deve ser considerado." /></label>\n                  <label className="wide">Imagens da oferta<input name="attachments" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.doc,.docx,.xls,.xlsx" multiple /><small className="commerce-note">Pode adicionar várias imagens e documentos. Use imagens nítidas e documentos comerciais relevantes.</small></label>
                   <label>Preço em MZN<input name="price" type="number" min="0" step="0.01" placeholder="Deixe vazio para sob consulta" /></label>
                   <label>Localização<input name="location" placeholder="Maputo, Matola..." /></label>
                   <div className="wide"><button className="btn primary" type="submit">Publicar oferta →</button><p className="commerce-note">A publicação fica disponível no marketplace. A negociação e o pagamento são tratados directamente entre as empresas.</p></div>
