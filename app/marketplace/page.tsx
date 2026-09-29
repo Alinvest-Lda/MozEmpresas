@@ -24,6 +24,7 @@ type Listing = {
   currency: string | null;
   location: string | null;
   business_id: string | null;
+  image_url?: string | null;
 };
 
 export default async function Marketplace({
@@ -45,10 +46,6 @@ export default async function Marketplace({
     const supabase = await createClient();
     const { data: claimsData } = await supabase.auth.getClaims();
     signedIn = Boolean(claimsData?.claims?.sub);
-    if (signedIn) {
-      const { redirect } = await import("next/navigation");
-      redirect("/dashboard/marketplace");
-    }
     const { data: promotions, error: promotionError } = await supabase
       .from("business_promotions")
       .select("id,title,text,image_url,target_url,priority")
@@ -86,6 +83,16 @@ export default async function Marketplace({
       const result = await query;
       listings = (result.data ?? []) as Listing[];
       error = error || Boolean(result.error);
+
+      const attachmentIds = listings.map((item) => item.id);
+      if (attachmentIds.length) {
+        const { data: attachments } = await supabase.from("listing_attachments").select("listing_id,storage_path,kind,created_at").in("listing_id", attachmentIds).eq("kind", "IMAGE").order("created_at", { ascending: true });
+        const firstImage = new Map<string, string>();
+        for (const attachment of attachments ?? []) {
+          if (!firstImage.has(attachment.listing_id)) firstImage.set(attachment.listing_id, supabase.storage.from("listing-media").getPublicUrl(attachment.storage_path).data.publicUrl);
+        }
+        listings = listings.map((item) => ({ ...item, image_url: firstImage.get(item.id) ?? null }));
+      }
 
       const ids = [...new Set(listings.map((item) => item.business_id).filter(Boolean))];
       if (ids.length) {
@@ -205,7 +212,7 @@ export default async function Marketplace({
               <div className="marketplace-results-gallery">
                 {listings.map((item, index) => (
                   <article className="marketplace-offer-card" key={item.id}>
-                    <div className="marketplace-offer-visual"><span>{item.type === "PRODUCT" ? "P" : "S"}</span><small>{item.type === "PRODUCT" ? "PRODUTO" : "SERVIÇO"}</small></div>
+                    <div className="marketplace-offer-visual">{item.image_url ? <img src={item.image_url} alt="" /> : <span>{item.type === "PRODUCT" ? "P" : "S"}</span>}<small>{item.type === "PRODUCT" ? "PRODUTO" : "SERVIÇO"}</small></div>
                     <div className="marketplace-offer-body">
                       <div className="marketplace-offer-meta"><span>{String(index + 1).padStart(2, "0")}</span>{item.location && <span>⌖ {item.location}</span>}</div>
                       <h3>{item.title}</h3>
