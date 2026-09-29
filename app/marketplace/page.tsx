@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
 
@@ -46,6 +47,7 @@ export default async function Marketplace({
     const supabase = await createClient();
     const { data: claimsData } = await supabase.auth.getClaims();
     signedIn = Boolean(claimsData?.claims?.sub);
+    if (signedIn) redirect("/dashboard/marketplace");
     const { data: promotions, error: promotionError } = await supabase
       .from("business_promotions")
       .select("id,title,text,image_url,target_url,priority")
