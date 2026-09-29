@@ -23,6 +23,7 @@ export default async function ContestDetail({params}:{params:Promise<{slug:strin
 
   if(!item) notFound();
 
+  const {data:attachments}=await supabase.from("publication_attachments").select("id,file_name,mime_type,storage_path,kind").eq("resource_type","CONTEST").eq("resource_id",item.id).order("created_at");
   const {data:reqs}=signedIn
     ? await supabase.from("contest_requirements").select("title,description,required").eq("contest_id",item.id).order("title")
     : {data:[]};
@@ -88,6 +89,8 @@ export default async function ContestDetail({params}:{params:Promise<{slug:strin
           </div>
 
           {!signedIn && <div className="notice">Está a consultar um preview público. Os requisitos e condições completos ficam disponíveis depois de iniciar sessão.</div>}
+
+          <div className="publication-attachments contest-publication-attachments">{attachments?.length ? attachments.map((file) => { const url=supabase.storage.from("publication-media").getPublicUrl(file.storage_path).data.publicUrl; return <a className="publication-attachment" href={url} target="_blank" rel="noreferrer" key={file.id}>{file.kind === "IMAGE" ? "Imagem" : "Documento"} · {file.file_name}</a>; }) : <span className="muted">Nenhum ficheiro anexado.</span>}</div>
 
           <div className="contest-detail-columns">
             <div>
