@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/lib/auth/actions";
 
 const publicLinks = [
-  ["/empresas", "Empresas"],
+  ["/dashboard/empresas", "Empresas"],
   ["/marketplace", "Produtos e serviços"],
   ["/concursos", "Concursos"],
   ["/oportunidades", "Oportunidades"],
@@ -16,7 +16,7 @@ const publicLinks = [
 
 const appLinks = [
   ["/dashboard", "Painel"],
-  ["/marketplace", "Comprar e vender"],
+  ["/dashboard/marketplace", "Comprar e vender"],
   ["/concursos", "Concursos"],
   ["/dashboard/oportunidades", "Oportunidades"],
   ["/empresas", "Empresas"],
