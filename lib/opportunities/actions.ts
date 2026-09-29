@@ -41,3 +41,43 @@ export async function applyToOpportunity(formData: FormData) {
   });
   redirect("/oportunidades/" + (formData.get("slug") || "") + "?application=submitted");
 }
+
+
+export async function createOpportunity(formData: FormData) {
+  const { supabase, userId } = await user();
+  const title = text(formData.get("title"));
+  const type = text(formData.get("type")).toUpperCase();
+  const description = text(formData.get("description"));
+  const organization = text(formData.get("organization")) || null;
+  const location = text(formData.get("location")) || null;
+  const requirements = text(formData.get("requirements")) || null;
+  const opensAt = text(formData.get("opens_at")) || null;
+  const closesAt = text(formData.get("closes_at")) || null;
+
+  if (!title || !description || !["CALL","FUNDING","PARTNERSHIP","TRAINING","EVENT"].includes(type)) {
+    redirect("/dashboard/oportunidades?publish=error");
+  }
+  if (closesAt && opensAt && new Date(closesAt).getTime() < new Date(opensAt).getTime()) {
+    redirect("/dashboard/oportunidades?publish=error");
+  }
+
+  const base = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "oportunidade";
+  const slug = `${base}-${crypto.randomUUID().slice(0, 8)}`;
+
+  const { error } = await supabase.from("opportunities").insert({
+    owner_id: userId,
+    title,
+    slug,
+    type,
+    description,
+    organization,
+    location,
+    requirements,
+    opens_at: opensAt ? new Date(opensAt).toISOString() : null,
+    closes_at: closesAt ? new Date(closesAt).toISOString() : null,
+    status: "PUBLISHED",
+  });
+
+  if (error) redirect("/dashboard/oportunidades?publish=error");
+  redirect("/dashboard/oportunidades?publish=success");
+}
