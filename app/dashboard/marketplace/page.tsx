@@ -103,7 +103,13 @@ export default async function MarketplaceWorkspace({
   const salesByOrder = new Map((sellerItems ?? []).map((item) => [item.order_id, item]));
   const activeBuyerOrders = orders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
   const activeSellerOrders = salesOrders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
-  const latestListings = (recentListings ?? []) as Listing[];\n  if (latestListings.length) {\n    const { data: attachments } = await supabase.from("listing_attachments").select("listing_id,storage_path,kind,created_at").in("listing_id", latestListings.map((item) => item.id)).eq("kind", "IMAGE").order("created_at", { ascending: true });\n    const firstImage = new Map<string, string>();\n    for (const attachment of attachments ?? []) if (!firstImage.has(attachment.listing_id)) firstImage.set(attachment.listing_id, supabase.storage.from("listing-media").getPublicUrl(attachment.storage_path).data.publicUrl);\n    latestListings.forEach((item) => { item.image_url = firstImage.get(item.id) ?? null; });\n  }
+  const latestListings = (recentListings ?? []) as Listing[];
+  if (latestListings.length) {
+    const { data: attachments } = await supabase.from("listing_attachments").select("listing_id,storage_path,kind,created_at").in("listing_id", latestListings.map((item) => item.id)).eq("kind", "IMAGE").order("created_at", { ascending: true });
+    const firstImage = new Map<string, string>();
+    for (const attachment of attachments ?? []) if (!firstImage.has(attachment.listing_id)) firstImage.set(attachment.listing_id, supabase.storage.from("listing-media").getPublicUrl(attachment.storage_path).data.publicUrl);
+    latestListings.forEach((item) => { item.image_url = firstImage.get(item.id) ?? null; });
+  }
 
   const listingCount = listings.length;
   const sellerInterestCount = activeSellerOrders.length;
@@ -111,10 +117,7 @@ export default async function MarketplaceWorkspace({
 
   const renderOfferCard = (item: Listing, compact = false) => (
     <article className={compact ? "commerce-offer commerce-offer-compact" : "commerce-offer"}>
-      <div className="commerce-offer-art">
-        <span>{item.type === "PRODUCT" ? "P" : "S"}</span>
-        <small>{item.type === "PRODUCT" ? "PRODUTO" : "SERVIÇO"}</small>
-      </div>
+      <div className="commerce-offer-art">{item.image_url ? <img src={item.image_url} alt="" /> : <span>{item.type === "PRODUCT" ? "P" : "S"}</span>}<small>{item.type === "PRODUCT" ? "PRODUTO" : "SERVIÇO"}</small></div>
       <div className="commerce-offer-body">
         <div className="commerce-offer-meta">
           <span className={"commerce-chip " + (item.type === "PRODUCT" ? "chip-product" : "chip-service")}>{item.type === "PRODUCT" ? "Produto" : "Serviço"}</span>
@@ -240,7 +243,8 @@ export default async function MarketplaceWorkspace({
                   <label>Empresa<select name="business_id" required><option value="">Seleccione a empresa</option>{businesses.map((business) => <option value={business.id} key={business.id}>{business.name}</option>)}</select></label>
                   <label>Tipo<select name="type" required><option value="PRODUCT">Produto</option><option value="SERVICE">Serviço</option></select></label>
                   <label className="wide">Título<input name="title" required placeholder="Ex.: Equipamento de segurança industrial" /></label>
-                  <label className="wide">Descrição<textarea name="description" required rows={4} placeholder="Explique o que oferece, para quem, o que está incluído e porque deve ser considerado." /></label>\n                  <label className="wide">Imagens da oferta<input name="attachments" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.doc,.docx,.xls,.xlsx" multiple /><small className="commerce-note">Pode adicionar várias imagens e documentos. Use imagens nítidas e documentos comerciais relevantes.</small></label>
+                  <label className="wide">Descrição<textarea name="description" required rows={4} placeholder="Explique o que oferece, para quem, o que está incluído e porque deve ser considerado." /></label>
+                  <label className="wide">Imagens da oferta<input name="attachments" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.doc,.docx,.xls,.xlsx" multiple /><small className="commerce-note">Pode adicionar várias imagens e documentos. Use imagens nítidas e documentos comerciais relevantes.</small></label>
                   <label>Preço em MZN<input name="price" type="number" min="0" step="0.01" placeholder="Deixe vazio para sob consulta" /></label>
                   <label>Localização<input name="location" placeholder="Maputo, Matola..." /></label>
                   <div className="wide"><button className="btn primary" type="submit">Publicar oferta →</button><p className="commerce-note">A publicação fica disponível no marketplace. A negociação e o pagamento são tratados directamente entre as empresas.</p></div>
