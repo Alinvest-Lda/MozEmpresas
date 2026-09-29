@@ -8,18 +8,15 @@ import { createClient } from "@/lib/supabase/client";
 const publicLinks = [
   ["/empresas", "Empresas"],
   ["/marketplace", "Produtos e serviços"],
-  ["/concursos", "Concursos"],
-  ["/oportunidades", "Oportunidades"],
   ["/contactos", "Contactos"],
 ] as const;
 
 const appLinks = [
   ["/dashboard", "Painel"],
   ["/dashboard/marketplace", "Comprar e vender"],
-  ["/dashboard/concursos", "Concursos"],
-  ["/dashboard/oportunidades", "Oportunidades"],
   ["/dashboard/empresas", "Empresas"],
   ["/dashboard/acessos", "Acessos"],
+  ["/dashboard/servicos", "Serviços"],
 ] as const;
 
 export function Header() {
@@ -60,52 +57,27 @@ export function Header() {
   return (
     <header className={insideApp && signedIn ? "topbar topbar-app" : "topbar"}>
       <div className="container topbar-inner">
-        <Link href={signedIn ? "/dashboard" : "/"} className="brand" aria-label="MozEmpresas">
-          Moz<span>Empresas</span>
-        </Link>
-
+        <Link href={signedIn ? "/dashboard" : "/"} className="brand" aria-label="MozEmpresas">Moz<span>Empresas</span></Link>
         <nav className="nav" aria-label={signedIn ? "Navegação do sistema" : "Navegação principal"}>
           {(!insideApp || !signedIn) && links.map(([href, label]) => {
             const active = pathname === href || pathname.startsWith(href + "/");
             return <Link key={href} href={href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>{label}</Link>;
           })}
         </nav>
-
         <div className="header-actions">
-          {signedIn ? (
-            insideApp ? null : (
-              <div className="header-account-actions">
-                <Link className="btn primary header-panel-btn" href="/dashboard">Aceder ao painel</Link>
-              </div>
-            )
-          ) : (
-            <>
-              <Link className="btn ghost desktop-only" href="/login">Entrar</Link>
-              <Link className="btn primary desktop-register" href="/registo">Criar conta</Link>
-            </>
+          {signedIn ? (insideApp ? null : <div className="header-account-actions"><Link className="btn primary header-panel-btn" href="/dashboard">Aceder ao painel</Link></div>) : (
+            <><Link className="btn ghost desktop-only" href="/login">Entrar</Link><Link className="btn primary desktop-register" href="/registo">Criar conta</Link></>
           )}
-
           {(!insideApp || !signedIn) && (
             <div className="mobile-menu" ref={menuRef}>
-              <button type="button" className="mobile-menu-trigger" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen((value) => !value)}>
-                {open ? "Fechar" : "Menu"}
-              </button>
-              {open && (
-                <div className="mobile-menu-panel">
-                  {links.map(([href, label]) => {
-                    const active = pathname === href || pathname.startsWith(href + "/");
-                    return <Link key={href} href={href} onClick={() => setOpen(false)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>{label}</Link>;
-                  })}
-                  {signedIn ? (
-                    <Link href="/dashboard" onClick={() => setOpen(false)} className="mobile-menu-panel-btn">Aceder ao painel</Link>
-                  ) : (
-                    <>
-                      <Link href="/login" onClick={() => setOpen(false)}>Entrar</Link>
-                      <Link className="mobile-menu-register" href="/registo" onClick={() => setOpen(false)}>Criar conta</Link>
-                    </>
-                  )}
-                </div>
-              )}
+              <button type="button" className="mobile-menu-trigger" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen((value) => !value)}>{open ? "Fechar" : "Menu"}</button>
+              {open && <div className="mobile-menu-panel">
+                {links.map(([href, label]) => {
+                  const active = pathname === href || pathname.startsWith(href + "/");
+                  return <Link key={href} href={href} onClick={() => setOpen(false)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>{label}</Link>;
+                })}
+                {signedIn ? <Link href="/dashboard" onClick={() => setOpen(false)} className="mobile-menu-panel-btn">Aceder ao painel</Link> : <><Link href="/login" onClick={() => setOpen(false)}>Entrar</Link><Link className="mobile-menu-register" href="/registo" onClick={() => setOpen(false)}>Criar conta</Link></>}
+              </div>}
             </div>
           )}
         </div>
