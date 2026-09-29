@@ -2391,3 +2391,5 @@ button,input,select,textarea{font-size:16px}
 @media (min-width:851px){
   .dashboard-sidebar-nav{display:flex!important;flex-direction:column!important}
 }
+
+.publication-attachments{display:grid;gap:8px;margin-top:14px}.publication-attachment{display:flex;align-items:center;gap:8px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:#fafcfb;color:var(--ink);text-decoration:none;font-size:12px;font-weight:700}.publication-attachment:hover{border-color:#9dbab5;background:#f5f9f7}
