@@ -67,7 +67,8 @@ export async function createListing(formData: FormData) {
   if (attachments.length > 10) redirect("/dashboard/marketplace?publish=error");
   const allowed = new Set(["image/jpeg","image/png","image/webp","application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]);
   if (attachments.some((file) => !allowed.has(file.type) || file.size > 10 * 1024 * 1024)) redirect("/dashboard/marketplace?publish=error");
-\n  const { data: createdListing, error } = await supabase.from("listings").insert({
+
+  const { data: createdListing, error } = await supabase.from("listings").insert({
     owner_id: userId,
     business_id: businessId,
     title,
@@ -78,13 +79,22 @@ export async function createListing(formData: FormData) {
     currency: "MZN",
     status: "PUBLISHED",
     location,
-  });
+  }).select("id").single();
 
   if (error || !createdListing) redirect("/dashboard/marketplace?publish=error");
   const listingIdPlaceholder = createdListing.id;
-\n  for (const file of attachments) {\n    const kind = file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT";\n    const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").slice(-120);\n    const storagePath = `${userId}/${listingIdPlaceholder}/${crypto.randomUUID()}-${safeName}`;\n    const { error: uploadError } = await supabase.storage.from("listing-media").upload(storagePath, file, { contentType: file.type, upsert: false });\n    if (uploadError) redirect("/dashboard/marketplace?publish=error");
-    const { error: attachmentError } = await supabase.from("listing_attachments").insert({ listing_id: listingIdPlaceholder, storage_path: storagePath, file_name: file.name, mime_type: file.type, size_bytes: file.size, kind });\n    if (attachmentError) redirect("/dashboard/marketplace?publish=error");
-  }\n\n  redirect("/dashboard/marketplace?publish=success");
+
+  for (const file of attachments) {
+    const kind = file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT";
+    const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").slice(-120);
+    const storagePath = `${userId}/${listingIdPlaceholder}/${crypto.randomUUID()}-${safeName}`;
+    const { error: uploadError } = await supabase.storage.from("listing-media").upload(storagePath, file, { contentType: file.type, upsert: false });
+    if (uploadError) redirect("/dashboard/marketplace?publish=error");
+    const { error: attachmentError } = await supabase.from("listing_attachments").insert({ listing_id: listingIdPlaceholder, storage_path: storagePath, file_name: file.name, mime_type: file.type, size_bytes: file.size, kind });
+    if (attachmentError) redirect("/dashboard/marketplace?publish=error");
+  }
+
+  redirect("/dashboard/marketplace?publish=success");
 }
 
 export async function createOrder(formData: FormData) {
