@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { savePublicationAttachments } from "@/lib/publications/attachments";
 
 const text = (v: FormDataEntryValue | null) => typeof v === "string" ? v.trim() : "";
 
@@ -64,7 +65,7 @@ export async function createOpportunity(formData: FormData) {
   const base = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "oportunidade";
   const slug = `${base}-${crypto.randomUUID().slice(0, 8)}`;
 
-  const { error } = await supabase.from("opportunities").insert({
+  const { data: createdOpportunity, error } = await supabase.from("opportunities").insert({
     owner_id: userId,
     title,
     slug,
@@ -76,8 +77,13 @@ export async function createOpportunity(formData: FormData) {
     opens_at: opensAt ? new Date(opensAt).toISOString() : null,
     closes_at: closesAt ? new Date(closesAt).toISOString() : null,
     status: "PUBLISHED",
-  });
+  }).select("id").single();
 
   if (error) redirect("/dashboard/oportunidades?publish=error");
+  try {
+    await savePublicationAttachments(supabase, userId, "OPPORTUNITY", createdOpportunity?.id ?? "", formData.getAll("attachments"));
+  } catch {
+    // The publication remains valid; attachments are optional and can be added later.
+  }
   redirect("/dashboard/oportunidades?publish=success");
 }
