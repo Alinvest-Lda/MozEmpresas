@@ -66,7 +66,6 @@ export default async function OpportunitiesWorkspace() {
   if (!userId) redirect("/login?next=/dashboard/oportunidades");
 
   const [
-    { data: profile },
     { data: applications },
     { data: ownedOpportunities },
     { data: recentOpportunities },
@@ -92,7 +91,6 @@ export default async function OpportunitiesWorkspace() {
     const days = daysUntil(item.closes_at);
     return days !== null && days >= 0 && days <= 7;
   });
-  const name = profile?.full_name?.split(" ")[0] || "utilizador";
 
   return (
     <main className="dashboard-main opportunities-hub">
