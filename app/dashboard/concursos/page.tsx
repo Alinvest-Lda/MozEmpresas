@@ -3,7 +3,7 @@ export const dynamic="force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createContest } from "@/lib/contests/actions";
+import { createContest } from "@/lib/contests/create-actions";
 
 const statusLabels:Record<string,string>={SUBMITTED:"Submetida",UNDER_REVIEW:"Em análise",SHORTLISTED:"Pré-seleccionada",ACCEPTED:"Aceite",REJECTED:"Não seleccionada",WITHDRAWN:"Retirada"};
 const contestStatus:Record<string,string>={OPEN:"Aberto",CLOSED:"Encerrado",EVALUATION:"Em avaliação",RESULTS:"Resultados",PUBLISHED:"Publicado"};
