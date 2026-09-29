@@ -14,6 +14,7 @@ type Listing = {
   currency: string | null;
   location: string | null;
   business_id: string | null;
+  image_url?: string | null;
 };
 type Order = { id: string; status: string; notes: string | null; created_at: string };
 type OrderItem = {
