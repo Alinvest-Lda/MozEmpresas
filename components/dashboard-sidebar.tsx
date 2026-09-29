@@ -2,16 +2,9 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { signOut } from "@/lib/auth/actions";
 import { createClient } from "@/lib/supabase/server";
-
-const groups = [
-  { label: "Trabalho", links: [["/dashboard","Visão geral"],["/dashboard/marketplace","Comprar e vender"],["/dashboard/oportunidades","Oportunidades"],["/dashboard/concursos","Concursos"]] },
-  { label: "Empresa", links: [["/dashboard/empresas","Presença da empresa"],["/dashboard/acessos","Acessos e equipa"],["/empresas","Directório"]] },
-  { label: "Relações", links: [["/dashboard/parceiros","Parceiros"],["/dashboard/servicos","Serviços MozEmpresas"]] },
-  { label: "Conta", links: [["/dashboard/conta","A minha conta"]] },
-] as const;
+import { DashboardSidebarNav } from "@/components/dashboard-sidebar-nav";
 
 export async function DashboardSidebar() {
-  const pathname = (await headers()).get("x-moz-pathname") ?? "/dashboard";
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: platformMember } = user
