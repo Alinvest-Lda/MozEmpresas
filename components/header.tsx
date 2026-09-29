@@ -86,45 +86,29 @@ export function Header() {
             </>
           )}
 
-          <div className={insideApp && signedIn ? "mobile-menu dashboard-mobile-menu" : "mobile-menu"} ref={menuRef}>
-            <button
-              type="button"
-              className="mobile-menu-trigger"
-              aria-expanded={open}
-              aria-haspopup="true"
-              onClick={() => setOpen((value) => !value)}
-            >
-              {open ? "Fechar" : "Menu"}
-            </button>
-
-            {open && (
-              <div className="mobile-menu-panel">
-                {(!insideApp || !signedIn) && links.map(([href, label]) => {
-                  const active = pathname === href || pathname.startsWith(href + "/");
-                  return (
-                    <Link key={href} href={href} onClick={() => setOpen(false)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
-                      {label}
-                    </Link>
-                  );
-                })}
-
-                {signedIn ? (
-                  <>
-                    {!insideApp && <Link href="/dashboard" onClick={() => setOpen(false)} className="mobile-menu-panel-btn">Aceder ao painel</Link>}
-
-                    <form action={signOut}>
-                      <button type="submit" className="btn primary mobile-menu-logout">Sair da conta</button>
-                    </form>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/login" onClick={() => setOpen(false)}>Entrar</Link>
-                    <Link className="mobile-menu-register" href="/registo" onClick={() => setOpen(false)}>Criar conta</Link>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+          {(!insideApp || !signedIn) && (
+            <div className="mobile-menu" ref={menuRef}>
+              <button type="button" className="mobile-menu-trigger" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen((value) => !value)}>
+                {open ? "Fechar" : "Menu"}
+              </button>
+              {open && (
+                <div className="mobile-menu-panel">
+                  {links.map(([href, label]) => {
+                    const active = pathname === href || pathname.startsWith(href + "/");
+                    return <Link key={href} href={href} onClick={() => setOpen(false)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>{label}</Link>;
+                  })}
+                  {signedIn ? (
+                    <Link href="/dashboard" onClick={() => setOpen(false)} className="mobile-menu-panel-btn">Aceder ao painel</Link>
+                  ) : (
+                    <>
+                      <Link href="/login" onClick={() => setOpen(false)}>Entrar</Link>
+                      <Link className="mobile-menu-register" href="/registo" onClick={() => setOpen(false)}>Criar conta</Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </header>
