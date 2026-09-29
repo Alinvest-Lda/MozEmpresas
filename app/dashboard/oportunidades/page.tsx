@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createOpportunity } from "@/lib/opportunities/actions";
 
 const labels: Record<string, string> = {
   CALL: "Chamadas",
@@ -59,7 +60,8 @@ type Application = {
   submitted_at: string | null;
 };
 
-export default async function OpportunitiesWorkspace() {
+export default async function OpportunitiesWorkspace({ searchParams }: { searchParams?: Promise<{ publish?: string; }>; }) {
+  const params = searchParams ? await searchParams : {};
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   const userId = claimsData?.claims?.sub;
@@ -133,6 +135,28 @@ export default async function OpportunitiesWorkspace() {
       `}</style>
 
       <div className="dashboard-content">
+
+        {params.publish === "1" && (
+          <section className="opp-panel" id="publicar" style={{marginBottom:18}}>
+            <div className="opp-head">
+              <div><span className="opp-eyebrow">Nova publicação</span><h2>Publicar uma oportunidade</h2><p>Crie a publicação directamente no workspace. A oportunidade ficará disponível no ecossistema após o envio.</p></div>
+              <Link href="/dashboard/oportunidades" className="text-link">Cancelar →</Link>
+            </div>
+            {params.publish === "error" && <div className="notice" style={{marginBottom:14}}>Não foi possível publicar. Verifique os campos e as datas.</div>}
+            {params.publish === "success" && <div className="notice" style={{marginBottom:14}}>Oportunidade publicada com sucesso.</div>}
+            <form action={createOpportunity} className="commerce-form-grid">
+              <label>Tipo<select name="type" required><option value="CALL">Chamada</option><option value="FUNDING">Financiamento</option><option value="PARTNERSHIP">Parceria</option><option value="TRAINING">Capacitação</option><option value="EVENT">Evento</option></select></label>
+              <label>Organização<input name="organization" placeholder="Nome da organização" /></label>
+              <label className="wide">Título<input name="title" required placeholder="Ex.: Chamada para propostas de inovação" /></label>
+              <label className="wide">Descrição<textarea name="description" required rows={5} placeholder="Explique a oportunidade, o que está a ser procurado e quem pode participar." /></label>
+              <label>Localização<input name="location" placeholder="Maputo, Moçambique ou Online" /></label>
+              <label>Abertura<input name="opens_at" type="datetime-local" /></label>
+              <label>Prazo / data final<input name="closes_at" type="datetime-local" /></label>
+              <label className="wide">Requisitos e condições<textarea name="requirements" rows={4} placeholder="Critérios, documentos, condições ou instruções para participação." /></label>
+              <div className="wide"><button type="submit" className="btn primary">Publicar oportunidade →</button><p className="opp-head p" style={{marginTop:8}}>A publicação ficará associada à sua conta e aparecerá em “Publicadas”.</p></div>
+            </form>
+          </section>
+        )}
         <header className="opp-hero">
           <div>
             <span className="opp-eyebrow">Área de oportunidades</span>
@@ -141,7 +165,7 @@ export default async function OpportunitiesWorkspace() {
           </div>
           <div className="opp-actions">
             <Link href="/oportunidades" className="btn">Explorar todas</Link>
-            <Link href="/publicar-oportunidade" className="btn primary">Publicar oportunidade →</Link>
+            <Link href="/dashboard/oportunidades?publish=1" className="btn primary">Publicar oportunidade →</Link>
           </div>
         </header>
 
@@ -209,9 +233,9 @@ export default async function OpportunitiesWorkspace() {
         <section id="publicadas" className="opp-panel" style={{marginTop:18}}>
           <div className="opp-head">
             <div><span className="opp-eyebrow">Publicadas pela sua conta</span><h2>Oportunidades da sua organização</h2><p>Tenha uma visão rápida das oportunidades que a sua conta criou.</p></div>
-            <Link href="/publicar-oportunidade" className="btn primary">Publicar nova →</Link>
+            <Link href="/dashboard/oportunidades?publish=1" className="btn primary">Publicar nova →</Link>
           </div>
-          {ownRows.length ? <div className="opp-list">{ownRows.map((item) => <Link href={"/oportunidades/"+item.slug} className="opp-card" key={item.id}><span className="opp-icon">{icons[item.type] || "◇"}</span><div><strong>{item.title}</strong><p>{item.description}</p><div className="opp-meta"><span>{labels[item.type] || item.type}</span><span>{item.location || "Moçambique"}</span></div></div><div className="opp-deadline"><b>Prazo</b>{dateLabel(item.closes_at)}</div></Link>)}</div> : <div className="opp-empty"><strong>A sua conta ainda não publicou oportunidades.</strong><p>Se representa uma organização, pode solicitar a publicação de uma chamada, financiamento, parceria, capacitação ou evento.</p><Link href="/publicar-oportunidade" className="btn primary">Ver publicação de oportunidade</Link></div>}
+          {ownRows.length ? <div className="opp-list">{ownRows.map((item) => <Link href={"/oportunidades/"+item.slug} className="opp-card" key={item.id}><span className="opp-icon">{icons[item.type] || "◇"}</span><div><strong>{item.title}</strong><p>{item.description}</p><div className="opp-meta"><span>{labels[item.type] || item.type}</span><span>{item.location || "Moçambique"}</span></div></div><div className="opp-deadline"><b>Prazo</b>{dateLabel(item.closes_at)}</div></Link>)}</div> : <div className="opp-empty"><strong>A sua conta ainda não publicou oportunidades.</strong><p>Se representa uma organização, pode solicitar a publicação de uma chamada, financiamento, parceria, capacitação ou evento.</p><Link href="/dashboard/oportunidades?publish=1" className="btn primary">Publicar oportunidade</Link></div>}
         </section>
 
         <section className="opp-panel" style={{marginTop:18,background:"linear-gradient(135deg,#e8efed,#f7faf9)"}}>
