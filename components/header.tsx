@@ -10,7 +10,7 @@ const publicLinks = [
   ["/empresas", "Empresas"],
   ["/marketplace", "Produtos e serviços"],
   ["/concursos", "Concursos"],
-  ["/oportunidades", "Oportunidades"],
+  ["/dashboard/oportunidades", "Oportunidades"],
   ["/contactos", "Contactos"],
 ] as const;
 
@@ -116,7 +116,7 @@ export function Header() {
                     {!insideApp && <Link href="/dashboard" onClick={() => setOpen(false)} className="mobile-menu-panel-btn">Aceder ao painel</Link>}
                     {insideApp && <Link href="/" onClick={() => setOpen(false)}>Portal público</Link>}
                     <form action={signOut}>
-                      <button type="submit" className="mobile-menu-logout">Sair da conta</button>
+                      <button type="submit" className="btn primary mobile-menu-logout">Sair da conta</button>
                     </form>
                   </>
                 ) : (
