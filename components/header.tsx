@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { signOut } from "@/lib/auth/actions";
 
 const publicLinks = [
   ["/empresas", "Empresas"],
