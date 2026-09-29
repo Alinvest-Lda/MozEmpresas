@@ -145,7 +145,7 @@ export default async function OpportunitiesWorkspace({ searchParams }: { searchP
               <div><span className="opp-eyebrow">Nova publicação</span><h2>Publicar uma oportunidade</h2><p>Crie a publicação directamente no workspace. A oportunidade ficará disponível no ecossistema após o envio.</p></div>
               <Link href="/dashboard/oportunidades" className="text-link">Cancelar →</Link>
             </div>
-            <form action={createOpportunity} className="commerce-form-grid">
+            <form action={createOpportunity} className="publication-form-grid">
               <label>Tipo<select name="type" required><option value="CALL">Chamada</option><option value="FUNDING">Financiamento</option><option value="PARTNERSHIP">Parceria</option><option value="TRAINING">Capacitação</option><option value="EVENT">Evento</option></select></label>
               <label>Organização<input name="organization" placeholder="Nome da organização" /></label>
               <label className="wide">Título<input name="title" required placeholder="Ex.: Chamada para propostas de inovação" /></label>
