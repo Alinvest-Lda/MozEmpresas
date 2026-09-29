@@ -9,7 +9,7 @@ import { signOut } from "@/lib/auth/actions";
 const publicLinks = [
   ["/dashboard/empresas", "Empresas"],
   ["/marketplace", "Produtos e serviços"],
-  ["/concursos", "Concursos"],
+  ["/dashboard/concursos", "Concursos"],
   ["/oportunidades", "Oportunidades"],
   ["/contactos", "Contactos"],
 ] as const;
