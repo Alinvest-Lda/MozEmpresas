@@ -40,13 +40,14 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
 
   if (!item || !labels[item.type]) notFound();
 
-  const [{ data: application }, { data: businesses }] = await Promise.all([
+  const [{ data: application }, { data: businesses }, { data: attachments }] = await Promise.all([
     userId
       ? supabase.from("opportunity_applications").select("status").eq("opportunity_id", item.id).eq("applicant_user_id", userId).maybeSingle()
       : Promise.resolve({ data: null }),
     userId
       ? supabase.from("businesses").select("id,name").eq("owner_id", userId).order("name")
       : Promise.resolve({ data: [] }),
+    supabase.from("publication_attachments").select("id,file_name,mime_type,storage_path,kind").eq("resource_type","OPPORTUNITY").eq("resource_id",item.id).order("created_at")
   ]);
 
   const deadline = item.closes_at ? new Date(item.closes_at) : null;
@@ -102,6 +103,12 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
               <div className="opportunity-requirements">
                 <p>{item.requirements || "Os requisitos e condições desta oportunidade serão apresentados pela entidade responsável."}</p>
               </div>
+            </section>
+
+            <section className="opportunity-detail-section">
+              <span className="eyebrow">Ficheiros</span>
+              <h2>Documentos e imagens.</h2>
+              {attachments?.length ? <div className="publication-attachments">{attachments.map((file) => { const url = supabase.storage.from("publication-media").getPublicUrl(file.storage_path).data.publicUrl; return <a className="publication-attachment" href={url} target="_blank" rel="noreferrer" key={file.id}>{file.kind === "IMAGE" ? "Imagem" : "Documento"} · {file.file_name}</a>; })}</div> : <p className="opportunity-detail-longtext">Não foram anexados ficheiros a esta publicação.</p>}
             </section>
 
             <section className="opportunity-detail-section">
