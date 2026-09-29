@@ -70,7 +70,6 @@ export default async function OpportunitiesWorkspace() {
     { data: ownedOpportunities },
     { data: recentOpportunities },
   ] = await Promise.all([
-    supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
     supabase.from("opportunity_applications").select("id,opportunity_id,status,cover_note,submitted_at").eq("applicant_user_id", userId).order("submitted_at", { ascending: false }).limit(30),
     supabase.from("opportunities").select("id,title,slug,type,description,organization,location,closes_at,created_at").eq("owner_id", userId).order("created_at", { ascending: false }).limit(20),
     supabase.from("opportunities").select("id,title,slug,type,description,organization,location,closes_at,created_at").eq("status", "PUBLISHED").order("created_at", { ascending: false }).limit(6),
