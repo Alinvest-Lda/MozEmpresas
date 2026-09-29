@@ -56,7 +56,7 @@ export function Header() {
   }, [open]);
 
   const insideApp = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
-  const links = insideApp ? [] : (signedIn ? appLinks : publicLinks);
+  const links = signedIn ? appLinks : publicLinks;
 
   return (
     <header className={insideApp && signedIn ? "topbar topbar-app" : "topbar"}>
