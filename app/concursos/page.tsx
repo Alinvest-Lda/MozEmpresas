@@ -55,11 +55,12 @@ export default async function Concursos({
   let signedIn = false;
   let error = false;
 
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  signedIn = Boolean(claimsData?.claims?.sub);
+  if (signedIn) redirect("/dashboard/concursos");
+
   try {
-    const supabase = await createClient();
-    const { data: claimsData } = await supabase.auth.getClaims();
-    signedIn = Boolean(claimsData?.claims?.sub);
-    if (signedIn) redirect("/dashboard/concursos");
 
     const { data: promotions } = await supabase
       .from("business_promotions")
