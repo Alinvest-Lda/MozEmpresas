@@ -10,7 +10,7 @@ const publicLinks = [
   ["/empresas", "Empresas"],
   ["/marketplace", "Produtos e serviços"],
   ["/concursos", "Concursos"],
-  ["/dashboard/oportunidades", "Oportunidades"],
+  ["/oportunidades", "Oportunidades"],
   ["/contactos", "Contactos"],
 ] as const;
 
@@ -18,7 +18,7 @@ const appLinks = [
   ["/dashboard", "Painel"],
   ["/marketplace", "Comprar e vender"],
   ["/concursos", "Concursos"],
-  ["/oportunidades", "Oportunidades"],
+  ["/dashboard/oportunidades", "Oportunidades"],
   ["/empresas", "Empresas"],
   ["/dashboard/acessos", "Acessos"],
 ] as const;
