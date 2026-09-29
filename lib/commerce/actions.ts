@@ -63,7 +63,7 @@ export async function createListing(formData: FormData) {
   const base = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "oferta";
   const slug = `${base}-${crypto.randomUUID().slice(0, 8)}`;
 
-  const { error } = await supabase.from("listings").insert({
+  const attachments = formData.getAll("attachments").filter((value): value is File => value instanceof File && value.size > 0);\n  if (attachments.length > 10) redirect("/dashboard/marketplace?publish=error");\n  const allowed = new Set(["image/jpeg","image/png","image/webp","application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]);\n  if (attachments.some((file) => !allowed.has(file.type) || file.size > 10 * 1024 * 1024)) redirect("/dashboard/marketplace?publish=error");\n\n  const { data: createdListing, error } = await supabase.from("listings").insert({
     owner_id: userId,
     business_id: businessId,
     title,
@@ -76,7 +76,7 @@ export async function createListing(formData: FormData) {
     location,
   });
 
-  redirect(error ? "/dashboard/marketplace?publish=error" : "/dashboard/marketplace?publish=success");
+  if (error || !createdListing) redirect("/dashboard/marketplace?publish=error");\n  const listingIdPlaceholder = createdListing.id;\n\n  for (const file of attachments) {\n    const kind = file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT";\n    const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").slice(-120);\n    const storagePath = `${userId}/${listingIdPlaceholder}/${crypto.randomUUID()}-${safeName}`;\n    const { error: uploadError } = await supabase.storage.from("listing-media").upload(storagePath, file, { contentType: file.type, upsert: false });\n    if (uploadError) redirect("/dashboard/marketplace?publish=error");\n    const { error: attachmentError } = await supabase.from("listing_attachments").insert({ listing_id: listingIdPlaceholder, storage_path: storagePath, file_name: file.name, mime_type: file.type, size_bytes: file.size, kind });\n    if (attachmentError) redirect("/dashboard/marketplace?publish=error");\n  }\n\n  redirect("/dashboard/marketplace?publish=success");
 }
 
 export async function createOrder(formData: FormData) {
