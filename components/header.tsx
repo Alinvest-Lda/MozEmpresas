@@ -19,7 +19,7 @@ const appLinks = [
   ["/dashboard/marketplace", "Comprar e vender"],
   ["/dashboard/concursos", "Concursos"],
   ["/dashboard/oportunidades", "Oportunidades"],
-  ["/empresas", "Empresas"],
+  ["/dashboard/empresas", "Empresas"],
   ["/dashboard/acessos", "Acessos"],
 ] as const;
 
