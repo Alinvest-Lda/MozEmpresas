@@ -2371,5 +2371,5 @@ button,input,select,textarea{font-size:16px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 /* Authenticated tablet navigation */
-.mobile-menu-panel .mobile-menu-logout{width:100%;margin-top:5px;display:flex;justify-content:center;background:#c93636;color:#fff;border-color:#c93636;border-radius:9px;font-weight:800}
+.mobile-menu-panel .mobile-menu-logout{width:100%;margin-top:5px;display:flex;justify-content:center;background:#c93636;color:#fff!important;border-color:#c93636;border-radius:9px;font-weight:800}
 .mobile-menu-panel .mobile-menu-logout:hover{background:#a92b2b;border-color:#a92b2b}
