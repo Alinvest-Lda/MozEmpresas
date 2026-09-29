@@ -17,7 +17,7 @@ const publicLinks = [
 const appLinks = [
   ["/dashboard", "Painel"],
   ["/dashboard/marketplace", "Comprar e vender"],
-  ["/concursos", "Concursos"],
+  ["/dashboard/concursos", "Concursos"],
   ["/dashboard/oportunidades", "Oportunidades"],
   ["/empresas", "Empresas"],
   ["/dashboard/acessos", "Acessos"],
