@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { savePublicationAttachments } from "@/lib/publications/attachments";
 
 const text=(v: FormDataEntryValue|null)=>typeof v==="string"?v.trim():"";
 
@@ -28,12 +29,17 @@ export async function createContest(formData:FormData){
   }
 
   const slug=slugify(title)+"-"+crypto.randomUUID().slice(0,8);
-  const {error}=await supabase.from("contests").insert({
+  const {data:createdContest,error}=await supabase.from("contests").insert({
     owner_id:userId,title,slug,description,category,requirements,rules,
     opens_at:opensAt?new Date(opensAt).toISOString():null,
     closes_at:closesAt?new Date(closesAt).toISOString():null,
     status:"OPEN"
-  });
+  }).select("id").single();
   if(error) redirect("/dashboard/concursos?publish=error");
+  try {
+    await savePublicationAttachments(supabase, userId, "CONTEST", createdContest?.id ?? "", formData.getAll("attachments"));
+  } catch {
+    // The publication remains valid; attachments are optional and can be added later.
+  }
   redirect("/dashboard/concursos?publish=success");
 }
