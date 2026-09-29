@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
 
@@ -57,6 +58,8 @@ export default async function Empresas({
 
   try {
     const supabase = await createClient();
+    const { data: claimsData } = await supabase.auth.getClaims();
+    if (claimsData?.claims?.sub) redirect("/dashboard/empresas");
 
     const [categoryResult, promotionResult] = await Promise.all([
       supabase.from("business_categories").select("id,name,slug").order("name").limit(24),
