@@ -40,9 +40,14 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
 
   if (!item || !labels[item.type]) notFound();
 
-  const { data: application } = userId
-    ? await supabase.from("opportunity_applications").select("status").eq("opportunity_id", item.id).eq("applicant_user_id", userId).maybeSingle()
-    : { data: null };
+  const [{ data: application }, { data: businesses }] = await Promise.all([
+    userId
+      ? supabase.from("opportunity_applications").select("status").eq("opportunity_id", item.id).eq("applicant_user_id", userId).maybeSingle()
+      : Promise.resolve({ data: null }),
+    userId
+      ? supabase.from("businesses").select("id,name").eq("owner_id", userId).order("name")
+      : Promise.resolve({ data: [] }),
+  ]);
 
   const deadline = item.closes_at ? new Date(item.closes_at) : null;
   const isEvent = item.type === "EVENT";
@@ -72,6 +77,7 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
               <form action={applyToOpportunity} className="detail-action-form">
                 <input type="hidden" name="opportunity_id" value={item.id} />
                 <input type="hidden" name="slug" value={item.slug} />
+                {businesses?.length ? <label className="field-label">Responder em nome de<select name="business_id" defaultValue=""><option value="">Minha conta</option>{businesses.map((business) => <option value={business.id} key={business.id}>{business.name}</option>)}</select></label> : null}
                 <textarea name="cover_note" rows={3} placeholder="Apresente brevemente a sua empresa ou interesse." aria-label="Mensagem de candidatura" />
                 <button className="btn primary full" type="submit">Enviar resposta →</button>
               </form>
@@ -122,5 +128,8 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
         </div>
       </div>
     </main>
+      <style>{`
+        .field-label{display:grid;gap:6px;font-size:12px;font-weight:750;color:#343b44}.field-label select{width:100%;box-sizing:border-box;border:1px solid #dfe3e7;border-radius:10px;padding:10px 11px;background:#fff;font:inherit}
+      `}</style>
   );
 }
