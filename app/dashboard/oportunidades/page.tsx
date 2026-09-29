@@ -128,7 +128,7 @@ export default async function OpportunitiesWorkspace({ searchParams }: { searchP
         .opportunities-hub .opp-side-action{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #e4e7ea;border-radius:13px}
         .opportunities-hub .opp-side-action:hover{background:#fafcfb}
         .opportunities-hub .opp-side-action strong{display:block;font-size:13px}.opportunities-hub .opp-side-action span{display:block;color:#7b8490;font-size:11px;margin-top:3px}
-        .opportunities-hub .opp-empty{border:1px dashed #d8dde2;border-radius:14px;padding:28px;text-align:center;color:#747e89}
+        .opportunities-hub .publication-upload-field{display:grid;gap:7px;padding:16px;border:1px dashed #cfd9d5;border-radius:14px;background:#f8faf9}.opportunities-hub .publication-upload-field>span{font-size:12px;font-weight:800;color:#454d57}.opportunities-hub .publication-upload-field input{width:100%;padding:10px;border:1px solid #dfe3e7;border-radius:10px;background:#fff}.opportunities-hub .publication-upload-field small{color:#7b8490;font-size:11px;line-height:1.45}.opportunities-hub .opp-empty{border:1px dashed #d8dde2;border-radius:14px;padding:28px;text-align:center;color:#747e89}
         .opportunities-hub .opp-empty strong{display:block;color:#303741;margin-bottom:5px}.opportunities-hub .opp-empty p{font-size:13px;margin:0 0 14px}
         @media(max-width:1050px){.opportunities-hub .opp-grid{grid-template-columns:1fr}.opportunities-hub .opp-kpis{grid-template-columns:repeat(2,1fr)}}
         @media(max-width:720px){.opportunities-hub .opp-hero{display:block}.opportunities-hub .opp-actions{margin-top:18px}.opportunities-hub .opp-kpis{grid-template-columns:1fr}.opportunities-hub .opp-nav{overflow-x:auto}.opportunities-hub .opp-nav a{white-space:nowrap}.opportunities-hub .opp-panel{padding:18px}.opportunities-hub .opp-card{grid-template-columns:40px minmax(0,1fr)}.opportunities-hub .opp-deadline{grid-column:2;text-align:left}}
@@ -153,7 +153,7 @@ export default async function OpportunitiesWorkspace({ searchParams }: { searchP
               <label>Localização<input name="location" placeholder="Maputo, Moçambique ou Online" /></label>
               <label>Abertura<input name="opens_at" type="datetime-local" /></label>
               <label>Prazo / data final<input name="closes_at" type="datetime-local" /></label>
-              <label className="wide">Requisitos e condições<textarea name="requirements" rows={4} placeholder="Critérios, documentos, condições ou instruções para participação." /></label>
+              <label className="wide">Requisitos e condições<textarea name="requirements" rows={4} placeholder="Critérios, documentos, condições ou instruções para participação." /></label><label className="wide publication-upload-field"><span>Imagens e documentos</span><input name="attachments" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" /><small>Até 12 ficheiros, máximo 10 MB cada. Pode anexar imagens, PDF, Word, Excel, PowerPoint e TXT.</small></label>
               <div className="wide"><button type="submit" className="btn primary">Publicar oportunidade →</button><p className="opp-head p" style={{marginTop:8}}>A publicação ficará associada à sua conta e aparecerá em “Publicadas”.</p></div>
             </form>
           </section>
