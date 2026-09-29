@@ -39,14 +39,14 @@ export default async function ContestsWorkspace({searchParams}:{searchParams?:Pr
   {params.publish==="success"&&<div className="notice" style={{marginBottom:14}}>Concurso publicado com sucesso.</div>}
   {params.publish==="1"&&<section className="cw-panel" style={{marginBottom:18}}>
    <div className="cw-head"><div><span className="cw-eyebrow">Nova publicação</span><h2>Publicar um concurso</h2><p>Crie o processo directamente no workspace da sua conta.</p></div><Link href="/dashboard/concursos" className="text-link">Cancelar →</Link></div>
-   <form action={createContest} className="cw-form">
+   <form action={createContest} className="publication-form-grid">
     <label>Título<input name="title" required placeholder="Ex.: Concurso para fornecimento de serviços de TI"/></label>
     <label>Área<input name="category" placeholder="Construção, IT, consultoria..."/></label>
     <label className="wide">Descrição<textarea name="description" rows={5} required placeholder="Explique o objecto, participantes e contexto do concurso."/></label>
     <label>Abertura<input name="opens_at" type="datetime-local"/></label><label>Prazo final<input name="closes_at" type="datetime-local"/></label>
     <label className="wide">Requisitos<textarea name="requirements" rows={4} placeholder="Documentos e condições de participação."/></label>
     <label className="wide">Regras<textarea name="rules" rows={4} placeholder="Instruções, critérios e regras do processo."/></label><label className="wide publication-upload-field"><span>Imagens e documentos</span><input name="attachments" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"/><small>Até 12 ficheiros, máximo 10 MB cada. Anexe edital, termos, imagens, modelos ou outros documentos.</small></label>
-    <div className="cw-form-actions"><button className="btn primary" type="submit">Publicar concurso →</button></div>
+    <div className="wide publication-form-actions"><button className="btn primary" type="submit">Publicar concurso →</button></div>
    </form>
   </section>}
   <header className="cw-hero"><div><span className="cw-eyebrow">Área de concursos</span><h1>Encontre e acompanhe processos de contratação.</h1><p>Tenha num só espaço os concursos que pode explorar, as candidaturas que já enviou e os processos publicados pela sua organização.</p></div><div className="cw-actions"><Link href="/concursos" className="btn">Explorar todos</Link><Link href="/dashboard/concursos?publish=1" className="btn primary">Publicar concurso →</Link></div></header>
