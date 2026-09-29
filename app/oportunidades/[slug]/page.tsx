@@ -53,6 +53,7 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
   const isEvent = item.type === "EVENT";
 
   return (
+    <>
     <main className="opportunity-detail-page">
       <div className="container">
         <Link href="/oportunidades" className="opportunity-back">← Voltar às oportunidades</Link>
@@ -131,5 +132,6 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
       <style>{`
         .field-label{display:grid;gap:6px;font-size:12px;font-weight:750;color:#343b44}.field-label select{width:100%;box-sizing:border-box;border:1px solid #dfe3e7;border-radius:10px;padding:10px 11px;background:#fff;font:inherit}
       `}</style>
+    </>
   );
 }
