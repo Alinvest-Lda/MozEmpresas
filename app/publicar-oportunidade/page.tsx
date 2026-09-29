@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
 const types = [
   ["Chamadas", "Convites à apresentação de propostas, candidaturas ou manifestações de interesse."],
@@ -14,7 +16,10 @@ const visibility = [
   ["Parceiro em destaque", "Presença institucional de maior visibilidade no ecossistema MozEmpresas, incluindo espaços próprios de marca."],
 ];
 
-export default function PublicarOportunidade() {
+export default async function PublicarOportunidade() {
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  if (claimsData?.claims?.sub) redirect("/dashboard/oportunidades?publish=1");
   return (
     <main className="publish-opportunity-page">
       <div className="container">
