@@ -68,6 +68,7 @@ export async function updatePlatformServiceRequest(formData: FormData) {
   const { supabase, user, member } = await currentPlatformMember();
   if (!user || !member?.active) return { error: "Sem autorização para gerir pedidos." };
 
+  const { data: request } = await supabase.from("service_requests").select("requester_user_id,service_id").eq("id", requestId).maybeSingle();
   const { error } = await supabase.from("service_requests").update({
     status,
     requested_price: requestedPrice,
@@ -76,6 +77,18 @@ export async function updatePlatformServiceRequest(formData: FormData) {
   }).eq("id", requestId);
 
   if (error) return { error: "Não foi possível actualizar o pedido." };
+
+  if (request?.requester_user_id && request.requester_user_id !== user.id) {
+    const { data: service } = await supabase.from("platform_services").select("name").eq("id", request.service_id).maybeSingle();
+    await supabase.from("notifications").insert({
+      user_id: request.requester_user_id,
+      type: "SERVICE_REQUEST_UPDATED",
+      title: "Pedido de serviço actualizado",
+      body: `O pedido de ${service?.name || "serviço"} passou para o estado ${status.replaceAll("_", " ").toLowerCase()}.`,
+      resource_type: "SERVICE_REQUEST",
+      resource_id: requestId,
+    });
+  }
 
   revalidatePath("/dashboard/admin");
   revalidatePath("/dashboard/servicos");
