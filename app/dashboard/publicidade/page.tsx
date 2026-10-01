@@ -18,7 +18,6 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
     supabase.from("businesses").select("id,name").eq("owner_id",user.id).order("name"),
     supabase.from("business_members").select("business_id").eq("user_id",user.id).in("role",["owner","admin","operator"]),
     supabase.from("ad_products").select("id,name,placement,description,duration_days,direct_price_mzn,credit_price,capacity,access_type,audience_level").eq("active",true).order("placement").order("duration_days"),
-    supabase.from("business_categories").select("name").order("name"),
     supabase.from("business_promotions").select("id,title,placement,status,starts_at,ends_at,payment_method,price_mzn,credits_charged,businesses:business_id(name)").order("created_at",{ascending:false}).limit(20)
   ]);
   const ids=[...new Set((members??[]).map(x=>x.business_id))];
