@@ -10,12 +10,16 @@ export default async function MyBusinesses() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: businesses }, { data: categories }] = await Promise.all([
+  const [{ data: businesses }, { data: memberships }, { data: categories }] = await Promise.all([
     supabase.from("businesses").select("id,name,slug,description,location,is_public,logo_url,cover_url,created_at").eq("owner_id", user.id).order("created_at",{ascending:false}),
+    supabase.from("business_members").select("business_id,role").eq("user_id", user.id).in("role", ["owner","admin","operator"]),
     supabase.from("business_categories").select("id,name,slug").order("name").limit(100),
   ]);
 
-  const publicCount = businesses?.filter((business) => business.is_public).length ?? 0;
+  const memberIds = [...new Set((memberships ?? []).map((m) => m.business_id))];
+  const { data: memberBusinesses } = memberIds.length ? await supabase.from("businesses").select("id,name,slug,description,location,is_public,logo_url,cover_url,created_at").in("id", memberIds).order("created_at",{ascending:false}) : { data: [] as typeof businesses };
+  const allBusinesses = [...(businesses ?? []), ...(memberBusinesses ?? []).filter((b) => !(businesses ?? []).some((o) => o.id === b.id))];
+  const publicCount = allBusinesses.filter((business) => business.is_public).length;
 
   return <main className="dashboard-main">
       <div className="dashboard-content business-registration-page">
@@ -27,7 +31,7 @@ export default async function MyBusinesses() {
           </div>
           <aside className="business-presence-status">
             <span>Estado da sua presença</span>
-            <strong>{businesses?.length ?? 0} empresa{businesses?.length === 1 ? "" : "s"}</strong>
+            <strong>{allBusinesses.length} empresa{businesses?.length === 1 ? "" : "s"}</strong>
             <span>{publicCount} perfil{publicCount === 1 ? "" : "is"} actualmente publicado{publicCount === 1 ? "" : "s"} no directório.</span>
             <span className="tag">{publicCount ? "Presença activa" : "Por publicar"}</span>
           </aside>
@@ -39,8 +43,8 @@ export default async function MyBusinesses() {
           <div className="business-guide-item"><b>03 · ACTIVIDADE</b><strong>Ecossistema</strong><span>Produtos, serviços, oportunidades, concursos e relações comerciais podem ser ligados ao perfil.</span></div>
         </section>
 
-        {businesses?.length ? <section className="business-owned-grid">
-          {businesses.map((business) => <article className="business-management-card" key={business.id}>
+        {allBusinesses.length ? <section className="business-owned-grid">
+          {allBusinesses.map((business) => <article className="business-management-card" key={business.id}>
             <div className="business-card-top">
               <div className="business-management-identity"><div className="business-management-logo">{business.logo_url ? <img src={business.logo_url} alt="" /> : business.name[0]}</div><div><strong>{business.name}</strong><span>{business.location || "Localização por definir"}</span></div></div>
               <span className="tag">{business.is_public ? "Publicado" : "Privado"}</span>
