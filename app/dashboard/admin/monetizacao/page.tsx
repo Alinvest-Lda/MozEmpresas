@@ -9,7 +9,7 @@ export default async function AdminMonetizationPage() {
   const { data: member } = await supabase.from("platform_members").select("active").eq("user_id", user.id).maybeSingle();
   if (!member?.active) return null;
 
-  const [{ data: plans }, { data: promotions }, { count: subscriptions }, { data: adProducts }] = await Promise.all([
+  const [{ data: plans }, { data: promotions }, { count: subscriptions }] = await Promise.all([
     supabase.from("platform_plans").select("id,code,name,description,monthly_price,currency,active").order("monthly_price"),
     supabase.from("business_promotions").select("id,title,placement,status,budget,currency,starts_at,ends_at,businesses:business_id(name)").order("created_at",{ascending:false}).limit(30),
     supabase.from("business_plan_subscriptions").select("id",{count:"exact",head:true}).eq("status","ACTIVE"),
