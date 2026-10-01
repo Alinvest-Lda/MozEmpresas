@@ -34,8 +34,8 @@ export function AdvertisingPurchaseForm({
   products: Product[];
   categories: { name: string }[];
   wallets: Record<string, number>;
-  creditAction: (formData: FormData) => void | Promise<void>;
-  directAction: (formData: FormData) => void | Promise<void>;
+  creditAction: (formData: FormData) => Promise<void>;
+  directAction: (formData: FormData) => Promise<void>;
 }) {
   const first = products[0];
   const defaultBusiness = businesses[0]?.id ?? "";
