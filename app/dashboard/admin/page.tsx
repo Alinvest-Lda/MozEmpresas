@@ -110,7 +110,7 @@ export default async function AdminPage() {
 
     <section className="card" style={{marginTop:18}}>
       <span className="eyebrow">Administração</span><h2 style={{marginTop:10}}>Áreas da plataforma</h2>
-      <div className="grid" style={{marginTop:18}}>
+      <div className="grid" style={{marginTop:18}}><a className="card" href="/dashboard/admin/monetizacao"><strong>Monetização</strong><p style={{marginTop:6}}>Planos, assinaturas e publicidade.</p></a>
         {["Utilizadores e acessos","Empresas e validação","Produtos e serviços","Concursos","Oportunidades","Parceiros","Publicidade","Relatórios"].map((item)=><div className="card" key={item}><strong>{item}</strong><p style={{marginTop:6}}>Módulo preparado para evolução.</p></div>)}
       </div>
     </section>
