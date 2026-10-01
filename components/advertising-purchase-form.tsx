@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 type Product = {
   id: string; name: string; placement: string; duration_days: number;
@@ -40,7 +40,7 @@ export function AdvertisingPurchaseForm({
   const first = products[0];
   const defaultBusiness = businesses[0]?.id ?? "";
   const selectedProduct = useMemo(() => first, [first]);
-  const price = calculate(selectedProduct, 0, 0);
+  const price = calculate(selectedProduct, selectedLocations.length, selectedCategories.length);
 
   return (
     <div className="card">
@@ -88,13 +88,13 @@ export function AdvertisingPurchaseForm({
           <p className="muted" style={{margin:"10px 0"}}>Cada tipo de critério acrescenta 10% ao preço. Vários valores dentro do mesmo tipo continuam a contar como um critério.</p>
           <div className="grid" style={{gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:14}}>
             <label>Localização
-              <select name="target_location" multiple size={5}>
+              <select name="target_location" multiple size={5} value={selectedLocations} onChange={e => setSelectedLocations(Array.from(e.target.selectedOptions, o => o.value))}>
                 {locations.map(v => <option key={v} value={v}>{v}</option>)}
               </select>
               <small className="muted">Pode seleccionar várias.</small>
             </label>
             <label>Actividade / categoria
-              <select name="target_category" multiple size={5}>
+              <select name="target_category" multiple size={5} value={selectedCategories} onChange={e => setSelectedCategories(Array.from(e.target.selectedOptions, o => o.value))}>
                 {categories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
               </select>
               <small className="muted">Pode seleccionar várias.</small>
@@ -104,7 +104,7 @@ export function AdvertisingPurchaseForm({
 
         <div className="card" style={{margin:0,background:"var(--surface-muted, #f7f7f7)"}}>
           <div style={{display:"flex",justifyContent:"space-between",gap:16,alignItems:"center",flexWrap:"wrap"}}>
-            <div><span className="dashboard-kicker">Cálculo</span><h3 style={{margin:"4px 0"}}>{money(price.price)}</h3><p className="muted" style={{margin:0}}>ou {price.credits.toLocaleString("pt-MZ")} créditos · preço base, sem segmentação</p></div>
+            <div><span className="dashboard-kicker">Cálculo</span><h3 style={{margin:"4px 0"}}>{money(price.price)}</h3><p className="muted" style={{margin:0}}>ou {price.credits.toLocaleString("pt-MZ")} créditos · {selectedLocations.length || selectedCategories.length ? "inclui segmentação" : "preço base"}</p></div>
             <div className="muted">Ajuste final após seleccionar a audiência.</div>
           </div>
         </div>
