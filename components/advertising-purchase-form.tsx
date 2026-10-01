@@ -49,7 +49,7 @@ export function AdvertisingPurchaseForm({
         <p className="muted" style={{margin:0}}>Escolha as opções. O custo final é calculado automaticamente, sem precisar consultar tabelas.</p>
       </div>
 
-      <form action={action} style={{display:"grid",gap:16,marginTop:20}}>
+      <form style={{display:"grid",gap:16,marginTop:20}}>
         <div className="grid" style={{gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:14}}>
           <label>Empresa
             <select name="business_id" required defaultValue={defaultBusiness}>
@@ -109,8 +109,8 @@ export function AdvertisingPurchaseForm({
         </div>
 
         <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-          <button className="btn primary" type="submit" name="payment_method" value="CREDITS">Activar com créditos</button>
-          <button className="btn" type="submit" name="payment_method" value="DIRECT">Solicitar pagamento directo</button>
+          <button className="btn primary" type="submit" formAction={creditAction}>Activar com créditos</button>
+          <button className="btn" type="submit" formAction={directAction}>Solicitar pagamento directo</button>
         </div>
       </form>
     </div>
