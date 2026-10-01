@@ -20,7 +20,7 @@ export async function createBusiness(_state:BusinessState,formData:FormData):Pro
 
 export async function updateBusiness(_state:BusinessState,formData:FormData):Promise<BusinessState>{
  const id=String(formData.get("businessId")||"");
- const parsed=schema.safeParse({name:formData.get("name"),description:formData.get("description")||undefined,categoryId:formData.get("categoryId")||"",location:formData.get("location")||undefined,phone:formData.get("phone")||undefined,email:formData.get("email")||"",website:formData.get("website")||"",isPublic:formData.get("isPublic")||"true"});
+ const parsed=schema.safeParse({name:formData.get("name"),description:formData.get("description")||undefined,categoryId:formData.get("categoryId")||"",location:formData.get("location")||undefined,phone:formData.get("phone")||undefined,email:formData.get("email")||"",website:formData.get("website")||"",logoUrl:formData.get("logoUrl")||"",coverUrl:formData.get("coverUrl")||"",isPublic:formData.get("isPublic")||"true"});
  if(!id || !parsed.success)return{error:"Verifique os dados introduzidos."};
  const supabase=await createClient();
  const {data:{user}}=await supabase.auth.getUser(); if(!user)redirect("/login");
