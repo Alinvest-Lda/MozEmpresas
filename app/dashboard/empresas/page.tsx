@@ -31,7 +31,7 @@ export default async function MyBusinesses() {
           </div>
           <aside className="business-presence-status">
             <span>Estado da sua presença</span>
-            <strong>{allBusinesses.length} empresa{businesses?.length === 1 ? "" : "s"}</strong>
+            <strong>{allBusinesses.length} empresa{allBusinesses.length === 1 ? "" : "s"}</strong>
             <span>{publicCount} perfil{publicCount === 1 ? "" : "is"} actualmente publicado{publicCount === 1 ? "" : "s"} no directório.</span>
             <span className="tag">{publicCount ? "Presença activa" : "Por publicar"}</span>
           </aside>
