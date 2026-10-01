@@ -38,13 +38,14 @@ export default async function ServicesPage() {
       .order("name"),
     supabase
       .from("platform_service_orders")
-      .select("id,service_id,business_id,status,amount_mzn,currency,starts_at,ends_at,renewal_period,auto_renew,created_at,platform_services(name)")
+      .select("id,service_id,business_id,status,amount_mzn,currency,starts_at,ends_at,renewal_period,auto_renew,created_at")
       .eq("requester_user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(8),
   ]);
 
   const services = serviceRows ?? [];
+  const serviceNames = new Map(services.map((service) => [service.id, service.name]));
   const categories = [...new Set(services.map((service) => service.category))];
 
   return (
@@ -79,11 +80,11 @@ export default async function ServicesPage() {
           {orders?.length ? (
             <div className="service-order-list">
               {orders.map((order) => {
-                const service = Array.isArray(order.platform_services) ? order.platform_services[0] : order.platform_services;
+                const serviceName = serviceNames.get(order.service_id) || "Serviço MozEmpresas";
                 return (
                   <div className="service-order-row" key={order.id}>
                     <div>
-                      <strong>{service?.name || "Serviço MozEmpresas"}</strong>
+                      <strong>{serviceName}</strong>
                       <small>{termLabel(order)} · {new Date(order.created_at).toLocaleDateString("pt-MZ")}</small>
                     </div>
                     <div className="service-order-meta">
