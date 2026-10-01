@@ -102,7 +102,21 @@ export default async function Empresas({
         .replace(/[%_,()']/g, " ")
         .replace(/\s+/g, " ")
         .trim();
-      if (safe) query = query.or(`name.ilike.%${safe}%,description.ilike.%${safe}%`);
+
+      if (safe) {
+        // A directory search also discovers companies through their published products/services.
+        const { data: matchingListings } = await supabase
+          .from("listings")
+          .select("business_id")
+          .eq("status", "PUBLISHED")
+          .or(`title.ilike.%${safe}%,description.ilike.%${safe}%`)
+          .limit(100);
+
+        const listingBusinessIds = [...new Set((matchingListings ?? []).map((item) => item.business_id).filter(Boolean))];
+        const clauses = [`name.ilike.%${safe}%`, `description.ilike.%${safe}%`];
+        if (listingBusinessIds.length) clauses.push(`id.in.(${listingBusinessIds.join(",")})`);
+        query = query.or(clauses.join(","));
+      }
     }
 
     if (location) {
