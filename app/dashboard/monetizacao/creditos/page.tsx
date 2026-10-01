@@ -15,12 +15,12 @@ export default async function CreditosPage(){
     supabase.from("credit_packages").select("id,code,name,credit_volume,price_mzn,active").eq("active",true).order("credit_volume"),
   ]);
   const ids=[...new Set((members??[]).map(x=>x.business_id))];
-  const {data:managed}=ids.length?await supabase.from("businesses").select("id,name").in("id",ids).order("name"):{data:[] as {id:string;name:string}[]};
+  const {data:managed}=ids.length?await supabase.from("businesses").select("id,name").in("id",ids).order("name") : {data:[] as {id:string;name:string}[]};
   const businesses=[...(owned??[]),...(managed??[]).filter(b=>!(owned??[]).some(o=>o.id===b.id))];
-  const {data:wallets}=businesses.length?await supabase.from("business_credit_wallets").select("business_id,balance_credits").in("business_id",businesses.map(b=>b.id)):{data:[] as {business_id:string;balance_credits:number}[]};
+  const {data:wallets}=businesses.length?await supabase.from("business_credit_wallets").select("id,business_id,balance_credits").in("business_id",businesses.map(b=>b.id)):{data:[] as {business_id:string;balance_credits:number}[]};
   const walletMap=new Map((wallets??[]).map(w=>[w.business_id,w.balance_credits]));
-  const walletIds=(wallets??[]).map(w=>w.business_id);
-  const {data:transactions}=walletIds.length?await supabase.from("credit_transactions").select("id,business_id,type,credits,amount_mzn,description,created_at").in("business_id",walletIds).order("created_at",{ascending:false}).limit(20):{data:[] as any[]};
+  const walletIds=(wallets??[]).map(w=>w.id);
+  const {data:transactions}=walletIds.length?await supabase.from("credit_transactions").select("id,wallet_id,type,credits,amount_mzn,description,created_at").in("wallet_id",walletIds).order("created_at",{ascending:false}).limit(20):{data:[] as any[]};
   return <main className="dashboard-main"><div className="dashboard-content">
     <header className="dashboard-topbar"><div><span className="dashboard-kicker">Conta · Créditos</span><h1>Créditos</h1><p>Um recurso transversal do MozEmpresas. Os créditos podem ser utilizados em funcionalidades elegíveis da plataforma, incluindo publicidade.</p></div><Link className="btn" href="/dashboard/publicidade">Ir para Publicidade →</Link></header>
     <section className="dashboard-section" style={{marginTop:18}}><div className="dashboard-section-head"><div><span className="dashboard-kicker">Saldos</span><h2>Contas de créditos</h2><p className="muted">O saldo é mantido por empresa para permitir controlo e utilização no ecossistema.</p></div></div>
