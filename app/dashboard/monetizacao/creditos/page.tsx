@@ -1,5 +1,4 @@
 export const dynamic="force-dynamic";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CreditPurchaseForm } from "@/components/credit-purchase-form";
 function money(v:number|string|null|undefined){return v==null?"—":Number(v).toLocaleString("pt-MZ")+" MZN";}
