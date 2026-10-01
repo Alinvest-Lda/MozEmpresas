@@ -60,7 +60,7 @@ export default async function AdminPage() {
               <span className="tag">{statusLabel.get(request.status as typeof statuses[number][0]) || request.status}</span>
             </div>
             <p>{request.notes || "Sem observações adicionais."}</p>
-            <form action={updatePlatformServiceRequest} className="admin-request-form">
+            <form action={async (formData) => { "use server"; await updatePlatformServiceRequest(formData); }} className="admin-request-form">
               <input type="hidden" name="requestId" value={request.id} />
               <label><span>Estado</span><select name="status" defaultValue={request.status}>{statuses.map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label>
               <label><span>Valor proposto</span><input name="requestedPrice" type="number" min="0" step="0.01" defaultValue={request.requested_price ?? ""} placeholder="Sob consulta" /></label>
