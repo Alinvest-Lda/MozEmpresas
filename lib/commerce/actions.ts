@@ -208,7 +208,7 @@ export async function cancelOrder(formData: FormData) {
 }
 
 
-export async function updateListing(_state: { error?: string; success?: string }, formData: FormData) {
+export async function updateListing(_state: { error?: string; success?: string }, formData: FormData): Promise<{ error?: string; success?: string }> {
   const { supabase, userId } = await currentUser();
   const listingId = text(formData.get("listing_id"));
   const title = text(formData.get("title"));
@@ -255,6 +255,7 @@ export async function updateListing(_state: { error?: string; success?: string }
   revalidatePath("/dashboard/marketplace");
   revalidatePath("/marketplace/" + listingId);
   redirect("/dashboard/marketplace?status=updated");
+  return { success: "Oferta actualizada." };
 }
 
 export async function updateListingStatus(formData: FormData) {
