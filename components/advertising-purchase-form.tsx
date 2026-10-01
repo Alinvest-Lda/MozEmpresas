@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 type Product = {
   id: string; name: string; placement: string; duration_days: number;
@@ -39,7 +39,10 @@ export function AdvertisingPurchaseForm({
 }) {
   const first = products[0];
   const defaultBusiness = businesses[0]?.id ?? "";
-  const selectedProduct = useMemo(() => first, [first]);
+  const [productId, setProductId] = useState(first?.id ?? "");
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const selectedProduct = products.find(p => p.id === productId) ?? first;
   const price = calculate(selectedProduct, selectedLocations.length, selectedCategories.length);
 
   return (
@@ -58,7 +61,7 @@ export function AdvertisingPurchaseForm({
             </select>
           </label>
           <label>Espaço publicitário
-            <select name="ad_product_id" required defaultValue={first?.id}>
+            <select name="ad_product_id" required value={productId} onChange={e => setProductId(e.target.value)}>
               {(["DIRECTORY","MARKETPLACE","HOME"] as const).map(place => (
                 <optgroup key={place} label={placementLabel[place]}>
                   {products.filter(p => p.placement === place).map(p => (
