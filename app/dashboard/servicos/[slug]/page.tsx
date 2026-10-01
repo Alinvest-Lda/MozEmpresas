@@ -14,6 +14,7 @@ type Service = {
   price: number | string | null;
   currency: string | null;
   billing: string | null;
+  default_term_days: number | null;
 };
 
 const categoryIntro: Record<string, string> = {
@@ -95,7 +96,7 @@ export default async function ServiceDetail({
   const [{ data: service }, { data: businesses }] = await Promise.all([
     supabase
       .from("platform_services")
-      .select("id,slug,name,description,category,price,currency,billing")
+      .select("id,slug,name,description,category,price,currency,billing,default_term_days")
       .eq("slug", slug)
       .eq("active", true)
       .maybeSingle(),
@@ -141,15 +142,16 @@ export default async function ServiceDetail({
               {service.description || categoryIntro[service.category] || "Serviço especializado da plataforma MozEmpresas."}
             </p>
             <div className="service-detail-hero-actions">
-              <a href="#solicitar" className="btn primary">Comprar agora →</a>
+              <a href="#contratar" className="btn primary">Contratar serviço →</a>
               <Link href="/dashboard/servicos" className="btn">Ver outros serviços</Link>
             </div>
           </div>
 
           <aside className="service-detail-offer">
-            <span className="dashboard-kicker">Condições</span>
+            <span className="dashboard-kicker">Condições de contratação</span>
             <strong>{priceLabel(service)}</strong>
             <p>{billingLabel(service)}</p>
+            <div className="service-detail-term"><span>Prazo / período</span><strong>{service.billing === "MONTHLY" ? "1 mês · renovável" : service.billing === "ANNUAL" ? "1 ano · renovável" : service.default_term_days ? service.default_term_days + " dias para execução" : "Definido no contrato"}</strong></div>
             <div className="service-detail-offer-note">
               {service.price == null
                 ? "O valor depende do escopo, volume, prazo e requisitos do pedido."
@@ -205,7 +207,7 @@ export default async function ServiceDetail({
             </section>
           </div>
 
-          <aside id="comprar" className="service-request-panel">
+          <aside id="contratar" className="service-request-panel">
             <PlatformServiceRequestForm serviceId={service.id} businesses={businesses ?? []} price={service.price} />
           </aside>
         </section>
