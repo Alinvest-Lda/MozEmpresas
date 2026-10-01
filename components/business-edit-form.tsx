@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import type { BusinessState } from "@/lib/businesses/actions";
 
 type Category = { id: string; name: string; slug: string };
-type Business = { id:string; name:string; description:string|null; category_id:string|null; location:string|null; phone:string|null; email:string|null; website:string|null; is_public:boolean };
+type Business = { id:string; name:string; description:string|null; category_id:string|null; location:string|null; phone:string|null; email:string|null; website:string|null; logo_url:string|null; cover_url:string|null; is_public:boolean };
 type PortfolioItem = { id:string; image_url:string; title:string|null; sort_order:number };
 
 export function BusinessEditForm({ action, business, categories, portfolio=[] }: { action:(state:BusinessState, formData:FormData)=>Promise<BusinessState>; business:Business; categories:Category[]; portfolio?:PortfolioItem[] }) {
@@ -23,6 +23,7 @@ export function BusinessEditForm({ action, business, categories, portfolio=[] }:
       <div className="field"><label htmlFor="edit-email">Email empresarial</label><input id="edit-email" name="email" type="email" defaultValue={business.email || ""} /></div>
       <div className="field"><label htmlFor="edit-website">Website</label><input id="edit-website" name="website" type="url" defaultValue={business.website || ""} /></div>
     </div>
+    <div className="business-form-grid"><div className="field"><label htmlFor="edit-logo">URL do logótipo</label><input id="edit-logo" name="logoUrl" type="url" defaultValue={business.logo_url || ""} placeholder="https://..." /></div><div className="field"><label htmlFor="edit-cover">URL da capa</label><input id="edit-cover" name="coverUrl" type="url" defaultValue={business.cover_url || ""} placeholder="https://..." /></div></div>
     <div className="field"><label htmlFor="edit-description">Apresentação da empresa</label><textarea id="edit-description" name="description" rows={6} maxLength={5000} defaultValue={business.description || ""} placeholder="Explique o que a empresa faz, para quem trabalha e o que disponibiliza." /></div>
     <section className="business-portfolio-editor">
       <div>
