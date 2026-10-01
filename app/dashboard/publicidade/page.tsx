@@ -46,7 +46,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
           <button className="btn primary" type="submit">Comprar com créditos →</button>
         </form>
         <form action={requestAdDirectPayment} style={{display:"grid",gap:12,marginTop:18,paddingTop:18,borderTop:"1px solid #eee"}}>
-          <input type="hidden" name="business_id" value={businesses[0].id}/><input type="hidden" name="ad_product_id" value={(products??[])[0]?.id??""}/>
+          <input type="hidden" name="business_id" value={businesses[0].id}/>
           <label>Produto para pagamento directo<select name="ad_product_id">{(products??[]).map(p=><option value={p.id} key={p.id}>{p.name} — {Number(p.direct_price_mzn).toLocaleString("pt-MZ")} MZN</option>)}</select></label>
           <label>Data de início<input name="starts_at" type="datetime-local" required /></label>
           <label>Nome da campanha<input name="title" placeholder="Ex.: Campanha institucional" /></label>
