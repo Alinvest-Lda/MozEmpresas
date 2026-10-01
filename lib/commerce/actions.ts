@@ -208,7 +208,7 @@ export async function cancelOrder(formData: FormData) {
 }
 
 
-export async function updateListing(formData: FormData) {
+export async function updateListing(_state: { error?: string; success?: string }, formData: FormData) {
   const { supabase, userId } = await currentUser();
   const listingId = text(formData.get("listing_id"));
   const title = text(formData.get("title"));
