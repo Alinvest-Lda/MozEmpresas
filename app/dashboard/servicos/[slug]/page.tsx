@@ -208,7 +208,7 @@ export default async function ServiceDetail({
           </div>
 
           <aside id="contratar" className="service-request-panel">
-            <PlatformServiceRequestForm serviceId={service.id} businesses={businesses ?? []} price={service.price} />
+            <PlatformServiceRequestForm serviceId={service.id} businesses={businesses ?? []} price={service.price} billing={service.billing} defaultTermDays={service.default_term_days} />
           </aside>
         </section>
 
