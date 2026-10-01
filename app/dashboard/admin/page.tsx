@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { updatePlatformServiceRequest } from "@/lib/services/actions";
+import { moderateBusiness, moderateListing } from "@/lib/admin/actions";
 import { createClient } from "@/lib/supabase/server";
 
 const statuses = [
@@ -29,6 +30,10 @@ export default async function AdminPage() {
   ]);
 
   const statusLabel = new Map(statuses);
+  const [{ data: adminBusinesses }, { data: adminListings }] = await Promise.all([
+    supabase.from("businesses").select("id,name,is_public,location,created_at").order("created_at", { ascending: false }).limit(20),
+    supabase.from("listings").select("id,title,type,status,business_id,created_at,businesses:business_id(name)").order("created_at", { ascending: false }).limit(20),
+  ]);
 
   return <main className="dashboard-main"><div className="dashboard-content">
     <div className="page-header">
@@ -69,6 +74,37 @@ export default async function AdminPage() {
             </form>
           </article>;
         }) : <div className="admin-request-empty"><strong>Nenhum pedido de serviço recebido.</strong><span>Quando uma empresa solicitar um add-on, o pedido aparecerá aqui.</span></div>}
+      </div>
+    </section>
+
+    <section className="dashboard-section" style={{marginTop:18}}>
+      <div className="dashboard-section-head"><div><span className="dashboard-kicker">Moderação</span><h2>Empresas recentes</h2><p>Controlo de publicação da presença empresarial.</p></div></div>
+      <div className="admin-request-list">
+        {adminBusinesses?.length ? adminBusinesses.map((business) => <article className="admin-request-card" key={business.id}>
+          <div className="admin-request-head"><div><span className="dashboard-kicker">{business.location || "Localização não indicada"}</span><h3>{business.name}</h3><small>{new Date(business.created_at).toLocaleString("pt-MZ")}</small></div><span className="tag">{business.is_public ? "Pública" : "Privada"}</span></div>
+          <form action={async (formData) => { "use server"; await moderateBusiness(formData); }} className="admin-request-form">
+            <input type="hidden" name="businessId" value={business.id} />
+            <label><span>Visibilidade</span><select name="isPublic" defaultValue={business.is_public ? "true" : "false"}><option value="true">Publicada</option><option value="false">Privada</option></select></label>
+            <button className="btn primary" type="submit">Actualizar</button>
+          </form>
+        </article>) : <div className="admin-request-empty"><strong>Nenhuma empresa encontrada.</strong></div>}
+      </div>
+    </section>
+
+    <section className="dashboard-section" style={{marginTop:18}}>
+      <div className="dashboard-section-head"><div><span className="dashboard-kicker">Moderação</span><h2>Ofertas recentes</h2><p>Controlo do estado de produtos e serviços publicados.</p></div></div>
+      <div className="admin-request-list">
+        {adminListings?.length ? adminListings.map((listing) => {
+          const business = Array.isArray(listing.businesses) ? listing.businesses[0] : listing.businesses;
+          return <article className="admin-request-card" key={listing.id}>
+            <div className="admin-request-head"><div><span className="dashboard-kicker">{listing.type === "PRODUCT" ? "Produto" : "Serviço"} · {business?.name || "Sem empresa"}</span><h3>{listing.title}</h3><small>{new Date(listing.created_at).toLocaleString("pt-MZ")}</small></div><span className="tag">{listing.status}</span></div>
+            <form action={async (formData) => { "use server"; await moderateListing(formData); }} className="admin-request-form">
+              <input type="hidden" name="listingId" value={listing.id} />
+              <label><span>Estado</span><select name="status" defaultValue={listing.status}>{["DRAFT","PUBLISHED","PAUSED","SOLD_OUT","ARCHIVED"].map((value)=><option value={value} key={value}>{value}</option>)}</select></label>
+              <button className="btn primary" type="submit">Actualizar</button>
+            </form>
+          </article>;
+        }) : <div className="admin-request-empty"><strong>Nenhuma oferta encontrada.</strong></div>}
       </div>
     </section>
 
