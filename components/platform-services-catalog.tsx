@@ -12,7 +12,7 @@ type Service = {
   price: number | string | null;
   currency: string | null;
   billing: string | null;
-  default_term_days: number | null;
+  default_term_days?: number | null;
 };
 
 const categoryCopy: Record<string, string> = {
