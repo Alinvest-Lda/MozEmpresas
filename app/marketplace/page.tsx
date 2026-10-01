@@ -77,7 +77,20 @@ export default async function Marketplace({
 
       if (q) {
         const safe = q.replace(/[%_,()']/g, " ").replace(/\s+/g, " ").trim();
-        if (safe) query = query.or(`title.ilike.%${safe}%,description.ilike.%${safe}%`);
+        if (safe) {
+          // Search both the offer itself and the supplier name.
+          const { data: matchingBusinesses } = await supabase
+            .from("businesses")
+            .select("id")
+            .eq("is_public", true)
+            .ilike("name", `%${safe}%`)
+            .limit(100);
+
+          const businessIds = [...new Set((matchingBusinesses ?? []).map((business) => business.id))];
+          const clauses = [`title.ilike.%${safe}%`, `description.ilike.%${safe}%`];
+          if (businessIds.length) clauses.push(`business_id.in.(${businessIds.join(",")})`);
+          query = query.or(clauses.join(","));
+        }
       }
       if (type && type !== "all") query = query.eq("type", type);
       if (location) query = query.ilike("location", `%${location}%`);
