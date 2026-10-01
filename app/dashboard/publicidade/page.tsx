@@ -37,7 +37,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
     {flash && <div className="card" style={{marginBottom:18}}><strong>{flash}</strong></div>}
     <header className="dashboard-topbar">
       <div><span className="dashboard-kicker">Trabalho · Publicidade</span><h1>Publicidade</h1><p>Visibilidade adicional nos espaços publicitários limitados do MozEmpresas. A presença normal no Directório e no Marketplace continua gratuita.</p></div>
-      <Link className="btn" href="/dashboard/monetizacao/creditos">Gerir créditos →</Link>
+
     </header>
 
     <section className="dashboard-section" style={{marginTop:18}}>
