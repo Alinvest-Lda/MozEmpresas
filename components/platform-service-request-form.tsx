@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { requestPlatformService } from "@/lib/services/actions";
 
@@ -31,7 +32,7 @@ export function PlatformServiceRequestForm({
           <strong>Pedido recebido.</strong>
           <p>
             A sua solicitação foi registada. Pode acompanhar a evolução em
-            <a href="/dashboard/servicos"> Serviços MozEmpresas</a> e nas suas notificações.
+            <Link href="/dashboard/servicos"> Serviços MozEmpresas</Link> e nas suas notificações.
           </p>
         </div>
       </div>
