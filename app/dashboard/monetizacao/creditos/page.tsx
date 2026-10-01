@@ -1,3 +1,4 @@
+import Link from "next/link";
 export const dynamic="force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { CreditPurchaseForm } from "@/components/credit-purchase-form";
