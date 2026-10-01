@@ -12,11 +12,13 @@ export default async function ManageBusinessPage({ params }: { params: Promise<{
   if (!user) redirect("/login");
 
   const [{ data: business }, { data: categories }, { data: portfolio }] = await Promise.all([
-    supabase.from("businesses").select("id,name,slug,description,category_id,location,phone,email,website,is_public").eq("id",id).eq("owner_id",user.id).maybeSingle(),
+    supabase.from("businesses").select("id,name,slug,description,category_id,location,phone,email,website,logo_url,cover_url,is_public,owner_id").eq("id",id).eq("owner_id",user.id).maybeSingle(),
     supabase.from("business_categories").select("id,name,slug").order("name").limit(100),
     supabase.from("business_portfolio_media").select("id,image_url,title,sort_order").eq("business_id",id).order("sort_order"),
   ]);
   if (!business) notFound();
+  const canManage = business.owner_id === user.id || Boolean((await supabase.from("business_members").select("role").eq("business_id", id).eq("user_id", user.id).in("role", ["owner","admin","operator"]).maybeSingle()).data);
+  if (!canManage) notFound();
 
   return <main className="dashboard-main">
       <div className="dashboard-content business-registration-page">
