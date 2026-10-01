@@ -61,7 +61,7 @@ export async function updatePlatformServiceRequest(formData: FormData) {
   }
 
   const requestedPrice = requestedPriceRaw ? Number(requestedPriceRaw.replace(",", ".")) : null;
-  if (requestedPriceRaw && (!Number.isFinite(requestedPrice) || requestedPrice < 0)) {
+  if (requestedPriceRaw && (requestedPrice === null || !Number.isFinite(requestedPrice) || requestedPrice < 0)) {
     return { error: "O valor proposto é inválido." };
   }
 
