@@ -10,6 +10,16 @@ const schema = z.object({
   notes: z.string().trim().max(2000).optional(),
 });
 
+const requestStatuses = ["REQUESTED", "UNDER_REVIEW", "QUOTED", "ACCEPTED", "IN_PROGRESS", "COMPLETED"] as const;
+
+async function currentPlatformMember() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { supabase, user: null, member: null };
+  const { data: member } = await supabase.from("platform_members").select("role,active").eq("user_id", user.id).maybeSingle();
+  return { supabase, user, member };
+}
+
 export async function requestPlatformService(formData: FormData) {
   const parsed = schema.safeParse({
     serviceId: formData.get("serviceId"),
@@ -35,6 +45,39 @@ export async function requestPlatformService(formData: FormData) {
   });
   if (error) return { error: "Não foi possível registar o pedido. Tente novamente." };
 
+  revalidatePath("/dashboard/servicos");
+  revalidatePath("/dashboard/admin");
+  return { success: true };
+}
+
+export async function updatePlatformServiceRequest(formData: FormData) {
+  const requestId = String(formData.get("requestId") || "");
+  const status = String(formData.get("status") || "").toUpperCase();
+  const requestedPriceRaw = String(formData.get("requestedPrice") || "").trim();
+  const notes = String(formData.get("notes") || "").trim();
+
+  if (!z.string().uuid().safeParse(requestId).success || !requestStatuses.includes(status as typeof requestStatuses[number])) {
+    return { error: "Pedido ou estado inválido." };
+  }
+
+  const requestedPrice = requestedPriceRaw ? Number(requestedPriceRaw.replace(",", ".")) : null;
+  if (requestedPriceRaw && (!Number.isFinite(requestedPrice) || requestedPrice < 0)) {
+    return { error: "O valor proposto é inválido." };
+  }
+
+  const { supabase, user, member } = await currentPlatformMember();
+  if (!user || !member?.active) return { error: "Sem autorização para gerir pedidos." };
+
+  const { error } = await supabase.from("service_requests").update({
+    status,
+    requested_price: requestedPrice,
+    notes: notes || null,
+    updated_at: new Date().toISOString(),
+  }).eq("id", requestId);
+
+  if (error) return { error: "Não foi possível actualizar o pedido." };
+
+  revalidatePath("/dashboard/admin");
   revalidatePath("/dashboard/servicos");
   return { success: true };
 }
