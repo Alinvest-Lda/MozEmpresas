@@ -108,3 +108,53 @@ insert into public.ad_products(code,name,placement,description,duration_days,dir
 ('HOME_BILLBOARD_14','Billboard Home · 14 dias','HOME','Espaço publicitário premium no hero da página inicial.',14,9000,8400,1),
 ('HOME_BILLBOARD_30','Billboard Home · 30 dias','HOME','Espaço publicitário premium no hero da página inicial.',30,15000,14000,1)
 on conflict (code) do update set name=excluded.name,placement=excluded.placement,description=excluded.description,duration_days=excluded.duration_days,direct_price_mzn=excluded.direct_price_mzn,credit_price=excluded.credit_price,capacity=excluded.capacity,active=true,updated_at=now();
+
+
+-- Targeted visibility: the same limited inventory can be sold to a more relevant audience
+-- without creating additional ad slots or increasing page density.
+alter table public.business_promotions
+  add column if not exists audience_mode text not null default 'GENERAL'
+    check (audience_mode in ('GENERAL','TARGETED'));
+
+create index if not exists business_promotions_audience_mode_idx
+  on public.business_promotions(audience_mode);
+
+-- Pricing rule: general visibility uses the catalogue price; one targeting dimension adds 10%,
+-- two dimensions add 20%. Targeting never creates a new placement or additional inventory.
+create or replace function public.purchase_promotion_with_credits(
+  p_business_id uuid, p_ad_product_id uuid, p_listing_id uuid, p_title text,
+  p_starts_at timestamptz, p_locations text[] default '{}', p_categories text[] default '{}'
+)
+returns jsonb language plpgsql security definer set search_path = public
+as $$
+declare
+  v_user uuid := auth.uid(); v_product public.ad_products; v_wallet public.business_credit_wallets;
+  v_end timestamptz; v_promotion uuid; v_factor numeric := 1; v_price numeric; v_credits integer;
+  v_locations text[] := coalesce(p_locations,'{}'); v_categories text[] := coalesce(p_categories,'{}');
+begin
+  if v_user is null then raise exception 'AUTH_REQUIRED'; end if;
+  if not exists (select 1 from public.businesses b where b.id=p_business_id and b.owner_id=v_user)
+     and not exists (select 1 from public.business_members bm where bm.business_id=p_business_id and bm.user_id=v_user and bm.role in ('owner','admin','operator')) then raise exception 'FORBIDDEN'; end if;
+  select * into v_product from public.ad_products where id=p_ad_product_id and active=true and access_type='PAID' for share;
+  if not found then raise exception 'PRODUCT_UNAVAILABLE'; end if;
+  if cardinality(v_locations)>0 then v_factor := v_factor + 0.10; end if;
+  if cardinality(v_categories)>0 then v_factor := v_factor + 0.10; end if;
+  v_price := round(v_product.direct_price_mzn * v_factor,2);
+  v_credits := ceil(v_product.credit_price * v_factor);
+  v_end := p_starts_at + make_interval(days => v_product.duration_days);
+  if (select count(*) from public.business_promotions bp where bp.ad_product_id=v_product.id and bp.status in ('PENDING','ACTIVE') and bp.starts_at < v_end and bp.ends_at > p_starts_at) >= v_product.capacity then raise exception 'NO_AVAILABILITY'; end if;
+  select * into v_wallet from public.business_credit_wallets where business_id=p_business_id for update;
+  if not found then insert into public.business_credit_wallets(business_id,balance_credits) values(p_business_id,0) returning * into v_wallet; end if;
+  if v_wallet.balance_credits < v_credits then raise exception 'INSUFFICIENT_CREDITS'; end if;
+  update public.business_credit_wallets set balance_credits=balance_credits-v_credits,updated_at=now() where id=v_wallet.id;
+  insert into public.business_promotions(business_id,listing_id,title,placement,status,starts_at,ends_at,budget,currency,ad_product_id,payment_method,price_mzn,credits_charged,audience_mode)
+  values(p_business_id,p_listing_id,coalesce(nullif(trim(p_title),''),v_product.name),v_product.placement,'ACTIVE',p_starts_at,v_end,v_price,'MZN',v_product.id,'CREDITS',v_price,v_credits,case when cardinality(v_locations)+cardinality(v_categories)>0 then 'TARGETED' else 'GENERAL' end)
+  returning id into v_promotion;
+  insert into public.credit_transactions(wallet_id,type,credits,amount_mzn,reference_type,reference_id,description)
+  values(v_wallet.id,'CONSUMPTION',-v_credits,v_price,'BUSINESS_PROMOTION',v_promotion,'Publicidade: '||v_product.name||case when cardinality(v_locations)+cardinality(v_categories)>0 then ' · visibilidade direccionada' else '' end);
+  insert into public.business_promotion_targets(promotion_id,target_type,target_value) select v_promotion,'LOCATION',trim(x) from unnest(v_locations) x where trim(x)<>'';
+  insert into public.business_promotion_targets(promotion_id,target_type,target_value) select v_promotion,'CATEGORY',trim(x) from unnest(v_categories) x where trim(x)<>'';
+  return jsonb_build_object('promotion_id',v_promotion,'credits_charged',v_credits,'price_mzn',v_price,'ends_at',v_end);
+end; $$;
+revoke all on function public.purchase_promotion_with_credits(uuid,uuid,uuid,text,timestamptz,text[],text[]) from anon, public;
+grant execute on function public.purchase_promotion_with_credits(uuid,uuid,uuid,text,timestamptz,text[],text[]) to authenticated;
