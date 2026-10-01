@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AdvertisingHero } from "@/components/advertising-hero";
-import { PartnerSpotlight } from "@/components/partner-spotlight";
 
 const categories = [
   ["Construção e engenharia", "Obras, projectos e manutenção"],
@@ -17,14 +16,6 @@ const categories = [
   ["Outros serviços", "Outras actividades empresariais"],
 ];
 
-const opportunities = [
-  ["CHAMADAS", "Chamadas e pedidos de propostas", "Encontre pedidos, chamadas e manifestações de interesse publicados por organizações.", "/oportunidades?type=CALL"],
-  ["FINANCIAMENTO", "Financiamentos e apoio", "Descubra financiamento, subvenções e programas de apoio ao crescimento.", "/oportunidades?type=FUNDING"],
-  ["PARCERIAS", "Parcerias e colaboração", "Encontre organizações à procura de parceiros, alianças e novas formas de colaboração.", "/oportunidades?type=PARTNERSHIP"],
-  ["CAPACITAÇÃO", "Capacitações e desenvolvimento", "Acompanhe cursos, workshops e programas para desenvolver competências.", "/oportunidades?type=TRAINING"],
-  ["EVENTOS", "Eventos e networking", "Descubra feiras, conferências, encontros e outros momentos relevantes para o mercado.", "/oportunidades?type=EVENT"],
-];
-
 export default function Home() {
   return (
     <>
@@ -34,7 +25,7 @@ export default function Home() {
           <div className="search-hero-copy">
             <span className="eyebrow">Directório empresarial de Moçambique</span>
             <h1>Encontre quem pode <span>fazer negócio consigo.</span></h1>
-            <p>Pesquise empresas, fornecedores, produtos, serviços e oportunidades em Moçambique.</p>
+            <p>Pesquise empresas, fornecedores, produtos e serviços em Moçambique.</p>
           </div>
           <form action="/empresas" className="market-search market-search-main">
             <div className="search-field"><span className="search-symbol" aria-hidden="true">⌕</span><input name="q" placeholder="Empresa, produto, serviço ou actividade" aria-label="Empresa, produto, serviço ou actividade" /></div>
@@ -47,27 +38,21 @@ export default function Home() {
       <section className="portal-actions" aria-label="Acesso rápido"><div className="container portal-actions-grid">
         <Link href="/empresas"><strong>Encontrar empresas</strong><span>Pesquise por nome, sector ou localização</span><b>→</b></Link>
         <Link href="/marketplace"><strong>Encontrar produtos e serviços</strong><span>Explore ofertas publicadas por empresas</span><b>→</b></Link>
-        <Link href="/concursos"><strong>Explorar oportunidades</strong><span>Chamadas, financiamento, parcerias, capacitações e eventos</span><b>→</b></Link>
-        <Link href="/oportunidades"><strong>Publicar uma oportunidade</strong><span>Apresente uma chamada, necessidade ou iniciativa ao mercado</span><b>→</b></Link>
+        <Link href="/dashboard/servicos"><strong>Serviços MozEmpresas</strong><span>Conheça serviços empresariais pagos e solicite uma solução</span><b>→</b></Link>
       </div></section>
       <section className="section home-section"><div className="container">
         <div className="section-head home-section-head"><div><span className="eyebrow">Explore o mercado</span><h2>Pesquise por actividade</h2><p className="section-intro">Escolha uma área para encontrar empresas, fornecedores e soluções.</p></div><Link href="/empresas" className="text-link">Ver todas as empresas →</Link></div>
-        <div className="category-list">{categories.map(([title,text]) => <Link href={"/empresas?q="+encodeURIComponent(title)} className="category-row" key={title}><span className="category-icon">›</span><span><strong>{title}</strong><small>{text}</small></span><span className="category-arrow">→</span></Link>)}</div>
+        <div className="category-list">{categories.map(([title, text]) => <Link href={"/empresas?q="+encodeURIComponent(title)} className="category-row" key={title}><span className="category-icon">›</span><span><strong>{title}</strong><small>{text}</small></span><span className="category-arrow">→</span></Link>)}</div>
       </div></section>
       <section className="section home-section section-soft"><div className="container">
         <div className="section-head home-section-head"><div><span className="eyebrow">Descubra e compare</span><h2>Encontre. Compare. Contacte.</h2><p className="section-intro">Use o directório para encontrar empresas, conhecer as suas ofertas e chegar rapidamente ao contacto certo.</p></div></div>
         <div className="market-discovery"><div className="market-discovery-image"><img src="https://central.bvm.co.mz/storage/app/public/files/notice/140/_MG_8266.JPG" alt="Profissionais negros numa reunião empresarial em Moçambique" loading="lazy" /><div className="image-tag">Mercado empresarial</div></div><div className="discovery-steps">
           <Link href="/empresas" className="discovery-step"><span>01</span><div><strong>Encontre empresas</strong><p>Pesquise por nome, sector ou localização.</p></div><b>→</b></Link>
           <Link href="/marketplace" className="discovery-step"><span>02</span><div><strong>Conheça ofertas</strong><p>Veja produtos e serviços apresentados pelas empresas.</p></div><b>→</b></Link>
-          <Link href="/oportunidades" className="discovery-step"><span>03</span><div><strong>Explore oportunidades</strong><p>Consulte chamadas, financiamento, parcerias, capacitações e eventos.</p></div><b>→</b></Link>
+          <Link href="/dashboard/servicos" className="discovery-step"><span>03</span><div><strong>Contrate serviços</strong><p>Consulte serviços MozEmpresas e acompanhe os seus pedidos.</p></div><b>→</b></Link>
         </div></div>
       </div></section>
-      <section className="section home-section"><div className="container">
-        <div className="section-head home-section-head"><div><span className="eyebrow">Negócios e oportunidades</span><h2>Oportunidades para participar, crescer e fazer negócio.</h2><p className="section-intro">Descubra chamadas, financiamento, parcerias, capacitações e eventos que aproximam empresas e profissionais de novas possibilidades.</p></div><Link href="/oportunidades" className="text-link">Explorar oportunidades →</Link></div>
-        <div className="opportunity-layout"><div className="opportunity-visual"><img src="https://central.bvm.co.mz/storage/app/public/files/notice/123/7.JPG" alt="Profissionais negros num encontro empresarial em Moçambique" loading="lazy" /></div><div className="opportunity-grid">{opportunities.map(([label,title,text,href]) => <Link href={href} className="opportunity-card" key={title}><span className="opportunity-label">{label}</span><h3>{title}</h3><p>{text}</p><span className="card-link">Explorar →</span></Link>)}</div></div>
-      </div></section>
-      <section className="section home-partner-section"><div className="container"><PartnerSpotlight /></div></section>\n      <section className="request-section"><div className="container request-panel"><div><span className="eyebrow inverse-eyebrow">Tem uma oportunidade?</span><h2>Apresente uma necessidade, chamada ou iniciativa ao mercado.</h2><p>Partilhe uma oportunidade e permita que empresas, profissionais e parceiros relevantes encontrem a sua organização.</p></div><Link href="/publicar-oportunidade" className="btn light-btn">Publicar oportunidade</Link></div></section>
-      <section className="section company-cta"><div className="container company-cta-inner"><div><span className="eyebrow">Para empresas</span><h2>Coloque a sua empresa onde os clientes e parceiros procuram.</h2><p>Crie o perfil da sua empresa e apresente actividade, produtos, serviços e formas de contacto.</p></div><div className="cta-actions"><Link href="/registo" className="btn primary">Registar empresa</Link><Link href="/empresas" className="btn">Explorar empresas</Link></div></div></section>
+      <section className="section company-cta"><div className="container company-cta-inner"><div><span className="eyebrow">Para empresas</span><h2>Coloque a sua empresa onde os clientes procuram.</h2><p>Crie o perfil da sua empresa e apresente actividade, produtos, serviços e formas de contacto.</p></div><div className="cta-actions"><Link href="/registo" className="btn primary">Registar empresa</Link><Link href="/empresas" className="btn">Explorar empresas</Link></div></div></section>
     </>
   );
 }
