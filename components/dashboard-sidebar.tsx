@@ -10,11 +10,14 @@ export async function DashboardSidebar() {
     ? await supabase.from("platform_members").select("role,active").eq("user_id", user.id).maybeSingle()
     : { data: null };
   const platformAccess = platformMember?.active ? platformMember.role : null;
+  const { count: unreadNotifications } = user
+    ? await supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("read_at", null)
+    : { count: 0 };
 
   return (
     <aside className="dashboard-sidebar">
       <div className="dashboard-brand"><small>Área empresarial</small><strong>MozEmpresas</strong></div>
-      <DashboardSidebarNav platformAccess={platformAccess} />
+      <DashboardSidebarNav platformAccess={platformAccess} unreadNotifications={unreadNotifications ?? 0} />
       <div className="dashboard-user">
         <strong>Conta activa</strong>
         <Link className="dashboard-account-link" href="/dashboard/conta">Gerir conta</Link>
