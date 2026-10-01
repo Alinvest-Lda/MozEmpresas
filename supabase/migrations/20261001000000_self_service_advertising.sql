@@ -158,3 +158,4 @@ begin
 end; $$;
 revoke all on function public.purchase_promotion_with_credits(uuid,uuid,uuid,text,timestamptz,text[],text[]) from anon, public;
 grant execute on function public.purchase_promotion_with_credits(uuid,uuid,uuid,text,timestamptz,text[],text[]) to authenticated;
+revoke execute on function public.purchase_promotion_with_credits(uuid,uuid,uuid,text,timestamptz) from anon, public, authenticated;
