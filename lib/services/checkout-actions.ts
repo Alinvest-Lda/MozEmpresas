@@ -2,8 +2,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 const text=(v:FormDataEntryValue|null)=>typeof v==="string"?v.trim():"";
-async function access(s:any,uid:string,bid:string){const {data:o}=await s.from("businesses").select("id").eq("id",bid).eq("owner_id",uid).maybeSingle();if(o)return true;const {data:m}=await s.from("business_members").select("role").eq("business_id",bid).eq("user_id",uid).in("role",["owner","admin","operator"]).maybeSingle();return !!m;}
+async function access(s:SupabaseClient,uid:string,bid:string){const {data:o}=await s.from("businesses").select("id").eq("id",bid).eq("owner_id",uid).maybeSingle();if(o)return true;const {data:m}=await s.from("business_members").select("role").eq("business_id",bid).eq("user_id",uid).in("role",["owner","admin","operator"]).maybeSingle();return !!m;}
 export async function purchasePlatformService(formData:FormData){
  const s=await createClient();const {data:{user}}=await s.auth.getUser();if(!user)redirect("/login");
  const serviceId=text(formData.get("serviceId")),businessId=text(formData.get("businessId")),method=text(formData.get("paymentMethod"))||"CREDITS";
