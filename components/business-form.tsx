@@ -72,6 +72,8 @@ export function BusinessForm({
           <input id="website" name="website" type="url" placeholder="https://..." />
         </div>
 
+        <div className="toolbar"><div className="field" style={{ flex: 1 }}><label htmlFor="logoUrl">URL do logótipo</label><input id="logoUrl" name="logoUrl" type="url" placeholder="https://..." /></div><div className="field" style={{ flex: 1 }}><label htmlFor="coverUrl">URL da capa</label><input id="coverUrl" name="coverUrl" type="url" placeholder="https://..." /></div></div>
+
         <div className="field">
           <label htmlFor="isPublic">Publicação</label>
           <select id="isPublic" name="isPublic" defaultValue="true">
