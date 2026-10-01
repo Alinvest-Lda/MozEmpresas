@@ -141,7 +141,7 @@ export default async function ServiceDetail({
               {service.description || categoryIntro[service.category] || "Serviço especializado da plataforma MozEmpresas."}
             </p>
             <div className="service-detail-hero-actions">
-              <a href="#solicitar" className="btn primary">Conhecer e solicitar →</a>
+              <a href="#solicitar" className="btn primary">Comprar agora →</a>
               <Link href="/dashboard/servicos" className="btn">Ver outros serviços</Link>
             </div>
           </div>
@@ -205,11 +205,8 @@ export default async function ServiceDetail({
             </section>
           </div>
 
-          <aside id="solicitar" className="service-request-panel">
-            <PlatformServiceRequestForm
-              serviceId={service.id}
-              businesses={businesses ?? []}
-            />
+          <aside id="comprar" className="service-request-panel">
+            <PlatformServiceRequestForm serviceId={service.id} businesses={businesses ?? []} price={service.price} />
           </aside>
         </section>
 
