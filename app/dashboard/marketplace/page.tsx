@@ -17,6 +17,7 @@ type Listing = {
   image_url?: string | null;
 };
 type Order = { id: string; status: string; notes: string | null; created_at: string };
+type OrderEvent = { id: string; order_id: string; from_status: string | null; to_status: string; note: string | null; created_at: string };
 type OrderItem = {
   id: string;
   order_id: string;
@@ -102,6 +103,16 @@ export default async function MarketplaceWorkspace({
   const orders = (buyerOrders ?? []) as Order[];
   const salesOrders = (sellerOrders ?? []) as Order[];
   const salesByOrder = new Map((sellerItems ?? []).map((item) => [item.order_id, item]));
+  const allOrderIds = [...new Set([...orders, ...salesOrders].map((o) => o.id))];
+  const { data: orderEvents } = allOrderIds.length
+    ? await supabase.from("commerce_order_events").select("id,order_id,from_status,to_status,note,created_at").in("order_id", allOrderIds).order("created_at", { ascending: false })
+    : { data: [] as OrderEvent[] };
+  const eventsByOrder = new Map<string, OrderEvent[]>();
+  for (const event of (orderEvents ?? []) as OrderEvent[]) {
+    const current = eventsByOrder.get(event.order_id) ?? [];
+    current.push(event);
+    eventsByOrder.set(event.order_id, current);
+  }
   const activeBuyerOrders = orders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
   const activeSellerOrders = salesOrders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
   const latestListings = (recentListings ?? []) as Listing[];
@@ -165,7 +176,7 @@ export default async function MarketplaceWorkspace({
         .commerce-hub .commerce-list{display:grid;gap:0}
         .commerce-hub .commerce-list-row{display:flex;align-items:center;gap:14px;padding:15px 0;border-top:1px solid #edf0f2}
         .commerce-hub .commerce-list-row:first-child{border-top:0;padding-top:0}
-        .commerce-hub .commerce-list-main{min-width:0;flex:1}.commerce-hub .commerce-list-main strong{display:block;font-size:14px}.commerce-hub .commerce-list-main span{display:block;color:#7b8490;font-size:12px;margin-top:4px}
+        .commerce-hub .commerce-list-main{min-width:0;flex:1}.commerce-hub .commerce-timeline{display:grid;gap:5px;margin-top:8px}.commerce-hub .commerce-timeline div{display:flex;gap:8px;align-items:baseline;color:#68717c;font-size:10px}.commerce-hub .commerce-timeline span{font-weight:800;color:#3f4852}.commerce-hub .commerce-timeline small{font-size:10px}.commerce-hub .commerce-list-main strong{display:block;font-size:14px}.commerce-hub .commerce-list-main span{display:block;color:#7b8490;font-size:12px;margin-top:4px}
         .commerce-hub .commerce-status{display:inline-flex;align-items:center;white-space:nowrap;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:800}
         .commerce-hub .commerce-status.is-info{background:#edf5ff;color:#2364a0}.commerce-hub .commerce-status.is-warning{background:#fff5df;color:#98650c}.commerce-hub .commerce-status.is-success{background:#edf8f1;color:#28734a}.commerce-hub .commerce-status.is-muted{background:#f0f1f2;color:#707780}
         .commerce-hub .commerce-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
@@ -273,7 +284,7 @@ export default async function MarketplaceWorkspace({
                 {order.status === "CONTACTED" && <><select name="status" defaultValue="NEGOTIATING"><option value="NEGOTIATING">Em negociação</option><option value="CANCELLED">Encerrar</option></select><button className="btn" type="submit">Actualizar</button></>}
                 {order.status === "NEGOTIATING" && <><select name="status" defaultValue="AGREED"><option value="AGREED">Acordado</option><option value="CANCELLED">Encerrar</option></select><button className="btn" type="submit">Actualizar</button></>}
                 {order.status === "AGREED" && <><select name="status" defaultValue="COMPLETED"><option value="COMPLETED">Concluído</option><option value="CANCELLED">Encerrar</option></select><button className="btn" type="submit">Actualizar</button></>}
-              </form>
+              </form><div className="commerce-timeline">{(eventsByOrder.get(order.id) ?? []).slice(0, 4).map((event) => <div key={event.id}><span>{statusLabels[event.to_status] || event.to_status}</span><small>{new Date(event.created_at).toLocaleDateString("pt-MZ")} · {event.note || "Estado actualizado."}</small></div>)}</div>
             </div>;
           })}</div> : <div className="commerce-empty"><strong>Nenhuma negociação pendente.</strong><p>Os novos interesses aparecerão aqui automaticamente quando alguém demonstrar interesse numa das suas ofertas.</p></div>}
         </section>
