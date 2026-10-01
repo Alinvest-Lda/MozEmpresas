@@ -28,13 +28,14 @@ function calculate(product: Product | undefined, locationCount: number, category
 }
 
 export function AdvertisingPurchaseForm({
-  businesses, products, categories, wallets, action,
+  businesses, products, categories, wallets, creditAction, directAction,
 }: {
   businesses: { id: string; name: string }[];
   products: Product[];
   categories: { name: string }[];
   wallets: Record<string, number>;
-  action: (formData: FormData) => void | Promise<void>;
+  creditAction: (formData: FormData) => void | Promise<void>;
+  directAction: (formData: FormData) => void | Promise<void>;
 }) {
   const first = products[0];
   const defaultBusiness = businesses[0]?.id ?? "";
