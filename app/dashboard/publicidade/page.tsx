@@ -14,12 +14,13 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{data:owned},{data:members},{data:products},{data:promotions},{data:categories}] = await Promise.all([
+  const [{data:owned},{data:members},{data:products},{data:promotions}] = await Promise.all([
     supabase.from("businesses").select("id,name").eq("owner_id",user.id).order("name"),
     supabase.from("business_members").select("business_id").eq("user_id",user.id).in("role",["owner","admin","operator"]),
     supabase.from("ad_products").select("id,name,placement,description,duration_days,direct_price_mzn,credit_price,capacity,access_type,audience_level").eq("active",true).order("placement").order("duration_days"),
     supabase.from("business_promotions").select("id,title,placement,status,starts_at,ends_at,payment_method,price_mzn,credits_charged,businesses:business_id(name)").order("created_at",{ascending:false}).limit(20)
   ]);
+  const {data:categories} = await supabase.from("business_categories").select("name").order("name");
   const ids=[...new Set((members??[]).map(x=>x.business_id))];
   const {data:managed}=ids.length?await supabase.from("businesses").select("id,name").in("id",ids).order("name"):{data:[] as {id:string;name:string}[]};
   const businesses=[...(owned??[]),...(managed??[]).filter(b=>!(owned??[]).some(o=>o.id===b.id))];
