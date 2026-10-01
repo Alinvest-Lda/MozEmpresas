@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const groups = [
-  { label: "Trabalho", links: [["/dashboard","Visão geral"],["/dashboard/marketplace","Comprar e vender"]] },
+  { label: "Trabalho", links: [["/dashboard","Visão geral"],["/dashboard/marketplace","Comprar e vender"],["/dashboard/publicidade","Publicidade"]] },
   { label: "Empresa", links: [["/dashboard/empresas","Presença da empresa"],["/dashboard/acessos","Acessos e equipa"],["/empresas","Directório"]] },
   { label: "Serviços", links: [["/dashboard/servicos","Serviços MozEmpresas"]] },
   { label: "Conta", links: [["/dashboard/conta","A minha conta"],["/dashboard/notificacoes","Notificações"]] },
