@@ -52,7 +52,6 @@ export function PlatformServicesCatalog({ services }: { services: Service[] }) {
             key={item}
             className={category === item ? "active" : ""}
             onClick={() => setCategory(item)}
-            aria-current={category === item ? "page" : undefined}
           >
             <span>{item}</span>
             <small>{services.filter((service) => service.category === item).length}</small>
@@ -70,10 +69,10 @@ export function PlatformServicesCatalog({ services }: { services: Service[] }) {
       </div>
 
       <div className="service-catalog-list">
-        {visible.map((service) => (
+        {visible.map((service, index) => (
           <article className="service-catalog-row" key={service.id}>
             <div className="service-catalog-index" aria-hidden="true">
-              {String(visible.indexOf(service) + 1).padStart(2, "0")}
+              {String(index + 1).padStart(2, "0")}
             </div>
             <div className="service-catalog-main">
               <span className="dashboard-kicker">{service.category}</span>
