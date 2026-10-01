@@ -1,91 +1,14 @@
 "use client";
-
-import Link from "next/link";
 import { useActionState } from "react";
-import { requestPlatformService } from "@/lib/services/actions";
-
-type Business = { id: string; name: string };
-
-type State = { success?: boolean; error?: string };
-
-const initialState: State = {};
-
-export function PlatformServiceRequestForm({
-  serviceId,
-  businesses,
-}: {
-  serviceId: string;
-  businesses: Business[];
-}) {
-  const [state, action, pending] = useActionState<State, FormData>(
-    async (_previous, formData) => {
-      return (await requestPlatformService(formData)) as State;
-    },
-    initialState,
-  );
-
-  if (state.success) {
-    return (
-      <div className="service-request-success" role="status">
-        <span className="service-success-icon">✓</span>
-        <div>
-          <strong>Pedido recebido.</strong>
-          <p>
-            A sua solicitação foi registada. Pode acompanhar a evolução em
-            <Link href="/dashboard/servicos"> Serviços MozEmpresas</Link> e nas suas notificações.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <form action={action} className="service-request-form">
-      <input type="hidden" name="serviceId" value={serviceId} />
-
-      <div className="service-form-heading">
-        <span className="dashboard-kicker">Solicitar este serviço</span>
-        <h3>Vamos perceber o que precisa.</h3>
-        <p>
-          Envie o contexto essencial. A equipa MozEmpresas analisa o pedido e,
-          quando necessário, entra em contacto para definir o escopo e a proposta.
-        </p>
-      </div>
-
-      {businesses.length > 0 ? (
-        <label>
-          <span>Empresa</span>
-          <select name="businessId" defaultValue={businesses[0].id}>
-            {businesses.map((business) => (
-              <option value={business.id} key={business.id}>
-                {business.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : null}
-
-      <label>
-        <span>O que pretende alcançar?</span>
-        <textarea
-          name="notes"
-          rows={6}
-          placeholder="Indique o objectivo, contexto, localização, prazo ou requisitos que já conhece."
-          required
-        />
-      </label>
-
-      {state.error ? <p className="service-form-error">{state.error}</p> : null}
-
-      <div className="service-form-submit">
-        <div>
-          <strong>Sem compromisso imediato.</strong>
-          <span>O pedido será analisado antes de qualquer cobrança.</span>
-        </div>
-        <button className="btn primary" type="submit" disabled={pending}>
-          {pending ? "A enviar…" : "Enviar pedido →"}
-        </button>
-      </div>
-    </form>
-  );
+import Link from "next/link";
+import { purchasePlatformService } from "@/lib/services/checkout-actions";
+type Business={id:string;name:string}; type State={success?:boolean;error?:string;orderId?:string;pending?:boolean};
+export function PlatformServiceRequestForm({serviceId,businesses,price}:{serviceId:string;businesses:Business[];price:number|string|null}){
+ const [state,action,pending]=useActionState<State,FormData>(async(_,f)=>await purchasePlatformService(f),{});
+ if(state.success)return <div className="service-request-success" role="status"><span className="service-success-icon">✓</span><div><strong>{state.pending?"Pagamento M-Pesa registado.":"Compra concluída."}</strong><p>{state.pending?"Conclua o pagamento M-Pesa conforme as instruções da plataforma. O serviço será activado após confirmação.":"O serviço foi adquirido e o valor foi registado na gestão financeira."} <Link href="/dashboard/financeiro">Ver gestão financeira</Link></p></div></div>;
+ return <form action={action} className="service-request-form"><input type="hidden" name="serviceId" value={serviceId}/><div className="service-form-heading"><span className="dashboard-kicker">Comprar este serviço</span><h3>Activação self-service</h3><p>Escolha a empresa e pague com créditos ou M-Pesa. Não é necessário enviar uma solicitação para obter uma cotação.</p></div>
+ {businesses.length?<label><span>Empresa</span><select name="businessId" defaultValue={businesses[0].id}>{businesses.map(b=><option value={b.id} key={b.id}>{b.name}</option>)}</select></label>:<p className="service-form-error">Associe uma empresa antes de comprar.</p>}
+ <div className="service-checkout-price"><span>Preço actual</span><strong>{price==null?"Indisponível":Number(price).toLocaleString("pt-MZ")+" MZN"}</strong></div>
+ <label><span>Forma de pagamento</span><select name="paymentMethod" defaultValue="CREDITS"><option value="CREDITS">Créditos</option><option value="MPESA">M-Pesa</option></select></label>
+ {state.error?<p className="service-form-error">{state.error}</p>:null}<div className="service-form-submit"><div><strong>Compra self-service</strong><span>O débito de créditos é atómico; M-Pesa fica pendente até confirmação.</span></div><button className="btn primary" type="submit" disabled={pending||!businesses.length||price==null}>{pending?"A processar…":"Comprar agora →"}</button></div></form>;
 }
