@@ -205,3 +205,95 @@ export async function cancelOrder(formData: FormData) {
   });
   redirect("/dashboard/marketplace?status=cancelled");
 }
+
+
+export async function updateListing(formData: FormData) {
+  const { supabase, userId } = await currentUser();
+  const listingId = text(formData.get("listing_id"));
+  const title = text(formData.get("title"));
+  const description = text(formData.get("description"));
+  const type = text(formData.get("type")).toUpperCase();
+  const businessId = text(formData.get("business_id"));
+  const location = text(formData.get("location")) || null;
+  const priceRaw = text(formData.get("price"));
+  const price = priceRaw ? number(priceRaw, NaN) : null;
+  const status = text(formData.get("status")).toUpperCase();
+
+  if (!listingId || !title || !description || !businessId || !["PRODUCT","SERVICE"].includes(type)) {
+    redirect("/dashboard/marketplace?status=error");
+  }
+  if (price !== null && (!Number.isFinite(price) || price < 0)) {
+    redirect("/dashboard/marketplace?status=error");
+  }
+  if (!["DRAFT","PUBLISHED","PAUSED","SOLD_OUT","ARCHIVED"].includes(status)) {
+    redirect("/dashboard/marketplace?status=error");
+  }
+  if (!(await canManageBusiness(supabase, userId, businessId))) {
+    redirect("/dashboard/marketplace?status=forbidden");
+  }
+
+  const { data: existing } = await supabase
+    .from("listings")
+    .select("id,owner_id,business_id")
+    .eq("id", listingId)
+    .maybeSingle();
+
+  if (!existing || !(await canManageBusiness(supabase, userId, existing.business_id || businessId))) {
+    redirect("/dashboard/marketplace?status=forbidden");
+  }
+
+  const base = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "oferta";
+  const slug = `${base}-${crypto.randomUUID().slice(0, 8)}`;
+
+  const { error } = await supabase.from("listings").update({
+    title, description, type, business_id: businessId, location, price, currency: "MZN", status, slug,
+    updated_at: new Date().toISOString(),
+  }).eq("id", listingId);
+
+  if (error) redirect("/dashboard/marketplace?status=error");
+  revalidatePath("/dashboard/marketplace");
+  revalidatePath("/marketplace/" + listingId);
+  redirect("/dashboard/marketplace?status=updated");
+}
+
+export async function updateListingStatus(formData: FormData) {
+  const { supabase, userId } = await currentUser();
+  const listingId = text(formData.get("listing_id"));
+  const status = text(formData.get("status")).toUpperCase();
+  if (!listingId || !["DRAFT","PUBLISHED","PAUSED","SOLD_OUT","ARCHIVED"].includes(status)) {
+    redirect("/dashboard/marketplace?status=error");
+  }
+
+  const { data: listing } = await supabase.from("listings").select("id,business_id").eq("id", listingId).maybeSingle();
+  if (!listing || !listing.business_id || !(await canManageBusiness(supabase, userId, listing.business_id))) {
+    redirect("/dashboard/marketplace?status=forbidden");
+  }
+
+  const { error } = await supabase.from("listings").update({status, updated_at:new Date().toISOString()}).eq("id",listingId);
+  if (error) redirect("/dashboard/marketplace?status=error");
+
+  revalidatePath("/dashboard/marketplace");
+  revalidatePath("/marketplace/" + listingId);
+  redirect("/dashboard/marketplace?status=updated");
+}
+
+export async function deleteListing(formData: FormData) {
+  const { supabase, userId } = await currentUser();
+  const listingId = text(formData.get("listing_id"));
+  if (!listingId) redirect("/dashboard/marketplace?status=error");
+
+  const { data: listing } = await supabase.from("listings").select("id,business_id").eq("id",listingId).maybeSingle();
+  if (!listing || !listing.business_id || !(await canManageBusiness(supabase, userId, listing.business_id))) {
+    redirect("/dashboard/marketplace?status=forbidden");
+  }
+
+  const { data: attachments } = await supabase.from("listing_attachments").select("storage_path").eq("listing_id",listingId);
+  if (attachments?.length) {
+    await supabase.storage.from("listing-media").remove(attachments.map(a=>a.storage_path));
+  }
+  const { error } = await supabase.from("listings").delete().eq("id",listingId);
+  if (error) redirect("/dashboard/marketplace?status=error");
+
+  revalidatePath("/dashboard/marketplace");
+  redirect("/dashboard/marketplace?status=updated");
+}
