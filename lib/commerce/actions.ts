@@ -252,7 +252,27 @@ export async function updateListing(_state: { error?: string; success?: string }
   }).eq("id", listingId);
 
   if (error) redirect("/dashboard/marketplace?status=error");
+
+  const attachments = formData.getAll("attachments").filter((value): value is File => value instanceof File && value.size > 0);
+  if (attachments.length > 10) redirect("/dashboard/marketplace/" + listingId + "?status=attachments-error");
+  const allowed = new Set(["image/jpeg","image/png","image/webp","application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]);
+  if (attachments.some((file) => !allowed.has(file.type) || file.size > 10 * 1024 * 1024)) redirect("/dashboard/marketplace/" + listingId + "?status=attachments-error");
+
+  for (const file of attachments) {
+    const kind = file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT";
+    const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").slice(-120);
+    const storagePath = `${userId}/${listingId}/${crypto.randomUUID()}-${safeName}`;
+    const { error: uploadError } = await supabase.storage.from("listing-media").upload(storagePath, file, { contentType: file.type, upsert: false });
+    if (uploadError) redirect("/dashboard/marketplace/" + listingId + "?status=attachments-error");
+    const { error: attachmentError } = await supabase.from("listing_attachments").insert({ listing_id: listingId, storage_path: storagePath, file_name: file.name, mime_type: file.type, size_bytes: file.size, kind });
+    if (attachmentError) {
+      await supabase.storage.from("listing-media").remove([storagePath]);
+      redirect("/dashboard/marketplace/" + listingId + "?status=attachments-error");
+    }
+  }
+
   revalidatePath("/dashboard/marketplace");
+  revalidatePath("/dashboard/marketplace/" + listingId);
   revalidatePath("/marketplace/" + listingId);
   redirect("/dashboard/marketplace?status=updated");
   return { success: "Oferta actualizada." };
@@ -277,6 +297,36 @@ export async function updateListingStatus(formData: FormData) {
   revalidatePath("/dashboard/marketplace");
   revalidatePath("/marketplace/" + listingId);
   redirect("/dashboard/marketplace?status=updated");
+}
+
+export async function deleteListingAttachment(formData: FormData) {
+  const { supabase, userId } = await currentUser();
+  const attachmentId = text(formData.get("attachment_id"));
+  if (!attachmentId) redirect("/dashboard/marketplace?status=error");
+
+  const { data: attachment } = await supabase
+    .from("listing_attachments")
+    .select("id,listing_id,storage_path")
+    .eq("id", attachmentId)
+    .maybeSingle();
+  if (!attachment) redirect("/dashboard/marketplace?status=error");
+
+  const { data: listing } = await supabase
+    .from("listings")
+    .select("id,business_id")
+    .eq("id", attachment.listing_id)
+    .maybeSingle();
+  if (!listing || !(await canManageBusiness(supabase, userId, listing.business_id || ""))) {
+    redirect("/dashboard/marketplace?status=forbidden");
+  }
+
+  const { error } = await supabase.from("listing_attachments").delete().eq("id", attachmentId);
+  if (error) redirect("/dashboard/marketplace/" + attachment.listing_id + "?status=attachments-error");
+  await supabase.storage.from("listing-media").remove([attachment.storage_path]);
+
+  revalidatePath("/dashboard/marketplace/" + attachment.listing_id);
+  revalidatePath("/marketplace/" + attachment.listing_id);
+  redirect("/dashboard/marketplace/" + attachment.listing_id + "?status=attachment-deleted");
 }
 
 export async function deleteListing(formData: FormData) {
