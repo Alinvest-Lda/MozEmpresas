@@ -13,7 +13,6 @@ export default async function AdminMonetizationPage() {
     supabase.from("platform_plans").select("id,code,name,description,monthly_price,currency,active").order("monthly_price"),
     supabase.from("business_promotions").select("id,title,placement,status,budget,currency,starts_at,ends_at,businesses:business_id(name)").order("created_at",{ascending:false}).limit(30),
     supabase.from("business_plan_subscriptions").select("id",{count:"exact",head:true}).eq("status","ACTIVE"),
-    supabase.from("ad_products").select("id,code,name,placement,duration_days,direct_price_mzn,credit_price,capacity,active").order("placement").order("duration_days"),
   ]);
 
   return <main className="dashboard-main"><div className="dashboard-content">
