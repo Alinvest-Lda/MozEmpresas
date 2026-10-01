@@ -1,5 +1,3 @@
-"use server";
-
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
@@ -52,7 +50,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
 
     <section className="dashboard-section" style={{marginTop:18}}>
       <div className="dashboard-section-head"><div><span className="dashboard-kicker">Preçário simplificado</span><h2>Escolha no formulário</h2><p className="muted">Não é necessário comparar dezenas de linhas. O espaço e a duração estão agrupados num único selector e o sistema calcula o valor final.</p></div></div>
-      <AdvertisingPurchaseForm businesses={businesses} products={paidProducts} categories={categories??[]} wallets={walletMap} action={purchaseAdCredits}/>
+      <AdvertisingPurchaseForm businesses={businesses} products={paidProducts} categories={categories??[]} wallets={walletMap} creditAction={purchaseAdCredits} directAction={requestAdDirectPayment}/>
       <div className="card" style={{marginTop:12}}><strong>Segmentação</strong><p className="muted" style={{margin:"4px 0 0"}}>Localização +10% · actividade/categoria +10%. A segmentação altera o preço do mesmo espaço; não cria novos banners.</p></div>
     </section>
 
