@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { purchaseAdCredits, requestAdDirectPayment } from "@/lib/advertising/actions";
+import { purchaseAdCredits, requestAdMpesaPayment } from "@/lib/advertising/actions";
 import { AdvertisingPurchaseForm } from "@/components/advertising-purchase-form";
 
 const placement: Record<string, string> = { DIRECTORY:"Directório", MARKETPLACE:"Marketplace", HOME:"Página inicial" };
@@ -31,7 +31,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
   const walletMap=Object.fromEntries((wallets??[]).map(w=>[w.business_id,w.balance_credits]));
   const paidProducts=(products??[]).filter(p=>p.access_type!=="FREE");
 
-  const flash=params.success==="credits"?"Publicidade activada e créditos debitados.":params.success==="direct"?"Pedido de pagamento directo criado e aguarda confirmação.":params.error==="credits"?"Créditos insuficientes.":params.error==="availability"?"O espaço está ocupado nesse período.":params.error?"Não foi possível concluir a operação.":"";
+  const flash=params.success==="credits"?"Publicidade activada e créditos debitados.":params.success==="mpesa"?"Pedido M-Pesa criado e aguarda confirmação.":params.error==="credits"?"Créditos insuficientes.":params.error==="availability"?"O espaço está ocupado nesse período.":params.error?"Não foi possível concluir a operação.":"";
 
   return <main className="dashboard-main"><div className="dashboard-content">
     {flash && <div className="card" style={{marginBottom:18}}><strong>{flash}</strong></div>}
@@ -50,7 +50,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
 
     <section className="dashboard-section" style={{marginTop:18}}>
       <div className="dashboard-section-head"><div><span className="dashboard-kicker">Preçário simplificado</span><h2>Escolha no formulário</h2><p className="muted">Não é necessário comparar dezenas de linhas. O espaço e a duração estão agrupados num único selector e o sistema calcula o valor final.</p></div></div>
-      <AdvertisingPurchaseForm businesses={businesses} products={paidProducts} categories={categories??[]} wallets={walletMap} creditAction={purchaseAdCredits} directAction={requestAdDirectPayment}/>
+      <AdvertisingPurchaseForm businesses={businesses} products={paidProducts} categories={categories??[]} wallets={walletMap} creditAction={purchaseAdCredits} mpesaAction={requestAdMpesaPayment}/>
       <div className="card" style={{marginTop:12}}><strong>Segmentação</strong><p className="muted" style={{margin:"4px 0 0"}}>Localização +10% · actividade/categoria +10%. A segmentação altera o preço do mesmo espaço; não cria novos banners.</p></div>
     </section>
 
