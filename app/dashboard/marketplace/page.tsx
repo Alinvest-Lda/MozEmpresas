@@ -51,7 +51,7 @@ export default async function MarketplaceWorkspace({
   searchParams: Promise<{ tab?: string; publish?: string; request?: string; status?: string }>;
 }) {
   const params = await searchParams;
-  const activeTab = ["comprar", "vender"].includes(params.tab || "") ? params.tab! : "overview";
+  const activeTab = ["comprar", "vender", "negociacoes"].includes(params.tab || "") ? params.tab! : "comprar";
   const flash = params.publish === "success"
     ? "Oferta publicada com sucesso."
     : params.request && params.request !== "error" && params.request !== "forbidden"
@@ -90,7 +90,7 @@ export default async function MarketplaceWorkspace({
     businessIds.length
       ? supabase.from("commerce_order_items").select("id,order_id,title,quantity,line_total,currency,seller_business_id,created_at").in("seller_business_id", businessIds).order("created_at", { ascending: false }).limit(30)
       : Promise.resolve({ data: [] as OrderItem[] }),
-    supabase.from("listings").select("id,title,description,type,price,currency,location,business_id").eq("status", "PUBLISHED").order("created_at", { ascending: false }).limit(8),
+    supabase.from("listings").select("id,title,description,type,price,currency,location,business_id").eq("status", "PUBLISHED").order("created_at", { ascending: false }).limit(12),
   ]);
 
   const sellerOrderIds = [...new Set((sellerItems ?? []).map((item) => item.order_id))];
@@ -115,7 +115,7 @@ export default async function MarketplaceWorkspace({
   }
   const activeBuyerOrders = orders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
   const activeSellerOrders = salesOrders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
-  const latestListings = (recentListings ?? []) as Listing[];
+  const latestListings = (recentListings ?? []).filter((item) => !businessIds.includes(item.business_id || "")) as Listing[];
   if (latestListings.length) {
     const { data: attachments } = await supabase.from("listing_attachments").select("listing_id,storage_path,kind,created_at").in("listing_id", latestListings.map((item) => item.id)).eq("kind", "IMAGE").order("created_at", { ascending: true });
     const firstImage = new Map<string, string>();
@@ -210,33 +210,26 @@ export default async function MarketplaceWorkspace({
             <p>Um espaço único para descobrir ofertas, publicar o que a sua empresa vende e acompanhar relações comerciais.</p>
           </div>
           <div className="commerce-hero-actions">
-            <Link href="#comprar" className="btn">Explorar ofertas</Link>
-            <Link href="#vender" className="btn primary">Publicar oferta →</Link>
+            <Link href="/dashboard/marketplace?tab=comprar" className="btn">Explorar ofertas</Link>
+            <Link href="/dashboard/marketplace?tab=vender" className="btn primary">Publicar oferta →</Link>
           </div>
         </header>
 
         <nav className="commerce-nav" aria-label="Centro comercial">
-          <Link href="/dashboard/marketplace" className={activeTab === "overview" ? "active" : ""}>Visão geral</Link>
-          <Link href="/dashboard/marketplace?tab=comprar#comprar" className={activeTab === "comprar" ? "active" : ""}>Comprar</Link>
-          <Link href="/dashboard/marketplace?tab=vender#vender" className={activeTab === "vender" ? "active" : ""}>Vender</Link>
-          <Link href="/dashboard/marketplace#negociacoes">Negociações</Link>
+          
+          <Link href="/dashboard/marketplace?tab=comprar" className={activeTab === "comprar" ? "active" : ""}>Comprar</Link>
+          <Link href="/dashboard/marketplace?tab=vender" className={activeTab === "vender" ? "active" : ""}>Vender</Link>
+          <Link href="/dashboard/marketplace?tab=negociacoes" className={activeTab === "negociacoes" ? "active" : ""}>Negociações</Link>
         </nav>
 
-        <section className="commerce-kpis" aria-label="Resumo comercial">
-          <div className="commerce-kpi"><small>Ofertas activas</small><strong>{listingCount}</strong><span>Publicadas pelas empresas que representa</span></div>
-          <div className="commerce-kpi"><small>Interesses recebidos</small><strong>{sellerInterestCount}</strong><span>Relações comerciais por acompanhar</span></div>
-          <div className="commerce-kpi"><small>Compras em curso</small><strong>{buyerActivityCount}</strong><span>Interesses iniciados pela sua conta</span></div>
-          <div className="commerce-kpi"><small>Empresas representadas</small><strong>{businesses.length}</strong><span>Com capacidade de vender no espaço</span></div>
-        </section>
-
-        {(activeTab === "overview" || activeTab === "comprar") && (
+        {activeTab === "comprar" && (
           <section id="comprar" className="commerce-grid">
             <div className="commerce-panel">
               <div className="commerce-panel-head">
                 <div><span className="commerce-eyebrow">Comprar</span><h2>Encontre o que precisa.</h2><p>Veja ofertas publicadas por empresas, compare o que está disponível e abra uma publicação para falar directamente com o fornecedor.</p></div>
                 <Link href="/marketplace" className="commerce-link">Ver marketplace →</Link>
               </div>
-              {latestListings.length ? <div className="commerce-offer-grid">{latestListings.slice(0, 4).map((item) => <div key={item.id}>{renderOfferCard(item)}</div>)}</div> : <div className="commerce-empty"><strong>Ainda não existem ofertas publicadas.</strong><p>Quando empresas publicarem produtos ou serviços, eles aparecerão aqui.</p><Link href="#vender" className="btn primary">Publicar a primeira oferta</Link></div>}
+              {latestListings.length ? <div className="commerce-offer-grid">{latestListings.slice(0, 4).map((item) => <div key={item.id}>{renderOfferCard(item)}</div>)}</div> : <div className="commerce-empty"><strong>Ainda não existem ofertas publicadas.</strong><p>Quando empresas publicarem produtos ou serviços, eles aparecerão aqui.</p><Link href="/dashboard/marketplace?tab=vender" className="btn primary">Publicar a primeira oferta</Link></div>}
             </div>
 
             <div className="commerce-panel">
@@ -246,7 +239,7 @@ export default async function MarketplaceWorkspace({
           </section>
         )}
 
-        {(activeTab === "overview" || activeTab === "vender") && (
+        {activeTab === "vender" && (
           <section id="vender" className="commerce-split" style={{marginTop:18}}>
             <div className="commerce-panel">
               <div className="commerce-panel-head"><div><span className="commerce-eyebrow">Vender</span><h2>Apresente o que a sua empresa oferece.</h2><p>Crie uma publicação comercial completa, com informação clara, imagens e documentos de apoio para facilitar a avaliação por potenciais compradores.</p></div></div>
@@ -271,7 +264,7 @@ export default async function MarketplaceWorkspace({
           </section>
         )}
 
-        <section id="negociacoes" className="commerce-panel" style={{marginTop:18}}>
+        {activeTab === "negociacoes" && <section id="negociacoes" className="commerce-panel" style={{marginTop:18}}>
           <div className="commerce-panel-head"><div><span className="commerce-eyebrow">Negociações</span><h2>Relações comerciais a acompanhar</h2><p>Veja os interesses recebidos pelas empresas que representa e avance cada negociação por estado.</p></div></div>
           {activeSellerOrders.length ? <div className="commerce-list">{activeSellerOrders.slice(0, 8).map((order) => {
             const item = salesByOrder.get(order.id);
@@ -287,7 +280,7 @@ export default async function MarketplaceWorkspace({
               </form><div className="commerce-timeline">{(eventsByOrder.get(order.id) ?? []).slice(0, 4).map((event) => <div key={event.id}><span>{statusLabels[event.to_status] || event.to_status}</span><small>{new Date(event.created_at).toLocaleDateString("pt-MZ")} · {event.note || "Estado actualizado."}</small></div>)}</div>
             </div>;
           })}</div> : <div className="commerce-empty"><strong>Nenhuma negociação pendente.</strong><p>Os novos interesses aparecerão aqui automaticamente quando alguém demonstrar interesse numa das suas ofertas.</p></div>}
-        </section>
+        </section>}
       </div>
     </main>
   );
