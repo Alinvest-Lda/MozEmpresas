@@ -8,14 +8,14 @@ function money(v:number|string){return Number(v).toLocaleString("pt-MZ",{minimum
 export function CreditPurchaseForm({businesses,packages}:{businesses:{id:string;name:string}[];packages:Package[]}){
  const [packageId,setPackageId]=useState(packages[0]?.id??""); const [businessId,setBusinessId]=useState(businesses[0]?.id??""); const selected=packages.find(p=>p.id===packageId)??packages[0];
  if(!packages.length||!businesses.length)return null;
- return <form action={requestCreditPurchase} className="credit-purchase-form">
+ return <form action={requestCreditPurchase} className="credit-purchase-form" encType="multipart/form-data">
   <input type="hidden" name="package_id" value={packageId}/><input type="hidden" name="business_id" value={businessId}/>
   <section className="credit-purchase-panel">
    <div className="credit-purchase-heading"><div><span className="dashboard-kicker">1 · Empresa</span><h3>Onde quer carregar os créditos?</h3></div><select value={businessId} onChange={e=>setBusinessId(e.target.value)} aria-label="Empresa">{businesses.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
    <div className="credit-package-grid">{packages.map(p=><button key={p.id} type="button" className={"credit-package-option"+(p.id===packageId?" selected":"")} onClick={()=>setPackageId(p.id)}><span>{p.name}</span><strong>{p.credit_volume.toLocaleString("pt-MZ")}</strong><small>créditos</small><b>{money(p.price_mzn)}</b><em>{(Number(p.price_mzn)/p.credit_volume).toLocaleString("pt-MZ",{minimumFractionDigits:2,maximumFractionDigits:2})} MZN/crédito</em></button>)}</div>
   </section>
   <section className="credit-purchase-checkout"><div><span className="dashboard-kicker">2 · Pagamento</span><h3>{selected?.name}</h3><p>{selected?.credit_volume.toLocaleString("pt-MZ")} créditos · {money(selected?.price_mzn??0)}</p></div>
-   <div className="credit-checkout-fields"><label>Forma de pagamento<select name="payment_method" defaultValue="MPESA"><option value="MPESA">M-Pesa</option><option value="BANK_TRANSFER">Transferência bancária</option></select></label><label>Observação <span>(opcional)</span><input name="notes" placeholder="Referência ou instrução adicional"/></label><label>Comprovativo <span>(obrigatório na transferência)</span><input name="proof" type="file" accept="image/*,.pdf"/></label></div>
+   <div className="credit-checkout-fields"><label>Forma de pagamento<select name="payment_method" defaultValue="MPESA"><option value="MPESA">M-Pesa</option><option value="BANK_TRANSFER">Transferência bancária</option></select></label><label>Observação <span>(opcional)</span><input name="notes" placeholder="Referência ou instrução adicional"/></label><label className="credit-proof-field"><span>Comprovativo <span>(obrigatório na transferência)</span></span><div className="credit-upload-zone"><input name="proof" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"/><strong>Carregar comprovativo</strong><small>PDF, JPG, PNG ou WEBP · máximo recomendado 10 MB</small></div></label></div>
    <div className="credit-checkout-action"><p>M-Pesa: o pagamento fica pendente de confirmação. Transferência: anexe o comprovativo; o saldo só é creditado após validação.</p><button className="btn primary" type="submit">Solicitar compra →</button></div>
   </section>
  </form>;
