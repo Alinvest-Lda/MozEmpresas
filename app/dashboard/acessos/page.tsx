@@ -18,7 +18,8 @@ const permissionGroups = [
 ];
 
 export default async function AcessosPage({searchParams}:{searchParams?:Promise<{view?:string}>}) {
-  const params=await searchParams; const view=["membros","auditoria","convites"].includes(params?.view||"")?params?.view||"membros":"membros";\n  const supabase = await createClient();
+  const params=await searchParams; const view=["membros","auditoria","convites"].includes(params?.view||"")?params?.view||"membros":"membros";
+  const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   const userId = claimsData?.claims?.sub;
   if (!userId) redirect("/login");
@@ -41,7 +42,9 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
     ? await supabase.from("profiles").select("id,full_name").in("id", memberUserIds)
     : { data: [] };
 
-  const profileMap = new Map((profiles ?? []).map((profile) => [profile.id, profile]));\n  const {data:auditLogs}=businessIds.length?await supabase.from("access_audit_log").select("id,business_id,actor_user_id,target_user_id,action,role_from,role_to,created_at").in("business_id",businessIds).order("created_at",{ascending:false}).limit(50):{data:[]};\n  const {data:invitations}=businessIds.length?await supabase.from("business_invitations").select("id,business_id,email,role,invited_by,expires_at,accepted_at,created_at").in("business_id",businessIds).order("created_at",{ascending:false}).limit(50):{data:[]};
+  const profileMap = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
+  const {data:auditLogs}=businessIds.length?await supabase.from("access_audit_log").select("id,business_id,actor_user_id,target_user_id,action,role_from,role_to,created_at").in("business_id",businessIds).order("created_at",{ascending:false}).limit(50):{data:[]};
+  const {data:invitations}=businessIds.length?await supabase.from("business_invitations").select("id,business_id,email,role,invited_by,expires_at,accepted_at,created_at").in("business_id",businessIds).order("created_at",{ascending:false}).limit(50):{data:[]};
   const businessMap = new Map((businesses ?? []).map((business) => [business.id, business]));
 
   return (
@@ -51,7 +54,8 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
           <Link href="/dashboard" className="btn">Voltar ao painel</Link>
         </div>
 
-        <nav className="commerce-nav" aria-label="Gestão de acessos"><Link href="/dashboard/acessos" className={view==="membros"?"active":""}>Membros</Link><Link href="/dashboard/acessos?view=convites" className={view==="convites"?"active":""}>Convites</Link><Link href="/dashboard/acessos?view=auditoria" className={view==="auditoria"?"active":""}>Auditoria</Link></nav>\n        {view==="membros" && <section className="dashboard-section access-invite-card">
+        <nav className="commerce-nav" aria-label="Gestão de acessos"><Link href="/dashboard/acessos" className={view==="membros"?"active":""}>Membros</Link><Link href="/dashboard/acessos?view=convites" className={view==="convites"?"active":""}>Convites</Link><Link href="/dashboard/acessos?view=auditoria" className={view==="auditoria"?"active":""}>Auditoria</Link></nav>
+        {view==="membros" && <section className="dashboard-section access-invite-card">
           <div className="dashboard-section-head">
             <div><span className="dashboard-kicker">Adicionar pessoa</span><h2>Convidar para a equipa</h2><p>O convite fica associado à empresa e à função escolhida.</p></div>
           </div>
