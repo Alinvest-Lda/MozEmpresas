@@ -6,7 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createBusiness } from "@/lib/businesses/actions";
 import { BusinessForm } from "@/components/business-form";
 export default async function MyBusinesses({searchParams}:{searchParams?:Promise<{view?:string}>}) {
-  const params=await searchParams;\n  const view=params?.view==="criar"?"criar":"lista";\n  const supabase = await createClient();
+  const params=await searchParams;
+  const view=params?.view==="criar"?"criar":"lista";
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
