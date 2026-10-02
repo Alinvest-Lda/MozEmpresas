@@ -43,7 +43,7 @@ export async function purchaseAdCredits(formData: FormData) {
   redirect("/dashboard/publicidade?success=credits&promotion=" + String(data?.promotion_id ?? ""));
 }
 
-export async function requestAdDirectPayment(formData: FormData) {
+export async function requestAdMpesaPayment(formData: FormData) {
   const { supabase, userId } = await auth();
   const businessId = text(formData.get("business_id"));
   const productId = text(formData.get("ad_product_id"));
@@ -63,7 +63,7 @@ export async function requestAdDirectPayment(formData: FormData) {
   const { error } = await supabase.from("business_promotions").insert({
     business_id: businessId, listing_id: listingId, title: title || product.name,
     placement: product.placement, status: "PENDING", starts_at: starts.toISOString(), ends_at: ends.toISOString(),
-    budget: finalPrice, currency: "MZN", ad_product_id: product.id, payment_method: "DIRECT", price_mzn: finalPrice, audience_mode: (locations.length || categories.length) ? "TARGETED" : "GENERAL"
+    budget: finalPrice, currency: "MZN", ad_product_id: product.id, payment_method: "MPESA", price_mzn: finalPrice, audience_mode: (locations.length || categories.length) ? "TARGETED" : "GENERAL"
   });
   if (error) redirect("/dashboard/publicidade?error=purchase");
   const promotion = await supabase.from("business_promotions").select("id").eq("business_id", businessId).eq("ad_product_id", product.id).eq("starts_at", starts.toISOString()).order("created_at",{ascending:false}).limit(1).maybeSingle();
@@ -73,5 +73,5 @@ export async function requestAdDirectPayment(formData: FormData) {
   }
   revalidatePath("/dashboard/publicidade");
   revalidatePath("/dashboard/admin/monetizacao");
-  redirect("/dashboard/publicidade?success=direct");
+  redirect("/dashboard/publicidade?success=mpesa");
 }
