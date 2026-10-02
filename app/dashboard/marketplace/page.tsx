@@ -140,9 +140,6 @@ export default async function MarketplaceWorkspace({
     latestListings.forEach((item) => { item.image_url = firstImage.get(item.id) ?? null; });
   }
 
-  const listingCount = listings.length;
-  const sellerInterestCount = activeSellerOrders.length;
-  const buyerActivityCount = activeBuyerOrders.length;
 
   const renderOfferCard = (item: Listing, compact = false) => (
     <article className={compact ? "commerce-offer commerce-offer-compact" : "commerce-offer"}>
