@@ -113,7 +113,6 @@ export default async function MarketplaceWorkspace({
     current.push(event);
     eventsByOrder.set(event.order_id, current);
   }
-  const activeBuyerOrders = orders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
   const activeSellerOrders = salesOrders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
   const latestListings = (recentListings ?? []).filter((item) => !businessIds.includes(item.business_id || "")) as Listing[];
   const { data: promotedRows } = await supabase
