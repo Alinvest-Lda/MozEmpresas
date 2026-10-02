@@ -17,8 +17,8 @@ const permissionGroups = [
   ["Consulta", "Acesso de leitura à informação autorizada."],
 ];
 
-export default async function AcessosPage() {
-  const supabase = await createClient();
+export default async function AcessosPage({searchParams}:{searchParams?:Promise<{view?:string}>}) {
+  const params=await searchParams; const view=["membros","auditoria","convites"].includes(params?.view||"")?params?.view||"membros":"membros";\n  const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   const userId = claimsData?.claims?.sub;
   if (!userId) redirect("/login");
@@ -41,7 +41,7 @@ export default async function AcessosPage() {
     ? await supabase.from("profiles").select("id,full_name").in("id", memberUserIds)
     : { data: [] };
 
-  const profileMap = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
+  const profileMap = new Map((profiles ?? []).map((profile) => [profile.id, profile]));\n  const {data:auditLogs}=businessIds.length?await supabase.from("access_audit_log").select("id,business_id,actor_user_id,target_user_id,action,role_from,role_to,created_at").in("business_id",businessIds).order("created_at",{ascending:false}).limit(50):{data:[]};\n  const {data:invitations}=businessIds.length?await supabase.from("business_invitations").select("id,business_id,email,role,invited_by,expires_at,accepted_at,created_at").in("business_id",businessIds).order("created_at",{ascending:false}).limit(50):{data:[]};
   const businessMap = new Map((businesses ?? []).map((business) => [business.id, business]));
 
   return (
@@ -51,7 +51,7 @@ export default async function AcessosPage() {
           <Link href="/dashboard" className="btn">Voltar ao painel</Link>
         </div>
 
-        <section className="dashboard-section access-invite-card">
+        <nav className="commerce-nav" aria-label="Gestão de acessos"><Link href="/dashboard/acessos" className={view==="membros"?"active":""}>Membros</Link><Link href="/dashboard/acessos?view=convites" className={view==="convites"?"active":""}>Convites</Link><Link href="/dashboard/acessos?view=auditoria" className={view==="auditoria"?"active":""}>Auditoria</Link></nav>\n        {view==="membros" && <section className="dashboard-section access-invite-card">
           <div className="dashboard-section-head">
             <div><span className="dashboard-kicker">Adicionar pessoa</span><h2>Convidar para a equipa</h2><p>O convite fica associado à empresa e à função escolhida.</p></div>
           </div>
@@ -67,7 +67,7 @@ export default async function AcessosPage() {
           )}
         </section>
 
-        <div className="access-layout">
+        {view==="membros" && <div className="access-layout">
           <section className="dashboard-section">
             <div className="dashboard-section-head"><div><span className="dashboard-kicker">Membros</span><h2>Quem tem acesso</h2><p>Os membros aparecem associados à empresa onde receberam acesso.</p></div></div>
             {businesses?.length ? (
@@ -97,6 +97,11 @@ export default async function AcessosPage() {
             <div className="access-note"><strong>Princípio do sistema</strong><p>O acesso é definido por função e permissões. Não transforma o utilizador em “comprador” ou “prestador”. A mesma empresa pode comprar, vender, publicar, participar e gerir parceiros.</p></div>
           </aside>
         </div>
+        </div>}
+
+        {view==="convites" && <section className="dashboard-section"><div className="dashboard-section-head"><div><span className="dashboard-kicker">Convites</span><h2>Convites de acesso</h2><p>Controle convites pendentes e o seu prazo.</p></div></div>{(invitations??[]).length?(invitations??[]).map(i=><div className="credit-request-row" key={i.id}><div><strong>{i.email} · {roleLabels[i.role]||i.role}</strong><small>{businessMap.get(i.business_id)?.name||"Empresa"} · criado {new Date(i.created_at).toLocaleString("pt-MZ")} · expira {new Date(i.expires_at).toLocaleString("pt-MZ")}</small></div><span>{i.accepted_at?"Aceite":"Pendente"}</span></div>):<p className="muted">Não existem convites registados.</p>}</section>}
+
+        {view==="auditoria" && <section className="dashboard-section"><div className="dashboard-section-head"><div><span className="dashboard-kicker">Segurança</span><h2>Auditoria de acessos</h2><p>Registo das alterações de função e eventos de acesso associados às empresas que administra.</p></div></div>{(auditLogs??[]).length?(auditLogs??[]).map(log=><div className="credit-request-row" key={log.id}><div><strong>{log.action}</strong><small>{businessMap.get(log.business_id)?.name||"Empresa"} · actor {profileMap.get(log.actor_user_id)?.full_name||log.actor_user_id.slice(0,8)} · alvo {profileMap.get(log.target_user_id)?.full_name||log.target_user_id.slice(0,8)}</small></div><span>{log.role_from&&log.role_to?log.role_from+" → "+log.role_to:new Date(log.created_at).toLocaleString("pt-MZ")}</span></div>):<p className="muted">Ainda não existem eventos de auditoria.</p>}</section>}
       </div></main>
   );
 }
