@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { updateBusinessMemberRole } from "@/lib/businesses/access-actions";
+import { updateBusinessMemberRole, removeBusinessMember } from "@/lib/businesses/access-actions";
 import { inviteBusinessMember } from "@/lib/businesses/invitation-actions";
 const roleLabels: Record<string, string> = {
   owner: "Proprietário", admin: "Administrador", operator: "Operador", member: "Membro", viewer: "Consulta",
@@ -83,7 +83,7 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
                     <td><span className={"access-role " + (member.role === "owner" ? "owner" : "")}>{roleLabels[member.role] || member.role}</span></td>
                     <td>{member.role === "owner" ? <span className="muted">Controlo principal</span> : <form action={updateBusinessMemberRole} className="access-role-form">
                       <input type="hidden" name="businessId" value={member.business_id} /><input type="hidden" name="userId" value={member.user_id} />
-                      <select name="role" defaultValue={member.role}><option value="admin">Administrador</option><option value="operator">Operador</option><option value="member">Membro</option><option value="viewer">Consulta</option></select><button className="btn" type="submit">Guardar</button>
+                      <select name="role" defaultValue={member.role}><option value="admin">Administrador</option><option value="operator">Operador</option><option value="member">Membro</option><option value="viewer">Consulta</option></select><button className="btn" type="submit">Guardar</button><button className="btn danger" type="submit" formAction={removeBusinessMember} name="revoke" value="1">Revogar</button>
                     </form>}</td>
                   </tr>;
                 })}</tbody>
