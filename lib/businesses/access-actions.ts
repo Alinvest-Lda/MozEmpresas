@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const schema=z.object({businessId:z.string().uuid(),userId:z.string().uuid(),role:z.enum(["admin","operator","member","viewer"])});
 
-async function owner(supabase:any,businessId:string,userId:string){return Boolean((await supabase.from("businesses").select("id").eq("id",businessId).eq("owner_id",userId).maybeSingle()).data);}
+async function owner(supabase:Awaited<ReturnType<typeof createClient>>,businessId:string,userId:string){return Boolean((await supabase.from("businesses").select("id").eq("id",businessId).eq("owner_id",userId).maybeSingle()).data);}
 
 export async function updateBusinessMemberRole(formData:FormData){
  const parsed=schema.safeParse({businessId:formData.get("businessId"),userId:formData.get("userId"),role:formData.get("role")}); if(!parsed.success)return;
