@@ -69,7 +69,7 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
           ) : (
             <div className="empty"><p>Crie primeiro uma empresa para poder convidar a equipa.</p><Link href="/dashboard/empresas" className="btn primary">Criar empresa</Link></div>
           )}
-        </section>
+        </section>}
 
         {view==="membros" && <div className="access-layout">
           <section className="dashboard-section">
