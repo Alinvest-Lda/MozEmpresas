@@ -32,7 +32,7 @@ export async function inviteBusinessMember(formData: FormData) {
     business_id: business.id, email: parsed.data.email.toLowerCase(), role: parsed.data.role,
     invited_by: user.id, token_hash: tokenHash,
   });
-  if (error) return { error: "Não foi possível criar o convite." };
+  if (error) return { error: "Não foi possível criar o convite." };\n  await supabase.from("access_audit_log").insert({ business_id: business.id, actor_user_id: user.id, target_user_id: null, action: "INVITE_SENT", role_from: null, role_to: parsed.data.role, metadata: { email: parsed.data.email.toLowerCase() } });
 
   revalidatePath("/dashboard/acessos");
   return { success: true, invitePath: "/convites/" + token };
