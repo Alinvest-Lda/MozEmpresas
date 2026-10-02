@@ -100,7 +100,6 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
             <div className="access-role-list">{permissionGroups.map(([role, description]) => <div className="access-role-item" key={role}><strong>{role}</strong><p>{description}</p></div>)}</div>
             <div className="access-note"><strong>Princípio do sistema</strong><p>O acesso é definido por função e permissões. Não transforma o utilizador em “comprador” ou “prestador”. A mesma empresa pode comprar, vender, publicar, participar e gerir parceiros.</p></div>
           </aside>
-        </div>
         </div>}
 
         {view==="convites" && <section className="dashboard-section"><div className="dashboard-section-head"><div><span className="dashboard-kicker">Convites</span><h2>Convites de acesso</h2><p>Controle convites pendentes e o seu prazo.</p></div></div>{(invitations??[]).length?(invitations??[]).map(i=><div className="credit-request-row" key={i.id}><div><strong>{i.email} · {roleLabels[i.role]||i.role}</strong><small>{businessMap.get(i.business_id)?.name||"Empresa"} · criado {new Date(i.created_at).toLocaleString("pt-MZ")} · expira {new Date(i.expires_at).toLocaleString("pt-MZ")}</small></div><span>{i.accepted_at?"Aceite":"Pendente"}</span></div>):<p className="muted">Não existem convites registados.</p>}</section>}
