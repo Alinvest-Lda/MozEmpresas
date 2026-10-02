@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { updatePassword, updateProfile } from "@/lib/account/actions";
+import { updateAccountStatus, updatePassword, updateProfile } from "@/lib/account/actions";
 import type { AccountState } from "@/lib/account/actions";
 
 export function ProfileForm({ initial }: { initial: { fullName: string; location: string; website: string; bio: string } }) {
@@ -27,5 +27,15 @@ export function PasswordForm() {
     </div>
     {state.error && <p className="notice">{state.error}</p>}{state.success && <p className="account-success">{state.success}</p>}
     <button className="btn primary" disabled={pending}>{pending ? "A actualizar..." : "Alterar password"}</button>
+  </form>;
+}
+
+export function AccountStatusForm({ status }: { status: "ACTIVE" | "INACTIVE" | "DELETED" }) {
+  const [state, action, pending] = useActionState<AccountState, FormData>(updateAccountStatus, {});
+  return <form action={action} className="account-status-buttons">
+    <button className="btn" type="submit" name="status" value="ACTIVE" disabled={pending || status === "DELETED"}>Activar</button>
+    <button className="btn" type="submit" name="status" value="INACTIVE" disabled={pending || status === "DELETED"}>Desactivar</button>
+    <button className="btn danger" type="submit" name="status" value="DELETED" disabled={pending || status === "DELETED"}>Eliminar conta</button>
+    {state.error && <p className="notice">{state.error}</p>}{state.success && <p className="account-success">{state.success}</p>}
   </form>;
 }
