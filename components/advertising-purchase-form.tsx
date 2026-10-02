@@ -7,7 +7,7 @@ const locationOptions=["Maputo","Matola","Gaza","Inhambane","Sofala","Manica","T
 function money(v:number|string){return Number(v).toLocaleString("pt-MZ")+" MZN";}
 function calculate(p:Product|undefined,l:number,c:number){if(!p)return{price:0,credits:0};const factor=1+(l?0.1:0)+(c?0.1:0);return{price:Number((Number(p.direct_price_mzn)*factor).toFixed(2)),credits:Math.ceil(Number(p.credit_price)*factor)};}
 function cleanName(name:string){return name.replace(/\s·\s(7|14|30) dias$/i,"");}
-export function AdvertisingPurchaseForm({businesses,products,categories,wallets,creditAction,directAction}:{businesses:{id:string;name:string}[];products:Product[];categories:{name:string}[];wallets:Record<string,number>;creditAction:(f:FormData)=>Promise<void>;directAction:(f:FormData)=>Promise<void>}){
+export function AdvertisingPurchaseForm({businesses,products,categories,wallets,creditAction,mpesaAction}:{businesses:{id:string;name:string}[];products:Product[];categories:{name:string}[];wallets:Record<string,number>;creditAction:(f:FormData)=>Promise<void>;mpesaAction:(f:FormData)=>Promise<void>}){
  const placements=["DIRECTORY","MARKETPLACE","HOME"].filter(place=>products.some(p=>p.placement===place));
  const firstPlacement=placements[0]??"DIRECTORY"; const [placement,setPlacement]=useState(firstPlacement);
  const placementProducts=products.filter(p=>p.placement===placement&&Number(p.direct_price_mzn)>0);
@@ -34,6 +34,6 @@ export function AdvertisingPurchaseForm({businesses,products,categories,wallets,
    <div className="ad-target-block"><div className="ad-builder-label"><span>Actividade / categoria <small>+10%</small></span><small>{cats.length?cats.length+" seleccionada(s)":"Opcional"}</small></div><div className="ad-chip-grid">{categories.map(c=><label key={c.name} className={"ad-chip"+(cats.includes(c.name)?" selected":"")}><input type="checkbox" name="target_category" value={c.name} checked={cats.includes(c.name)} onChange={()=>toggle(c.name,setCats,cats)}/>{c.name}</label>)}</div></div>
   </section>
   <section className="ad-builder-summary"><div><span className="dashboard-kicker">03 · Resumo</span><h3>{product?cleanName(product.name):"Espaço publicitário"}</h3><p>{duration} dias · {locations.length||cats.length?"Audiência segmentada":"Audiência geral"} · {placementLabel[placement]}</p></div><div className="ad-builder-price"><small>Valor estimado</small><strong>{money(calc.price)}</strong><span>ou {calc.credits.toLocaleString("pt-MZ")} créditos</span></div></section>
-  <section className="ad-builder-actions"><div><strong>Como pretende pagar?</strong><p>Use o saldo de créditos ou solicite pagamento directo.</p></div><div className="ad-builder-buttons"><button className="btn primary" type="submit" formAction={creditAction}>Activar com créditos</button><button className="btn" type="submit" formAction={directAction}>Solicitar pagamento directo</button></div></section>
+  <section className="ad-builder-actions"><div><strong>Como pretende pagar?</strong><p>Use o saldo de créditos ou solicite pagamento por M-Pesa.</p></div><div className="ad-builder-buttons"><button className="btn primary" type="submit" formAction={creditAction}>Activar com créditos</button><button className="btn" type="submit" formAction={mpesaAction}>Solicitar pagamento M-Pesa</button></div></section>
  </form></div>;
 }
