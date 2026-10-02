@@ -59,7 +59,7 @@ export default async function Empresas({
   try {
     const supabase = await createClient();
     const { data: claimsData } = await supabase.auth.getClaims();
-    if (claimsData?.claims?.sub) redirect("/dashboard/empresas");
+    const viewerId = claimsData?.claims?.sub as string | undefined;
 
     const [categoryResult, promotionResult] = await Promise.all([
       supabase.from("business_categories").select("id,name,slug").order("name").limit(24),
@@ -92,8 +92,8 @@ export default async function Empresas({
 
     let query = supabase
       .from("businesses")
-      .select("id,name,slug,description,location,logo_url,cover_url,category_id")
-      .eq("is_public", true)
+      .select("id,name,slug,description,location,logo_url,cover_url,category_id,owner_id")
+      .or(viewerId ? "is_public.eq.true,owner_id.eq." + viewerId : "is_public.eq.true")
       .order("name")
       .limit(60);
 
