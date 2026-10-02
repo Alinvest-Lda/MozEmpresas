@@ -33,3 +33,16 @@ export async function updatePassword(_state: AccountState, formData: FormData): 
   if (error) return { error: "Não foi possível alterar a password." };
   return { success: "Password actualizada com sucesso." };
 }
+
+
+export async function updateAccountStatus(formData: FormData): Promise<AccountState> {
+  const status = String(formData.get("status") || "");
+  if (!["ACTIVE", "INACTIVE", "DELETED"].includes(status)) return { error: "Estado de conta inválido." };
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { error } = await supabase.from("profiles").update({ account_status: status }).eq("id", user.id);
+  if (error) return { error: "Não foi possível actualizar o estado da conta." };
+  revalidatePath("/dashboard/conta");
+  return { success: status === "ACTIVE" ? "Conta activada." : status === "INACTIVE" ? "Conta desactivada." : "Conta marcada para eliminação." };
+}
