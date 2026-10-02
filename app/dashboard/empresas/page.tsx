@@ -5,8 +5,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createBusiness } from "@/lib/businesses/actions";
 import { BusinessForm } from "@/components/business-form";
-export default async function MyBusinesses() {
-  const supabase = await createClient();
+export default async function MyBusinesses({searchParams}:{searchParams?:Promise<{view?:string}>}) {
+  const params=await searchParams;\n  const view=params?.view==="criar"?"criar":"lista";\n  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
@@ -37,44 +37,26 @@ export default async function MyBusinesses() {
           </aside>
         </section>
 
+        <nav className="commerce-nav" aria-label="Gestão da presença"><Link href="/dashboard/empresas" className={view==="lista"?"active":""}>Empresas e gestão</Link><Link href="/dashboard/empresas?view=criar" className={view==="criar"?"active":""}>Criar empresa</Link></nav>
+
         <section className="business-presence-guide" aria-label="Como funciona a presença empresarial">
           <div className="business-guide-item"><b>01 · IDENTIDADE</b><strong>Dados essenciais</strong><span>Nome, actividade, localização e contactos que tornam a empresa reconhecível.</span></div>
           <div className="business-guide-item"><b>02 · PRESENÇA</b><strong>Perfil público</strong><span>Uma página empresarial que pode ser descoberta e consultada no directório.</span></div>
           <div className="business-guide-item"><b>03 · ACTIVIDADE</b><strong>Ecossistema</strong><span>Produtos, serviços, oportunidades, concursos e relações comerciais podem ser ligados ao perfil.</span></div>
         </section>
 
-        {allBusinesses.length ? <section className="business-owned-grid">
-          {allBusinesses.map((business) => <article className="business-management-card" key={business.id}>
-            <div className="business-card-top">
-              <div className="business-management-identity"><div className="business-management-logo">{business.logo_url ? <img src={business.logo_url} alt="" /> : business.name[0]}</div><div><strong>{business.name}</strong><span>{business.location || "Localização por definir"}</span></div></div>
-              <span className="tag">{business.is_public ? "Publicado" : "Privado"}</span>
-            </div>
-            <div className="business-readiness"><span>Presença</span><strong>{[business.name,business.description,business.location,business.logo_url,business.cover_url].filter(Boolean).length >= 4 ? "Completa" : "A completar"}</strong></div>
-            <p>{business.description || "Complete a apresentação da empresa para melhorar a informação disponível no directório."}</p>
-            <div className="business-management-next"><span>Próximo passo</span><strong>Adicionar portfólio e ofertas</strong></div>
-            <div className="business-card-meta">
-              <span>{business.is_public ? "Visível no directório" : "Não publicado"}</span>
-              <span>Perfil empresarial</span>
-            </div>
-            <div className="business-card-actions">
-              <Link href={"/empresas/" + business.slug} className="text-link">Ver perfil público →</Link>
-              <Link href={"/dashboard/empresas/" + business.id} className="text-link">Gerir perfil →</Link>
-            </div>
-          </article>)}
-        </section> : <section className="business-empty">
-          <span className="dashboard-kicker">Primeiro passo</span>
-          <h2>Ainda não tem uma empresa associada.</h2>
-          <p>Crie o primeiro perfil para representar a sua actividade no ecossistema MozEmpresas.</p>
-        </section>}
-
-        <section className="business-form-heading">
-          <span className="dashboard-kicker">Nova empresa</span>
-          <h2>Registar uma empresa</h2>
-          <p>O registo cria a entidade que representa no MozEmpresas. Não define se compra ou vende: todas as empresas podem participar em todo o ecossistema.</p>
-        </section>
-        <div className="business-form-card">
-          <BusinessForm action={createBusiness} categories={categories ?? []} />
-        </div>
-      </div>
-    </main>;
-};
+        {view==="lista" ? <>
+          {allBusinesses.length ? <section className="business-owned-grid">
+            {allBusinesses.map((business) => <article className="business-management-card" key={business.id}>
+              <div className="business-card-top"><div className="business-management-identity"><div className="business-management-logo">{business.logo_url ? <img src={business.logo_url} alt="" /> : business.name[0]}</div><div><strong>{business.name}</strong><span>{business.location || "Localização por definir"}</span></div></div><span className="tag">{business.is_public ? "Publicado" : "Privado"}</span></div>
+              <div className="business-readiness"><span>Presença</span><strong>{[business.name,business.description,business.location,business.logo_url,business.cover_url].filter(Boolean).length >= 4 ? "Completa" : "A completar"}</strong></div>
+              <p>{business.description || "Complete a apresentação da empresa para melhorar a informação disponível no directório."}</p>
+              <div className="business-management-next"><span>Próximo passo</span><strong>Adicionar portfólio e ofertas</strong></div>
+              <div className="business-card-actions"><Link href={"/empresas/"+business.slug} className="text-link">Ver perfil público →</Link><Link href={"/dashboard/empresas/"+business.id} className="text-link">Gerir perfil →</Link></div>
+            </article>)}
+          </section> : <section className="business-empty"><span className="dashboard-kicker">Primeiro passo</span><h2>Ainda não tem uma empresa associada.</h2><p>Crie o primeiro perfil para representar a sua actividade no ecossistema MozEmpresas.</p><Link href="/dashboard/empresas?view=criar" className="btn primary">Criar empresa →</Link></section>}
+        </> : <>
+          <section className="business-form-heading"><Link href="/dashboard/empresas" className="text-link">← Voltar às empresas</Link><span className="dashboard-kicker" style={{display:"block",marginTop:16}}>Nova empresa</span><h2>Registar uma empresa</h2><p>Crie a entidade que representa no MozEmpresas. Depois, a gestão do perfil acontece na lista de empresas.</p></section>
+          <div className="business-form-card"><BusinessForm action={createBusiness} categories={categories ?? []} /></div>
+        </>}
+;
