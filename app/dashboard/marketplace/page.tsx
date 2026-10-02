@@ -116,6 +116,23 @@ export default async function MarketplaceWorkspace({
   const activeBuyerOrders = orders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
   const activeSellerOrders = salesOrders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
   const latestListings = (recentListings ?? []).filter((item) => !businessIds.includes(item.business_id || "")) as Listing[];
+  const { data: promotedRows } = await supabase
+    .from("business_promotions")
+    .select("listing_id,audience_mode")
+    .eq("status","ACTIVE")
+    .lte("starts_at",new Date().toISOString())
+    .gt("ends_at",new Date().toISOString())
+    .eq("audience_mode","TARGETED")
+    .not("listing_id","is",null)
+    .order("created_at",{ascending:false})
+    .limit(12);
+  const promotedIds=[...new Set((promotedRows??[]).map(row=>row.listing_id).filter(Boolean))];
+  let promotedListings: Listing[]=[];
+  if(promotedIds.length){
+    const {data:promoted}=await supabase.from("listings").select("id,title,description,type,price,currency,location,business_id").eq("status","PUBLISHED").in("id",promotedIds);
+    promotedListings=(promoted??[]).filter(item=>!businessIds.includes(item.business_id||"")) as Listing[];
+  }
+  const buyingListings=[...promotedListings,...latestListings.filter(item=>!promotedIds.includes(item.id))].slice(0,8);
   if (latestListings.length) {
     const { data: attachments } = await supabase.from("listing_attachments").select("listing_id,storage_path,kind,created_at").in("listing_id", latestListings.map((item) => item.id)).eq("kind", "IMAGE").order("created_at", { ascending: true });
     const firstImage = new Map<string, string>();
@@ -226,10 +243,10 @@ export default async function MarketplaceWorkspace({
           <section id="comprar" className="commerce-grid">
             <div className="commerce-panel">
               <div className="commerce-panel-head">
-                <div><span className="commerce-eyebrow">Comprar</span><h2>Encontre o que precisa.</h2><p>Veja ofertas publicadas por empresas, compare o que está disponível e abra uma publicação para falar directamente com o fornecedor.</p></div>
+                <div><span className="commerce-eyebrow">Comprar</span><h2>Encontre o que precisa.</h2><p>Veja primeiro as ofertas destacadas para a audiência da sua empresa e depois explore todo o marketplace quando quiser ampliar a pesquisa.</p></div>
                 <Link href="/marketplace" className="commerce-link">Ver marketplace →</Link>
               </div>
-              {latestListings.length ? <div className="commerce-offer-grid">{latestListings.slice(0, 4).map((item) => <div key={item.id}>{renderOfferCard(item)}</div>)}</div> : <div className="commerce-empty"><strong>Ainda não existem ofertas publicadas.</strong><p>Quando empresas publicarem produtos ou serviços, eles aparecerão aqui.</p><Link href="/dashboard/marketplace?tab=vender" className="btn primary">Publicar a primeira oferta</Link></div>}
+              {buyingListings.length ? <div className="commerce-offer-grid">{buyingListings.map((item) => <div key={item.id}>{renderOfferCard(item)}</div>)}</div> : <div className="commerce-empty"><strong>Ainda não existem ofertas publicadas.</strong><p>Quando empresas publicarem produtos ou serviços, eles aparecerão aqui.</p><Link href="/dashboard/marketplace?tab=vender" className="btn primary">Publicar a primeira oferta</Link></div>}
             </div>
 
             <div className="commerce-panel">
