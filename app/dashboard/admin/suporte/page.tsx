@@ -5,7 +5,7 @@ import {replySupportAsStaff} from "@/lib/support/admin-actions";
 const areas=["","Técnico","Comercial","Conta e acessos","Pagamentos e créditos","Publicidade","Serviços MozEmpresas"];
 const statuses=["","OPEN","IN_PROGRESS","WAITING_USER","RESOLVED","CLOSED"];
 
-export default async function AdminSupport({searchParams}:{searchParams?:Promise<{area?:string;status?:string;business?:string}>}){
+export default async function AdminSupport({searchParams}:{searchParams?:Promise<{area?:string;status?:string;business?:string;subject?:string}>}){
  const p=await searchParams;const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)return null;
  const {data:staff}=await supabase.from("platform_members").select("active").eq("user_id",user.id).eq("active",true).maybeSingle();if(!staff)return null;
  let query=supabase.from("support_tickets").select("id,user_id,business_id,area,subject,status,priority,created_at,updated_at").order("updated_at",{ascending:false}).limit(100);
