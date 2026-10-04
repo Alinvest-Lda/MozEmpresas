@@ -8,7 +8,7 @@ export const dashboardNavGroups = [
   { label: "Empresa", links: [["/dashboard/empresas","Presença da empresa"],["/dashboard/acessos","Acessos e equipa"],["/empresas","Directório"]] },
   { label: "Mercado", links: [["/oportunidades","Oportunidades"],["/concursos","Concursos"]] },
   { label: "Serviços", links: [["/dashboard/servicos","Serviços MozEmpresas"]] },
-  { label: "Conta", links: [["/dashboard/conta","A minha conta"],["/dashboard/monetizacao/creditos","Créditos"],["/dashboard/financeiro","Gestão financeira"],["/dashboard/notificacoes","Notificações"]] },
+  { label: "Conta", links: [["/dashboard/conta","A minha conta"],["/dashboard/monetizacao","Monetização"],["/dashboard/monetizacao/creditos","Créditos"],["/dashboard/financeiro","Gestão financeira"],["/dashboard/notificacoes","Notificações"]] },
 ] as const;
 
 export function DashboardSidebarNav({ platformAccess, unreadNotifications = 0 }: { platformAccess?: string | null; unreadNotifications?: number }) {
