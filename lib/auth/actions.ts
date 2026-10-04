@@ -57,10 +57,11 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
   }
 
   if (data.user) {
-    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", data.user.id).maybeSingle();
+    const { data: profile } = await supabase.from("profiles").select("full_name,user_type").eq("id", data.user.id).maybeSingle();
     await createProfile(data.user.id, profile?.full_name || data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "Utilizador");
   }
 
+  if (!requestedNext && profile?.user_type === "parceiro") redirect("/parceiro");
   redirect(next);
 }
 
