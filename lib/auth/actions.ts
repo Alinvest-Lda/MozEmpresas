@@ -56,8 +56,11 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
     return { error: "Não foi possível iniciar sessão. Verifique o email e a password." };
   }
 
+  let profile: { full_name: string; user_type: string } | null = null;
+
   if (data.user) {
-    const { data: profile } = await supabase.from("profiles").select("full_name,user_type").eq("id", data.user.id).maybeSingle();
+    const { data: existingProfile } = await supabase.from("profiles").select("full_name,user_type").eq("id", data.user.id).maybeSingle();
+    profile = existingProfile;
     await createProfile(data.user.id, profile?.full_name || data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "Utilizador");
   }
 
