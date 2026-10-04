@@ -89,7 +89,7 @@ export default async function MarketplaceWorkspace({
 
   const [{ data: myListings }, { data: sellerItems }, { data: recentListings }] = await Promise.all([
     businessIds.length
-      ? supabase.from("listings").select("id,title,description,type,price,currency,location,business_id").in("business_id", businessIds).order("created_at", { ascending: false }).limit(50)
+      ? supabase.from("listings").select("id,title,description,type,price,currency,location,business_id,category_id").in("business_id", businessIds).order("created_at", { ascending: false }).limit(50)
       : Promise.resolve({ data: [] as Listing[] }),
     businessIds.length
       ? supabase.from("commerce_order_items").select("id,order_id,title,quantity,line_total,currency,seller_business_id,created_at").in("seller_business_id", businessIds).order("created_at", { ascending: false }).limit(30)
@@ -145,11 +145,12 @@ export default async function MarketplaceWorkspace({
   }, 0);
   const matchedPromoted = [...promotedListings].sort((a,b) => interestScore(b)-interestScore(a));
   const buyingListings=[...matchedPromoted,...latestListings.filter(item=>!promotedIds.includes(item.id)).sort((a,b)=>interestScore(b)-interestScore(a))].slice(0,8);
-  if (latestListings.length) {
-    const { data: attachments } = await supabase.from("listing_attachments").select("listing_id,storage_path,kind,created_at").in("listing_id", latestListings.map((item) => item.id)).eq("kind", "IMAGE").order("created_at", { ascending: true });
+  const visibleListingIds = [...new Set([...latestListings, ...promotedListings].map((item) => item.id))];
+  if (visibleListingIds.length) {
+    const { data: attachments } = await supabase.from("listing_attachments").select("listing_id,storage_path,kind,created_at").in("listing_id", visibleListingIds).eq("kind", "IMAGE").order("created_at", { ascending: true });
     const firstImage = new Map<string, string>();
     for (const attachment of attachments ?? []) if (!firstImage.has(attachment.listing_id)) firstImage.set(attachment.listing_id, supabase.storage.from("listing-media").getPublicUrl(attachment.storage_path).data.publicUrl);
-    latestListings.forEach((item) => { item.image_url = firstImage.get(item.id) ?? null; });
+    [...latestListings, ...promotedListings].forEach((item) => { item.image_url = firstImage.get(item.id) ?? null; });
   }
 
 
@@ -284,7 +285,7 @@ export default async function MarketplaceWorkspace({
               {businesses.length ? (
                 <form action={createListing} className="commerce-form-grid" encType="multipart/form-data">
                   <label>Empresa<select name="business_id" required><option value="">Seleccione a empresa</option>{businesses.map((business) => <option value={business.id} key={business.id}>{business.name}</option>)}</select></label>
-                  <label>Tipo<select name="type" required><option value="PRODUCT">Produto</option><option value="SERVICE">Serviço</option></select></label>
+                  <label>Tipo<select name="type" required><option value="PRODUCT">Produto</option><option value="SERVICE">Serviço</option></select></label>\n                  <label>Categoria<select name="category_id"><option value="">Sem categoria</option>{(buyerCategories ?? []).map((cat) => <option value={cat.id} key={cat.id}>{cat.name}</option>)}</select></label>
                   <label className="wide">Título<input name="title" required placeholder="Ex.: Equipamento de segurança industrial" /></label>
                   <label className="wide">Descrição<textarea name="description" required rows={4} placeholder="Explique o que oferece, para quem, o que está incluído e porque deve ser considerado." /></label>
                   <label className="wide">Imagens da oferta<input name="attachments" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.doc,.docx,.xls,.xlsx" multiple /><small className="commerce-note">Pode adicionar várias imagens e documentos. Use imagens nítidas e documentos comerciais relevantes.</small></label>
