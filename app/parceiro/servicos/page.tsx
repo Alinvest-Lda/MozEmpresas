@@ -1,0 +1,7 @@
+export const dynamic="force-dynamic";
+import { createClient } from "@/lib/supabase/server";
+export default async function PartnerServicesPage(){
+ const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user)return null;
+ const {data}=await supabase.from("service_requests").select("id,status,requested_price,currency,notes,created_at,platform_services(name)").eq("requester_user_id",user.id).order("created_at",{ascending:false}).limit(50);
+ return <main className="partner-main"><div className="partner-content"><header className="partner-page-head"><span className="partner-kicker">Operação</span><h1>Serviços</h1><p>Acompanhe pedidos de serviços feitos através da sua conta de parceiro.</p></header><section className="partner-section">{data?.length?<div className="partner-table">{data.map((x:any)=><article key={x.id}><div><strong>{x.platform_services?.name||"Serviço MozEmpresas"}</strong><small>{x.status} · {new Date(x.created_at).toLocaleDateString("pt-MZ")}</small></div><span>{x.requested_price!=null?x.requested_price+" "+x.currency:"Preço por definir"}</span></article>)}</div>:<div className="partner-empty"><strong>Nenhum pedido de serviço.</strong><p>Os pedidos associados ao parceiro serão acompanhados nesta área.</p></div>}</section></div></main>;
+}
