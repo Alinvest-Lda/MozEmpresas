@@ -210,6 +210,38 @@ export async function cancelOrder(formData: FormData) {
 }
 
 
+export async function updateOrderProgress(formData: FormData) {
+  const { supabase, userId } = await currentUser();
+  const orderId = text(formData.get("order_id"));
+  const paymentStatus = text(formData.get("payment_status")).toUpperCase();
+  const fulfillmentStatus = text(formData.get("fulfillment_status")).toUpperCase();
+  const paymentReference = text(formData.get("payment_reference")) || null;
+  const allowedPayments = ["NOT_REQUIRED","PENDING","PROOF_SUBMITTED","PAID","FAILED","REFUNDED"];
+  const allowedFulfillment = ["NOT_STARTED","IN_PROGRESS","DELIVERED","COMPLETED","CANCELLED"];
+  if (!orderId || !allowedPayments.includes(paymentStatus) || !allowedFulfillment.includes(fulfillmentStatus)) redirect("/dashboard/marketplace?status=error");
+
+  const { data: items } = await supabase.from("commerce_order_items").select("seller_business_id").eq("order_id", orderId);
+  const sellerIds = [...new Set((items ?? []).map(item => item.seller_business_id).filter(Boolean))];
+  let authorized = false;
+  for (const businessId of sellerIds) if (await canManageBusiness(supabase, userId, businessId)) { authorized = true; break; }
+  if (!authorized) redirect("/dashboard/marketplace?status=forbidden");
+
+  const { data: current } = await supabase.from("commerce_orders").select("status,payment_status,fulfillment_status").eq("id", orderId).maybeSingle();
+  if (!current) redirect("/dashboard/marketplace?status=error");
+  if (paymentStatus === "PAID" && current.status !== "AGREED" && current.status !== "COMPLETED") redirect("/dashboard/marketplace?status=invalid-transition");
+
+  const now = new Date().toISOString();
+  const update: Record<string, string | null> = { payment_status: paymentStatus, fulfillment_status: fulfillmentStatus, payment_reference: paymentReference };
+  if (paymentStatus === "PAID") update.paid_at = now;
+  if (fulfillmentStatus === "IN_PROGRESS") update.service_started_at = now;
+  if (fulfillmentStatus === "COMPLETED") update.completed_at = now;
+  const { error } = await supabase.from("commerce_orders").update(update).eq("id", orderId);
+  if (error) redirect("/dashboard/marketplace?status=error");
+  await supabase.from("commerce_order_events").insert({ order_id: orderId, actor_user_id: userId, from_status: current.status, to_status: current.status, note: "Progresso comercial actualizado: pagamento " + paymentStatus + "; execução " + fulfillmentStatus + (paymentReference ? "; referência " + paymentReference : "") });
+  revalidatePath("/dashboard/marketplace");
+  redirect("/dashboard/marketplace?status=updated");
+}
+
 export async function updateListing(_state: { error?: string; success?: string }, formData: FormData): Promise<{ error?: string; success?: string }> {
   const { supabase, userId } = await currentUser();
   const listingId = text(formData.get("listing_id"));
