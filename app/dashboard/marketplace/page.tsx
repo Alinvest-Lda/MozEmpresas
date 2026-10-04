@@ -16,6 +16,7 @@ type Listing = {
   location: string | null;
   business_id: string | null;
   image_url?: string | null;
+  status?: string | null;
 };
 type Order = { id: string; status: string; notes: string | null; created_at: string };
 type OrderEvent = { id: string; order_id: string; from_status: string | null; to_status: string; note: string | null; created_at: string };
