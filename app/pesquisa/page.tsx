@@ -160,25 +160,29 @@ export default async function SearchPage({
           <h1>Encontre o que procura em todo o MozEmpresas.</h1>
           <p>Uma única pesquisa para descobrir empresas, produtos, serviços, oportunidades e concursos abertos.</p>
           <form className="global-search-form" action="/pesquisa">
-            <label>
+            <label className="global-search-query">
               <span>O que procura?</span>
               <div className="global-search-input">
                 <b aria-hidden="true">⌕</b>
                 <input name="q" defaultValue={q} placeholder="Empresa, produto, serviço, oportunidade..." autoFocus />
+                <kbd>⌘ K</kbd>
               </div>
             </label>
-            <label>
-              <span>Área</span>
-              <select name="tipo" defaultValue={type}>
-                <option value="all">Tudo</option>
-                <option value="business">Empresas</option>
-                <option value="listing">Produtos e serviços</option>
-                <option value="opportunity">Oportunidades</option>
-                <option value="contest">Concursos</option>
-              </select>
-            </label>
-            <button className="btn primary" type="submit">Pesquisar</button>
+            <div className="global-search-form-side">
+              <label>
+                <span>Pesquisar em</span>
+                <select name="tipo" defaultValue={type}>
+                  <option value="all">Tudo</option>
+                  <option value="business">Empresas</option>
+                  <option value="listing">Produtos e serviços</option>
+                  <option value="opportunity">Oportunidades</option>
+                  <option value="contest">Concursos</option>
+                </select>
+              </label>
+              <button className="btn primary" type="submit">Pesquisar →</button>
+            </div>
           </form>
+          <div className="global-search-hint"><span>Pesquisa transversal</span><small>Use uma palavra-chave ou necessidade. O sistema procura nas áreas públicas disponíveis.</small></div>
         </section>
 
         {q.length < 2 ? (
