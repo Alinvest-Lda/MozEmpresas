@@ -17,13 +17,8 @@ export async function requireSuperAdmin() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/admin/parceiros");
 
-  const { data: member } = await supabase
-    .from("platform_members")
-    .select("role,active")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (!member?.active || member.role !== "super_admin") redirect("/dashboard");
+  const { data: isSuperAdmin } = await supabase.rpc("is_super_admin");
+  if (!isSuperAdmin) redirect("/dashboard");
   return user;
 }
 
