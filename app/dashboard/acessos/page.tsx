@@ -5,7 +5,6 @@ import { InviteForm } from "@/components/access-invite-form";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateBusinessMemberRole, removeBusinessMember } from "@/lib/businesses/access-actions";
-import { inviteBusinessMember } from "@/lib/businesses/invitation-actions";
 const roleLabels: Record<string, string> = {
   owner: "Proprietário", admin: "Administrador", operator: "Operador", member: "Membro", viewer: "Consulta",
 };
