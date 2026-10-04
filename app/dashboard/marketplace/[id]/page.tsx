@@ -35,7 +35,7 @@ export default async function ManageListingPage({ params }: { params: Promise<{ 
 
   const { data: listing } = await supabase
     .from("listings")
-    .select("id,title,description,type,price,location,business_id,status")
+    .select("id,title,description,type,price,location,business_id,category_id,status")
     .eq("id", id)
     .maybeSingle();
 
@@ -75,7 +75,7 @@ export default async function ManageListingPage({ params }: { params: Promise<{ 
             <h2>Dados da oferta</h2>
             <p>Mantenha título, descrição, preço e estado actualizados para evitar informação comercial desactualizada.</p>
           </div>
-          <ListingEditForm action={updateListing} listing={listing} businesses={businesses} />
+          <ListingEditForm action={updateListing} listing={listing} businesses={businesses} categories={(await supabase.from("business_categories").select("id,name").order("name").limit(100)).data ?? []} />
           <section className="business-form-card" style={{marginTop:18}}>
             <div className="business-form-heading" style={{marginTop:0}}>
               <span className="dashboard-kicker">Media</span>
