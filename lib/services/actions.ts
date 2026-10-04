@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { canManageBusiness, getManagedBusinessIds } from "@/lib/businesses/permissions";
 
 const schema = z.object({
   serviceId: z.string().uuid(),
@@ -32,9 +33,8 @@ export async function requestPlatformService(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Inicie sessão para solicitar este serviço." };
 
-  if (parsed.data.businessId) {
-    const { data: access } = await supabase.from("businesses").select("id").eq("id", parsed.data.businessId).eq("owner_id", user.id).maybeSingle();
-    if (!access) return { error: "Não tem autorização para solicitar o serviço em nome desta empresa." };
+  if (parsed.data.businessId && !(await canManageBusiness(supabase, user.id, parsed.data.businessId))) {
+    return { error: "Não tem autorização para solicitar o serviço em nome desta empresa." };
   }
 
   const { error } = await supabase.from("service_requests").insert({
