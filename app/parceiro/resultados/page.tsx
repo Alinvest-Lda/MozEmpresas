@@ -1,0 +1,8 @@
+export const dynamic="force-dynamic";
+import { createClient } from "@/lib/supabase/server";
+export default async function PartnerResultsPage(){
+ const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user)return null;
+ const [{data:r},{data:s},{data:o}]=await Promise.all([supabase.from("business_partner_relationships").select("id,status").eq("created_by",user.id),supabase.from("service_requests").select("id,status").eq("requester_user_id",user.id),supabase.from("opportunities").select("id").eq("status","PUBLISHED")]);
+ const active=(r??[]).filter(x=>x.status==="ACTIVE").length; const completed=(s??[]).filter(x=>x.status==="COMPLETED").length;
+ return <main className="partner-main"><div className="partner-content"><header className="partner-page-head"><span className="partner-kicker">Inteligência</span><h1>Resultados</h1><p>Leitura factual da actividade da conta, sem inventar métricas que a plataforma ainda não recolhe.</p></header><section className="partner-stats"><article><span>Relações activas</span><strong>{active}</strong><small>Registos em estado ACTIVE</small></article><article><span>Pedidos concluídos</span><strong>{completed}</strong><small>Serviços associados à conta</small></article><article><span>Oportunidades disponíveis</span><strong>{o?.length??0}</strong><small>Universo publicado</small></article><article><span>Relações totais</span><strong>{r?.length??0}</strong><small>Histórico registado</small></article></section></div></main>;
+}
