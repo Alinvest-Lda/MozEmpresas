@@ -47,6 +47,7 @@ export async function createListing(formData: FormData) {
   const description = text(formData.get("description"));
   const type = text(formData.get("type")).toUpperCase();
   const businessId = text(formData.get("business_id"));
+  const categoryId = text(formData.get("category_id")) || null;
   const location = text(formData.get("location")) || null;
   const priceRaw = text(formData.get("price"));
   const price = priceRaw ? number(priceRaw, NaN) : null;
@@ -79,6 +80,7 @@ export async function createListing(formData: FormData) {
     price,
     currency: "MZN",
     status: "PUBLISHED",
+    category_id: categoryId,
     location,
   }).select("id").single();
 
@@ -215,6 +217,7 @@ export async function updateListing(_state: { error?: string; success?: string }
   const description = text(formData.get("description"));
   const type = text(formData.get("type")).toUpperCase();
   const businessId = text(formData.get("business_id"));
+  const categoryId = text(formData.get("category_id")) || null;
   const location = text(formData.get("location")) || null;
   const priceRaw = text(formData.get("price"));
   const price = priceRaw ? number(priceRaw, NaN) : null;
@@ -247,7 +250,7 @@ export async function updateListing(_state: { error?: string; success?: string }
   const slug = `${base}-${crypto.randomUUID().slice(0, 8)}`;
 
   const { error } = await supabase.from("listings").update({
-    title, description, type, business_id: businessId, location, price, currency: "MZN", status, slug,
+    title, description, type, business_id: businessId, category_id: categoryId, location, price, currency: "MZN", status, slug,
     updated_at: new Date().toISOString(),
   }).eq("id", listingId);
 
