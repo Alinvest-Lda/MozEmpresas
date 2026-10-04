@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { canManageBusiness } from "@/lib/businesses/permissions";
 const schema = z.object({ name:z.string().trim().min(2).max(160), description:z.string().trim().max(5000).optional(), categoryId:z.string().uuid().optional().or(z.literal("")), location:z.string().trim().max(160).optional(), phone:z.string().trim().max(40).optional(), email:z.string().trim().email().optional().or(z.literal("")), website:z.string().trim().url().optional().or(z.literal("")), logoUrl:z.string().trim().url().optional().or(z.literal("")), coverUrl:z.string().trim().url().optional().or(z.literal("")), isPublic:z.enum(["true","false"]).default("true") });
 function slugify(value:string){return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,80)}
 export type BusinessState={error?:string};
@@ -25,7 +26,7 @@ export async function updateBusiness(_state:BusinessState,formData:FormData):Pro
  const {data:business,error:loadError}=await supabase.from("businesses").select("id,slug,owner_id,archived_at").eq("id",id).maybeSingle();
  if(loadError || !business)return{error:"Empresa não encontrada ou sem permissão para alterar."};
  if(business.archived_at)return{error:"Esta empresa está arquivada."};
- const canManage = business.owner_id === user.id || Boolean((await supabase.from("business_members").select("role").eq("business_id",id).eq("user_id",user.id).in("role",["owner","admin","operator"]).maybeSingle()).data);
+ const canManage = await canManageBusiness(supabase, user.id, id);
  if(!canManage)return{error:"Não tem permissão para alterar esta empresa."};
  const {error}=await supabase.from("businesses").update({name:parsed.data.name,description:parsed.data.description||null,category_id:parsed.data.categoryId||null,location:parsed.data.location||null,phone:parsed.data.phone||null,email:parsed.data.email||null,website:parsed.data.website||null,logo_url:parsed.data.logoUrl||null,cover_url:parsed.data.coverUrl||null,is_public:parsed.data.isPublic==="true",updated_at:new Date().toISOString()}).eq("id",id);
  if(error)return{error:"Não foi possível guardar as alterações."};
