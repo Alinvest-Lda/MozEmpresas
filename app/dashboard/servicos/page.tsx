@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PlatformServicesCatalog } from "@/components/platform-services-catalog";
+import { getManagedBusinessIds } from "@/lib/businesses/permissions";
 
 function orderStatus(status: string) {
   const map: Record<string, string> = {
@@ -29,6 +30,7 @@ export default async function ServicesPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const managedBusinessIds = await getManagedBusinessIds(supabase, user.id);
   const [{ data: serviceRows }, { data: orders }] = await Promise.all([
     supabase
       .from("platform_services")
@@ -36,12 +38,14 @@ export default async function ServicesPage() {
       .eq("active", true)
       .order("category")
       .order("name"),
-    supabase
-      .from("platform_service_orders")
-      .select("id,service_id,business_id,status,amount_mzn,currency,starts_at,ends_at,renewal_period,auto_renew,created_at")
-      .eq("requester_user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(8),
+    managedBusinessIds.length
+      ? supabase
+          .from("platform_service_orders")
+          .select("id,service_id,business_id,status,amount_mzn,currency,starts_at,ends_at,renewal_period,auto_renew,created_at")
+          .in("business_id", managedBusinessIds)
+          .order("created_at", { ascending: false })
+          .limit(8)
+      : Promise.resolve({ data: [] as { id: string; service_id: string; business_id: string; status: string; amount_mzn: number; currency: string; starts_at: string | null; ends_at: string | null; renewal_period: string | null; auto_renew: boolean; created_at: string }[] }),
   ]);
 
   const services = serviceRows ?? [];
