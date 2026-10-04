@@ -132,7 +132,7 @@ export default async function MarketplaceWorkspace({
   const promotedIds=[...new Set((promotedRows??[]).map(row=>row.listing_id).filter(Boolean))];
   let promotedListings: Listing[]=[];
   if(promotedIds.length){
-    const {data:promoted}=await supabase.from("listings").select("id,title,description,type,price,currency,location,business_id").eq("status","PUBLISHED").in("id",promotedIds);
+    const {data:promoted}=await supabase.from("listings").select("id,title,description,type,price,currency,location,business_id,category_id").eq("status","PUBLISHED").in("id",promotedIds);
     promotedListings=(promoted??[]).filter(item=>!businessIds.includes(item.business_id||"")) as Listing[];
   }
   const categoryNames = new Map((buyerCategories ?? []).map((item) => [item.id, item.name]));
