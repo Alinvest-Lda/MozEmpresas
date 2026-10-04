@@ -34,8 +34,7 @@ export async function updatePassword(_state: AccountState, formData: FormData): 
   return { success: "Password actualizada com sucesso." };
 }
 
-
-export async function updateAccountStatus(formData: FormData): Promise<AccountState> {
+export async function updateAccountStatus(_state: AccountState, formData: FormData): Promise<AccountState> {
   const status = String(formData.get("status") || "");
   if (!["ACTIVE", "INACTIVE", "DELETED"].includes(status)) return { error: "Estado de conta inválido." };
   const supabase = await createClient();
