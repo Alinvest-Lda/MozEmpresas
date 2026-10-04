@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./dashboard/dashboard-ux.css";
+import "./responsive-ux.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 
