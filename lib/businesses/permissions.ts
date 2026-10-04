@@ -19,7 +19,6 @@ export async function canManageBusiness(supabase: SupabaseClient, userId: string
     .is("archived_at", null)
     .maybeSingle();
   if (owned) return true;
-
   const { data: member } = await supabase
     .from("business_members")
     .select("role")
