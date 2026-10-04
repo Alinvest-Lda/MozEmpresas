@@ -349,3 +349,26 @@ export async function deleteListing(formData: FormData) {
   revalidatePath("/dashboard/marketplace");
   redirect("/dashboard/marketplace?status=updated");
 }
+
+
+export async function saveBuyerInterest(formData: FormData) {
+  const { supabase, userId } = await currentUser();
+  const businessId = text(formData.get("business_id"));
+  const categoryId = text(formData.get("category_id")) || null;
+  const location = text(formData.get("interest_location")) || null;
+  const listingType = text(formData.get("listing_type")) || null;
+  if (!businessId || (!categoryId && !location && !listingType)) return;
+  if (!(await canManageBusiness(supabase, userId, businessId))) return;
+  await supabase.from("business_buyer_interests").upsert({ business_id: businessId, category_id: categoryId, location, listing_type: listingType }, { onConflict: "business_id,category_id,location,listing_type" });
+  revalidatePath("/dashboard/marketplace");
+}
+
+export async function removeBuyerInterest(formData: FormData) {
+  const { supabase, userId } = await currentUser();
+  const id = text(formData.get("id"));
+  if (!id) return;
+  const { data: interest } = await supabase.from("business_buyer_interests").select("id,business_id").eq("id", id).maybeSingle();
+  if (!interest || !(await canManageBusiness(supabase, userId, interest.business_id))) return;
+  await supabase.from("business_buyer_interests").delete().eq("id", id);
+  revalidatePath("/dashboard/marketplace");
+}
