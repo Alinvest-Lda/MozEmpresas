@@ -1,0 +1,18 @@
+/* Responsive UX refinement — action-first hierarchy */
+.responsive-next-step{display:grid;gap:5px;margin:0 0 12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:#f7faf9}
+.responsive-next-step strong{font-size:15px}
+.responsive-next-step>span:last-child{font-size:12px;color:var(--muted);line-height:1.45}
+.responsive-form-card{display:grid;gap:16px}
+.responsive-state-block{margin-bottom:16px}
+.responsive-priority .dashboard-action-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.opportunity-mobile-cta{display:none}
+@media (min-width:769px) and (max-width:1100px){.responsive-priority .dashboard-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:768px){
+.responsive-priority .dashboard-action-grid{grid-template-columns:1fr;gap:9px}.responsive-priority .dashboard-action-card{min-height:62px;padding:13px 14px}.responsive-priority .dashboard-action-card small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.responsive-form-card{padding:14px!important}.responsive-form-card .field input,.responsive-form-card .field select,.responsive-form-card .field textarea{min-height:44px}.responsive-form-card .btn{width:100%;min-height:44px}.responsive-next-step{padding:13px 14px}
+.responsive-state-block{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+.access-table-wrap{overflow:visible}.access-table{display:block}.access-table thead{display:none}.access-table tbody{display:grid;gap:9px}.access-table tr{display:grid;grid-template-columns:1fr;gap:10px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#fff}.access-table td{display:block;padding:0!important;border:0!important}.access-table td:nth-child(2)::before{content:"Empresa";display:block;font-size:10px;color:var(--muted);margin-bottom:3px}.access-table td:nth-child(3)::before{content:"Função";display:block;font-size:10px;color:var(--muted);margin-bottom:3px}.access-table td:nth-child(4)::before{content:"Acções";display:block;font-size:10px;color:var(--muted);margin-bottom:5px}.access-role-form{display:grid;grid-template-columns:1fr;gap:8px}.access-role-form select,.access-role-form .btn{width:100%;min-height:44px}
+.opportunity-card{padding:16px!important}.opportunity-card p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.opportunity-result-bottom{display:grid!important;grid-template-columns:1fr!important;gap:7px!important}.opportunity-mobile-cta{display:block;font-weight:800;order:-1}
+.responsive-meta{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important}.responsive-meta span{padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:#f7faf9}.contest-card{grid-template-columns:1fr!important;padding:16px!important;gap:9px!important}.contest-card-index,.contest-type-icon{display:none!important}.contest-result-bottom{align-items:flex-start!important;gap:5px!important}
+}
+@media (max-width:600px){.responsive-priority .dashboard-action-icon{display:none}.responsive-state-block{grid-template-columns:1fr!important}.finance-row{display:grid!important;grid-template-columns:1fr;gap:7px}.finance-row>div:last-child{display:flex;justify-content:space-between;gap:8px}.finance-two-col{grid-template-columns:1fr!important}.responsive-next{margin-top:14px!important}}
