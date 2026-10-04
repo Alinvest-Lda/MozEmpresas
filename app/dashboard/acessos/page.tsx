@@ -60,7 +60,7 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
             <div><span className="dashboard-kicker">Adicionar pessoa</span><h2>Convidar para a equipa</h2><p>O convite fica associado à empresa e à função escolhida.</p></div>
           </div>
           {businesses?.length ? (
-            <form action={async (formData) => { await inviteBusinessMember(formData); }} className="access-invite-form">
+            <form action={async (formData) => { "use server"; await inviteBusinessMember(formData); }} className="access-invite-form">
               <label><span>Empresa</span><select name="businessId" required>{businesses.map((business) => <option key={business.id} value={business.id}>{business.name}</option>)}</select></label>
               <label><span>Email</span><input name="email" type="email" placeholder="email@empresa.co.mz" required /></label>
               <label><span>Função</span><select name="role" defaultValue="operator"><option value="admin">Administrador</option><option value="operator">Operador</option><option value="member">Membro</option><option value="viewer">Consulta</option></select></label>
