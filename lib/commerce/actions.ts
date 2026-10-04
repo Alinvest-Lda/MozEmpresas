@@ -3,7 +3,6 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { canManageBusiness } from "@/lib/businesses/permissions";
 
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -20,26 +19,6 @@ async function currentUser() {
   const userId = claims?.claims?.sub;
   if (!userId) redirect("/login?next=/dashboard/marketplace");
   return { supabase, userId };
-}
-
-async function canManageBusiness(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, businessId: string) {
-  const { data } = await supabase
-    .from("businesses")
-    .select("id")
-    .eq("id", businessId)
-    .or(`owner_id.eq.${userId}`)
-    .maybeSingle();
-  if (data) return true;
-
-  const { data: member } = await supabase
-    .from("business_members")
-    .select("role")
-    .eq("business_id", businessId)
-    .eq("user_id", userId)
-    .in("role", ["owner", "admin", "operator"])
-    .maybeSingle();
-
-  return Boolean(member);
 }
 
 export async function createListing(formData: FormData) {
