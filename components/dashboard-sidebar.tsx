@@ -19,8 +19,7 @@ export async function DashboardSidebar() {
       <div className="dashboard-brand"><small>Área empresarial</small><strong>MozEmpresas</strong></div>
       <DashboardSidebarNav platformAccess={platformAccess} unreadNotifications={unreadNotifications ?? 0} />
       <div className="dashboard-user">
-        <strong>Conta activa</strong>
-        <Link className="dashboard-account-link" href="/dashboard/conta">Gerir conta</Link>
+        <Link className="dashboard-account-link" href="/dashboard/conta">A minha conta</Link>
         <form action={signOut} className="dashboard-signout-form"><button className="btn header-signout full" type="submit">Sair</button></form>
       </div>
     </aside>
