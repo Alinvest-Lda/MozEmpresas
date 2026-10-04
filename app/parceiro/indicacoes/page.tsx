@@ -1,0 +1,7 @@
+export const dynamic="force-dynamic";
+import { createClient } from "@/lib/supabase/server";
+export default async function PartnerReferralsPage(){
+ const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user)return null;
+ const {data}=await supabase.from("recommendation_events").select("id,event_type,business_id,listing_id,metadata,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(50);
+ return <main className="partner-main"><div className="partner-content"><header className="partner-page-head"><span className="partner-kicker">Rede</span><h1>Indicações e recomendações</h1><p>Histórico de sinais e recomendações associados à actividade desta conta.</p></header><section className="partner-section">{data?.length?<div className="partner-table">{data.map(x=><article key={x.id}><div><strong>{x.event_type}</strong><small>{new Date(x.created_at).toLocaleDateString("pt-MZ")}</small></div><span>{x.business_id||x.listing_id||"Sinal sem entidade associada"}</span></article>)}</div>:<div className="partner-empty"><strong>Ainda não há indicações registadas.</strong><p>Quando a actividade gerar sinais de recomendação, eles serão apresentados aqui.</p></div>}</section></div></main>;
+}
