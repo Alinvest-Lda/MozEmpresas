@@ -2587,3 +2587,27 @@ button,input,select,textarea{font-size:16px}
   .header-search-link span{display:none}
   .header-search-link{padding:8px 9px}
 }
+
+/* Header mobile: keep search and menu as independent, non-overlapping controls. */
+@media (max-width: 850px){
+  .topbar-inner{min-width:0;gap:8px}
+  .brand{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .header-actions{flex:0 0 auto;margin-left:auto;gap:6px;min-width:0}
+  .header-search-link,.mobile-menu,.mobile-menu-trigger{flex:0 0 auto}
+  .header-search-link{white-space:nowrap}
+  .mobile-menu{margin-left:0!important}
+}
+@media (max-width: 600px){
+  .topbar-inner{gap:6px}
+  .brand{font-size:19px}
+  .header-actions{gap:5px}
+  .header-search-link{width:38px;height:40px;padding:8px!important;justify-content:center}
+  .mobile-menu-trigger{min-width:58px;padding:8px 10px}
+}
+@media (max-width: 360px){
+  .container{width:calc(100% - 20px)}
+  .brand{font-size:18px}
+  .header-actions{gap:4px}
+  .header-search-link{width:36px}
+  .mobile-menu-trigger{min-width:54px;padding-inline:8px}
+}
