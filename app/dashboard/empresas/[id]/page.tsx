@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { deleteBusiness, updateBusiness } from "@/lib/businesses/actions";
+import { deleteBusinessAction, updateBusiness } from "@/lib/businesses/actions";
 import { BusinessEditForm } from "@/components/business-edit-form";
 export default async function ManageBusinessPage({ params }: { params: Promise<{ id:string }> }) {
   const { id } = await params;
@@ -44,7 +44,7 @@ export default async function ManageBusinessPage({ params }: { params: Promise<{
           </div>
           <BusinessEditForm action={updateBusiness} business={business} categories={categories ?? []} portfolio={portfolio ?? []} />
           {business.owner_id === user.id && (
-            <form action={deleteBusiness} className="business-danger-zone" onSubmit={(event) => { if (!window.confirm("Eliminar esta empresa? Esta acção não pode ser desfeita.")) event.preventDefault(); }}>
+            <form action={deleteBusinessAction} className="business-danger-zone" onSubmit={(event) => { if (!window.confirm("Eliminar esta empresa? Esta acção não pode ser desfeita.")) event.preventDefault(); }}>
               <input type="hidden" name="businessId" value={business.id} />
               <div><span className="dashboard-kicker">Zona de risco</span><h3>Eliminar empresa</h3><p>Remove o perfil empresarial e os dados dependentes, quando as regras da base de dados permitirem.</p></div>
               <button className="btn" type="submit">Eliminar empresa</button>
