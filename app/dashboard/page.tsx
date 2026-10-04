@@ -11,7 +11,7 @@ const workActions = [
 ];
 
 const quickLinks = [
-  ["/dashboard/parceiros", "Parceiros", "Criar e acompanhar relações empresariais"],
+  ["/oportunidades", "Oportunidades", "Descobrir chamadas, parcerias e processos relevantes"],
   ["/dashboard/acessos", "Acessos e equipa", "Definir quem pode actuar pela empresa"],
   ["/dashboard/servicos", "Serviços MozEmpresas", "Contratar apoio e serviços da plataforma"],
   ["/empresas", "Directório", "Pesquisar empresas e potenciais parceiros"],
