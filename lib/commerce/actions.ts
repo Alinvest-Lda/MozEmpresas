@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { canManageBusiness } from "@/lib/businesses/permissions";
 
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -119,44 +120,14 @@ export async function createOrder(formData: FormData) {
   if (!listing || listing.owner_id === userId) redirect("/dashboard/marketplace?request=error");
   if (buyerBusinessId && !(await canManageBusiness(supabase, userId, buyerBusinessId))) redirect("/dashboard/marketplace?request=forbidden");
 
-  const { data: order, error: orderError } = await supabase.from("commerce_orders").insert({
-    buyer_user_id: userId,
-    buyer_business_id: buyerBusinessId,
-    status: "INTERESTED",
-    currency: listing.currency || "MZN",
-    subtotal: listing.price ?? 0,
-    total: listing.price ?? 0,
-    notes,
-  }).select("id").single();
-
-  if (orderError || !order) redirect("/dashboard/marketplace?request=error");
-
-  const { error: itemError } = await supabase.from("commerce_order_items").insert({
-    order_id: order.id,
-    listing_id: listing.id,
-    seller_business_id: listing.business_id,
-    title: listing.title,
-    type: listing.type,
-    quantity,
-    unit_price: listing.price,
-    currency: listing.currency || "MZN",
-    line_total: listing.price === null ? 0 : Number(listing.price) * quantity,
-    metadata: { transaction_mode: "OFFLINE", quantity_requested: quantity },
+  const { data: orderId, error: orderError } = await supabase.rpc("create_commerce_order", {
+    p_listing_id: listing.id,
+    p_buyer_business_id: buyerBusinessId,
+    p_quantity: quantity,
+    p_notes: notes,
   });
-
-  if (itemError) {
-    await supabase.from("commerce_orders").update({ status: "CANCELLED" }).eq("id", order.id);
-    redirect("/dashboard/marketplace?request=error");
-  }
-
-  await supabase.from("commerce_order_events").insert({
-    order_id: order.id,
-    actor_user_id: userId,
-    to_status: "INTERESTED",
-    note: "Interesse comercial registado. A negociação e qualquer compra decorrem fora da plataforma.",
-  });
-
-  redirect("/dashboard/marketplace?request=" + order.id);
+  if (orderError || !orderId) redirect("/dashboard/marketplace?request=error");
+  redirect("/dashboard/marketplace?request=" + orderId);
 }
 
 export async function updateOrderStatus(formData: FormData) {
@@ -230,14 +201,13 @@ export async function updateOrderProgress(formData: FormData) {
   if (!current) redirect("/dashboard/marketplace?status=error");
   if (paymentStatus === "PAID" && current.status !== "AGREED" && current.status !== "COMPLETED") redirect("/dashboard/marketplace?status=invalid-transition");
 
-  const now = new Date().toISOString();
-  const update: Record<string, string | null> = { payment_status: paymentStatus, fulfillment_status: fulfillmentStatus, payment_reference: paymentReference };
-  if (paymentStatus === "PAID") update.paid_at = now;
-  if (fulfillmentStatus === "IN_PROGRESS") update.service_started_at = now;
-  if (fulfillmentStatus === "COMPLETED") update.completed_at = now;
-  const { error } = await supabase.from("commerce_orders").update(update).eq("id", orderId);
+  const { error } = await supabase.rpc("update_commerce_order_progress", {
+    p_order_id: orderId,
+    p_payment_status: paymentStatus,
+    p_fulfillment_status: fulfillmentStatus,
+    p_payment_reference: paymentReference,
+  });
   if (error) redirect("/dashboard/marketplace?status=error");
-  await supabase.from("commerce_order_events").insert({ order_id: orderId, actor_user_id: userId, from_status: current.status, to_status: current.status, note: "Progresso comercial actualizado: pagamento " + paymentStatus + "; execução " + fulfillmentStatus + (paymentReference ? "; referência " + paymentReference : "") });
   revalidatePath("/dashboard/marketplace");
   redirect("/dashboard/marketplace?status=updated");
 }
