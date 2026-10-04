@@ -1,0 +1,7 @@
+export const dynamic="force-dynamic";
+import { createClient } from "@/lib/supabase/server";
+export default async function PartnerCompaniesPage(){
+ const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user)return null;
+ const {data:rows}=await supabase.from("business_partner_relationships").select("id,business_id,partner_business_id,status,relationship_type,notes,created_at").eq("created_by",user.id).order("created_at",{ascending:false});
+ return <main className="partner-main"><div className="partner-content"><header className="partner-page-head"><span className="partner-kicker">Empresas</span><h1>Empresas e relações</h1><p>Centralize as relações que gere no ecossistema. Os dados só aparecem quando existe uma relação registada.</p></header><section className="partner-section">{rows?.length?<div className="partner-table">{rows.map(x=><article key={x.id}><div><strong>Relação {x.relationship_type}</strong><small>{x.status} · criada {new Date(x.created_at).toLocaleDateString("pt-MZ")}</small></div><span>{x.notes||"Sem notas registadas"}</span></article>)}</div>:<div className="partner-empty"><strong>Ainda não existem relações associadas.</strong><p>Quando uma relação de parceria for registada para esta conta, ela aparecerá aqui com o respectivo estado.</p></div>}</section></div></main>;
+}
