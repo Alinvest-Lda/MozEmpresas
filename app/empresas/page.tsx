@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
 
-type Business = {
+type BusinessRecord = {
   id: string;
   name: string;
   slug: string;
@@ -11,7 +11,11 @@ type Business = {
   logo_url: string | null;
   cover_url: string | null;
   category_id: string | null;
-  portfolio: { image_url:string; title:string|null }[];
+  owner_id: string | null;
+};
+
+type Business = BusinessRecord & {
+  portfolio: { image_url: string; title: string | null }[];
 };
 
 type Category = {
@@ -132,14 +136,16 @@ export default async function Empresas({
     }
 
     const result = await query;
-    data = (result.data ?? []) as Business[];
+    const records = (result.data ?? []) as BusinessRecord[];
     error = error || Boolean(result.error);
-    if (data.length) {
-      const ids=data.map((item)=>item.id);
+    if (records.length) {
+      const ids=records.map((item)=>item.id);
       const {data:media}=await supabase.from("business_portfolio_media").select("business_id,image_url,title,sort_order").in("business_id",ids).order("sort_order");
       const byBusiness=new Map<string,{image_url:string;title:string|null}[]>();
       (media??[]).forEach((item)=>{const list=byBusiness.get(item.business_id)??[]; if(list.length<5) list.push({image_url:item.image_url,title:item.title}); byBusiness.set(item.business_id,list);});
-      data=data.map((item)=>({...item,portfolio:byBusiness.get(item.id)??[]}));
+      data=records.map((item)=>({...item,portfolio:byBusiness.get(item.id)??[]}));
+    } else {
+      data = [];
     }
   } catch {
     error = true;
