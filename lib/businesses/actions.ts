@@ -44,6 +44,10 @@ export async function updateBusiness(_state:BusinessState,formData:FormData):Pro
 }
 
 
+export async function deleteBusinessAction(formData:FormData):Promise<void>{
+ await deleteBusiness({},formData);
+}
+
 export async function deleteBusiness(_state:BusinessState,formData:FormData):Promise<BusinessState>{
  const id=String(formData.get("businessId")||"");
  if(!id)return{error:"Empresa inválida."};
