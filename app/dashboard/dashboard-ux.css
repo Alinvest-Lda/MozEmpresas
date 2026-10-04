@@ -249,3 +249,372 @@
 @media (min-width:769px) and (max-width:1024px){.dashboard-sidebar{width:210px}.dashboard-main{margin-left:210px}.dashboard-content{padding:22px}.commerce-hub .commerce-kpis{grid-template-columns:repeat(2,1fr)}.commerce-hub .commerce-grid,.commerce-hub .commerce-split{grid-template-columns:1fr}.service-catalog-row{grid-template-columns:35px minmax(0,1fr) 180px}.service-catalog-action{grid-column:2/4;justify-self:start}.access-table-wrap{overflow-x:auto}.access-table{min-width:760px}}
 @media (min-width:481px) and (max-width:768px){.dashboard-sidebar{width:100%;position:relative}.dashboard-main{margin-left:0}.dashboard-content{padding:18px 16px}.dashboard-nav-group{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.dashboard-nav-group>span{grid-column:1/-1}.commerce-hub .commerce-nav{overflow-x:auto}.commerce-hub .commerce-nav a{white-space:nowrap}.account-status-actions{align-items:flex-start;flex-direction:column}.support-message{max-width:92%}}
 @media (max-width:480px){.dashboard-content{padding:14px 12px}.dashboard-topbar h1,.commerce-hub .commerce-hero h1{font-size:30px}.dashboard-nav-group{grid-template-columns:1fr}.commerce-hub .commerce-panel{padding:16px}.commerce-hub .commerce-offer{grid-template-columns:1fr}.commerce-hub .commerce-offer-art{min-height:150px}.commerce-hub .commerce-offer-bottom,.support-reply{grid-template-columns:1fr;display:grid}.account-status-buttons,.account-status-buttons form,.account-status-buttons .btn{width:100%}.credit-package-option{min-height:140px}.credit-upload-zone{padding:12px}.service-catalog-row{display:grid;grid-template-columns:1fr;gap:9px}.service-catalog-index{display:none}.service-catalog-action{justify-self:stretch;text-align:center}.support-ticket-head{align-items:flex-start;flex-direction:column}}
+
+
+/* =========================================================
+   Dashboard Responsive System v2
+   Single authoritative layout contract for cards and forms.
+   ========================================================= */
+.dashboard-main,
+.dashboard-content,
+.dashboard-card,
+.dashboard-panel,
+.account-panel,
+.support-ticket,
+.service-info-section,
+.service-request-panel,
+.credit-purchase-panel,
+.credit-purchase-checkout,
+.commerce-panel,
+.commerce-offer,
+.commerce-list-row,
+.dashboard-topbar,
+.account-hero,
+.finance-hero,
+.services-page-hero{min-width:0;max-width:100%;}
+
+.dashboard-content{width:100%;margin:0 auto;padding-inline:clamp(12px,2.4vw,32px);}
+
+.dashboard-card-grid,
+.dashboard-grid,
+.dashboard-stats,
+.dashboard-stat-grid,
+.finance-metrics{
+  display:grid;
+  gap:16px;
+  min-width:0;
+}
+
+.dashboard-card-grid>*,
+.dashboard-grid>*,
+.dashboard-stats>*,
+.dashboard-stat-grid>*,
+.finance-metrics>*{min-width:0;max-width:100%;}
+
+.dashboard-card,
+.dashboard-panel,
+.account-panel,
+.support-ticket,
+.credit-purchase-panel,
+.credit-purchase-checkout,
+.commerce-panel{
+  overflow:hidden;
+  overflow-wrap:anywhere;
+}
+
+.dashboard-card h1,.dashboard-card h2,.dashboard-card h3,
+.dashboard-panel h1,.dashboard-panel h2,.dashboard-panel h3,
+.account-panel h1,.account-panel h2,.account-panel h3,
+.commerce-panel h1,.commerce-panel h2,.commerce-panel h3{
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+
+.dashboard-actions,
+.account-status-buttons,
+.service-detail-hero-actions,
+.notification-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  min-width:0;
+}
+
+.dashboard-actions .btn,
+.account-status-buttons .btn,
+.service-detail-hero-actions .btn{
+  min-width:0;
+  max-width:100%;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+
+.dashboard-form-grid,
+.publication-form-grid,
+.commerce-form-grid{
+  min-width:0;
+}
+
+.dashboard-form-grid>*,
+.publication-form-grid>*,
+.commerce-form-grid>*{min-width:0;}
+
+.dashboard-form-grid input,
+.dashboard-form-grid select,
+.dashboard-form-grid textarea,
+.publication-form-grid input,
+.publication-form-grid select,
+.publication-form-grid textarea,
+.commerce-form-grid input,
+.commerce-form-grid select,
+.commerce-form-grid textarea{
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+
+.dashboard-form-grid textarea,
+.publication-form-grid textarea,
+.commerce-form-grid textarea{overflow:auto;overflow-wrap:anywhere;}
+
+.dashboard-table-responsive,
+.access-table-wrap,
+.table-wrap{
+  width:100%;
+  min-width:0;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+.access-table,
+.dashboard-table,
+.table-wrap table{
+  width:100%;
+  max-width:100%;
+  border-collapse:collapse;
+}
+
+.commerce-hub .commerce-offer{
+  min-width:0;
+  min-height:0;
+  grid-template-columns:minmax(92px,110px) minmax(0,1fr);
+}
+
+.commerce-hub .commerce-offer-art{
+  min-width:0;
+  min-height:170px;
+  aspect-ratio:4 / 5;
+}
+
+.commerce-hub .commerce-offer-body{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+
+.commerce-hub .commerce-offer h3,
+.commerce-hub .commerce-offer p{
+  overflow-wrap:anywhere;
+}
+
+.commerce-hub .commerce-offer-bottom{
+  margin-top:auto;
+  flex-wrap:wrap;
+}
+
+.commerce-hub .commerce-list-row{
+  min-width:0;
+  flex-wrap:wrap;
+}
+
+.commerce-hub .commerce-list-main{
+  min-width:180px;
+}
+
+.commerce-hub .commerce-list-row>form{
+  min-width:0;
+  max-width:100%;
+  flex-wrap:wrap;
+}
+
+.buyer-interest-box{
+  min-width:0;
+  margin-bottom:18px;
+  padding:16px;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  background:#fafbfc;
+}
+
+.buyer-interest-list{display:grid;gap:8px;margin-top:14px;min-width:0;}
+.buyer-interest-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-width:0;
+  padding:9px 10px;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  background:#fff;
+}
+.buyer-interest-item>span{min-width:0;overflow-wrap:anywhere;}
+.buyer-interest-item form{flex:0 0 auto;}
+
+.support-message{min-width:0;overflow-wrap:anywhere;}
+.support-reply{min-width:0;}
+.support-reply input{min-width:0;max-width:100%;}
+.notification-actions>*{min-width:0;max-width:100%;}
+
+.credit-upload-zone{
+  min-width:0;
+  width:100%;
+  overflow:hidden;
+}
+.credit-upload-zone input[type="file"]{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  overflow:hidden;
+}
+
+.finance-metrics>*{min-width:0;}
+.finance-metrics strong{
+  min-width:0;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+.service-catalog-row{
+  min-width:0;
+  max-width:100%;
+}
+.service-catalog-row>*{min-width:0;max-width:100%;}
+.service-catalog-action{min-width:0;max-width:100%;}
+
+.dashboard-status,
+.status-badge,
+.notification-type,
+.commerce-status,
+.account-status-badge{
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+
+/* Desktop: generous cards without excessive stretching */
+@media (min-width:1440px){
+  .dashboard-sidebar{width:270px!important;}
+  .dashboard-main{margin-left:270px!important;padding:36px 42px 64px!important;}
+  .dashboard-content{max-width:1440px!important;padding-inline:0;}
+  .dashboard-grid,.dashboard-stats,.dashboard-stat-grid,.finance-metrics{grid-template-columns:repeat(4,minmax(0,1fr));}
+  .commerce-hub .commerce-grid{grid-template-columns:minmax(0,1.4fr) minmax(320px,.8fr);}
+  .commerce-hub .commerce-offer-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+
+/* Large desktop */
+@media (min-width:1200px) and (max-width:1439px){
+  .dashboard-sidebar{width:250px!important;}
+  .dashboard-main{margin-left:250px!important;padding:32px 32px 58px!important;}
+  .dashboard-content{max-width:1320px!important;padding-inline:0;}
+  .dashboard-grid,.dashboard-stats,.dashboard-stat-grid,.finance-metrics{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .commerce-hub .commerce-offer-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+
+/* Standard desktop / small laptop */
+@media (min-width:1024px) and (max-width:1199px){
+  .dashboard-sidebar{width:230px!important;}
+  .dashboard-main{margin-left:230px!important;padding:28px 24px 52px!important;}
+  .dashboard-content{max-width:none!important;padding-inline:0;}
+  .dashboard-grid,.dashboard-stats,.dashboard-stat-grid,.finance-metrics{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .commerce-hub .commerce-grid,.commerce-hub .commerce-split{grid-template-columns:1fr;}
+  .commerce-hub .commerce-offer-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .service-catalog-row{grid-template-columns:34px minmax(0,1fr) 170px!important;}
+}
+
+/* Tablet landscape: sidebar remains complete, content becomes single-column where needed */
+@media (min-width:768px) and (max-width:1023px){
+  .dashboard-sidebar{width:220px!important;position:fixed!important;left:0!important;top:64px!important;height:calc(100vh - 64px)!important;overflow-y:auto!important;overflow-x:hidden!important;}
+  .dashboard-main{margin-left:220px!important;padding:24px 18px 48px!important;}
+  .dashboard-content{max-width:none!important;padding-inline:0;}
+  .dashboard-grid,.dashboard-stats,.dashboard-stat-grid,.finance-metrics{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .commerce-hub .commerce-grid,.commerce-hub .commerce-split{grid-template-columns:1fr;}
+  .commerce-hub .commerce-offer-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .commerce-hub .commerce-panel{padding:20px;}
+  .service-catalog-row{grid-template-columns:32px minmax(0,1fr) 165px!important;}
+  .service-catalog-action{grid-column:2/4!important;justify-self:start!important;}
+  .dashboard-nav-group{display:flex!important;flex-direction:column!important;align-items:stretch!important;}
+  .dashboard-nav-group>span{display:block!important;}
+  .dashboard-nav-link{width:100%!important;white-space:normal!important;}
+  .access-table-wrap{overflow-x:auto;}
+  .access-table{min-width:680px;}
+}
+
+/* Tablet portrait: preserve structure, avoid squeezed columns */
+@media (min-width:600px) and (max-width:767px){
+  .dashboard-sidebar{
+    position:relative!important;
+    top:auto!important;
+    left:auto!important;
+    width:100%!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    border-right:0!important;
+    border-bottom:1px solid var(--line)!important;
+  }
+  .dashboard-main{margin-left:0!important;padding:20px 14px 42px!important;}
+  .dashboard-content{padding-inline:0;}
+  .dashboard-grid,.dashboard-stats,.dashboard-stat-grid,.finance-metrics{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .dashboard-nav-group{display:flex!important;flex-direction:column!important;align-items:stretch!important;}
+  .dashboard-nav-group>span{display:block!important;}
+  .dashboard-nav-link{width:100%!important;white-space:normal!important;}
+  .dashboard-topbar,.account-hero,.finance-hero,.services-page-hero{align-items:flex-start!important;flex-direction:column!important;}
+  .account-layout,.commerce-hub .commerce-grid,.commerce-hub .commerce-split,.service-detail-grid,.service-detail-hero{grid-template-columns:1fr!important;}
+  .dashboard-actions,.account-status-buttons{width:100%!important;}
+  .service-catalog-row{grid-template-columns:30px minmax(0,1fr)!important;}
+  .service-catalog-action{grid-column:2!important;grid-row:auto!important;justify-self:start!important;}
+  .commerce-hub .commerce-offer-grid{grid-template-columns:1fr!important;}
+  .commerce-hub .commerce-offer{grid-template-columns:105px minmax(0,1fr)!important;}
+}
+
+/* Mobile: one column, no horizontal deformation */
+@media (max-width:599px){
+  .dashboard-sidebar{
+    position:sticky!important;
+    left:auto!important;
+    top:60px!important;
+    width:100%!important;
+    height:auto!important;
+    max-height:none!important;
+    padding:8px 10px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    border-right:0!important;
+    border-bottom:1px solid var(--line)!important;
+  }
+  .dashboard-main{margin-left:0!important;padding:16px 12px 38px!important;}
+  .dashboard-content{padding-inline:0;}
+  .dashboard-grid,.dashboard-stats,.dashboard-stat-grid,.finance-metrics{grid-template-columns:1fr!important;}
+  .dashboard-topbar,.account-hero,.finance-hero,.services-page-hero,.account-status-actions,.service-detail-bottom{align-items:stretch!important;flex-direction:column!important;}
+  .account-layout,.commerce-hub .commerce-grid,.commerce-hub .commerce-split,.service-detail-grid,.service-detail-hero{grid-template-columns:1fr!important;}
+  .dashboard-card,.dashboard-panel,.account-panel,.support-ticket,.credit-purchase-panel,.credit-purchase-checkout,.service-info-section,.service-request-panel,.commerce-panel{padding:16px!important;}
+  .dashboard-actions,.dashboard-actions .btn,.account-status-buttons,.account-status-buttons .btn,.service-detail-hero-actions,.service-detail-hero-actions .btn{width:100%!important;}
+  .account-status-buttons,.dashboard-actions{display:grid!important;grid-template-columns:1fr!important;}
+  .credit-package-grid,.credit-checkout-fields,.publication-form-grid,.dashboard-form-grid,.commerce-form-grid{grid-template-columns:1fr!important;}
+  .commerce-hub .commerce-offer-grid{grid-template-columns:1fr!important;}
+  .commerce-hub .commerce-offer{grid-template-columns:1fr!important;}
+  .commerce-hub .commerce-offer-art{min-height:170px;aspect-ratio:16/9;}
+  .commerce-hub .commerce-offer-bottom{align-items:stretch;flex-direction:column;}
+  .commerce-hub .commerce-offer-bottom>*{width:100%;}
+  .commerce-hub .commerce-list-row{display:grid!important;grid-template-columns:1fr!important;gap:9px!important;}
+  .commerce-hub .commerce-list-main{min-width:0!important;}
+  .commerce-hub .commerce-list-row>form{display:grid!important;grid-template-columns:1fr!important;width:100%!important;}
+  .commerce-hub .commerce-list-row>form select,
+  .commerce-hub .commerce-list-row>form .btn{width:100%!important;}
+  .buyer-interest-item{align-items:flex-start;flex-direction:column;}
+  .buyer-interest-item form,.buyer-interest-item .text-link{width:100%;}
+  .service-catalog-row{display:grid!important;grid-template-columns:1fr!important;gap:9px!important;}
+  .service-catalog-index{display:none!important;}
+  .service-catalog-action{grid-column:auto!important;justify-self:stretch!important;text-align:center!important;}
+  .support-ticket-head,.support-reply,.credit-checkout-action{display:grid!important;grid-template-columns:1fr!important;align-items:stretch!important;}
+  .support-message{max-width:94%!important;}
+  .access-table-wrap{overflow:visible!important;}
+  .access-table{display:block!important;min-width:0!important;overflow:visible!important;}
+  .access-table thead{display:none!important;}
+  .access-table tbody,.access-table tr,.access-table td{display:block!important;width:100%!important;}
+  .access-table tr{padding:12px 0;border-bottom:1px solid var(--line);}
+  .access-table td{padding:4px 0!important;}
+}
+
+/* Narrow phones: protect controls from edge-to-edge overflow */
+@media (max-width:389px){
+  .dashboard-main{padding-inline:10px!important;}
+  .dashboard-card,.dashboard-panel,.account-panel,.support-ticket,.credit-purchase-panel,.credit-purchase-checkout,.service-info-section,.service-request-panel,.commerce-panel{padding:14px!important;}
+  .commerce-hub .commerce-panel-head{display:block!important;}
+  .commerce-hub .commerce-panel-head .commerce-link{display:inline-block;margin-top:9px;}
+  .commerce-hub .commerce-form-grid{gap:10px!important;}
+  .commerce-hub .commerce-form-grid label{font-size:11px!important;}
+  .btn{max-width:100%;overflow-wrap:anywhere;}
+}
