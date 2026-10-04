@@ -60,7 +60,9 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
           <div className="dashboard-section-head">
             <div><span className="dashboard-kicker">Adicionar pessoa</span><h2>Convidar para a equipa</h2><p>O convite fica associado à empresa e à função escolhida.</p></div>
           </div>
-          {ownedBusinesses?.length ? (\n            <InviteForm businesses={ownedBusinesses} />\n                    ) : (
+          {ownedBusinesses?.length ? (
+            <InviteForm businesses={ownedBusinesses} />
+                    ) : (
             <div className="empty"><p>Crie primeiro uma empresa para poder convidar a equipa.</p><Link href="/dashboard/empresas" className="btn primary">Criar empresa</Link></div>
           )}
         </section>}
