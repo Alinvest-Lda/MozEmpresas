@@ -1,0 +1,7 @@
+export const dynamic="force-dynamic";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+export default async function PartnerOpportunitiesPage(){
+ const supabase=await createClient(); const {data}=await supabase.from("opportunities").select("id,title,slug,type,description,organization,location,closes_at").eq("status","PUBLISHED").order("closes_at",{ascending:true,nullsFirst:false}).limit(50);
+ return <main className="partner-main"><div className="partner-content"><header className="partner-page-head"><span className="partner-kicker">Mercado</span><h1>Oportunidades</h1><p>Descubra oportunidades onde a sua rede, capacidade ou relação com empresas pode gerar valor.</p></header><section className="partner-section"><div className="partner-opportunity-list">{(data??[]).map(x=><Link href={"/oportunidades/"+x.slug} key={x.id}><div><span>{x.type}</span><strong>{x.title}</strong><small>{x.organization||"Organização não indicada"} · {x.location||"Localização não indicada"}</small></div><b>Ver →</b></Link>)}{!data?.length&&<div className="partner-empty"><strong>Sem oportunidades neste momento.</strong><p>Novas oportunidades publicadas na plataforma aparecerão aqui.</p></div>}</div></section></div></main>;
+}
