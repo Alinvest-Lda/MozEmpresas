@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { createPartnerAccess } from "@/lib/auth/partner-access";
+import { createPartnerAccess, requireSuperAdmin } from "@/lib/auth/partner-access";
 
 export const dynamic = "force-dynamic";
 
 export default async function PartnerAccessAdmin({ searchParams }: { searchParams: Promise<{ created?: string; access?: string }> }) {
+  await requireSuperAdmin();
   const params = await searchParams;
   return (
     <main className="dashboard-main">
