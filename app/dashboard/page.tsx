@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 const workActions = [
   { href: "/dashboard/marketplace", title: "Comprar e vender", text: "Encontre ofertas, publique o que a sua empresa disponibiliza e desenvolva negócio.", icon: "↗" },
   { href: "/dashboard/empresas", title: "Gerir empresa", text: "Actualize a presença, contactos e informação pública da sua empresa.", icon: "□" },
-  { href: "/dashboard/oportunidades", title: "Encontrar oportunidades", text: "Acompanhe oportunidades e responda às que fazem sentido para a sua actividade.", icon: "⌘" },
-  { href: "/dashboard/concursos", title: "Concursos", text: "Consulte concursos, acompanhe candidaturas e participe nos processos em que a sua empresa tem interesse.", icon: "◈" },
+  { href: "/oportunidades", title: "Encontrar oportunidades", text: "Acompanhe oportunidades e responda às que fazem sentido para a sua actividade.", icon: "⌘" },
+  { href: "/concursos", title: "Concursos", text: "Consulte concursos abertos e veja os processos relevantes para a sua empresa.", icon: "◈" },
 ];
 
 const quickLinks = [
