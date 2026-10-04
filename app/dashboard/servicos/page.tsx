@@ -70,7 +70,7 @@ export default async function ServicesPage() {
           </div>
         </header>
 
-        <section className="services-primary-action"><div><span className="dashboard-kicker">Próxima acção</span><h2>Escolha o apoio que precisa de executar agora.</h2><p>Veja primeiro os serviços disponíveis; o acompanhamento das contratações fica logo abaixo.</p></div></section><div className="services-catalog-surface"><PlatformServicesCatalog services={services} /></div>
+        <section className="services-primary-action"><div><span className="dashboard-kicker">Próxima acção</span><h2>Escolha o apoio que precisa de executar agora.</h2><p>Veja primeiro os serviços disponíveis; o acompanhamento das contratações fica logo abaixo.</p></div></section><div className="services-catalog-surface"><div className="responsive-next-step"><span className="dashboard-kicker">Próxima acção</span><strong>Escolha o apoio que precisa de executar agora.</strong><span>O acompanhamento das contratações fica logo abaixo.</span></div><PlatformServicesCatalog services={services} /></div>
 
         <section className="dashboard-section service-orders">
           <div className="dashboard-section-head">
