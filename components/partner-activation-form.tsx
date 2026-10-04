@@ -1,13 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
+import { activatePartnerAccess } from "@/lib/auth/partner-access";
 import type { PartnerAccessState } from "@/lib/auth/partner-access";
 
 export function PartnerActivationForm({ token }: { token: string }) {
-  const [state, action, pending] = useActionState<PartnerAccessState, FormData>(async (_state, formData) => {
-    const { activatePartnerAccess } = await import("@/lib/auth/partner-access");
-    return activatePartnerAccess(_state, formData);
-  }, {});
+  const [state, action, pending] = useActionState<PartnerAccessState, FormData>(activatePartnerAccess, {});
 
   return (
     <form action={action} style={{ marginTop: 24 }}>
