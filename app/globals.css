@@ -2611,3 +2611,68 @@ button,input,select,textarea{font-size:16px}
   .header-search-link{width:36px}
   .mobile-menu-trigger{min-width:54px;padding-inline:8px}
 }
+
+/* ========================================================================== */
+/* Responsive contract — global header                                       */
+/* One source of truth for header geometry; overrides legacy header queries.  */
+/* Desktop: full navigation. Tablet/mobile: brand + search + menu, no overlap. */
+/* ========================================================================== */
+.topbar-inner{min-width:0}
+.topbar-inner>.brand{flex:0 1 auto;min-width:0}
+.topbar-inner>.nav{flex:1 1 auto;min-width:0}
+.topbar-inner>.header-actions{
+  flex:0 0 auto;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+}
+.header-search-link,.mobile-menu,.mobile-menu-trigger{flex:0 0 auto}
+.mobile-menu{position:relative;margin-left:0!important}
+.mobile-menu-trigger{white-space:nowrap}
+
+@media (max-width:1024px){
+  .topbar{height:64px}
+  .topbar-inner{height:64px;gap:10px}
+  .topbar-inner>.brand{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topbar-inner>.nav{display:none!important}
+  .header-actions{margin-left:auto!important}
+  .header-account-actions,.header-actions>.desktop-only,.header-actions>.desktop-register{display:none!important}
+  .header-search-link{
+    width:42px;
+    height:42px;
+    padding:0!important;
+    display:inline-flex!important;
+    align-items:center;
+    justify-content:center;
+    white-space:nowrap;
+  }
+  .header-search-link span{display:none!important}
+  .mobile-menu{display:block!important}
+  .mobile-menu-trigger{min-width:62px;height:42px;padding:8px 11px}
+  .mobile-menu-panel{
+    right:0!important;
+    top:calc(100% + 8px)!important;
+    width:min(310px,calc(100vw - 24px))!important;
+    z-index:100!important;
+  }
+}
+
+@media (max-width:600px){
+  .topbar-inner{gap:7px}
+  .container{width:calc(100% - 24px)}
+  .topbar-inner>.brand{font-size:19px}
+  .header-actions{gap:5px!important}
+  .header-search-link{width:40px;height:40px}
+  .mobile-menu-trigger{min-width:58px;height:40px;padding-inline:9px}
+}
+
+@media (max-width:380px){
+  .topbar-inner{gap:5px}
+  .container{width:calc(100% - 18px)}
+  .topbar-inner>.brand{font-size:18px}
+  .header-actions{gap:4px!important}
+  .header-search-link{width:38px;height:38px}
+  .mobile-menu-trigger{min-width:54px;height:38px;padding-inline:7px}
+}
