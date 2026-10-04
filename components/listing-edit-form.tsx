@@ -5,18 +5,19 @@ import { useActionState } from "react";
 type Business = { id: string; name: string };
 type Listing = {
   id: string; title: string; description: string; type: "PRODUCT"|"SERVICE";
-  price: number|null; location: string|null; business_id: string|null;
+  price: number|null; location: string|null; business_id: string|null; category_id: string|null;
   status: string;
 };
 
 type ListingActionState = { error?: string; success?: string };
 
 export function ListingEditForm({
-  action, listing, businesses,
+  action, listing, businesses, categories,
 }: {
   action: (state: ListingActionState, formData: FormData) => Promise<ListingActionState>;
   listing: Listing;
   businesses: Business[];
+  categories: { id: string; name: string }[];
 }) {
   const [state, formAction, pending] = useActionState(action, {});
   return (
@@ -28,6 +29,7 @@ export function ListingEditForm({
       </div>
       <div className="business-form-grid">
         <div className="field"><label htmlFor="listing-business">Empresa</label><select id="listing-business" name="business_id" defaultValue={listing.business_id || ""} required>{businesses.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
+        <div className="field"><label htmlFor="listing-category">Categoria</label><select id="listing-category" name="category_id" defaultValue={listing.category_id || ""}><option value="">Sem categoria</option>{categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
         <div className="field"><label htmlFor="listing-price">Preço (MZN)</label><input id="listing-price" name="price" type="number" min="0" step="0.01" defaultValue={listing.price ?? ""} placeholder="Sob consulta" /></div>
       </div>
       <div className="field"><label htmlFor="listing-location">Localização</label><input id="listing-location" name="location" defaultValue={listing.location || ""} maxLength={160} placeholder="Maputo, Moçambique" /></div>
