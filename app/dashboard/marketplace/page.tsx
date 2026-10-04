@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { cancelOrder, createListing, updateOrderStatus } from "@/lib/commerce/actions";
+import { cancelOrder, createListing, updateOrderStatus, saveBuyerInterest, removeBuyerInterest } from "@/lib/commerce/actions";
 
 type Business = { id: string; name: string };
 type Listing = {
@@ -10,6 +10,7 @@ type Listing = {
   title: string;
   description: string;
   type: "PRODUCT" | "SERVICE";
+  category_id?: string | null;
   price: number | null;
   currency: string | null;
   location: string | null;
@@ -66,10 +67,11 @@ export default async function MarketplaceWorkspace({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: owned }, { data: memberships }, { data: buyerOrders }] = await Promise.all([
+  const [{ data: owned }, { data: memberships }, { data: buyerOrders }, { data: buyerCategories }] = await Promise.all([
     supabase.from("businesses").select("id,name").eq("owner_id", user.id).order("name"),
     supabase.from("business_members").select("business_id,role").eq("user_id", user.id).in("role", ["owner", "admin", "operator"]),
     supabase.from("commerce_orders").select("id,status,notes,created_at").eq("buyer_user_id", user.id).order("created_at", { ascending: false }).limit(12),
+    supabase.from("business_categories").select("id,name,slug").order("name").limit(100),
   ]);
 
   const memberIds = [...new Set((memberships ?? []).map((x) => x.business_id))];
@@ -82,6 +84,8 @@ export default async function MarketplaceWorkspace({
     ...(memberBusinesses ?? []).filter((b) => !(owned ?? []).some((o) => o.id === b.id)),
   ];
   const businessIds = businesses.map((b) => b.id);
+  const buyerBusinessIds = businesses.map((b) => b.id);
+  const { data: buyerInterests } = buyerBusinessIds.length ? await supabase.from("business_buyer_interests").select("id,business_id,category_id,location,listing_type").in("business_id", buyerBusinessIds).order("created_at", { ascending: false }).limit(40) : { data: [] };
 
   const [{ data: myListings }, { data: sellerItems }, { data: recentListings }] = await Promise.all([
     businessIds.length
@@ -90,7 +94,7 @@ export default async function MarketplaceWorkspace({
     businessIds.length
       ? supabase.from("commerce_order_items").select("id,order_id,title,quantity,line_total,currency,seller_business_id,created_at").in("seller_business_id", businessIds).order("created_at", { ascending: false }).limit(30)
       : Promise.resolve({ data: [] as OrderItem[] }),
-    supabase.from("listings").select("id,title,description,type,price,currency,location,business_id").eq("status", "PUBLISHED").order("created_at", { ascending: false }).limit(12),
+    supabase.from("listings").select("id,title,description,type,price,currency,location,business_id,category_id").eq("status", "PUBLISHED").order("created_at", { ascending: false }).limit(12),
   ]);
 
   const sellerOrderIds = [...new Set((sellerItems ?? []).map((item) => item.order_id))];
@@ -131,7 +135,16 @@ export default async function MarketplaceWorkspace({
     const {data:promoted}=await supabase.from("listings").select("id,title,description,type,price,currency,location,business_id").eq("status","PUBLISHED").in("id",promotedIds);
     promotedListings=(promoted??[]).filter(item=>!businessIds.includes(item.business_id||"")) as Listing[];
   }
-  const buyingListings=[...promotedListings,...latestListings.filter(item=>!promotedIds.includes(item.id))].slice(0,8);
+  const categoryNames = new Map((buyerCategories ?? []).map((item) => [item.id, item.name]));
+  const interests = buyerInterests ?? [];
+  const interestScore = (item: Listing) => interests.reduce((score, interest) => {
+    const categoryMatch = interest.category_id && (item as Listing & { category_id?: string | null }).category_id === interest.category_id ? 4 : 0;
+    const locationMatch = interest.location && item.location?.toLowerCase().includes(String(interest.location).toLowerCase()) ? 2 : 0;
+    const typeMatch = interest.listing_type && item.type === interest.listing_type ? 2 : 0;
+    return score + categoryMatch + locationMatch + typeMatch;
+  }, 0);
+  const matchedPromoted = [...promotedListings].sort((a,b) => interestScore(b)-interestScore(a));
+  const buyingListings=[...matchedPromoted,...latestListings.filter(item=>!promotedIds.includes(item.id)).sort((a,b)=>interestScore(b)-interestScore(a))].slice(0,8);
   if (latestListings.length) {
     const { data: attachments } = await supabase.from("listing_attachments").select("listing_id,storage_path,kind,created_at").in("listing_id", latestListings.map((item) => item.id)).eq("kind", "IMAGE").order("created_at", { ascending: true });
     const firstImage = new Map<string, string>();
@@ -247,6 +260,18 @@ export default async function MarketplaceWorkspace({
 
             <div className="commerce-panel">
               <div className="commerce-panel-head"><div><span className="commerce-eyebrow">Actividade de compra</span><h2>Os seus interesses</h2><p>Acompanhe o que já iniciou com fornecedores.</p></div></div>
+              <section className="buyer-interest-box">
+                <div className="commerce-panel-head"><div><span className="commerce-eyebrow">Preferências de compra</span><h2>O que procura?</h2><p>Escolha interesses da empresa para que ofertas patrocinadas relevantes apareçam primeiro.</p></div></div>
+                <form action={saveBuyerInterest} className="commerce-form-grid">
+                  <label>Empresa<select name="business_id" required><option value="">Seleccione a empresa</option>{businesses.map((b) => <option value={b.id} key={b.id}>{b.name}</option>)}</select></label>
+                  <label>Categoria<select name="category_id"><option value="">Qualquer categoria</option>{(buyerCategories ?? []).map((cat) => <option value={cat.id} key={cat.id}>{cat.name}</option>)}</select></label>
+                  <label>Tipo<select name="listing_type"><option value="">Produto ou serviço</option><option value="PRODUCT">Produto</option><option value="SERVICE">Serviço</option></select></label>
+                  <label>Localização<input name="interest_location" placeholder="Maputo, Matola, Nampula..." /></label>
+                  <div className="wide"><button className="btn" type="submit">Adicionar interesse</button></div>
+                </form>
+                {interests.length > 0 && <div className="buyer-interest-list">{interests.map((interest) => <div className="buyer-interest-item" key={interest.id}><span>{interest.category_id ? categoryNames.get(interest.category_id) : "Qualquer categoria"}{interest.listing_type ? " · " + (interest.listing_type === "PRODUCT" ? "Produto" : "Serviço") : ""}{interest.location ? " · " + interest.location : ""}</span><form action={removeBuyerInterest}><input type="hidden" name="id" value={interest.id}/><button className="text-link" type="submit">Remover</button></form></div>)}</div>}
+              </section>
+
               {orders.length ? <div className="commerce-list">{orders.slice(0, 5).map((order) => <div className="commerce-list-row" key={order.id}><div className="commerce-list-main"><strong>Solicitação #{order.id.slice(0, 8)}</strong><span>{new Date(order.created_at).toLocaleDateString("pt-MZ")}</span></div><span className={"commerce-status " + statusClass(order.status)}>{statusLabels[order.status] || order.status}</span>{["INTERESTED","CONTACTED","NEGOTIATING"].includes(order.status) && <form action={cancelOrder}><input type="hidden" name="order_id" value={order.id}/><button className="btn" type="submit">Encerrar</button></form>}</div>)}</div> : <div className="commerce-empty"><strong>Nenhum interesse iniciado.</strong><p>Abra uma oferta e manifeste o seu interesse para começar uma relação comercial.</p><Link href="/marketplace" className="btn primary">Encontrar ofertas</Link></div>}
             </div>
           </section>
