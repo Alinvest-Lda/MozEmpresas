@@ -53,6 +53,7 @@ export function Header() {
 
   const insideApp = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
   const links = signedIn ? appLinks : publicLinks;
+  const searchActive = pathname === "/pesquisa";
 
   return (
     <header className={insideApp && signedIn ? "topbar topbar-app" : "topbar"}>
@@ -65,6 +66,7 @@ export function Header() {
           })}
         </nav>
         <div className="header-actions">
+          <Link href="/pesquisa" className={"header-search-link" + (searchActive ? " active" : "")} aria-label="Pesquisar no MozEmpresas" title="Pesquisar no MozEmpresas">⌕<span>Pesquisar</span></Link>
           {signedIn ? (insideApp ? null : <div className="header-account-actions"><Link className="btn primary header-panel-btn" href="/dashboard">Aceder ao painel</Link></div>) : (
             <><Link className="btn ghost desktop-only" href="/login">Entrar</Link><Link className="btn primary desktop-register" href="/registo">Criar conta</Link></>
           )}
@@ -76,6 +78,7 @@ export function Header() {
                   const active = pathname === href || pathname.startsWith(href + "/");
                   return <Link key={href} href={href} onClick={() => setOpen(false)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>{label}</Link>;
                 })}
+                <Link href="/pesquisa" onClick={() => setOpen(false)} className={searchActive ? "active" : ""}>Pesquisar</Link>
                 {signedIn ? <Link href="/dashboard" onClick={() => setOpen(false)} className="mobile-menu-panel-btn">Aceder ao painel</Link> : <><Link href="/login" onClick={() => setOpen(false)}>Entrar</Link><Link className="mobile-menu-register" href="/registo" onClick={() => setOpen(false)}>Criar conta</Link></>}
               </div>}
             </div>
