@@ -89,12 +89,12 @@ export default async function MarketplaceWorkspace({
 
   const [{ data: myListings }, { data: sellerItems }, { data: recentListings }] = await Promise.all([
     businessIds.length
-      ? supabase.from("listings").select("id,title,description,type,price,currency,location,business_id,category_id").in("business_id", businessIds).order("created_at", { ascending: false }).limit(50)
+      ? supabase.from("listings").select("id,title,description,type,price,currency,location,business_id,category_id,status").in("business_id", businessIds).order("created_at", { ascending: false }).limit(50)
       : Promise.resolve({ data: [] as Listing[] }),
     businessIds.length
       ? supabase.from("commerce_order_items").select("id,order_id,title,quantity,line_total,currency,seller_business_id,created_at").in("seller_business_id", businessIds).order("created_at", { ascending: false }).limit(30)
       : Promise.resolve({ data: [] as OrderItem[] }),
-    supabase.from("listings").select("id,title,description,type,price,currency,location,business_id,category_id").eq("status", "PUBLISHED").order("created_at", { ascending: false }).limit(12),
+    supabase.from("listings").select("id,title,description,type,price,currency,location,business_id,category_id,status").eq("status", "PUBLISHED").order("created_at", { ascending: false }).limit(12),
   ]);
 
   const sellerOrderIds = [...new Set((sellerItems ?? []).map((item) => item.order_id))];
@@ -132,7 +132,7 @@ export default async function MarketplaceWorkspace({
   const promotedIds=[...new Set((promotedRows??[]).map(row=>row.listing_id).filter(Boolean))];
   let promotedListings: Listing[]=[];
   if(promotedIds.length){
-    const {data:promoted}=await supabase.from("listings").select("id,title,description,type,price,currency,location,business_id,category_id").eq("status","PUBLISHED").in("id",promotedIds);
+    const {data:promoted}=await supabase.from("listings").select("id,title,description,type,price,currency,location,business_id,category_id,status").eq("status","PUBLISHED").in("id",promotedIds);
     promotedListings=(promoted??[]).filter(item=>!businessIds.includes(item.business_id||"")) as Listing[];
   }
   const categoryNames = new Map((buyerCategories ?? []).map((item) => [item.id, item.name]));
@@ -298,7 +298,7 @@ export default async function MarketplaceWorkspace({
 
             <div className="commerce-panel">
               <div className="commerce-panel-head"><div><span className="commerce-eyebrow">A sua montra</span><h2>Ofertas publicadas</h2><p>Gerencie visualmente o que está disponível.</p></div></div>
-              {listings.length ? <div className="commerce-list">{listings.slice(0, 6).map((item) => <div className="commerce-list-row" key={item.id}><div className="commerce-list-main"><strong>{item.title}</strong><span>{businessNames.get(item.business_id || "") || "Empresa"} · {item.type === "PRODUCT" ? "Produto" : "Serviço"}</span></div><strong>{item.price != null ? item.price.toLocaleString("pt-MZ") + " MZN" : "Sob consulta"}</strong><Link href={"/marketplace/" + item.id} className="commerce-link">Abrir →</Link></div>)}</div> : <div className="commerce-empty"><strong>A sua montra está vazia.</strong><p>Publique a primeira oferta para começar a aparecer no marketplace.</p></div>}
+              {listings.length ? <div className="commerce-list">{listings.slice(0, 6).map((item) => <div className="commerce-list-row" key={item.id}><div className="commerce-list-main"><strong>{item.title}</strong><span>{businessNames.get(item.business_id || "") || "Empresa"} · {item.type === "PRODUCT" ? "Produto" : "Serviço"} · {item.status || "PUBLISHED"}</span></div><strong>{item.price != null ? item.price.toLocaleString("pt-MZ") + " MZN" : "Sob consulta"}</strong><div style={{display:"flex",gap:10,alignItems:"center"}}><Link href={"/marketplace/" + item.id} className="commerce-link">Abrir →</Link><Link href={"/dashboard/marketplace/" + item.id} className="commerce-link">Gerir →</Link></div></div>)}</div> : <div className="commerce-empty"><strong>A sua montra está vazia.</strong><p>Publique a primeira oferta para começar a aparecer no marketplace.</p></div>}
             </div>
           </section>
         )}
