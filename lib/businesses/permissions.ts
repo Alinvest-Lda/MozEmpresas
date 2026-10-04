@@ -1,34 +1,31 @@
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-export const BUSINESS_PERMISSIONS = [
-  "company.view","company.manage","users.manage","products.manage","sales.manage",
-  "purchase.manage","tenders.create","tenders.participate","opportunities.create",
-  "opportunities.respond","partners.manage",
-] as const;
+export const MANAGER_ROLES = ["owner", "admin", "operator"] as const;
 
-export type BusinessPermission = typeof BUSINESS_PERMISSIONS[number];
-
-export async function getBusinessAccess(userId: string, businessId: string) {
-  const supabase = await createClient();
-  const [{ data: business }, { data: member }] = await Promise.all([
-    supabase.from("businesses").select("id,owner_id").eq("id", businessId).maybeSingle(),
-    supabase.from("business_members").select("role").eq("business_id", businessId).eq("user_id", userId).maybeSingle(),
+export async function getManagedBusinessIds(supabase: SupabaseClient, userId: string): Promise<string[]> {
+  const [{ data: owned }, { data: memberships }] = await Promise.all([
+    supabase.from("businesses").select("id").eq("owner_id", userId).is("archived_at", null),
+    supabase.from("business_members").select("business_id").eq("user_id", userId).in("role", [...MANAGER_ROLES]),
   ]);
-
-  if (!business) return { role: null, permissions: [] as string[] };
-  const role = business.owner_id === userId ? "owner" : member?.role ?? null;
-  if (!role) return { role: null, permissions: [] as string[] };
-
-  const { data: rows } = await supabase
-    .from("business_role_permissions")
-    .select("permission")
-    .eq("role", role);
-
-  return { role, permissions: (rows ?? []).map((row) => row.permission) };
+  return [...new Set([...(owned ?? []).map((row) => row.id), ...(memberships ?? []).map((row) => row.business_id)])];
 }
 
-export async function requireBusinessPermission(userId: string, businessId: string, permission: BusinessPermission) {
-  const access = await getBusinessAccess(userId, businessId);
-  if (!access.permissions.includes(permission)) throw new Error("Acesso não autorizado.");
-  return access;
+export async function canManageBusiness(supabase: SupabaseClient, userId: string, businessId: string): Promise<boolean> {
+  const { data: owned } = await supabase
+    .from("businesses")
+    .select("id")
+    .eq("id", businessId)
+    .eq("owner_id", userId)
+    .is("archived_at", null)
+    .maybeSingle();
+  if (owned) return true;
+
+  const { data: member } = await supabase
+    .from("business_members")
+    .select("role")
+    .eq("business_id", businessId)
+    .eq("user_id", userId)
+    .in("role", [...MANAGER_ROLES])
+    .maybeSingle();
+  return Boolean(member);
 }
