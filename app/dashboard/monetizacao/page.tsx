@@ -9,6 +9,14 @@ function money(value: number | string | null | undefined) {
   return value == null ? "—" : Number(value).toLocaleString("pt-MZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " MZN";
 }
 
+function credits(value: number | string | null | undefined) {
+  return Number(value ?? 0).toLocaleString("pt-MZ") + " cr";
+}
+
+function statusLabel(status: string | null | undefined) {
+  return String(status ?? "—").replaceAll("_", " ").toLocaleLowerCase("pt-MZ");
+}
+
 export default async function MonetizacaoPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -18,18 +26,22 @@ export default async function MonetizacaoPage() {
   const [{ data: businesses }, { data: wallets }, { data: promotions }, { data: serviceOrders }, { data: creditRequests }] = await Promise.all([
     businessIds.length ? supabase.from("businesses").select("id,name").in("id", businessIds).order("name") : Promise.resolve({ data: [] as { id: string; name: string }[] }),
     businessIds.length ? supabase.from("business_credit_wallets").select("business_id,balance_credits").in("business_id", businessIds) : Promise.resolve({ data: [] as { business_id: string; balance_credits: number }[] }),
-    businessIds.length ? supabase.from("business_promotions").select("id,status,price_mzn,credits_charged,created_at").in("business_id", businessIds).order("created_at", { ascending: false }).limit(8) : Promise.resolve({ data: [] }),
-    businessIds.length ? supabase.from("platform_service_orders").select("id,status,amount_mzn,created_at").in("business_id", businessIds).order("created_at", { ascending: false }).limit(8) : Promise.resolve({ data: [] }),
-    businessIds.length ? supabase.from("credit_purchase_requests").select("id,status,amount_mzn,credits,created_at").in("business_id", businessIds).order("created_at", { ascending: false }).limit(8) : Promise.resolve({ data: [] }),
+    businessIds.length ? supabase.from("business_promotions").select("id,status,price_mzn,credits_charged,created_at").in("business_id", businessIds).order("created_at", { ascending: false }).limit(12) : Promise.resolve({ data: [] }),
+    businessIds.length ? supabase.from("platform_service_orders").select("id,status,amount_mzn,credits_charged,created_at").in("business_id", businessIds).order("created_at", { ascending: false }).limit(12) : Promise.resolve({ data: [] }),
+    businessIds.length ? supabase.from("credit_purchase_requests").select("id,status,amount_mzn,credits,created_at").in("business_id", businessIds).order("created_at", { ascending: false }).limit(12) : Promise.resolve({ data: [] }),
   ]);
 
   const balance = (wallets ?? []).reduce((sum, item) => sum + Number(item.balance_credits), 0);
+  const advertisingCredits = (promotions ?? []).reduce((sum, item) => sum + Number(item.credits_charged ?? 0), 0);
+  const serviceCredits = (serviceOrders ?? []).reduce((sum, item) => sum + Number(item.credits_charged ?? 0), 0);
+  const totalCreditsConsumed = advertisingCredits + serviceCredits;
   const activePromotions = (promotions ?? []).filter(item => item.status === "ACTIVE" || item.status === "PENDING").length;
-  const pendingPurchases = (creditRequests ?? []).filter(item => item.status === "REQUESTED" || item.status === "PENDING").length;
+  const pendingPurchases = (creditRequests ?? []).filter(item => item.status === "REQUESTED" || item.status === "PAYMENT_PENDING").length;
+  const confirmedCreditPurchases = (creditRequests ?? []).filter(item => item.status === "PAID").reduce((sum, item) => sum + Number(item.credits ?? 0), 0);
   const recentActivity = [
-    ...(promotions ?? []).map(item => ({ id: "p-" + item.id, label: "Publicidade", status: item.status, value: item.credits_charged ? item.credits_charged.toLocaleString("pt-MZ") + " créditos" : money(item.price_mzn), date: item.created_at })),
-    ...(serviceOrders ?? []).map(item => ({ id: "s-" + item.id, label: "Serviço MozEmpresas", status: item.status, value: money(item.amount_mzn), date: item.created_at })),
-    ...(creditRequests ?? []).map(item => ({ id: "c-" + item.id, label: "Compra de créditos", status: item.status, value: item.credits.toLocaleString("pt-MZ") + " créditos", date: item.created_at })),
+    ...(promotions ?? []).map(item => ({ id: "p-" + item.id, label: "Publicidade", status: item.status, value: item.credits_charged ? credits(item.credits_charged) : money(item.price_mzn), date: item.created_at })),
+    ...(serviceOrders ?? []).map(item => ({ id: "s-" + item.id, label: "Serviço MozEmpresas", status: item.status, value: item.credits_charged ? credits(item.credits_charged) : money(item.amount_mzn), date: item.created_at })),
+    ...(creditRequests ?? []).map(item => ({ id: "c-" + item.id, label: "Compra de créditos", status: item.status, value: credits(item.credits), date: item.created_at })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 8);
 
   return (
@@ -48,10 +60,33 @@ export default async function MonetizacaoPage() {
         </header>
 
         <section className="monetization-state responsive-state-block">
-          <article><span>Saldo total</span><strong>{balance.toLocaleString("pt-MZ")} cr</strong><small>somatório das carteiras das empresas sob gestão</small></article>
+          <article><span>Saldo total</span><strong>{credits(balance)}</strong><small>somatório das carteiras das empresas sob gestão</small></article>
           <article><span>Publicidade activa</span><strong>{activePromotions}</strong><small>campanhas activas ou pendentes</small></article>
           <article><span>Pedidos de créditos</span><strong>{pendingPurchases}</strong><small>aguardam processamento</small></article>
           <article><span>Empresas</span><strong>{businesses?.length ?? 0}</strong><small>com representação autorizada</small></article>
+        </section>
+
+        <section className="monetization-consumption-grid">
+          <article className="monetization-consumption-card">
+            <span className="dashboard-kicker">Consumo</span>
+            <strong>{credits(totalCreditsConsumed)}</strong>
+            <p>créditos consumidos por publicidade e serviços no histórico recente.</p>
+          </article>
+          <article className="monetization-consumption-card">
+            <span className="dashboard-kicker">Publicidade</span>
+            <strong>{credits(advertisingCredits)}</strong>
+            <p>créditos atribuídos às campanhas registadas neste período.</p>
+          </article>
+          <article className="monetization-consumption-card">
+            <span className="dashboard-kicker">Serviços</span>
+            <strong>{credits(serviceCredits)}</strong>
+            <p>créditos associados aos serviços MozEmpresas registados.</p>
+          </article>
+          <article className="monetization-consumption-card">
+            <span className="dashboard-kicker">Créditos adquiridos</span>
+            <strong>{credits(confirmedCreditPurchases)}</strong>
+            <p>créditos provenientes de pedidos já marcados como pagos.</p>
+          </article>
         </section>
 
         <section className="monetization-module-grid">
@@ -88,7 +123,7 @@ export default async function MonetizacaoPage() {
           {recentActivity.length ? recentActivity.map(item => (
             <div className="monetization-activity-row" key={item.id}>
               <div><strong>{item.label}</strong><small>{new Date(item.date).toLocaleString("pt-MZ")}</small></div>
-              <div><strong>{item.value}</strong><span>{item.status}</span></div>
+              <div><strong>{item.value}</strong><span>{statusLabel(item.status)}</span></div>
             </div>
           )) : <p className="muted">Ainda não existem movimentos de monetização.</p>}
         </section>
