@@ -73,7 +73,7 @@ export default async function OpportunitiesPage() {
                   </div>
                   <h3>{item.title}</h3>
                   <p>{item.description || "Consulte os detalhes e condições desta oportunidade."}</p>
-                  <div className="opportunity-result-bottom">
+                  <div className="opportunity-result-bottom"><span className="opportunity-mobile-cta">Ver oportunidade →</span>
                     <span>{item.organization || "Organização não indicada"}</span>
                     <span>{item.closes_at ? "Até " + dateLabel(item.closes_at) : "Prazo aberto"}</span>
                   </div>
