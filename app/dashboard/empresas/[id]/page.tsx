@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { updateBusiness } from "@/lib/businesses/actions";
+import { deleteBusiness, updateBusiness } from "@/lib/businesses/actions";
 import { BusinessEditForm } from "@/components/business-edit-form";
 export default async function ManageBusinessPage({ params }: { params: Promise<{ id:string }> }) {
   const { id } = await params;
@@ -12,7 +12,7 @@ export default async function ManageBusinessPage({ params }: { params: Promise<{
   if (!user) redirect("/login");
 
   const [{ data: business }, { data: categories }, { data: portfolio }] = await Promise.all([
-    supabase.from("businesses").select("id,name,slug,description,category_id,location,phone,email,website,logo_url,cover_url,is_public,owner_id").eq("id",id).eq("owner_id",user.id).maybeSingle(),
+    supabase.from("businesses").select("id,name,slug,description,category_id,location,phone,email,website,logo_url,cover_url,is_public,owner_id").eq("id",id).maybeSingle(),
     supabase.from("business_categories").select("id,name,slug").order("name").limit(100),
     supabase.from("business_portfolio_media").select("id,image_url,title,sort_order").eq("business_id",id).order("sort_order"),
   ]);
@@ -43,6 +43,13 @@ export default async function ManageBusinessPage({ params }: { params: Promise<{
             <p>Estes dados podem ser usados para apresentar a sua empresa a outros participantes do ecossistema.</p>
           </div>
           <BusinessEditForm action={updateBusiness} business={business} categories={categories ?? []} portfolio={portfolio ?? []} />
+          {business.owner_id === user.id && (
+            <form action={deleteBusiness} className="business-danger-zone" onSubmit={(event) => { if (!window.confirm("Eliminar esta empresa? Esta acção não pode ser desfeita.")) event.preventDefault(); }}>
+              <input type="hidden" name="businessId" value={business.id} />
+              <div><span className="dashboard-kicker">Zona de risco</span><h3>Eliminar empresa</h3><p>Remove o perfil empresarial e os dados dependentes, quando as regras da base de dados permitirem.</p></div>
+              <button className="btn" type="submit">Eliminar empresa</button>
+            </form>
+          )}
         </div>
       </div>
     </main>;
