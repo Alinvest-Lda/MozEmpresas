@@ -71,7 +71,7 @@ export default async function MarketplaceWorkspace({
   const [{ data: owned }, { data: memberships }, { data: buyerOrders }, { data: buyerCategories }] = await Promise.all([
     supabase.from("businesses").select("id,name").eq("owner_id", user.id).order("name"),
     supabase.from("business_members").select("business_id,role").eq("user_id", user.id).in("role", ["owner", "admin", "operator"]),
-    supabase.from("commerce_orders").select("id,status,notes,created_at,payment_status,fulfillment_status").eq("buyer_user_id", user.id).order("created_at", { ascending: false }).limit(12),
+    supabase.from("commerce_orders").select("id,status,notes,created_at,payment_status,fulfillment_status,buyer_business_id").eq("buyer_user_id", user.id).order("created_at", { ascending: false }).limit(12),
     supabase.from("business_categories").select("id,name,slug").order("name").limit(100),
   ]);
 
