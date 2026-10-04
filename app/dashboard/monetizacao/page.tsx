@@ -4,130 +4,55 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getManagedBusinessIds } from "@/lib/businesses/permissions";
+import styles from "./monetizacao.module.css";
 
-function money(value: number | string | null | undefined) {
-  return value == null ? "—" : Number(value).toLocaleString("pt-MZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " MZN";
-}
+const money=(n:number)=>n.toLocaleString("pt-MZ",{minimumFractionDigits:2,maximumFractionDigits:2})+" MZN";
+const cr=(n:number)=>n.toLocaleString("pt-MZ")+" cr";
+const day=(v:string)=>new Date(v).toLocaleDateString("pt-MZ",{day:"2-digit",month:"short"});
 
-function credits(value: number | string | null | undefined) {
-  return Number(value ?? 0).toLocaleString("pt-MZ") + " cr";
-}
-
-function statusLabel(status: string | null | undefined) {
-  return String(status ?? "—").replaceAll("_", " ").toLocaleLowerCase("pt-MZ");
-}
-
-export default async function MonetizacaoPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const businessIds = await getManagedBusinessIds(supabase, user.id);
-  const [{ data: businesses }, { data: wallets }, { data: promotions }, { data: serviceOrders }, { data: creditRequests }] = await Promise.all([
-    businessIds.length ? supabase.from("businesses").select("id,name").in("id", businessIds).order("name") : Promise.resolve({ data: [] as { id: string; name: string }[] }),
-    businessIds.length ? supabase.from("business_credit_wallets").select("business_id,balance_credits").in("business_id", businessIds) : Promise.resolve({ data: [] as { business_id: string; balance_credits: number }[] }),
-    businessIds.length ? supabase.from("business_promotions").select("id,status,price_mzn,credits_charged,created_at").in("business_id", businessIds).order("created_at", { ascending: false }).limit(12) : Promise.resolve({ data: [] }),
-    businessIds.length ? supabase.from("platform_service_orders").select("id,status,amount_mzn,credits_charged,created_at").in("business_id", businessIds).order("created_at", { ascending: false }).limit(12) : Promise.resolve({ data: [] }),
-    businessIds.length ? supabase.from("credit_purchase_requests").select("id,status,amount_mzn,credits,created_at").in("business_id", businessIds).order("created_at", { ascending: false }).limit(12) : Promise.resolve({ data: [] }),
-  ]);
-
-  const balance = (wallets ?? []).reduce((sum, item) => sum + Number(item.balance_credits), 0);
-  const advertisingCredits = (promotions ?? []).reduce((sum, item) => sum + Number(item.credits_charged ?? 0), 0);
-  const serviceCredits = (serviceOrders ?? []).reduce((sum, item) => sum + Number(item.credits_charged ?? 0), 0);
-  const totalCreditsConsumed = advertisingCredits + serviceCredits;
-  const activePromotions = (promotions ?? []).filter(item => item.status === "ACTIVE" || item.status === "PENDING").length;
-  const pendingPurchases = (creditRequests ?? []).filter(item => item.status === "REQUESTED" || item.status === "PAYMENT_PENDING").length;
-  const confirmedCreditPurchases = (creditRequests ?? []).filter(item => item.status === "PAID").reduce((sum, item) => sum + Number(item.credits ?? 0), 0);
-  const recentActivity = [
-    ...(promotions ?? []).map(item => ({ id: "p-" + item.id, label: "Publicidade", status: item.status, value: item.credits_charged ? credits(item.credits_charged) : money(item.price_mzn), date: item.created_at })),
-    ...(serviceOrders ?? []).map(item => ({ id: "s-" + item.id, label: "Serviço MozEmpresas", status: item.status, value: item.credits_charged ? credits(item.credits_charged) : money(item.amount_mzn), date: item.created_at })),
-    ...(creditRequests ?? []).map(item => ({ id: "c-" + item.id, label: "Compra de créditos", status: item.status, value: credits(item.credits), date: item.created_at })),
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 8);
-
-  return (
-    <main className="dashboard-main">
-      <div className="dashboard-content">
-        <header className="dashboard-topbar monetization-hero">
-          <div>
-            <span className="dashboard-kicker">Conta · Monetização</span>
-            <h1>Monetização</h1>
-            <p>Um único centro para controlar créditos, publicidade e serviços pagos das empresas que representa.</p>
-          </div>
-          <div className="monetization-hero-actions">
-            <Link href="/dashboard/monetizacao/creditos" className="btn primary">Comprar créditos →</Link>
-            <Link href="/dashboard/publicidade" className="btn">Criar campanha</Link>
-          </div>
-        </header>
-
-        <section className="monetization-state responsive-state-block">
-          <article><span>Saldo total</span><strong>{credits(balance)}</strong><small>somatório das carteiras das empresas sob gestão</small></article>
-          <article><span>Publicidade activa</span><strong>{activePromotions}</strong><small>campanhas activas ou pendentes</small></article>
-          <article><span>Pedidos de créditos</span><strong>{pendingPurchases}</strong><small>aguardam processamento</small></article>
-          <article><span>Empresas</span><strong>{businesses?.length ?? 0}</strong><small>com representação autorizada</small></article>
-        </section>
-
-        <section className="monetization-consumption-grid">
-          <article className="monetization-consumption-card">
-            <span className="dashboard-kicker">Consumo</span>
-            <strong>{credits(totalCreditsConsumed)}</strong>
-            <p>créditos consumidos por publicidade e serviços no histórico recente.</p>
-          </article>
-          <article className="monetization-consumption-card">
-            <span className="dashboard-kicker">Publicidade</span>
-            <strong>{credits(advertisingCredits)}</strong>
-            <p>créditos atribuídos às campanhas registadas neste período.</p>
-          </article>
-          <article className="monetization-consumption-card">
-            <span className="dashboard-kicker">Serviços</span>
-            <strong>{credits(serviceCredits)}</strong>
-            <p>créditos associados aos serviços MozEmpresas registados.</p>
-          </article>
-          <article className="monetization-consumption-card">
-            <span className="dashboard-kicker">Créditos adquiridos</span>
-            <strong>{credits(confirmedCreditPurchases)}</strong>
-            <p>créditos provenientes de pedidos já marcados como pagos.</p>
-          </article>
-        </section>
-
-        <section className="monetization-module-grid">
-          <Link href="/dashboard/monetizacao/creditos" className="monetization-module-card">
-            <span className="dashboard-kicker">01 · Pré-pago</span>
-            <h2>Créditos</h2>
-            <p>Compre saldo, acompanhe pedidos e consulte todos os movimentos das carteiras empresariais.</p>
-            <strong>Gerir créditos →</strong>
-          </Link>
-          <Link href="/dashboard/publicidade" className="monetization-module-card">
-            <span className="dashboard-kicker">02 · Visibilidade</span>
-            <h2>Publicidade</h2>
-            <p>Escolha espaço, duração e audiência. O preço é calculado antes da activação da campanha.</p>
-            <strong>Gerir publicidade →</strong>
-          </Link>
-          <Link href="/dashboard/servicos" className="monetization-module-card">
-            <span className="dashboard-kicker">03 · Serviços</span>
-            <h2>Serviços MozEmpresas</h2>
-            <p>Contrate serviços da plataforma e acompanhe prazo, estado, valor e recorrência.</p>
-            <strong>Ver serviços →</strong>
-          </Link>
-          <Link href="/dashboard/financeiro" className="monetization-module-card">
-            <span className="dashboard-kicker">04 · Controlo</span>
-            <h2>Gestão financeira</h2>
-            <p>Veja pagamentos, documentos, compras e movimentos financeiros relacionados com a utilização da plataforma.</p>
-            <strong>Ver gestão financeira →</strong>
-          </Link>
-        </section>
-
-        <section className="dashboard-section monetization-activity">
-          <div className="dashboard-section-head">
-            <div><span className="dashboard-kicker">Acompanhamento</span><h2>Actividade recente</h2><p>Os movimentos mais recentes de monetização das suas empresas.</p></div>
-          </div>
-          {recentActivity.length ? recentActivity.map(item => (
-            <div className="monetization-activity-row" key={item.id}>
-              <div><strong>{item.label}</strong><small>{new Date(item.date).toLocaleString("pt-MZ")}</small></div>
-              <div><strong>{item.value}</strong><span>{statusLabel(item.status)}</span></div>
-            </div>
-          )) : <p className="muted">Ainda não existem movimentos de monetização.</p>}
-        </section>
-      </div>
-    </main>
-  );
+export default async function MonetizacaoPage({searchParams}:{searchParams:Promise<{period?:string}>}){
+ const supabase=await createClient();
+ const {data:{user}}=await supabase.auth.getUser(); if(!user) redirect("/login");
+ const p=await searchParams; const period=p.period==="90"||p.period==="all"?p.period:"30";
+ const ids=await getManagedBusinessIds(supabase,user.id);
+ const since=period==="all"?null:new Date(Date.now()-Number(period)*86400000).toISOString();
+ const [b,w,ad,svc,cp,pay,ev]=await Promise.all([
+  ids.length?supabase.from("businesses").select("id,name").in("id",ids).order("name"):Promise.resolve({data:[]}),
+  ids.length?supabase.from("business_credit_wallets").select("business_id,balance_credits").in("business_id",ids):Promise.resolve({data:[]}),
+  ids.length?supabase.from("business_promotions").select("id,business_id,title,status,price_mzn,credits_charged,created_at,ends_at").in("business_id",ids).order("created_at",{ascending:false}).limit(100):Promise.resolve({data:[]}),
+  ids.length?supabase.from("platform_service_orders").select("id,business_id,status,amount_mzn,credits_charged,created_at").in("business_id",ids).order("created_at",{ascending:false}).limit(100):Promise.resolve({data:[]}),
+  ids.length?supabase.from("credit_purchase_requests").select("id,business_id,status,amount_mzn,credits,created_at").in("business_id",ids).order("created_at",{ascending:false}).limit(100):Promise.resolve({data:[]}),
+  ids.length?supabase.from("financial_payments").select("id,business_id,amount_mzn,status,created_at").in("business_id",ids).order("created_at",{ascending:false}).limit(100):Promise.resolve({data:[]}),
+  ids.length?supabase.from("recommendation_events").select("id,business_id,event_type,created_at").in("business_id",ids).order("created_at",{ascending:false}).limit(100):Promise.resolve({data:[]})
+ ]);
+ const businesses=b.data??[], wallets=w.data??[];
+ const ads=(ad.data??[]).filter(x=>!since||x.created_at>=since), services=(svc.data??[]).filter(x=>!since||x.created_at>=since), purchases=(cp.data??[]).filter(x=>!since||x.created_at>=since), payments=(pay.data??[]).filter(x=>!since||x.created_at>=since), events=(ev.data??[]).filter(x=>!since||x.created_at>=since);
+ const balance=wallets.reduce((s,x)=>s+Number(x.balance_credits??0),0);
+ const adSpend=ads.filter(x=>x.status!=="CANCELLED").reduce((s,x)=>s+Number(x.price_mzn??0),0);
+ const svcSpend=services.filter(x=>!["CANCELLED","FAILED"].includes(x.status)).reduce((s,x)=>s+Number(x.amount_mzn??0),0);
+ const paidSpend=purchases.filter(x=>x.status==="PAID").reduce((s,x)=>s+Number(x.amount_mzn??0),0);
+ const confirmed=payments.filter(x=>x.status==="CONFIRMED").reduce((s,x)=>s+Number(x.amount_mzn??0),0);
+ const consumed=ads.reduce((s,x)=>s+Number(x.credits_charged??0),0)+services.reduce((s,x)=>s+Number(x.credits_charged??0),0);
+ const active=ads.filter(x=>x.status==="ACTIVE"&&(!x.ends_at||new Date(x.ends_at)>=new Date())).length;
+ const pendingPurchases=purchases.filter(x=>["REQUESTED","PAYMENT_PENDING"].includes(x.status)).length;
+ const pendingServices=services.filter(x=>["PENDING_PAYMENT","PROCESSING"].includes(x.status)).length;
+ const eventCount=events.length;
+ const names=new Map(businesses.map(x=>[x.id,x.name]));
+ const activity=[...ads.map(x=>({id:"a"+x.id,title:x.title||"Campanha publicitária",meta:"Publicidade · "+(names.get(x.business_id)||"Empresa"),value:x.price_mzn?money(Number(x.price_mzn)):cr(Number(x.credits_charged??0)),date:x.created_at})),...services.map(x=>({id:"s"+x.id,title:"Serviço MozEmpresas",meta:(names.get(x.business_id)||"Empresa")+" · "+x.status.replaceAll("_"," ").toLowerCase(),value:x.amount_mzn?money(Number(x.amount_mzn)):cr(Number(x.credits_charged??0)),date:x.created_at})),...purchases.filter(x=>x.status==="PAID").map(x=>({id:"c"+x.id,title:"Créditos adquiridos",meta:names.get(x.business_id)||"Empresa",value:cr(Number(x.credits??0)),date:x.created_at}))].sort((a,z)=>+new Date(z.date)-+new Date(a.date)).slice(0,6);
+ const recommendations=[];
+ if(balance>0&&active===0) recommendations.push(["Aproveitar saldo disponível","Há "+cr(balance)+" sem campanha activa. Se visibilidade for a prioridade, avalie uma nova utilização.","attention"]);
+ if(active>0) recommendations.push(["Acompanhar antes de aumentar","Há "+active+" campanha(s) activa(s). Primeiro compare o resultado antes de aumentar o investimento.","good"]);
+ if(pendingPurchases>0) recommendations.push(["Não duplicar uma compra pendente",pendingPurchases+" pedido(s) de créditos aguardam processamento.","attention"]);
+ if(pendingServices>0) recommendations.push(["Aguardar execução",pendingServices+" serviço(s) estão pendentes ou em processamento.","neutral"]);
+ if(!recommendations.length) recommendations.push(["Construir histórico comercial","Ainda não existem sinais suficientes para recomendar uma nova alocação. Continue a registar actividade.","neutral"]);
+ return <main className="dashboard-main"><div className="dashboard-content">
+  <header className={styles.hero}><div><span className="dashboard-kicker">Conta · Inteligência comercial</span><h1>Monetização</h1><p>Transforme a actividade da sua presença no MozEmpresas em decisões sobre onde investir, quando esperar e o que optimizar.</p></div><div className={styles.period}><span>Período</span><div><Link href="?period=30" className={period==="30"?styles.active:""}>30 dias</Link><Link href="?period=90" className={period==="90"?styles.active:""}>90 dias</Link><Link href="?period=all" className={period==="all"?styles.active:""}>Tudo</Link></div></div></header>
+  <section className={styles.metrics}><article><span>Investimento comercial</span><strong>{money(adSpend+svcSpend)}</strong><small>publicidade + serviços registados</small></article><article><span>Saldo disponível</span><strong>{cr(balance)}</strong><small>carteiras das empresas sob gestão</small></article><article><span>Créditos consumidos</span><strong>{cr(consumed)}</strong><small>publicidade + serviços</small></article><article><span>Pagamentos confirmados</span><strong>{money(confirmed)}</strong><small>registos financeiros no período</small></article></section>
+  <section className={styles.grid}><article className={styles.card}><span className="dashboard-kicker">Retorno da presença</span><h2>O sistema já consegue medir o retorno?</h2>{eventCount?<><strong className={styles.big}>{eventCount}</strong><p>evento(s) comercial(is) registado(s). Ainda é necessário consolidar impressões, visualizações, contactos e conversões para calcular ROI.</p></>:<div className={styles.empty}><strong>Ainda não há dados suficientes para calcular ROI.</strong><p>O histórico financeiro e de consumo existe, mas não há dados suficientes de alcance, visualizações, contactos ou conversões.</p></div>}</article>
+  <article className={styles.card}><span className="dashboard-kicker">Estado comercial</span><h2>O que merece atenção agora</h2><ul className={styles.state}><li><strong>{active}</strong><span>campanhas activas</span></li><li><strong>{pendingPurchases}</strong><span>compras de créditos pendentes</span></li><li><strong>{pendingServices}</strong><span>serviços em curso</span></li><li><strong>{purchases.filter(x=>x.status==="PAID").reduce((s,x)=>s+Number(x.credits??0),0)}</strong><span>créditos adquiridos</span></li></ul></article></section>
+  <section className={styles.section}><div className="dashboard-section-head"><div><span className="dashboard-kicker">Próxima decisão</span><h2>Onde vale a pena agir</h2><p>Recomendações baseadas apenas em dados verificáveis.</p></div></div><div className={styles.recs}>{recommendations.map((r,i)=><article className={styles[r[2] as "good"|"attention"|"neutral"]} key={String(r[0])}><b>0{i+1}</b><div><strong>{r[0]}</strong><p>{r[1]}</p></div></article>)}</div></section>
+  <section className={styles.section}><div className="dashboard-section-head"><div><span className="dashboard-kicker">Alocação</span><h2>Onde está a sair o investimento</h2><p>Leitura comercial sem duplicar os módulos de origem.</p></div></div><div className={styles.alloc}><article><span>Publicidade</span><strong>{money(adSpend)}</strong><small>{ads.length} registo(s) · {cr(ads.reduce((s,x)=>s+Number(x.credits_charged??0),0))}</small></article><article><span>Serviços</span><strong>{money(svcSpend)}</strong><small>{services.length} contratação(ões) · {cr(services.reduce((s,x)=>s+Number(x.credits_charged??0),0))}</small></article><article><span>Saldo adquirido</span><strong>{money(paidSpend)}</strong><small>compras de créditos marcadas como pagas</small></article></div></section>
+  <section className={styles.section}><div className="dashboard-section-head"><div><span className="dashboard-kicker">Histórico de decisão</span><h2>Últimas movimentações relevantes</h2></div></div>{activity.length?activity.map(x=><div className={styles.row} key={x.id}><div><strong>{x.title}</strong><small>{x.meta} · {day(x.date)}</small></div><strong>{x.value}</strong></div>):<p className="muted">Ainda não há movimentações no período seleccionado.</p>}</section>
+  <div className={styles.footerNote}>Para gerir créditos, publicidade, serviços ou gestão financeira, use os módulos próprios no menu. Esta página existe para ajudar a decidir, não para repetir esses módulos.</div>
+ </div></main>;
 }
