@@ -76,7 +76,6 @@ export default async function SearchPage({
           .select("id,title,description,type,location")
           .eq("status", "PUBLISHED")
           .or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`)
-          .or(location ? `location.ilike.%${location}%` : "location.not.is.null")
           .order("created_at", { ascending: false })
           .limit(12);
         if (queryError) error = true;
@@ -100,7 +99,6 @@ export default async function SearchPage({
           .select("id,title,slug,description,type,organization,location")
           .eq("status", "PUBLISHED")
           .or(`title.ilike.%${q}%,description.ilike.%${q}%,organization.ilike.%${q}%,location.ilike.%${q}%`)
-          .or(location ? `location.ilike.%${location}%` : "location.not.is.null")
           .order("closes_at", { ascending: true, nullsFirst: false })
           .limit(12);
         if (queryError) error = true;
