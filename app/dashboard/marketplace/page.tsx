@@ -224,8 +224,39 @@ export default async function MarketplaceWorkspace({
         .commerce-hub .commerce-empty{border:1px dashed #d8dde2;border-radius:14px;padding:28px;text-align:center;color:#747e89}.commerce-hub .commerce-empty strong{display:block;color:#303741;margin-bottom:5px}.commerce-hub .commerce-empty p{font-size:13px;margin:0 0 14px}
         .commerce-hub .commerce-flash{margin-bottom:18px;border-radius:12px;padding:12px 15px;background:#edf8f1;border:1px solid #cfe9d9;color:#28734a;font-size:13px;font-weight:650}
         .commerce-hub .commerce-note{font-size:11px;color:#7b8490;line-height:1.55;margin-top:12px}
-        @media(max-width:1050px){.commerce-hub .commerce-grid,.commerce-hub .commerce-split{grid-template-columns:1fr}.commerce-hub .commerce-kpis{grid-template-columns:repeat(2,1fr)}}
-        @media(max-width:720px){.commerce-hub .commerce-hero{display:block}.commerce-hub .commerce-hero-actions{margin-top:18px}.commerce-hub .commerce-kpis,.commerce-hub .commerce-action-grid,.commerce-hub .commerce-form-grid,.commerce-hub .commerce-offer-grid{grid-template-columns:1fr}.commerce-hub .commerce-offer{grid-template-columns:82px minmax(0,1fr)}.commerce-hub .commerce-offer-art{min-height:130px}.commerce-hub .commerce-nav{overflow-x:auto}.commerce-hub .commerce-nav a{white-space:nowrap}.commerce-hub .commerce-panel{padding:18px}}
+        .commerce-hub .buyer-activity-panel{background:#fbfcfd}
+        .commerce-hub .buyer-interest-box{border:1px solid #dfe5ea;border-radius:15px;background:#fff;padding:18px;margin-bottom:18px;box-shadow:0 2px 8px rgba(31,41,55,.04)}
+        .commerce-hub .buyer-interest-box .commerce-panel-head{margin-bottom:16px}
+        .commerce-hub .buyer-interest-box .commerce-panel-head h2{font-size:17px;margin-top:4px}
+        .commerce-hub .buyer-interest-list{display:grid;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid #edf0f2}
+        .commerce-hub .buyer-interest-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 11px;border:1px solid #edf0f2;border-radius:10px;background:#fafbfc;font-size:12px;color:#4e5863}
+        .commerce-hub .buyer-interest-item span{min-width:0;line-height:1.4}
+        .commerce-hub .buyer-interest-item form{flex:0 0 auto}
+        .commerce-hub .text-link{border:0;background:none;padding:4px;color:#6f7780;font:inherit;font-size:11px;font-weight:750;cursor:pointer}
+        @media(max-width:1050px){
+          .commerce-hub .commerce-grid,.commerce-hub .commerce-split{grid-template-columns:1fr}
+          .commerce-hub .commerce-kpis{grid-template-columns:repeat(2,1fr)}
+          .commerce-hub .buyer-activity-panel{order:-1}
+          .commerce-hub .buyer-interest-box{padding:20px}
+          .commerce-hub .buyer-activity-panel .commerce-panel-head{margin-bottom:14px}
+        }
+        @media(max-width:720px){
+          .commerce-hub .commerce-hero{display:block}
+          .commerce-hub .commerce-hero-actions{margin-top:18px}
+          .commerce-hub .commerce-kpis,.commerce-hub .commerce-action-grid,.commerce-hub .commerce-form-grid,.commerce-hub .commerce-offer-grid{grid-template-columns:1fr}
+          .commerce-hub .commerce-offer{grid-template-columns:82px minmax(0,1fr)}
+          .commerce-hub .commerce-offer-art{min-height:130px}
+          .commerce-hub .commerce-nav{overflow-x:auto}
+          .commerce-hub .commerce-nav a{white-space:nowrap}
+          .commerce-hub .commerce-panel{padding:18px}
+          .commerce-hub .buyer-activity-panel{padding:14px;margin-bottom:14px;border-radius:16px;box-shadow:0 4px 16px rgba(31,41,55,.06)}
+          .commerce-hub .buyer-interest-box{padding:16px;border-radius:13px;margin-bottom:16px}
+          .commerce-hub .buyer-interest-box .commerce-form-grid{gap:11px}
+          .commerce-hub .buyer-interest-box .commerce-form-grid label{font-size:12px}
+          .commerce-hub .buyer-interest-box .commerce-form-grid input,.commerce-hub .buyer-interest-box .commerce-form-grid select{min-height:44px;padding:10px 12px}
+          .commerce-hub .buyer-interest-box .btn{width:100%;min-height:44px}
+          .commerce-hub .buyer-interest-item{align-items:flex-start}
+        }
       `}</style>
 
       <div className="dashboard-content">
@@ -252,7 +283,7 @@ export default async function MarketplaceWorkspace({
 
         {activeTab === "comprar" && (
           <section id="comprar" className="commerce-grid">
-            <div className="commerce-panel">
+            <div className="commerce-panel commerce-offers-panel">
               <div className="commerce-panel-head">
                 <div><span className="commerce-eyebrow">Comprar</span><h2>Encontre o que precisa.</h2><p>Veja primeiro as ofertas destacadas para a audiência da sua empresa e depois explore todo o marketplace quando quiser ampliar a pesquisa.</p></div>
                 <Link href="/marketplace" className="commerce-link">Ver marketplace →</Link>
@@ -260,8 +291,8 @@ export default async function MarketplaceWorkspace({
               {buyingListings.length ? <div className="commerce-offer-grid">{buyingListings.map((item) => <div key={item.id}>{renderOfferCard(item)}</div>)}</div> : <div className="commerce-empty"><strong>Ainda não existem ofertas publicadas.</strong><p>Quando empresas publicarem produtos ou serviços, eles aparecerão aqui.</p><Link href="/dashboard/marketplace?tab=vender" className="btn primary">Publicar a primeira oferta</Link></div>}
             </div>
 
-            <div className="commerce-panel">
-              <div className="commerce-panel-head"><div><span className="commerce-eyebrow">Actividade de compra</span><h2>Os seus interesses</h2><p>Acompanhe o que já iniciou com fornecedores.</p></div></div>
+            <div className="commerce-panel buyer-activity-panel">
+              <div className="commerce-panel-head"><div><span className="commerce-eyebrow">Actividade de compra</span><h2>Os seus interesses</h2><p>Acompanhe e defina rapidamente o que a sua empresa procura.</p></div></div>
               <section className="buyer-interest-box">
                 <div className="commerce-panel-head"><div><span className="commerce-eyebrow">Preferências de compra</span><h2>O que procura?</h2><p>Escolha interesses da empresa para que ofertas patrocinadas relevantes apareçam primeiro.</p></div></div>
                 <form action={saveBuyerInterest} className="commerce-form-grid">
