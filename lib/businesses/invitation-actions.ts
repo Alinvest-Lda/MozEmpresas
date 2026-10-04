@@ -11,7 +11,7 @@ const schema = z.object({
   role: z.enum(["admin","operator","member","viewer"]),
 });
 
-export async function inviteBusinessMember(formData: FormData) {
+export async function inviteBusinessMember(_state: { error?: string; success?: boolean; invitePath?: string } | FormData, maybeFormData?: FormData) {\n  const formData = maybeFormData ?? (_state instanceof FormData ? _state : new FormData());
   const parsed = schema.safeParse({
     businessId: formData.get("businessId"),
     email: formData.get("email"),
