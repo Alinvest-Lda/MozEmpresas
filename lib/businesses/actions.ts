@@ -42,3 +42,20 @@ export async function updateBusiness(_state:BusinessState,formData:FormData):Pro
  revalidatePath("/empresas/"+business.slug);
  redirect("/dashboard/empresas");
 }
+
+
+export async function deleteBusiness(_state:BusinessState,formData:FormData):Promise<BusinessState>{
+ const id=String(formData.get("businessId")||"");
+ if(!id)return{error:"Empresa inválida."};
+ const supabase=await createClient();
+ const {data:{user}}=await supabase.auth.getUser();
+ if(!user)redirect("/login");
+ const {data:business,error:loadError}=await supabase.from("businesses").select("id,slug,owner_id").eq("id",id).maybeSingle();
+ if(loadError || !business)return{error:"Empresa não encontrada."};
+ if(business.owner_id!==user.id)return{error:"Apenas o proprietário pode eliminar esta empresa."};
+ const {error}=await supabase.from("businesses").delete().eq("id",id).eq("owner_id",user.id);
+ if(error)return{error:"Não foi possível eliminar a empresa. Verifique se existem dados dependentes que precisam de ser tratados."};
+ revalidatePath("/empresas");
+ revalidatePath("/dashboard/empresas");
+ redirect("/dashboard/empresas");
+}
