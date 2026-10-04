@@ -73,7 +73,7 @@ export default async function Dashboard() {
             </div>
           </section>
 
-          <section className="dashboard-section dashboard-work-section">
+          <section className="dashboard-section dashboard-work-section responsive-priority">
             <div className="dashboard-section-head">
               <div>
                 <span className="dashboard-kicker">Centro de trabalho</span>
