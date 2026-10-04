@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { deleteListingAttachment, updateListing } from "@/lib/commerce/actions";
+import { deleteListingAttachment, updateListing, updateListingStatus } from "@/lib/commerce/actions";
 import { ListingEditForm } from "@/components/listing-edit-form";
 
 export default async function ManageListingPage({ params }: { params: Promise<{ id: string }> }) {
@@ -76,6 +76,18 @@ export default async function ManageListingPage({ params }: { params: Promise<{ 
             <p>Mantenha título, descrição, preço e estado actualizados para evitar informação comercial desactualizada.</p>
           </div>
           <ListingEditForm action={updateListing} listing={listing} businesses={businesses} categories={(await supabase.from("business_categories").select("id,name").order("name").limit(100)).data ?? []} />
+
+          <form action={updateListingStatus} style={{marginTop:18,padding:18,border:"1px solid #e5e7eb",borderRadius:14}}>
+            <span className="dashboard-kicker">Publicação</span>
+            <p className="muted">Altere rapidamente o estado desta oferta sem apagar o histórico comercial.</p>
+            <input type="hidden" name="listing_id" value={listing.id} />
+            <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+              <select name="status" defaultValue={listing.status} style={{border:"1px solid #dfe3e7",borderRadius:10,padding:"10px 12px"}}>
+                <option value="DRAFT">Rascunho</option><option value="PUBLISHED">Publicado</option><option value="PAUSED">Pausado</option><option value="SOLD_OUT">Esgotado</option><option value="ARCHIVED">Arquivado</option>
+              </select>
+              <button className="btn" type="submit">Actualizar estado</button>
+            </div>
+          </form>
           <section className="business-form-card" style={{marginTop:18}}>
             <div className="business-form-heading" style={{marginTop:0}}>
               <span className="dashboard-kicker">Media</span>
