@@ -86,7 +86,7 @@ export default async function MyBusinesses({searchParams}:{searchParams?:Promise
               <h2>Registar uma empresa</h2>
               <p>Crie a entidade que representa no MozEmpresas. Depois, a gestão do perfil acontece na lista de empresas.</p>
             </section>
-            <div className="business-form-card"><BusinessForm action={createBusiness} categories={categories ?? []} /></div>
+            <div className="business-form-card responsive-form-card"><BusinessForm action={createBusiness} categories={categories ?? []} /></div>
           </>
         )}
       </div>
