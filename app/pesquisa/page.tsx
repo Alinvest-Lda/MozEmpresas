@@ -30,11 +30,10 @@ function resultLabel(type: SearchType) {
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; tipo?: string; location?: string }>;
+  searchParams: Promise<{ q?: string; tipo?: string }>;
 }) {
   const params = await searchParams;
   const q = cleanQuery(params.q || "");
-  const location = cleanQuery(params.location || "");
   const requestedType = params.tipo as SearchType | undefined;
   const type: SearchType = requestedType && ["all", "business", "listing", "opportunity", "contest"].includes(requestedType)
     ? requestedType
@@ -54,7 +53,6 @@ export default async function SearchPage({
           .select("id,name,slug,description,location")
           .eq("is_public", true)
           .or(`name.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`)
-          .or(location ? `location.ilike.%${location}%` : "location.not.is.null")
           .order("name")
           .limit(12);
         if (queryError) error = true;
@@ -170,10 +168,6 @@ export default async function SearchPage({
                 <b aria-hidden="true">⌕</b>
                 <input name="q" defaultValue={q} placeholder="Empresa, produto, serviço, oportunidade..." autoFocus />
               </div>
-            </label>
-            <label>
-              <span>Localização</span>
-              <div className="global-search-input"><b aria-hidden="true">⌖</b><input name="location" defaultValue={location} placeholder="Província ou cidade" /></div>
             </label>
             <label>
               <span>Área</span>
