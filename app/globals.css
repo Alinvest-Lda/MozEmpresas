@@ -2649,6 +2649,12 @@ button,input,select,textarea{font-size:16px}
 .monetization-module-card h2{margin:8px 0 7px;font-size:22px}
 .monetization-module-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.55;max-width:600px}
 .monetization-module-card strong{margin-top:auto;padding-top:18px;color:var(--brand);font-size:12px}
+.monetization-consumption-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px}
+.monetization-consumption-card{padding:17px;border:1px solid var(--line);border-radius:16px;background:#fff}
+.monetization-consumption-card .dashboard-kicker{display:block}
+.monetization-consumption-card strong{display:block;margin-top:8px;font-size:23px;letter-spacing:-.03em}
+.monetization-consumption-card p{margin:6px 0 0;color:var(--muted);font-size:11px;line-height:1.45}
+
 .monetization-activity{margin-top:18px}
 .monetization-activity-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid var(--line)}
 .monetization-activity-row>div:last-child{text-align:right}
