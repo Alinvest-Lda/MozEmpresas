@@ -3,7 +3,7 @@ import { createPartnerAccess, requireSuperAdmin } from "@/lib/auth/partner-acces
 
 export const dynamic = "force-dynamic";
 
-export default async function PartnerAccessAdmin({ searchParams }: { searchParams: Promise<{ created?: string; access?: string }> }) {
+export default async function PartnerAccessAdmin({ searchParams }: { searchParams: Promise<{ created?: string; access?: string; error?: string }> }) {
   await requireSuperAdmin();
   const params = await searchParams;
   return (
@@ -22,6 +22,13 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
             <h2>Envie este link ao parceiro</h2>
             <p className="muted">O link é apresentado apenas nesta operação. Guarde-o ou copie-o antes de sair desta página.</p>
             <div className="notice" style={{ wordBreak: "break-all" }}>{params.access}</div>
+          </section>
+        )}
+        {params.error && (
+          <section className="dashboard-section">
+            <div className="notice">
+              {params.error === "forbidden" ? "Apenas o Super Admin pode criar acessos de parceiros." : "Não foi possível criar o acesso. Verifique os dados e tente novamente."}
+            </div>
           </section>
         )}
         <section className="dashboard-section">
