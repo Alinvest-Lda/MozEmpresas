@@ -27,13 +27,13 @@ const accessSchema = z.object({
   expiresInDays: z.coerce.number().int().min(1).max(30),
 });
 
-export async function createPartnerAccess(_state: PartnerAccessState, formData: FormData): Promise<PartnerAccessState> {
+export async function createPartnerAccess(formData: FormData): Promise<void> {
   await requireSuperAdmin();
   const parsed = accessSchema.safeParse({
     email: formData.get("email"),
     expiresInDays: formData.get("expiresInDays") || 7,
   });
-  if (!parsed.success) return { error: "Indique um email válido e uma validade entre 1 e 30 dias." };
+  if (!parsed.success) redirect("/admin/parceiros?error=validation");
 
   const supabase = await createClient();
   const token = randomBytes(32).toString("hex");
@@ -46,8 +46,8 @@ export async function createPartnerAccess(_state: PartnerAccessState, formData: 
   });
 
   if (error) {
-    if (error.message.includes("FORBIDDEN")) return { error: "Apenas o Super Admin pode criar acessos de parceiros." };
-    return { error: "Não foi possível criar o acesso de parceiro." };
+    if (error.message.includes("FORBIDDEN")) redirect("/admin/parceiros?error=forbidden");
+    redirect("/admin/parceiros?error=create");
   }
 
   const requestHeaders = await headers();
