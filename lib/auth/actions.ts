@@ -24,13 +24,13 @@ async function createProfile(userId: string, fullName: string) {
   return !error;
 }
 
-function safeNext(value: FormDataEntryValue | null) {
+function safeNext(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string") return null;
   if (!value.startsWith("/") || value.startsWith("//")) return null;
   return value;
 }
 
-function isPartnerPath(path: string | null) {
+function isPartnerPath(path: string | null): boolean {
   return Boolean(path && (path === "/parceiro" || path.startsWith("/parceiro/")));
 }
 
@@ -83,14 +83,15 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
   }
 
   const partner = profile?.user_type === "parceiro";
-  const target = partner
-    ? (isPartnerPath(requestedNext) ? requestedNext : "/parceiro")
-    : (isPartnerPath(requestedNext) ? "/dashboard" : requestedNext || "/dashboard");
 
   if (profile?.account_status && profile.account_status !== "ACTIVE") {
     await supabase.auth.signOut();
     return { error: "Esta conta não está activa. Contacte o suporte para recuperar o acesso." };
   }
+
+  const target: string = partner
+    ? (isPartnerPath(requestedNext) && requestedNext ? requestedNext : "/parceiro")
+    : (isPartnerPath(requestedNext) ? "/dashboard" : requestedNext || "/dashboard");
 
   redirect(target);
 }

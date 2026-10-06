@@ -1,8 +1,8 @@
 import Link from "next/link";
+import { signOut } from "@/lib/auth/actions";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardSidebarNav } from "@/components/dashboard-sidebar-nav";
 import { DashboardMobileMenu } from "@/components/dashboard-mobile-menu";
-import { SignOutButton } from "@/components/sign-out-button";
 
 export async function DashboardSidebar() {
   const supabase = await createClient();
@@ -19,12 +19,12 @@ export async function DashboardSidebar() {
     <>
       <DashboardMobileMenu platformAccess={platformAccess} unreadNotifications={unreadNotifications ?? 0} />
       <aside className="dashboard-sidebar">
-        <div className="dashboard-brand"><small>Área empresarial</small><strong>MozEmpresas</strong></div>
-        <DashboardSidebarNav platformAccess={platformAccess} unreadNotifications={unreadNotifications ?? 0} />
-        <div className="dashboard-user">
-          <Link className="dashboard-account-link" href="/dashboard/conta">A minha conta</Link>
-          <div className="dashboard-signout-form"><SignOutButton /></div>
-        </div>
+      <div className="dashboard-brand"><small>Área empresarial</small><strong>MozEmpresas</strong></div>
+      <DashboardSidebarNav platformAccess={platformAccess} unreadNotifications={unreadNotifications ?? 0} />
+      <div className="dashboard-user">
+        <Link className="dashboard-account-link" href="/dashboard/conta">A minha conta</Link>
+        <form action={signOut} className="dashboard-signout-form"><button className="btn header-signout full" type="submit">Sair</button></form>
+      </div>
       </aside>
     </>
   );
