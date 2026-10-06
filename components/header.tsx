@@ -55,14 +55,10 @@ export function Header({
       setSignedIn(true);
       try {
         const supabase = createClient();
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        if (active) setAccountType((profile?.user_type as AccountType | null) || "empresa");
+        const { data: partnerResult } = await supabase.rpc("is_partner_account");
+        if (active) setAccountType(partnerResult === true ? "parceiro" : "empresa");
       } catch {
-        if (active) setAccountType(initialAccountType || "empresa");
+        if (active) setAccountType(initialAccountType === "parceiro" ? "parceiro" : "empresa");
       }
     };
 
