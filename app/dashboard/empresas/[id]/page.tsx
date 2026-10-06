@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { deleteBusinessAction, updateBusiness } from "@/lib/businesses/actions";
@@ -128,7 +129,7 @@ export default async function ManageBusinessPage({ params }: { params: Promise<{
             </div>
             <div className="business-manage-readiness">
               <div className="business-manage-readiness-meta"><span>Completude estimada</span><strong>{completenessPercent}%</strong></div>
-              <div className="business-manage-readiness-bar" style={{"--readiness":`${completenessPercent}%`} as React.CSSProperties}><span /></div>
+              <div className="business-manage-readiness-bar" style={{"--readiness":`${completenessPercent}%`} as CSSProperties}><span /></div>
             </div>
             <div className="business-manage-signals">
               <div className="business-manage-signal"><strong>{business.is_public ? "Presença activa" : "Presença por publicar"}</strong><span>{business.is_public ? "O perfil já pode ser encontrado no directório." : "Termine a informação essencial e publique quando estiver pronto."}</span></div>
