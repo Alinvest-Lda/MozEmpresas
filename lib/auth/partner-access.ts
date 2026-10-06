@@ -52,7 +52,7 @@ export async function createPartnerAccess(formData: FormData): Promise<void> {
 
   const requestHeaders = await headers();
   const origin = requestHeaders.get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "";
-  const inviteUrl = `${origin}/parceiro/ativar?token=${token}`;
+  const inviteUrl = `${origin}/parceiro-acesso/ativar?token=${token}`;
   redirect(`/admin/parceiros?created=1&access=${encodeURIComponent(inviteUrl)}`);
 }
 
