@@ -7,35 +7,53 @@ import { getManagedBusinessIds } from "@/lib/businesses/permissions";
 
 export default async function Dashboard() {
   const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
-  const userId = claimsData?.claims?.sub;
-  if (!userId) redirect("/login");
-
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: ownedBusinesses }, { data: memberships }] = await Promise.all([
-    supabase.from("profiles").select("full_name,location,website,bio").eq("id", user.id).maybeSingle(),
-    supabase.from("businesses").select("id,name,slug,location,is_public").eq("owner_id", user.id).is("archived_at", null).order("created_at", { ascending: false }),
-    supabase.from("business_members").select("business_id,role").eq("user_id", user.id),
-  ]);
+  let profile: { full_name?: string | null } | null = null;
+  let ownedBusinesses: any[] = [];
+  let memberships: any[] = [];
+  let listings: { id: string }[] = [];
 
-  const managedBusinessIds = await getManagedBusinessIds(supabase, user.id);
-  const { data: listings } = managedBusinessIds.length
-    ? await supabase.from("listings").select("id").in("business_id", managedBusinessIds)
-    : { data: [] as { id: string }[] };
+  if (user) {
+    const [{ data: userProfile }, { data: userBusinesses }, { data: userMemberships }] = await Promise.all([
+      supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+      supabase.from("businesses").select("id,name,slug,location,is_public").eq("owner_id", user.id).is("archived_at", null).order("created_at", { ascending: false }),
+      supabase.from("business_members").select("business_id,role").eq("user_id", user.id),
+    ]);
+    profile = userProfile;
+    ownedBusinesses = userBusinesses ?? [];
+    memberships = userMemberships ?? [];
+
+    const managedBusinessIds = await getManagedBusinessIds(supabase, user.id);
+    if (managedBusinessIds.length) {
+      const { data } = await supabase.from("listings").select("id").in("business_id", managedBusinessIds);
+      listings = data ?? [];
+    }
+  } else {
+    // Public visual preview: deliberately uses only synthetic data.
+    profile = { full_name: "Administrador" };
+    ownedBusinesses = [
+      { id: "preview-public", name: "Empresa de Demonstração", slug: "empresa-demonstracao", location: "Maputo", is_public: true },
+      { id: "preview-review", name: "Empresa em Configuração", slug: "empresa-configuracao", location: "Maputo", is_public: false },
+    ];
+    listings = [
+      { id: "preview-offer-1" },
+      { id: "preview-offer-2" },
+      { id: "preview-offer-3" },
+    ];
+  }
 
   const memberBusinessIds = [...new Set((memberships ?? []).map((item) => item.business_id))];
-  const { data: memberBusinesses } = memberBusinessIds.length
+  const { data: memberBusinesses } = user && memberBusinessIds.length
     ? await supabase.from("businesses").select("id,name,slug,location,is_public").in("id", memberBusinessIds)
     : { data: [] };
 
   const businesses = [
-    ...(ownedBusinesses ?? []),
-    ...(memberBusinesses ?? []).filter((item) => !(ownedBusinesses ?? []).some((owned) => owned.id === item.id)),
+    ...ownedBusinesses,
+    ...(memberBusinesses ?? []).filter((item) => !ownedBusinesses.some((owned) => owned.id === item.id)),
   ];
 
-  const name = profile?.full_name || user.email?.split("@")[0] || "Utilizador";
+  const name = profile?.full_name || user?.email?.split("@")[0] || "Utilizador";
   const publicBusinesses = businesses.filter((business) => business.is_public);
   const businessesNeedingAttention = businesses.filter((business) => !business.is_public);
   const attentionCount = businessesNeedingAttention.length;
