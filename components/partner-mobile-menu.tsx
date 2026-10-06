@@ -3,11 +3,16 @@ import { useEffect,useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/auth/actions";
+
 export const partnerNavGroups = [
- {label:"Trabalho",links:[["/parceiro","Visão geral"],["/parceiro/empresas","Empresas"],["/parceiro/oportunidades","Oportunidades"]]},
- {label:"Actividade",links:[["/parceiro/servicos","Serviços"],["/parceiro/indicacoes","Indicações e recomendações"],["/parceiro/resultados","Resultados"]]},
- {label:"Conta",links:[["/parceiro/conta","A minha conta"]]},
+ {label:"Oportunidades",links:[["/parceiro","Visão geral"],["/parceiro/oportunidades","Minhas oportunidades"]]},
+ {label:"Crescimento",links:[["/parceiro/publicidade","Publicidade"]]},
+ {label:"Inteligência",links:[["/parceiro/inteligencia","Mercado e insights"]]},
+ {label:"Serviços",links:[["/parceiro/servicos","Serviços"],["/parceiro/exclusividades","Exclusividades"]]},
+ {label:"Actividade",links:[["/parceiro/resultados","Desempenho e histórico"]]},
+ {label:"Conta",links:[["/parceiro/conta","Perfil e gestores"]]},
 ] as const;
+
 export function PartnerMobileMenu(){
  const pathname=usePathname()||"/parceiro"; const [open,setOpen]=useState(false);
  useEffect(()=>{setOpen(false)},[pathname]); useEffect(()=>{document.body.style.overflow=open?"hidden":"";return()=>{document.body.style.overflow=""}},[open]);
