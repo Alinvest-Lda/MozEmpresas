@@ -22,6 +22,6 @@ export function PartnerSidebar() {
         })}
       </div>)}
     </nav>
-    <div className="partner-sidebar-bottom"><Link href="/dashboard">Área empresarial</Link><form action={signOut}><button className="btn header-signout full" type="submit">Sair</button></form></div>
+    <div className="partner-sidebar-bottom"><Link href="/parceiro/conta">Conta do parceiro</Link><form action={signOut}><button className="btn header-signout full" type="submit">Sair</button></form></div>
   </aside>;
 }
