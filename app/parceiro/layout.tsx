@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PartnerSidebar } from "@/components/partner-sidebar";
+import "@/components/partner-workspace.css";
 
 export default async function PartnerLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
