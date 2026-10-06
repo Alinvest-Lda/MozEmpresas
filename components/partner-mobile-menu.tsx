@@ -5,11 +5,9 @@ import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/auth/actions";
 
 export const partnerNavGroups = [
- {label:"Oportunidades",links:[["/parceiro","Visão geral"],["/parceiro/oportunidades","Minhas oportunidades"]]},
- {label:"Crescimento",links:[["/parceiro/publicidade","Publicidade"]]},
- {label:"Inteligência",links:[["/parceiro/inteligencia","Mercado e insights"]]},
- {label:"Serviços",links:[["/parceiro/servicos","Serviços"],["/parceiro/exclusividades","Exclusividades"]]},
- {label:"Actividade",links:[["/parceiro/resultados","Desempenho e histórico"]]},
+ {label:"Trabalho",links:[["/parceiro","Visão geral"],["/parceiro/oportunidades","Minhas oportunidades"]]},
+ {label:"Serviços",links:[["/parceiro/servicos","Serviços"]]},
+ {label:"Actividade",links:[["/parceiro/resultados","Actividade"]]},
  {label:"Conta",links:[["/parceiro/conta","Perfil e gestores"]]},
 ] as const;
 
