@@ -14,8 +14,8 @@ export function Footer() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSignedIn(Boolean(session)));
     return () => subscription.unsubscribe();
   }, []);
-  if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) return null;
-  if (signedIn && (pathname === "/dashboard" || pathname.startsWith("/dashboard/"))) return null;
+  const authenticatedArea = pathname === "/dashboard" || pathname.startsWith("/dashboard/") || pathname === "/parceiro" || pathname.startsWith("/parceiro/");
+  if (authenticatedArea || signedIn && (pathname === "/dashboard" || pathname.startsWith("/dashboard/") || pathname === "/parceiro" || pathname.startsWith("/parceiro/"))) return null;
   return <footer className="site-footer">
     <div className="container footer-grid">
       <div className="footer-brand"><div className="footer-logo">Moz<span>Empresas</span></div><p>Directório e plataforma de informação empresarial de Moçambique.</p></div>
