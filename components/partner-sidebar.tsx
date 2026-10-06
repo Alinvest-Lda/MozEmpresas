@@ -4,9 +4,9 @@ import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/auth/actions";
 
 const groups = [
-  { label: "Centro", links: [["/parceiro","Início"],["/parceiro/empresas","Empresas"],["/parceiro/oportunidades","Oportunidades"]] },
-  { label: "Operação", links: [["/parceiro/servicos","Serviços"],["/parceiro/indicacoes","Indicações e recomendações"],["/parceiro/resultados","Resultados"]] },
-  { label: "Conta", links: [["/parceiro/conta","Conta do parceiro"]] },
+  { label: "Trabalho", links: [["/parceiro","Visão geral"],["/parceiro/empresas","Empresas"],["/parceiro/oportunidades","Oportunidades"]] },
+  { label: "Actividade", links: [["/parceiro/servicos","Serviços"],["/parceiro/indicacoes","Indicações e recomendações"],["/parceiro/resultados","Resultados"]] },
+  { label: "Conta", links: [["/parceiro/conta","A minha conta"]] },
 ] as const;
 
 export function PartnerSidebar() {
@@ -22,6 +22,6 @@ export function PartnerSidebar() {
         })}
       </div>)}
     </nav>
-    <div className="partner-sidebar-bottom"><Link href="/parceiro/conta">Conta do parceiro</Link><form action={signOut}><button className="btn header-signout full" type="submit">Sair</button></form></div>
+    <div className="partner-sidebar-bottom"><Link href="/parceiro/conta">A minha conta</Link><form action={signOut}><button className="btn header-signout full" type="submit">Sair</button></form></div>
   </aside>;
 }
