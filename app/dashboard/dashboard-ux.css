@@ -838,3 +838,14 @@
 @media(max-width:1050px){.workspace-hero,.workspace-primary-grid{grid-template-columns:1fr}.workspace-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.workspace-secondary-grid{grid-template-columns:1fr}.workspace-context-grid{grid-template-columns:1fr}.workspace-hero{padding-top:22px}.workspace-panel{padding:17px}.workspace-panel-head{display:block}.workspace-panel-head .text-link{display:inline-block;margin-top:10px}}
 @media(max-width:480px){.workspace-metrics{grid-template-columns:1fr}.workspace-hero-copy h1{font-size:34px}.workspace-action-row{grid-template-columns:30px minmax(0,1fr)}.workspace-action-row .text-link{grid-column:2}.workspace-activity-list>a,.workspace-entity-list>a{grid-template-columns:1fr;gap:6px}}
+
+
+/* Workspace migration: normalize existing dashboard pages */
+.dashboard-main{background:linear-gradient(180deg,#f7f8f9 0,#fff 380px);min-height:100vh}
+.dashboard-main .dashboard-content{max-width:1500px}
+.dashboard-main .dashboard-topbar{padding-top:30px}
+.dashboard-main .dashboard-section,.dashboard-main .dashboard-card,.dashboard-main .dashboard-panel,.dashboard-main .account-panel{border-radius:18px}
+.dashboard-main .dashboard-topbar h1{letter-spacing:-.045em}
+.dashboard-main .dashboard-section-head{gap:16px}
+.dashboard-main .dashboard-stat,.dashboard-main .dashboard-card,.dashboard-main .dashboard-panel{box-shadow:0 8px 30px rgba(17,24,39,.035)}
+@media(max-width:700px){.dashboard-main .dashboard-topbar{padding-top:20px}.dashboard-main .dashboard-section{padding:17px!important}}
