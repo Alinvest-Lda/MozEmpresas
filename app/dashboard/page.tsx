@@ -19,6 +19,7 @@ export default async function Dashboard() {
   let activeOrders = 0;
   let unread = 0;
   let opportunities:{id:string; title:string; type:string; location:string|null; created_at:string}[] = [];
+  let recentCommerce:{id:string; status:string; created_at:string}[] = [];
 
   if (user) {
     const [{data:profile},{data:owned},{data:memberships},{count:notificationCount}] = await Promise.all([
@@ -44,8 +45,7 @@ export default async function Dashboard() {
       ]);
       listings=ls??[]; orderCount=orders??0; activeOrders=active??0;
       opportunities=(marketOpportunities??[]) as typeof opportunities;
-      const recentOrderItems=(recentOrders??[]) as {id:string;status:string;created_at:string}[];
-      recentOrderItems.forEach(o=>listings.push({id:"order-"+o.id,title:"Actividade comercial",business_id:null,status:o.status}));
+      recentCommerce=(recentOrders??[]) as typeof recentCommerce;
     }
     unread=notificationCount??0;
   } else {
@@ -92,9 +92,10 @@ export default async function Dashboard() {
 
   const formatDate=(value?:string)=>value?new Intl.DateTimeFormat("pt-MZ",{day:"2-digit",month:"short"}).format(new Date(value)):"";
   const activity:Activity[]=[
-    ...publishedListings.slice(0,3).map(x=>({label:"Oferta",title:x.title||"Oferta publicada",meta:"Produto ou serviço disponível no mercado",href:"/dashboard/marketplace?tab=vender",created_at:undefined})),
+    ...publishedListings.slice(0,2).map(x=>({label:"Oferta",title:x.title||"Oferta publicada",meta:"Produto ou serviço disponível no mercado",href:"/dashboard/marketplace?tab=vender",created_at:undefined})),
     ...businesses.slice(0,2).map(b=>({label:b.is_public?"Presença activa":"Revisão",title:b.name,meta:b.is_public?"Perfil visível no directório":"Perfil ainda não publicado",href:"/dashboard/empresas",created_at:b.created_at})),
-  ].slice(0,5);
+    ...recentCommerce.slice(0,2).map(o=>({label:"Mercado",title:"Actividade comercial",meta:`Estado: ${o.status.toLowerCase().replaceAll("_"," ")}`,href:"/dashboard/marketplace?tab=negociacoes",created_at:o.created_at})),
+  ].sort((a,b)=>new Date(b.created_at||0).getTime()-new Date(a.created_at||0).getTime()).slice(0,5);
 
   return <main className="dashboard-main workspace-dashboard">
     <div className="dashboard-content">
