@@ -26,4 +26,4 @@ return <main className="dashboard-main"><div className="dashboard-content">
 {opportunities?.length?<div className="dashboard-list">{opportunities.map(x=><Link href={"/oportunidades/"+x.slug} key={x.id}><strong>{x.title}</strong><span>{x.organization||"Organização não indicada"} · {x.location||"Localização não indicada"} · {dateLabel(x.closes_at)}</span><b>→</b></Link>)}</div>:<div className="empty"><div className="empty-icon">—</div><p>Não há oportunidades publicadas neste momento.</p></div>}</section>
 <section className="dashboard-section"><div className="dashboard-section-head"><div><span className="dashboard-kicker">Acesso rápido</span><h2>Outras ferramentas</h2></div></div>
 <div className="dashboard-quick-links"><Link href="/parceiro/resultados"><div><strong>Resultados</strong><small>Consultar a leitura factual da actividade</small></div><b>→</b></Link><Link href="/parceiro/conta"><div><strong>A minha conta</strong><small>Consultar identidade e acesso</small></div><b>→</b></Link></div></section>
-</div></div></main>
+</div></div></div></main>
