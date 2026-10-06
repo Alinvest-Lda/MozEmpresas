@@ -2737,3 +2737,10 @@ button,input,select,textarea{font-size:16px}
 @media(max-width:1050px){.workspace-hero{grid-template-columns:minmax(0,1fr) 260px}.workspace-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.workspace-metric-featured{grid-column:span 2}.workspace-primary-grid,.workspace-secondary-grid{grid-template-columns:1fr}.workspace-context-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.workspace-dashboard .dashboard-content{padding-top:22px}.workspace-hero{grid-template-columns:1fr;gap:12px}.workspace-hero-copy h1{font-size:34px}.workspace-metrics{grid-template-columns:1fr 1fr}.workspace-metric-featured{grid-column:1/-1}.workspace-panel{padding:18px}.workspace-context-grid{grid-template-columns:1fr}.workspace-action-row{grid-template-columns:30px minmax(0,1fr) 18px;gap:10px}.workspace-action-index{width:28px;height:28px}}
 @media(max-width:480px){.workspace-dashboard .dashboard-content{padding-inline:12px}.workspace-metrics{grid-template-columns:1fr}.workspace-metric-featured{grid-column:auto}.workspace-panel-head{align-items:flex-start;flex-direction:column;gap:7px}.workspace-action-row p{font-size:10px}.workspace-hero-context{padding:16px}.workspace-next-panel .btn{width:100%;justify-content:center}}
+
+/* Executive dashboard readout */
+.workspace-readout-list{display:grid;gap:0;border-top:1px solid #dfe8e5}
+.workspace-readout-list>div{padding:13px 0;border-bottom:1px solid #dfe8e5}
+.workspace-readout-list span{display:block;font-size:8px;text-transform:uppercase;letter-spacing:.08em;font-weight:900;color:#64736f}
+.workspace-readout-list strong{display:block;margin-top:4px;font-size:15px;color:var(--navy);letter-spacing:-.02em}
+.workspace-readout-list small{display:block;margin-top:3px;font-size:9px;color:#64736f}
