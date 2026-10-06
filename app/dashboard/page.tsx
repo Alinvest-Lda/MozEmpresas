@@ -4,8 +4,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getManagedBusinessIds } from "@/lib/businesses/permissions";
 
-type Business = { id:string; name:string; slug:string; location:string|null; is_public:boolean };
-type Activity = { label:string; title:string; meta:string; href:string };
+type Business = { id:string; name:string; slug:string; location:string|null; is_public:boolean; created_at?:string };
+type Activity = { label:string; title:string; meta:string; href:string; created_at?:string };
 type Action = { label:string; title:string; text:string; href:string };
 
 export default async function Dashboard() {
@@ -18,11 +18,12 @@ export default async function Dashboard() {
   let orderCount = 0;
   let activeOrders = 0;
   let unread = 0;
+  let opportunities:{id:string; title:string; type:string; location:string|null; created_at:string}[] = [];
 
   if (user) {
     const [{data:profile},{data:owned},{data:memberships},{count:notificationCount}] = await Promise.all([
       supabase.from("profiles").select("full_name").eq("id",user.id).maybeSingle(),
-      supabase.from("businesses").select("id,name,slug,location,is_public").eq("owner_id",user.id).is("archived_at",null).order("created_at",{ascending:false}),
+      supabase.from("businesses").select("id,name,slug,location,is_public,created_at").eq("owner_id",user.id).is("archived_at",null).order("created_at",{ascending:false}),
       supabase.from("business_members").select("business_id,role").eq("user_id",user.id),
       supabase.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",user.id).is("read_at",null),
     ]);
@@ -34,12 +35,17 @@ export default async function Dashboard() {
 
     const ids=await getManagedBusinessIds(supabase,user.id);
     if(ids.length){
-      const [{data:ls},{count:orders},{count:active}] = await Promise.all([
+      const [{data:ls},{count:orders},{count:active},{data:recentOrders},{data:marketOpportunities}] = await Promise.all([
         supabase.from("listings").select("id,title,business_id,status").in("business_id",ids).order("created_at",{ascending:false}).limit(20),
         supabase.from("commerce_orders").select("id",{count:"exact",head:true}).eq("buyer_user_id",user.id),
         supabase.from("commerce_orders").select("id",{count:"exact",head:true}).eq("buyer_user_id",user.id).in("status",["INTERESTED","CONTACTED","NEGOTIATING","AGREED"]),
+        supabase.from("commerce_orders").select("id,status,created_at").eq("buyer_user_id",user.id).order("created_at",{ascending:false}).limit(3),
+        supabase.from("listings").select("id,title,type,location,created_at").eq("status","PUBLISHED").not("business_id","in",`(${ids.join(",")})`).order("created_at",{ascending:false}).limit(3),
       ]);
       listings=ls??[]; orderCount=orders??0; activeOrders=active??0;
+      opportunities=(marketOpportunities??[]) as typeof opportunities;
+      const recentOrderItems=(recentOrders??[]) as {id:string;status:string;created_at:string}[];
+      recentOrderItems.forEach(o=>listings.push({id:"order-"+o.id,title:"Actividade comercial",business_id:null,status:o.status}));
     }
     unread=notificationCount??0;
   } else {
@@ -54,6 +60,11 @@ export default async function Dashboard() {
       {id:"p3",title:"Serviços Administrativos",business_id:"preview-1",status:"PUBLISHED"},
     ];
     orderCount=8; activeOrders=3; unread=2;
+    opportunities=[
+      {id:"op-1",title:"Serviços de contabilidade",type:"SERVICE",location:"Maputo",created_at:new Date().toISOString()},
+      {id:"op-2",title:"Fornecimento empresarial",type:"PRODUCT",location:"Matola",created_at:new Date().toISOString()},
+      {id:"op-3",title:"Formação profissional",type:"SERVICE",location:"Maputo",created_at:new Date().toISOString()},
+    ];
   }
 
   const publicBusinesses=businesses.filter(b=>b.is_public);
@@ -79,9 +90,10 @@ export default async function Dashboard() {
     ...(unread?[{label:"Conta",title:`${unread} notificação(ões) por consultar`,text:"Reveja os avisos recentes antes de continuar a operar.",href:"/dashboard/notificacoes"}]:[]),
   ].slice(0,4);
 
+  const formatDate=(value?:string)=>value?new Intl.DateTimeFormat("pt-MZ",{day:"2-digit",month:"short"}).format(new Date(value)):"";
   const activity:Activity[]=[
-    ...publishedListings.slice(0,3).map(x=>({label:"Oferta",title:x.title||"Oferta publicada",meta:"Produto ou serviço disponível no mercado",href:"/dashboard/marketplace?tab=vender"})),
-    ...businesses.slice(0,2).map(b=>({label:b.is_public?"Presença activa":"Revisão",title:b.name,meta:b.is_public?"Perfil visível no directório":"Perfil ainda não publicado",href:"/dashboard/empresas"})),
+    ...publishedListings.slice(0,3).map(x=>({label:"Oferta",title:x.title||"Oferta publicada",meta:"Produto ou serviço disponível no mercado",href:"/dashboard/marketplace?tab=vender",created_at:undefined})),
+    ...businesses.slice(0,2).map(b=>({label:b.is_public?"Presença activa":"Revisão",title:b.name,meta:b.is_public?"Perfil visível no directório":"Perfil ainda não publicado",href:"/dashboard/empresas",created_at:b.created_at})),
   ].slice(0,5);
 
   return <main className="dashboard-main workspace-dashboard">
@@ -130,8 +142,12 @@ export default async function Dashboard() {
 
       <div className="workspace-secondary-grid">
         <section className="workspace-panel">
+          <div className="workspace-panel-head"><div><span className="dashboard-kicker">Oportunidade</span><h2>Onde pode existir valor agora</h2><p>Ofertas públicas recentes que podem ser relevantes para a sua actividade.</p></div><Link href="/dashboard/marketplace?tab=comprar" className="text-link">Explorar mercado →</Link></div>
+          {opportunities.length?<div className="workspace-entity-list">{opportunities.map(o=><Link href={"/marketplace/"+o.id} key={o.id}><span>{o.type==="PRODUCT"?"PRODUTO":"SERVIÇO"} · {o.location||"Localização não indicada"}</span><strong>{o.title}</strong><small>Publicado {formatDate(o.created_at)}</small></Link>)}</div>:<div className="workspace-empty"><strong>Nenhuma oportunidade recente detectada.</strong><p>Explore o mercado para encontrar ofertas fora da sua carteira actual.</p></div>}
+        </section>
+        <section className="workspace-panel">
           <div className="workspace-panel-head"><div><span className="dashboard-kicker">Actividade recente</span><h2>O que aconteceu</h2><p>Uma leitura curta da actividade disponível na conta.</p></div><Link href="/dashboard/marketplace" className="text-link">Ver mercado →</Link></div>
-          {activity.length?<div className="workspace-activity-list">{activity.map(a=><Link href={a.href} key={a.label+a.title}><span>{a.label}</span><strong>{a.title}</strong><small>{a.meta}</small></Link>)}</div>:<div className="workspace-empty"><strong>Ainda não há actividade suficiente.</strong><p>Comece por completar a presença ou publicar uma oferta.</p></div>}
+          {activity.length?<div className="workspace-activity-list">{activity.map(a=><Link href={a.href} key={a.label+a.title}><span>{a.label}</span><strong>{a.title}</strong><small>{a.meta}{a.created_at?` · ${formatDate(a.created_at)}`:""}</small></Link>)}</div>:<div className="workspace-empty"><strong>Ainda não há actividade suficiente.</strong><p>Comece por completar a presença ou publicar uma oferta.</p></div>}
         </section>
         <section className="workspace-panel">
           <div className="workspace-panel-head"><div><span className="dashboard-kicker">Presença</span><h2>Empresas</h2></div><Link href="/dashboard/empresas" className="text-link">Gerir →</Link></div>
