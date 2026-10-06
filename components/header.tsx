@@ -51,14 +51,14 @@ export function Header() {
     return () => document.removeEventListener("pointerdown", handleOutside);
   }, [open]);
 
-  const insideApp = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+  const insideApp = pathname === "/dashboard" || pathname.startsWith("/dashboard/") || pathname === "/parceiro" || pathname.startsWith("/parceiro/");
   const links = signedIn ? appLinks : publicLinks;
   const searchActive = pathname === "/pesquisa";
 
   return (
     <header className={insideApp && signedIn ? "topbar topbar-app" : "topbar"}>
       <div className="container topbar-inner">
-        <Link href={signedIn ? "/dashboard" : "/"} className="brand" aria-label="MozEmpresas">Moz<span>Empresas</span></Link>
+        <Link href={signedIn ? (pathname.startsWith("/parceiro") ? "/parceiro" : "/dashboard") : "/"} className="brand" aria-label="MozEmpresas">Moz<span>Empresas</span></Link>
         <nav className="nav" aria-label={signedIn ? "Navegação do sistema" : "Navegação principal"}>
           {(!insideApp || !signedIn) && links.map(([href, label]) => {
             const active = pathname === href || pathname.startsWith(href + "/");
