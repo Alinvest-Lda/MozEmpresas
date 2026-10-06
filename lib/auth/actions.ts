@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,15 +24,22 @@ async function createProfile(userId: string, fullName: string) {
   return !error;
 }
 
+function safeNext(value: FormDataEntryValue | null) {
+  if (typeof value !== "string") return null;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  return value;
+}
+
+function isPartnerPath(path: string | null) {
+  return Boolean(path && (path === "/parceiro" || path.startsWith("/parceiro/")));
+}
+
 export async function signIn(_state: AuthState, formData: FormData): Promise<AuthState> {
   const parsed = credentialsSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
   });
-  const requestedNext = formData.get("next");
-  const next = typeof requestedNext === "string" && requestedNext.startsWith("/") && !requestedNext.startsWith("//")
-    ? requestedNext
-    : "/dashboard";
+  const requestedNext = safeNext(formData.get("next"));
 
   if (!parsed.success) {
     return { error: "Indique um email válido e uma password com pelo menos 8 caracteres." };
@@ -56,16 +64,35 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
     return { error: "Não foi possível iniciar sessão. Verifique o email e a password." };
   }
 
-  let profile: { full_name: string; user_type: string } | null = null;
+  let profile: { full_name: string; user_type: string; account_status?: string } | null = null;
 
   if (data.user) {
-    const { data: existingProfile } = await supabase.from("profiles").select("full_name,user_type").eq("id", data.user.id).maybeSingle();
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("full_name,user_type,account_status")
+      .eq("id", data.user.id)
+      .maybeSingle();
     profile = existingProfile;
-    await createProfile(data.user.id, profile?.full_name || data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "Utilizador");
+    await createProfile(
+      data.user.id,
+      profile?.full_name ||
+        data.user.user_metadata?.full_name ||
+        data.user.email?.split("@")[0] ||
+        "Utilizador"
+    );
   }
 
-  if (!requestedNext && profile?.user_type === "parceiro") redirect("/parceiro");
-  redirect(next);
+  const partner = profile?.user_type === "parceiro";
+  const target = partner
+    ? (isPartnerPath(requestedNext) ? requestedNext : "/parceiro")
+    : (isPartnerPath(requestedNext) ? "/dashboard" : requestedNext || "/dashboard");
+
+  if (profile?.account_status && profile.account_status !== "ACTIVE") {
+    await supabase.auth.signOut();
+    return { error: "Esta conta não está activa. Contacte o suporte para recuperar o acesso." };
+  }
+
+  redirect(target);
 }
 
 export async function signUp(_state: AuthState, formData: FormData): Promise<AuthState> {
@@ -122,5 +149,6 @@ export async function signOut() {
     const supabase = await createClient();
     await supabase.auth.signOut();
   } catch {}
+  revalidatePath("/", "layout");
   redirect("/");
 }

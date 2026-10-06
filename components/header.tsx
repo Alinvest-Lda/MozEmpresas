@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import type { AccountType } from "@/lib/auth/access";
 
 const publicLinks = [
   ["/empresas", "Empresas"],
@@ -19,24 +20,74 @@ const appLinks = [
   ["/dashboard/servicos", "Serviços"],
 ] as const;
 
-export function Header() {
+const partnerLinks = [
+  ["/parceiro", "Área de parceiro"],
+  ["/parceiro/oportunidades", "Oportunidades"],
+  ["/parceiro/publicidade", "Publicidade"],
+  ["/parceiro/inteligencia", "Inteligência"],
+] as const;
+
+export function Header({
+  initialSignedIn = false,
+  initialAccountType = null,
+}: {
+  initialSignedIn?: boolean;
+  initialAccountType?: AccountType | null;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [signedIn, setSignedIn] = useState(false);
+  const [signedIn, setSignedIn] = useState(initialSignedIn);
+  const [accountType, setAccountType] = useState<AccountType | null>(initialAccountType);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null;
+    let active = true;
+
+    const syncSession = async (session: { user: { id: string } } | null) => {
+      if (!active) return;
+      if (!session) {
+        setSignedIn(false);
+        setAccountType(null);
+        return;
+      }
+
+      setSignedIn(true);
+      try {
+        const supabase = createClient();
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        if (active) setAccountType((profile?.user_type as AccountType | null) || "empresa");
+      } catch {
+        if (active) setAccountType(initialAccountType || "empresa");
+      }
+    };
+
     try {
       const supabase = createClient();
-      supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session))).catch(() => setSignedIn(false));
-      const result = supabase.auth.onAuthStateChange((_event, session) => setSignedIn(Boolean(session)));
+      supabase.auth.getSession().then(({ data }) => syncSession(data.session)).catch(() => {
+        if (active) {
+          setSignedIn(false);
+          setAccountType(null);
+        }
+      });
+      const result = supabase.auth.onAuthStateChange((_event, session) => {
+        void syncSession(session);
+      });
       subscription = result.data.subscription;
     } catch {
       setSignedIn(false);
+      setAccountType(null);
     }
-    return () => subscription?.unsubscribe();
-  }, []);
+
+    return () => {
+      active = false;
+      subscription?.unsubscribe();
+    };
+  }, [initialAccountType]);
 
   useEffect(() => {
     setOpen(false);
@@ -52,13 +103,15 @@ export function Header() {
   }, [open]);
 
   const insideApp = pathname === "/dashboard" || pathname.startsWith("/dashboard/") || pathname === "/parceiro" || pathname.startsWith("/parceiro/");
-  const links = signedIn ? appLinks : publicLinks;
+  const links = signedIn ? (accountType === "parceiro" ? partnerLinks : appLinks) : publicLinks;
   const searchActive = pathname === "/pesquisa";
+  const panelHref = accountType === "parceiro" ? "/parceiro" : "/dashboard";
+  const panelLabel = accountType === "parceiro" ? "Aceder à área de parceiro" : "Aceder ao painel";
 
   return (
     <header className={insideApp && signedIn ? "topbar topbar-app" : "topbar"}>
       <div className="container topbar-inner">
-        <Link href={signedIn ? (pathname.startsWith("/parceiro") ? "/parceiro" : "/dashboard") : "/"} className="brand" aria-label="MozEmpresas">Moz<span>Empresas</span></Link>
+        <Link href={signedIn ? panelHref : "/"} className="brand" aria-label="MozEmpresas">Moz<span>Empresas</span></Link>
         <nav className="nav" aria-label={signedIn ? "Navegação do sistema" : "Navegação principal"}>
           {(!insideApp || !signedIn) && links.map(([href, label]) => {
             const active = pathname === href || pathname.startsWith(href + "/");
@@ -67,7 +120,7 @@ export function Header() {
         </nav>
         <div className="header-actions">
           <Link href="/pesquisa" className={"header-search-link" + (searchActive ? " active" : "")} aria-label="Pesquisar no MozEmpresas" title="Pesquisar no MozEmpresas">⌕<span>Pesquisar</span></Link>
-          {signedIn ? (insideApp ? null : <div className="header-account-actions"><Link className="btn primary header-panel-btn" href="/dashboard">Aceder ao painel</Link></div>) : (
+          {signedIn ? (insideApp ? null : <div className="header-account-actions"><Link className="btn primary header-panel-btn" href={panelHref}>{panelLabel}</Link></div>) : (
             <><Link className="btn ghost desktop-only" href="/login">Entrar</Link><Link className="btn primary desktop-register" href="/registo">Criar conta</Link></>
           )}
           {(!insideApp || !signedIn) && (
@@ -79,7 +132,7 @@ export function Header() {
                   return <Link key={href} href={href} onClick={() => setOpen(false)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>{label}</Link>;
                 })}
                 <Link href="/pesquisa" onClick={() => setOpen(false)} className={searchActive ? "active" : ""}>Pesquisar</Link>
-                {signedIn ? <Link href="/dashboard" onClick={() => setOpen(false)} className="mobile-menu-panel-btn">Aceder ao painel</Link> : <><Link href="/login" onClick={() => setOpen(false)}>Entrar</Link><Link className="mobile-menu-register" href="/registo" onClick={() => setOpen(false)}>Criar conta</Link></>}
+                {signedIn ? <Link href={panelHref} onClick={() => setOpen(false)} className="mobile-menu-panel-btn">{panelLabel}</Link> : <><Link href="/login" onClick={() => setOpen(false)}>Entrar</Link><Link className="mobile-menu-register" href="/registo" onClick={() => setOpen(false)}>Criar conta</Link></>}
               </div>}
             </div>
           )}
