@@ -82,11 +82,17 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
     );
   }
 
-  const partner = profile?.user_type === "parceiro";
-
   if (profile?.account_status && profile.account_status !== "ACTIVE") {
     await supabase.auth.signOut();
     return { error: "Esta conta não está activa. Contacte o suporte para recuperar o acesso." };
+  }
+
+  let partner = false;
+  try {
+    const { data: partnerResult } = await supabase.rpc("is_partner_account");
+    partner = partnerResult === true;
+  } catch {
+    partner = false;
   }
 
   const target: string = partner
