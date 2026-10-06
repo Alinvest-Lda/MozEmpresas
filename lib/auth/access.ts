@@ -3,10 +3,16 @@ import { createClient } from "@/lib/supabase/server";
 
 export type AccountType = "empresa" | "profissional" | "parceiro";
 
+function normalizeAccountType(value: unknown): Exclude<AccountType, "parceiro"> {
+  return value === "profissional" ? "profissional" : "empresa";
+}
+
 export async function getCurrentAccountContext() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, accountType: null as AccountType | null, accountStatus: null as string | null };
+  if (!user) {
+    return { supabase, user: null, accountType: null as AccountType | null, accountStatus: null as string | null };
+  }
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -14,10 +20,18 @@ export async function getCurrentAccountContext() {
     .eq("id", user.id)
     .maybeSingle();
 
+  let isPartner = false;
+  try {
+    const { data } = await supabase.rpc("is_partner_account");
+    isPartner = data === true;
+  } catch {
+    isPartner = false;
+  }
+
   return {
     supabase,
     user,
-    accountType: (profile?.user_type ?? "empresa") as AccountType,
+    accountType: isPartner ? "parceiro" as const : normalizeAccountType(profile?.user_type),
     accountStatus: profile?.account_status ?? "ACTIVE",
   };
 }
