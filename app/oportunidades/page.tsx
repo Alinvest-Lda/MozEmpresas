@@ -1,95 +1,28 @@
-export const dynamic = "force-dynamic";
+export const dynamic="force-dynamic";
+import Link from"next/link";
+import{createClient}from"@/lib/supabase/server";
 
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+const labels:Record<string,string>={FUNDING:"Financiamento",PROGRAM:"Programa / Candidatura",AWARD_SCHOLARSHIP:"Bolsa / Prémio",PARTNERSHIP:"Parceria / Cooperação",EXPRESSION_OF_INTEREST:"Manifestação de Interesse",CALL:"Chamada · publicação anterior",TRAINING:"Capacitação · publicação anterior",EVENT:"Evento · publicação anterior",TENDER:"Concurso · publicação anterior",BUSINESS:"Negócio · publicação anterior",OTHER:"Publicação anterior"};
+const icons:Record<string,string>={FUNDING:"◈",PROGRAM:"↗",AWARD_SCHOLARSHIP:"✦",PARTNERSHIP:"⌘",EXPRESSION_OF_INTEREST:"◎",CALL:"↗",TRAINING:"◇",EVENT:"◷",TENDER:"▣",BUSINESS:"◆",OTHER:"•"};
 
-const labels: Record<string, string> = {
-  CALL: "Chamada",
-  FUNDING: "Financiamento",
-  PARTNERSHIP: "Parceria",
-  TRAINING: "Capacitação",
-  EVENT: "Evento",
-  BUSINESS: "Negócio",
-  TENDER: "Concurso",
-  OTHER: "Outro",
-};
+function dateLabel(value:string|null){return value?new Date(value).toLocaleDateString("pt-MZ",{day:"2-digit",month:"short",year:"numeric"}):"Prazo não indicado"}
 
-const icons: Record<string, string> = {
-  CALL: "↗",
-  FUNDING: "◈",
-  PARTNERSHIP: "⌘",
-  TRAINING: "◇",
-  EVENT: "◷",
-  BUSINESS: "◆",
-  TENDER: "▣",
-  OTHER: "•",
-};
-
-function dateLabel(value: string | null) {
-  return value
-    ? new Date(value).toLocaleDateString("pt-MZ", { day: "2-digit", month: "short", year: "numeric" })
-    : "Prazo não indicado";
-}
-
-export default async function OpportunitiesPage() {
-  const supabase = await createClient();
-  const { data: items } = await supabase
-    .from("opportunities")
-    .select("id,title,slug,type,description,organization,location,opens_at,closes_at")
-    .eq("status", "PUBLISHED")
-    .order("closes_at", { ascending: true, nullsFirst: false })
-    .limit(30);
-
-  const opportunities = items ?? [];
-
-  return (
-    <main className="page">
-      <div className="container">
-        <section className="page-header">
-          <span className="eyebrow">Oportunidades empresariais</span>
-          <h1>Encontre oportunidades que podem mover o seu negócio.</h1>
-          <p className="muted" style={{ maxWidth: 760 }}>
-            Chamadas, financiamento, parcerias, capacitação e outros processos publicados por organizações.
-            Consulte as condições e participe quando fizer sentido para a sua empresa.
-          </p>
-        </section>
-
-        <div className="contest-command-bar">
-          <div className="contest-command-copy">
-            <span className="eyebrow">Descoberta</span>
-            <strong>{opportunities.length} oportunidades disponíveis</strong>
-            <span>Ordenadas pelo prazo mais próximo.</span>
-          </div>
-          <Link href="/dashboard/recomendacoes" className="btn">Ver recomendações →</Link>
-        </div>
-
-        {opportunities.length ? (
-          <section className="opportunity-category-sections" style={{ marginTop: 28 }}>
-            <div className="opportunity-grid">
-              {opportunities.map((item) => (
-                <Link href={"/oportunidades/" + item.slug} className="opportunity-card" key={item.id}>
-                  <div className="opportunity-label">
-                    {icons[item.type] || "•"} {labels[item.type] || item.type}
-                  </div>
-                  <h3>{item.title}</h3>
-                  <p>{item.description || "Consulte os detalhes e condições desta oportunidade."}</p>
-                  <div className="opportunity-result-bottom"><span className="opportunity-mobile-cta">Ver oportunidade →</span>
-                    <span>{item.organization || "Organização não indicada"}</span>
-                    <span>{item.closes_at ? "Até " + dateLabel(item.closes_at) : "Prazo aberto"}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : (
-          <section className="card" style={{ marginTop: 28, padding: 28 }}>
-            <span className="eyebrow">Sem resultados</span>
-            <h2 style={{ margin: "9px 0 6px" }}>Ainda não existem oportunidades publicadas.</h2>
-            <p className="muted">Volte mais tarde ou explore o Directório e o Marketplace enquanto novas oportunidades são adicionadas.</p>
-            <Link href="/empresas" className="btn primary" style={{ marginTop: 15 }}>Explorar empresas →</Link>
-          </section>
-        )}
-      </div>
-    </main>
-  );
+export default async function OpportunitiesPage({searchParams}:{searchParams?:Promise<{q?:string;type?:string}>}){
+ const params=searchParams?await searchParams:{};
+ const supabase=await createClient();
+ const{data:items}=await supabase.from("opportunities").select("id,title,slug,type,description,organization,location,opens_at,closes_at").eq("status","PUBLISHED").order("closes_at",{ascending:true,nullsFirst:false}).limit(60);
+ const q=(params.q||"").trim().toLowerCase(),type=params.type||"";
+ const opportunities=(items??[]).filter((x:any)=>(!q||[x.title,x.description,x.organization,x.location].filter(Boolean).join(" ").toLowerCase().includes(q))&&(!type||x.type===type));
+ const currentTypes=["FUNDING","PROGRAM","AWARD_SCHOLARSHIP","PARTNERSHIP","EXPRESSION_OF_INTEREST"];
+ return <main className="page opportunities-hub"><div className="container">
+  <section className="opportunities-hero"><div><span className="eyebrow">Oportunidades</span><h1>Possibilidades abertas por organizações.</h1><p>Financiamento, programas, bolsas, parcerias e manifestações de interesse. Aqui, uma oportunidade significa que existe uma forma concreta de participar.</p></div><div className="opportunities-definition"><span>REGRA DO MÓDULO</span><strong>Participar · candidatar-se · cooperar</strong><small>Produtos, concursos e publicidade vivem noutros espaços.</small></div></section>
+  <form className="opportunities-filter" method="get"><div className="opportunity-search"><span>⌕</span><input name="q" defaultValue={params.q||""} placeholder="Pesquisar por título, organização ou localização"/></div><select name="type" defaultValue={type}><option value="">Todos os tipos</option>{currentTypes.map(v=><option value={v} key={v}>{labels[v]}</option>)}</select><button className="btn primary" type="submit">Pesquisar</button></form>
+  <div className="opportunities-summary"><strong>{opportunities.length} oportunidade{opportunities.length===1?"":"s"}</strong><span>{type?labels[type]:"Todas as categorias"}{q?" · pesquisa: "+q:""}</span></div>
+  {opportunities.length?<section className="opportunity-category-sections"><div className="opportunity-grid">{opportunities.map((item:any)=><Link href={"/oportunidades/"+item.slug} className="opportunity-card opportunity-card-new" key={item.id}><div className="opportunity-label">{icons[item.type]||"•"} {labels[item.type]||item.type}</div><h3>{item.title}</h3><p>{item.description||"Consulte as condições e instruções para participar."}</p><div className="opportunity-result-bottom"><span>{item.organization||"Organização não indicada"}</span><span>{item.closes_at?"Até "+dateLabel(item.closes_at):"Prazo aberto"}</span></div><strong className="opportunity-card-action">Ver oportunidade →</strong></Link>)}</div></section>:<section className="opportunity-no-results"><span>○</span><h2>Nenhuma oportunidade encontrada.</h2><p>Tente outro termo ou explore todas as categorias.</p><Link href="/oportunidades" className="btn">Limpar pesquisa</Link></section>}
+ </div>
+ <style>{`
+ .opportunities-hub{background:#f5f7f6}.opportunities-hero{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:30px;align-items:end;margin-bottom:25px}.opportunities-hero h1{font-size:clamp(39px,5vw,60px);letter-spacing:-.055em;line-height:1.02;margin:12px 0}.opportunities-hero p{max-width:700px;font-size:16px;line-height:1.6;color:#65716e;margin:0}.opportunities-definition{background:#142c29;color:#fff;border-radius:17px;padding:20px}.opportunities-definition span{font-size:9px;letter-spacing:.13em;color:#a9cbc5;font-weight:800}.opportunities-definition strong{display:block;font-size:19px;line-height:1.2;margin:10px 0}.opportunities-definition small{color:#bfd0cc;line-height:1.45}.opportunities-filter{display:grid;grid-template-columns:minmax(0,1fr) 245px auto;gap:8px;background:#fff;border:1px solid #dbe3e0;border-radius:15px;padding:8px;margin-bottom:16px}.opportunity-search{display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid #e0e6e3;border-radius:10px}.opportunity-search span{font-size:21px;color:#0b6b63}.opportunity-search input{border:0;outline:0;width:100%;padding:12px 0;background:transparent}.opportunities-filter select{border:1px solid #e0e6e3;border-radius:10px;padding:0 12px;background:#fff}.opportunities-summary{display:flex;justify-content:space-between;gap:15px;margin:18px 2px 12px;color:#65716e;font-size:12px}.opportunities-summary strong{color:#172321;font-size:13px}.opportunity-card-new{position:relative;padding:22px;min-height:255px}.opportunity-card-new h3{font-size:21px}.opportunity-card-action{margin-top:auto;padding-top:14px;color:#0b6b63;font-size:12px}.opportunity-no-results{background:#fff;border:1px solid #dbe3e0;border-radius:16px;text-align:center;padding:55px 25px}.opportunity-no-results>span{font-size:28px;color:#0b6b63}.opportunity-no-results h2{margin:10px 0 5px}.opportunity-no-results p{color:#65716e;margin-bottom:18px}
+ @media(max-width:800px){.opportunities-hero{grid-template-columns:1fr}.opportunities-filter{grid-template-columns:1fr}.opportunities-filter select{height:44px}.opportunities-filter .btn{width:100%}}
+ `}</style>
+ </main>
 }
