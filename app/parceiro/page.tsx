@@ -26,7 +26,7 @@ export default async function PartnerHome() {
   const actions = [
     { href: "/parceiro/oportunidades", label: "Publicar oportunidade", text: "Apresente uma necessidade, chamada ou oportunidade à rede MozEmpresas.", tag: "OPORTUNIDADES" },
     { href: "/parceiro/publicidade", label: "Activar exposição", text: "Conheça os espaços premium e solicite uma campanha exclusiva.", tag: "CRESCIMENTO" },
-    { href: "/parceiro/inteligencia", label: "Explorar inteligência", text: "Consulte informação e sinais de mercado relevantes para a sua relação com a plataforma.", tag: "INTELIGÊNCIA" },
+    { href: "/parceiro/publicidade", label: "Ver serviços de posicionamento", text: "Escolha publicidade e outros serviços para aumentar a presença da sua entidade perante o público da plataforma.", tag: "EXPOSIÇÃO" },
   ];
 
   return (
@@ -36,7 +36,7 @@ export default async function PartnerHome() {
           <div className="workspace-hero-copy">
             <span className="dashboard-kicker">Área de parceiro</span>
             <h1>{name}</h1>
-            <p>Um espaço dedicado à relação entre a sua entidade e a MozEmpresas — oportunidades, exposição, serviços e inteligência num só lugar.</p>
+            <p>Um espaço dedicado a dois objectivos: gerir as actividades que a sua entidade publica no MozEmpresas e adquirir serviços de posicionamento e exposição perante visitantes e utilizadores registados.</p>
           </div>
           <div className="workspace-hero-context">
             <span>Conta parceira</span>
@@ -91,7 +91,7 @@ export default async function PartnerHome() {
             <div className="workspace-context-grid">
               <Link href="/parceiro/publicidade"><strong>Publicidade e exposição</strong><span>Espaços premium exclusivos e alcance direccionado.</span><b>→</b></Link>
               <Link href="/parceiro/servicos"><strong>Serviços e exclusividades</strong><span>Serviços disponíveis e benefícios associados à conta.</span><b>→</b></Link>
-              <Link href="/parceiro/inteligencia"><strong>Mercado e insights</strong><span>Informação para compreender oportunidades e contexto.</span><b>→</b></Link>
+              <Link href="/parceiro/publicidade"><strong>Posicionamento e exposição</strong><span>Espaços e serviços para aumentar a presença perante o público.</span><b>→</b></Link>
               <Link href="/parceiro/resultados"><strong>Desempenho e histórico</strong><span>Registo factual das actividades da parceria.</span><b>→</b></Link>
             </div>
           </section>
