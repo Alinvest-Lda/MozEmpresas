@@ -92,5 +92,5 @@ export default function NewPartnerOpportunity(){
       </aside>
     </div>
   </div>
-</div></main>
+</main>
 }
