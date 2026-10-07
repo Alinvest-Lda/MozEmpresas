@@ -1,107 +1,18 @@
-export const dynamic = "force-dynamic";
-
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-
-function dateLabel(value: string | null) {
-  return value ? new Date(value).toLocaleDateString("pt-MZ", { day: "2-digit", month: "short" }) : "Sem prazo";
-}
-
-export default async function PartnerHome() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const [{ data: context }, { data: opportunities }, { data: requests }, { data: members }] = await Promise.all([
-    supabase.rpc("partner_account_context"),
-    supabase.from("opportunities").select("id,title,slug,type,organization,location,closes_at").eq("owner_id", user.id).order("created_at", { ascending: false }).limit(6),
-    supabase.from("service_requests").select("id,status,created_at").eq("requester_user_id", user.id).order("created_at", { ascending: false }).limit(6),
-    supabase.rpc("partner_account_members_list"),
-  ]);
-
-  const pending = (requests ?? []).filter((x) => ["REQUESTED", "UNDER_REVIEW", "QUOTED"].includes(x.status)).length;
-  const completed = (requests ?? []).filter((x) => x.status === "COMPLETED").length;
-  const name = context?.[0]?.account_name || user.email?.split("@")[0] || "Parceiro";
-
-  const actions = [
-    { href: "/parceiro/oportunidades", label: "Publicar oportunidade", text: "Apresente uma necessidade, chamada ou oportunidade à rede MozEmpresas.", tag: "OPORTUNIDADES" },
-    { href: "/parceiro/publicidade", label: "Activar exposição", text: "Conheça os espaços premium e solicite uma campanha exclusiva.", tag: "CRESCIMENTO" },
-    { href: "/parceiro/publicidade", label: "Ver serviços de posicionamento", text: "Escolha publicidade e outros serviços para aumentar a presença da sua entidade perante o público da plataforma.", tag: "EXPOSIÇÃO" },
-  ];
-
-  return (
-    <main className="dashboard-main workspace-dashboard">
-      <div className="dashboard-content">
-        <header className="workspace-hero">
-          <div className="workspace-hero-copy">
-            <span className="dashboard-kicker">Área de parceiro</span>
-            <h1>{name}</h1>
-            <p>Um espaço dedicado a dois objectivos: gerir as actividades que a sua entidade publica no MozEmpresas e adquirir serviços de posicionamento e exposição perante visitantes e utilizadores registados.</p>
-          </div>
-          <div className="workspace-hero-context">
-            <span>Conta parceira</span>
-            <strong>Activa</strong>
-            <small>Uma entidade · {members?.length ?? 0} gestor(es) autorizado(s)</small>
-            <Link href="/parceiro/conta" className="text-link">Ver conta e gestores →</Link>
-          </div>
-        </header>
-
-        <section className="workspace-metrics" aria-label="Resumo da relação">
-          <article className="workspace-metric workspace-metric-featured"><span>Relação com a MozEmpresas</span><strong>Em actividade</strong><small>O espaço está preparado para publicar, promover e acompanhar a sua relação com a plataforma.</small></article>
-          <article className="workspace-metric"><span>Oportunidades</span><strong>{opportunities?.length ?? 0}</strong><small>Publicadas pela entidade</small></article>
-          <article className="workspace-metric"><span>Serviços em curso</span><strong>{pending}</strong><small>Pedidos em acompanhamento</small></article>
-          <article className="workspace-metric"><span>Serviços concluídos</span><strong>{completed}</strong><small>Registados na conta</small></article>
-        </section>
-
-        <div className="workspace-primary-grid">
-          <section className="workspace-panel">
-            <div className="workspace-panel-head"><div><span className="dashboard-kicker">Centro de acção</span><h2>O que pretende fazer?</h2><p>As funções centrais da sua relação com o ecossistema MozEmpresas.</p></div></div>
-            <div className="workspace-action-list">
-              {actions.map((action, index) => (
-                <Link href={action.href} className="workspace-action-row" key={action.href}>
-                  <span className="workspace-action-index">0{index + 1}</span>
-                  <div><small>{action.tag}</small><strong>{action.label}</strong><p>{action.text}</p></div>
-                  <b>→</b>
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          <section className="workspace-panel workspace-activity-panel">
-            <div className="workspace-panel-head"><div><span className="dashboard-kicker">Actividade</span><h2>Oportunidades recentes</h2></div><Link href="/parceiro/oportunidades" className="text-link">Ver todas →</Link></div>
-            {opportunities?.length ? (
-              <div className="workspace-activity-list">
-                {opportunities.slice(0, 4).map((item) => (
-                  <Link href={"/oportunidades/" + item.slug} key={item.id}>
-                    <span>{item.type || "Oportunidade"} · {dateLabel(item.closes_at)}</span>
-                    <strong>{item.title}</strong>
-                    <small>{item.organization || name} · {item.location || "Localização não indicada"}</small>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="workspace-empty"><strong>Ainda sem actividade publicada</strong><p>A primeira oportunidade pode ser criada directamente a partir daqui.</p><Link href="/parceiro/oportunidades" className="btn primary">Publicar oportunidade</Link></div>
-            )}
-          </section>
-        </div>
-
-        <div className="workspace-secondary-grid">
-          <section className="workspace-panel">
-            <div className="workspace-panel-head"><div><span className="dashboard-kicker">Acompanhamento</span><h2>A sua relação, em contexto</h2></div></div>
-            <div className="workspace-context-grid">
-              <Link href="/parceiro/publicidade"><strong>Publicidade e exposição</strong><span>Espaços premium exclusivos e alcance direccionado.</span><b>→</b></Link>
-              <Link href="/parceiro/servicos"><strong>Serviços e exclusividades</strong><span>Serviços disponíveis e benefícios associados à conta.</span><b>→</b></Link>
-              <Link href="/parceiro/publicidade"><strong>Posicionamento e exposição</strong><span>Espaços e serviços para aumentar a presença perante o público.</span><b>→</b></Link>
-              <Link href="/parceiro/resultados"><strong>Desempenho e histórico</strong><span>Registo factual das actividades da parceria.</span><b>→</b></Link>
-            </div>
-          </section>
-          <section className="workspace-panel workspace-next-panel">
-            <div className="workspace-panel-head"><div><span className="dashboard-kicker">Conta</span><h2>Gestão do acesso</h2></div></div>
-            <p>Esta conta representa uma única entidade parceira. Os gestores autorizados trabalham sobre o mesmo espaço e os mesmos dados.</p>
-            <Link href="/parceiro/conta#gestores" className="btn secondary">Gerir gestores</Link>
-          </section>
-        </div>
-      </div>
-    </main>
-  );
-}
+export const dynamic="force-dynamic";
+import Link from "next/link";import{createClient}from"@/lib/supabase/server";
+export default async function PartnerHome(){const s=await createClient();const{data:{user}}=await s.auth.getUser();if(!user)return null;
+const[{data:context},{data:opportunities},{data:requests},{data:members},{data:campaigns},{data:entitlements}]=await Promise.all([
+s.rpc("partner_account_context"),s.from("opportunities").select("id,title,slug,type,status,organization,location,closes_at,created_at").eq("owner_id",user.id).order("created_at",{ascending:false}).limit(8),
+s.from("service_requests").select("id,status,created_at,requested_price,currency,platform_services(name)").eq("requester_user_id",user.id).order("created_at",{ascending:false}).limit(8),
+s.rpc("partner_account_members_list"),s.rpc("partner_ad_campaigns_list"),s.rpc("partner_entitlements_list")]);
+const name=context?.[0]?.account_name||user.email?.split("@")[0]||"Parceiro";const published=(opportunities??[]).filter(x=>x.status==="PUBLISHED").length;const drafts=(opportunities??[]).filter(x=>x.status==="DRAFT").length;const pending=(requests??[]).filter(x=>["REQUESTED","UNDER_REVIEW","QUOTED"].includes(x.status)).length;const activeCampaigns=(campaigns??[]).filter((x:any)=>["ACTIVE","RUNNING","PUBLISHED"].includes(x.status)).length;const benefits=(entitlements??[]).filter((x:any)=>x.status==="ACTIVE").length;const date=(v:string)=>new Date(v).toLocaleDateString("pt-MZ",{day:"2-digit",month:"short"});
+const next=drafts?[{label:"Rever e publicar rascunhos",href:"/parceiro/oportunidades",kind:"ACTIVIDADE"}]:!published?[{label:"Publicar a primeira oportunidade",href:"/parceiro/oportunidades/nova",kind:"ACTIVIDADE"}]:!activeCampaigns?[{label:"Escolher um formato de exposição",href:"/parceiro/publicidade",kind:"EXPOSIÇÃO"}]:[{label:"Explorar inteligência e reputação",href:"/parceiro/servicos",kind:"INTELIGÊNCIA"}];
+return <main className="partner-main"><div className="partner-content partner-home">
+<header className="partner-home-top"><div><span className="partner-kicker">PARTNER COMMAND CENTER</span><h1>{name}</h1><p>Gerir actividade. Comprar exposição. Transformar dados em inteligência.</p></div><div className="partner-home-top-meta"><span>CONTA</span><strong>Activa</strong><small>{members?.length??0} gestor(es) autorizado(s)</small><Link href="/parceiro/conta">Gerir conta →</Link></div></header>
+<section className="partner-command-grid"><article className="partner-command-feature"><span className="partner-kicker">ESTADO DA RELAÇÃO</span><strong>Em actividade</strong><p>A sua conta pode publicar oportunidades, activar exposição e solicitar produtos de dados, inteligência e confiança.</p><div><Link href="/parceiro/oportunidades" className="partner-primary-action">Gerir actividade →</Link><Link href="/parceiro/publicidade" className="partner-command-link">Ver exposição</Link></div></article>
+<article className="partner-command-action"><span>PRÓXIMA ACÇÃO</span><strong>{next[0].label}</strong><small>{next[0].kind}</small><Link href={next[0].href}>Abrir →</Link></article></section>
+<section className="partner-home-metrics"><article><span>Publicações activas</span><strong>{published}</strong><small>{drafts} rascunho(s)</small></article><article><span>Campanhas activas</span><strong>{activeCampaigns}</strong><small>Publicidade e exposição</small></article><article><span>Pedidos em curso</span><strong>{pending}</strong><small>Serviços a acompanhar</small></article><article><span>Benefícios activos</span><strong>{benefits}</strong><small>Exclusividades da conta</small></article></section>
+<div className="partner-home-columns"><section className="partner-home-panel"><div className="partner-home-panel-head"><div><span className="partner-kicker">ACTIVIDADE</span><h2>Publicações recentes</h2></div><Link href="/parceiro/oportunidades">Ver todas →</Link></div>{opportunities?.length?<div className="partner-home-list">{opportunities.slice(0,5).map(x=><Link href={"/parceiro/oportunidades/"+x.id} key={x.id}><div><span>{x.status} · {x.type||"OPORTUNIDADE"}</span><strong>{x.title}</strong><small>{x.location||"Localização não indicada"} · {date(x.created_at)}</small></div><b>→</b></Link>)}</div>:<div className="partner-home-empty"><strong>O espaço está pronto para a primeira publicação.</strong><p>Publique uma oportunidade, chamada, financiamento, concurso ou programa.</p><Link href="/parceiro/oportunidades/nova" className="partner-primary-action">Publicar agora →</Link></div>}</section>
+<section className="partner-home-panel"><div className="partner-home-panel-head"><div><span className="partner-kicker">VALOR</span><h2>Relação comercial</h2></div><Link href="/parceiro/servicos">Catálogo →</Link></div><div className="partner-value-stack"><Link href="/parceiro/publicidade"><span>01 · EXPOSIÇÃO</span><strong>{activeCampaigns?activeCampaigns+" campanha(s) activa(s)":"Ainda sem campanha activa"}</strong><small>Publicidade, patrocínios e posicionamento perante o público.</small></Link><Link href="/parceiro/servicos"><span>02 · INTELIGÊNCIA</span><strong>{pending?pending+" pedido(s) em curso":"Catálogo disponível para contratação"}</strong><small>Dados, mercado, estudos, reputação e confiança.</small></Link><Link href="/parceiro/resultados"><span>03 · HISTÓRICO</span><strong>Desempenho e registo factual</strong><small>Consulte a actividade e os resultados disponíveis.</small></Link></div></section></div>
+<section className="partner-home-panel partner-home-bottom"><div className="partner-home-panel-head"><div><span className="partner-kicker">MODELO MOZEMPRESAS</span><h2>Três formas de criar valor</h2></div></div><div className="partner-value-grid"><article><span>01</span><h3>PUBLICAR</h3><p>A organização coloca oportunidades e actividades diante do mercado.</p><Link href="/parceiro/oportunidades">Gerir actividade →</Link></article><article><span>02</span><h3>POSICIONAR</h3><p>A organização compra exposição, destaque e patrocínio onde o público está.</p><Link href="/parceiro/publicidade">Ver formatos →</Link></article><article><span>03</span><h3>COMPREENDER</h3><p>A organização transforma dados elegíveis em inteligência, confiança e decisões.</p><Link href="/parceiro/servicos">Explorar produtos →</Link></article></div></section>
+</div></main>}
