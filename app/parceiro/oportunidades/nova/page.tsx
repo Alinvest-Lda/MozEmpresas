@@ -41,10 +41,10 @@ export default function NewPartnerOpportunity(){
 
   const selected=types.find(([v])=>v===type)||types[0];
 
-  return <main className="partner-main"><div className="partner-content"><div className="partner-topbar"><div className="partner-topbar-left"><b>MOZEMPRESAS</b><span>/</span><span>Partner Workspace</span></div><div className="partner-topbar-right"><span className="partner-topbar-status"><i/> Conta activa</span><a className="partner-topbar-account" href="/parceiro/conta">Conta</a></div></div>
+  return <main className="dashboard-main partner-workspace"><div className="dashboard-content">
     <header className="partner-page-hero">
       <div>
-        <span className="partner-kicker">Actividade · Nova publicação</span>
+        <span className="dashboard-kicker">Actividade · Nova publicação</span>
         <h1>Publicar uma oportunidade</h1>
         <p>Publique algo que a sua organização disponibiliza ao público através de candidatura, participação, benefício ou cooperação.</p>
       </div>
@@ -87,10 +87,27 @@ export default function NewPartnerOpportunity(){
       </form>
 
       <aside className="opportunity-publisher-aside">
-        <div className="publisher-aside-card"><span className="partner-kicker">Regra editorial</span><h2>Uma oportunidade deve pedir uma acção ao público.</h2><p>O público deve conseguir perceber o que está a ser disponibilizado, quem pode participar, quais são as condições e qual é o próximo passo.</p></div>
+        <div className="publisher-aside-card"><span className="dashboard-kicker">Regra editorial</span><h2>Uma oportunidade deve pedir uma acção ao público.</h2><p>O público deve conseguir perceber o que está a ser disponibilizado, quem pode participar, quais são as condições e qual é o próximo passo.</p></div>
         <div className="publisher-aside-card publisher-exclusion"><strong>Não publique aqui</strong><ul><li>Produtos ou serviços comerciais</li><li>Concursos de contratação</li><li>Publicidade ou campanhas</li><li>Eventos isolados</li></ul><small>Esses conteúdos têm espaços próprios no MozEmpresas.</small></div>
       </aside>
     </div>
   </div>
-</main>
+  <style>{`
+    .opportunity-publisher-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
+    .opportunity-publisher-form{max-width:none}
+    .publisher-step{display:flex;gap:13px;align-items:flex-start;padding:4px 0 18px;border-bottom:1px solid #dfe6e3;margin-bottom:18px}
+    .publisher-step>span{width:32px;height:32px;border-radius:9px;background:#e8f1ef;color:#0b6b63;display:grid;place-items:center;font-size:11px;font-weight:900}
+    .publisher-step div{display:grid;gap:3px}.publisher-step strong{font-size:14px}.publisher-step small{color:#6d7976;line-height:1.45}
+    .opportunity-type-picker{border:0;padding:0;margin:0 0 17px}.opportunity-type-picker legend{font-size:13px;font-weight:800;margin-bottom:9px}
+    .opportunity-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+    .opportunity-type-option{display:flex;gap:10px;align-items:flex-start;border:1px solid #d7e1de;border-radius:12px;padding:13px;background:#fff;cursor:pointer;transition:.15s}
+    .opportunity-type-option:hover{border-color:#9bbab4}.opportunity-type-option.selected{border-color:#0b6b63;background:#f0f7f5;box-shadow:0 0 0 2px #dcefeb}
+    .opportunity-type-option input{margin-top:3px;accent-color:#0b6b63}.opportunity-type-option span{display:grid;gap:4px}.opportunity-type-option strong{font-size:13px}.opportunity-type-option small{font-size:11px;line-height:1.4;color:#6d7976}
+    .publisher-guidance{display:flex;gap:9px;align-items:center;background:#142c29;color:#fff;border-radius:12px;padding:13px 15px;margin:0 0 22px}.publisher-guidance strong{font-size:12px}.publisher-guidance span{font-size:11px;color:#bfd0cc}
+    .publisher-form-actions{display:flex;gap:9px;flex-direction:row-reverse;justify-content:flex-start;margin-top:6px}
+    .opportunity-publisher-aside{display:grid;gap:12px;position:sticky;top:25px}.publisher-aside-card{background:#fff;border:1px solid #dbe3e0;border-radius:15px;padding:19px}.publisher-aside-card h2{font-size:20px;line-height:1.15;letter-spacing:-.03em;margin:10px 0 8px}.publisher-aside-card p{font-size:12px;line-height:1.55;color:#65716e;margin:0}.publisher-exclusion{background:#f7faf9}.publisher-exclusion strong{font-size:12px}.publisher-exclusion ul{padding-left:18px;margin:10px 0;color:#596864;font-size:12px;line-height:1.8}.publisher-exclusion small{color:#7b8784}
+    @media(max-width:900px){.opportunity-publisher-layout{grid-template-columns:1fr}.opportunity-publisher-aside{position:static}.opportunity-type-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){.opportunity-type-grid{grid-template-columns:1fr}.publisher-form-actions{flex-direction:column}.publisher-form-actions .btn{width:100%}}
+  `}</style>
+  </main>
 }
