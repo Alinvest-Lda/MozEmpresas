@@ -5,13 +5,12 @@ import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/auth/actions";
 
 export const partnerNavGroups=[
-  {label:"Visão geral",links:[["/parceiro","Centro executivo"]]},
-  {label:"Actividade",links:[["/parceiro/oportunidades","Publicações"],["/parceiro/oportunidades/nova","Nova publicação"]]},
-  {label:"Exposição",links:[["/parceiro/publicidade","Publicidade e campanhas"]]},
-  {label:"Inteligência",links:[["/parceiro/inteligencia","Mercado e insights"],["/parceiro/resultados","Desempenho e histórico"]]},
-  {label:"Valor",links:[["/parceiro/servicos","Produtos e serviços"]]},
-  {label:"Explorar",links:[["/empresas","Directório empresarial"],["/marketplace","Produtos e serviços do mercado"],["/concursos","Concursos"],["/oportunidades","Oportunidades públicas"]]},
-  {label:"Conta",links:[["/parceiro/conta","Conta e gestores"]]}
+  {label:"Workspace",links:[["/parceiro","Visão geral"]]},
+  {label:"Publicar",links:[["/parceiro/oportunidades","Oportunidades publicadas"],["/parceiro/oportunidades/nova","Nova publicação"]]},
+  {label:"Posicionar",links:[["/parceiro/publicidade","Publicidade e campanhas"]]},
+  {label:"Compreender",links:[["/parceiro/inteligencia","Inteligência e mercado"],["/parceiro/resultados","Actividade e histórico"]]},
+  {label:"Contratar",links:[["/parceiro/servicos","Serviços e estudos"]]},
+  {label:"Organização",links:[["/parceiro/conta","Conta, gestores e segurança"]]}
 ] as const;
 
 export function PartnerMobileMenu(){
@@ -21,12 +20,12 @@ export function PartnerMobileMenu(){
   useEffect(()=>{document.body.style.overflow=open?"hidden":"";return()=>{document.body.style.overflow=""}},[open]);
   const active=(h:string)=>h==="/parceiro"?pathname===h:pathname===h||pathname.startsWith(h+"/");
   return <>
-    <button className="partner-mobile-trigger" type="button" onClick={()=>setOpen(v=>!v)} aria-label={open?"Fechar menu":"Abrir menu"} aria-expanded={open}><span/><span/><span/></button>
-    {open&&<button className="partner-mobile-backdrop" onClick={()=>setOpen(false)} aria-label="Fechar menu"/>}
-    <aside className={"partner-mobile-panel"+(open?" open":"")} aria-label="Menu do parceiro">
-      <div className="partner-mobile-head"><div><small>MOZEMPRESAS</small><b>PARTNER WORKSPACE</b></div><button onClick={()=>setOpen(false)} aria-label="Fechar">×</button></div>
+    <button className={"partner-mobile-trigger"+(open?" open":"")} type="button" onClick={()=>setOpen(v=>!v)} aria-label={open?"Fechar menu":"Abrir menu"} aria-expanded={open} aria-controls="partner-mobile-menu"><span/><span/><span/></button>
+    {open&&<button type="button" className="partner-mobile-backdrop" onClick={()=>setOpen(false)} aria-label="Fechar menu"/>}
+    <aside id="partner-mobile-menu" className={"partner-mobile-panel"+(open?" open":"")} aria-label="Menu do parceiro">
+      <div className="partner-mobile-head"><div><small>MOZEMPRESAS</small><b>PARTNER WORKSPACE</b></div><button type="button" onClick={()=>setOpen(false)} aria-label="Fechar">×</button></div>
       <nav>{partnerNavGroups.map(g=><div key={g.label}><span>{g.label}</span>{g.links.map(([h,l])=><Link key={h} href={h} className={active(h)?"active":""}><i aria-hidden="true"/><span>{l}</span></Link>)}</div>)}</nav>
-      <div className="partner-mobile-foot"><Link href="/parceiro/conta">A minha conta</Link><form action={signOut}><button type="submit">Terminar sessão</button></form></div>
+      <div className="partner-mobile-foot"><Link href="/parceiro/conta">Conta e gestores</Link><form action={signOut}><button type="submit">Terminar sessão</button></form></div>
     </aside>
   </>;
 }
