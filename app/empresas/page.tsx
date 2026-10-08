@@ -218,7 +218,6 @@ export default async function Empresas({
         </section>
 
         <PublicAd surface="DIRECTORY" slot="BILLBOARD" />
-        <DirectoryAdSlider ads={billboardAds} />
 
         {featured.length > 0 && (
           <section className="directory-featured">
