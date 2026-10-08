@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const roles = [
-  { number:"01", title:"Publicar", text:"Coloque no mercado oportunidades de interesse directo para a comunidade: financiamentos, programas de apoio ao empresariado e iniciativas juvenis." },
+  { number:"01", title:"Publicar", text:"Coloque no mercado oportunidades de interesse directo para a comunidade: financiamentos, programas de apoio ao empresariado, iniciativas juvenis, formação, apoio a empreendedores, inovação e internacionalização." },
   { number:"02", title:"Posicionar", text:"Dê mais visibilidade à sua organização, marca, produto, serviço ou oportunidade através de publicidade e campanhas no MozEmpresas." },
   { number:"03", title:"Obter inteligência", text:"Saiba onde está a procura, como o mercado está a mover-se e como a sua organização está posicionada, através de dados e análises." },
 ];
@@ -40,7 +40,7 @@ export default function ParceirosPage() {
         <section className="partners-v2-catalogue">
           <div className="partners-v2-section-head"><div><span className="eyebrow">O que pode fazer</span><h2>Serviços e possibilidades</h2></div></div>
           <div className="partners-v2-catalogue-grid">
-            <article><span>ACTIVIDADE</span><h3>Publicar oportunidades</h3><p>Financiamentos, programas de apoio ao empresariado e iniciativas juvenis.</p><Link href="/oportunidades">Ver oportunidades públicas →</Link></article>
+            <article><span>ACTIVIDADE</span><h3>Publicar oportunidades</h3><p>Financiamentos, programas de apoio ao empresariado, iniciativas juvenis, formação, apoio a empreendedores, inovação e internacionalização.</p><Link href="/oportunidades">Ver oportunidades públicas →</Link></article>
             <article><span>EXPOSIÇÃO</span><h3>Promover actividade</h3><p>Publicidade, destaques, patrocínios e campanhas para apresentar a sua actividade ao público do MozEmpresas.</p><Link href="/contactos">Falar sobre exposição →</Link></article>
             <article><span>INTELIGÊNCIA · DADOS</span><h3>Obter inteligência</h3><p>Dados empresariais, procura, mercado, sectores, benchmarking, verificação, reputação e estudos personalizados para apoiar decisões.</p><Link href="/contactos">Falar sobre inteligência →</Link></article>
           </div>
