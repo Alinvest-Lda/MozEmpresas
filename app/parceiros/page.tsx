@@ -42,7 +42,7 @@ export default function ParceirosPage() {
           <div className="partners-v2-catalogue-grid">
             <article><span>ACTIVIDADE</span><h3>Publicar oportunidades</h3><p>Financiamentos, programas de apoio ao empresariado e iniciativas juvenis.</p><Link href="/oportunidades">Ver oportunidades públicas →</Link></article>
             <article><span>EXPOSIÇÃO</span><h3>Promover actividade</h3><p>Publicidade, destaques, patrocínios e campanhas para apresentar a sua actividade ao público do MozEmpresas.</p><Link href="/contactos">Falar sobre exposição →</Link></article>
-            <article><span>INTELIGÊNCIA · DADOS</span><h3>Obter inteligência</h3><p>Dados empresariais, procura, mercado, sectores, benchmarking, verificação, reputação e estudos personalizados para apoiar decisões.<Link href="/contactos">Falar sobre inteligência →</Link></article>
+            <article><span>INTELIGÊNCIA · DADOS</span><h3>Obter inteligência</h3><p>Dados empresariais, procura, mercado, sectores, benchmarking, verificação, reputação e estudos personalizados para apoiar decisões.</p><Link href="/contactos">Falar sobre inteligência →</Link></article>
           </div>
         </section>
 
