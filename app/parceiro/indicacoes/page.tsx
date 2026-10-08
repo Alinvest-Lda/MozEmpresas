@@ -1,1 +1,2 @@
-export default function PartnerReferralsPage(){return <main className="dashboard-main"><div className="dashboard-content"><header className="dashboard-topbar"><div className="dashboard-welcome"><span className="dashboard-kicker">Actividade</span><h1>Indicações</h1><p>As indicações não são uma função central do módulo de parceiro.</p></div></header><section className="dashboard-section"><div className="empty"><div className="empty-icon">—</div><p>Esta função não faz parte do fluxo actual do parceiro.</p></div></section></div></main>}
+import { redirect } from "next/navigation";
+export default function PartnerReferralsPage(){redirect("/parceiro/resultados")}
