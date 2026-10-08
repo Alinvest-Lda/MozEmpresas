@@ -88,7 +88,7 @@ export default async function PartnerAds(){
           <div><Link href="/parceiro/oportunidades/nova" className="partner-primary-action">Nova publicação →</Link><Link href="/parceiro/oportunidades" className="partner-command-link">Gerir publicações →</Link></div>
         </article>
         <article className="partner-command-action">
-          <span>DECISÃO</span><strong>Precisa de compreender o público antes de investir?</strong><small>INTELIGÊNCIA</small><Link href="/parceiro/inteligencia">Ver inteligência e mercado →</Link>
+          <span>DECISÃO</span><strong>Precisa de saber quem procura, onde está a procura ou como está posicionada?</strong><small>INTELIGÊNCIA · DADOS</small><Link href="/parceiro/inteligencia">Ver inteligência e mercado →</Link>
         </article>
       </div>
     </PartnerSection>
