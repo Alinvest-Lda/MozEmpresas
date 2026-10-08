@@ -69,8 +69,17 @@ export default async function Home() {
                 href: "/empresas",
                 external: false,
                 alt: "Profissional africano a trabalhar num escritório"
+              },
+              {
+                image: "https://images.unsplash.com/photo-1758873268461-aea03b5c2ecb?auto=format&fit=crop&w=2200&q=82",
+                title: "Ligue a sua empresa ao mercado.",
+                body: "Encontre parceiros, fornecedores e clientes através de uma presença empresarial mais visível.",
+                cta: "Registar empresa",
+                href: "/registo",
+                external: false,
+                alt: "Profissionais africanos a colaborar num escritório"
               }
-            ].map((slide, index) => (
+            ].slice(0, 5).map((slide, index) => (
               <a
                 key={index}
                 href={slide.href}
