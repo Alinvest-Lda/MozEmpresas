@@ -5,7 +5,7 @@ export function PartnerPage({eyebrow,title,description,action,children}:{eyebrow
   return <main className="partner-main">
     <div className="partner-topbar">
       <div className="partner-topbar-left"><span className="partner-topbar-brand">MOZEMPRESAS</span><b>/</b><strong>PARTNER WORKSPACE</strong><b>/</b><span>{eyebrow}</span></div>
-      <div className="partner-topbar-center">PARTNER WORKSPACE</div>
+      <div className="partner-topbar-center"><strong>MOZEMPRESAS</strong><span>PARTNER WORKSPACE</span></div>
       <div className="partner-topbar-right"><span className="partner-topbar-account"><i/> Conta activa</span><Link href="/parceiro/conta" className="partner-topbar-link">Conta →</Link></div>
     </div>
     <div className="partner-content">
