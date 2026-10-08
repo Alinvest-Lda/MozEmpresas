@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
 import { PublicAd } from "@/components/public-ad";
 
 type BusinessRecord = {
@@ -29,11 +28,14 @@ type Promotion = {
   id: string;
   business_id: string;
   placement: string;
+  slot: string;
   title: string;
-  text: string | null;
+  headline: string | null;
+  body: string | null;
   image_url: string | null;
   target_url: string | null;
-  priority: number;
+  cta_label: string | null;
+  alt_text: string | null;
   businesses: {
     id: string;
     name: string;
@@ -57,7 +59,6 @@ export default async function Empresas({
   let data: Business[] = [];
   let categories: Category[] = [];
   let featured: Promotion[] = [];
-  let billboardAds: DirectoryAd[] = [];
   let error = false;
 
   try {
@@ -74,7 +75,7 @@ export default async function Empresas({
         .lte("starts_at", new Date().toISOString())
         .gt("ends_at", new Date().toISOString())
         .eq("placement", "DIRECTORY").in("slot", ["BILLBOARD", "FEATURED"])
-        .order("priority", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(12),
     ]);
 
@@ -83,16 +84,7 @@ export default async function Empresas({
 
     featured = promotions.filter((item) => item.slot === "FEATURED").slice(0, 3);
 
-    billboardAds = promotions
-      .filter((item) => item.slot === "BILLBOARD")
-      .slice(0, 3)
-      .map((item) => ({
-        label: "Publicidade",
-        title: item.title,
-        text: item.body || "Destaque a sua empresa perante visitantes do directório.",
-        image: item.image_url || undefined,
-        href: item.target_url || (item.businesses ? "/empresas/" + item.businesses.slug : "/contactos"),
-      }));
+
 
     let query = supabase
       .from("businesses")
