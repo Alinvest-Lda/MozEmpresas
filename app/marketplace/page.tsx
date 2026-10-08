@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
 import { PublicAd } from "@/components/public-ad";
 
 const types = [["PRODUCT", "Produtos"], ["SERVICE", "Serviços"]] as const;
@@ -40,7 +39,6 @@ export default async function Marketplace({
   const location = params.location?.trim() || "";
 
   let listings: Listing[] = [];
-  let billboardAds: DirectoryAd[] = [];
   let signedIn = false;
   let error = false;
 
@@ -56,18 +54,9 @@ export default async function Marketplace({
       .lte("starts_at", new Date().toISOString())
       .gt("ends_at", new Date().toISOString())
       .eq("placement", "MARKETPLACE").eq("slot", "BILLBOARD")
-      .order("priority", { ascending: false })
       .limit(6);
 
     if (promotionError) error = true;
-    billboardAds = (promotions ?? []).map((item) => ({
-      label: "Publicidade empresarial",
-      title: item.title,
-      text: item.body || "Apresente os seus produtos e serviços ao público empresarial.",
-      image: item.image_url || undefined,
-      href: item.target_url || "/contactos",
-    }));
-
     {
       let query = supabase
         .from("listings")
