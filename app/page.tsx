@@ -20,7 +20,7 @@ export default async function Home() {
   const exclusiveAd = ads.find((ad) => ad.slot === "EXCLUSIVE");
   const { data: presenceBusinesses } = await s
     .from("businesses")
-    .select("id,name,logo_url")
+    .select("id,name,slug,logo_url")
     .eq("is_public", true)
     .is("archived_at", null)
     .not("logo_url", "is", null)
@@ -178,7 +178,7 @@ export default async function Home() {
           <div className="home-v2-logo-track">
             <div className="home-v2-logo-pill home-v2-partner-presence">PARCEIROS</div>
             {(presenceBusinesses ?? []).map((business) => (
-              <Link href={"/empresas/" + business.id} key={business.id} className="home-v2-logo-pill" title={business.name}>
+              <Link href={"/empresas/" + business.slug} key={business.id} className="home-v2-logo-pill" title={business.name}>
                 {business.logo_url ? <img src={business.logo_url} alt={business.name} /> : <span>{business.name}</span>}
               </Link>
             ))}
