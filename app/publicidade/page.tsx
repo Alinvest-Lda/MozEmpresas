@@ -21,7 +21,7 @@ export default function Publicidade() {
 
         <section className="grid" style={{ marginBottom: 48 }}>
           {packages.map((item) => (
-            <article className="card" key={item.placement} style={{ padding: 24 }}>
+            <article className="card" key={item.name} style={{ padding: 24 }}>
               <span className="eyebrow">{item.eyebrow}</span>
               <h2 style={{ marginTop: 10 }}>{item.name}</h2>
               <p className="muted">{item.text}</p>
