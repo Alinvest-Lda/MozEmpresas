@@ -141,7 +141,7 @@ export default async function Marketplace({
           </div>
         </section>
 
-        <PublicAd surface="MARKETPLACE" slot="BILLBOARD" />
+        <PublicAd surface="MARKETPLACE" slot="BILLBOARD" context={{query:q,type,location}} interests={[q,type,location].filter(Boolean)} />
 
         <section className="marketplace-section marketplace-categories">
           <div className="marketplace-section-head">
