@@ -6,7 +6,7 @@ import { PartnerMobileMenu, partnerNavGroups } from "@/components/partner-mobile
 
 export function PartnerSidebar(){
   const pathname=usePathname()||"/parceiro";
-  const active=(h:string)=>h==="/parceiro"?pathname===h:pathname===h||pathname.startsWith(h+"/");
+  const active=(h:string)=>{if(h==="/parceiro")return pathname===h;if(h==="/parceiro/oportunidades")return pathname===h||pathname.startsWith(h+"/")&&!pathname.startsWith(h+"/nova");return pathname===h||pathname.startsWith(h+"/")};
   return <>
     <PartnerMobileMenu/>
     <aside className="partner-sidebar">
