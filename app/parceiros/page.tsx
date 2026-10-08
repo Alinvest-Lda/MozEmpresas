@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const roles = [
-  { number:"01", title:"Publicar", text:"Coloque no mercado oportunidades de interesse directo para a comunidade: financiamentos, programas de apoio ao empresariado, iniciativas juvenis, formação, apoio a empreendedores, inovação e internacionalização." },
+  { number:"01", title:"Publicar", text:"Coloque no mercado oportunidades de interesse directo para a comunidade: financiamento, desenvolvimento empresarial, apoio a empreendedores, iniciativas juvenis, formação e capacitação, e internacionalização." },
   { number:"02", title:"Posicionar", text:"Dê mais visibilidade à sua organização, marca, produto, serviço ou oportunidade através de publicidade e campanhas no MozEmpresas." },
   { number:"03", title:"Obter inteligência", text:"Saiba onde está a procura, como o mercado está a mover-se e como a sua organização está posicionada, através de dados e análises." },
 ];
