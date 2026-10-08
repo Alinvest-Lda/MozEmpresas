@@ -64,7 +64,7 @@ export default function Home() {
           <div className="home-v2-discovery-grid">
             <Link href="/empresas" className="home-v2-discovery-card featured"><span className="home-v2-number">01</span><div><h3>Empresas</h3><p>Pesquise por nome, actividade e localização. Consulte perfis, contactos e portfólio.</p></div><b>→</b></Link>
             <Link href="/marketplace" className="home-v2-discovery-card"><span className="home-v2-number">02</span><div><h3>Produtos e serviços</h3><p>Descubra o que as empresas estão a oferecer e encontre fornecedores.</p></div><b>→</b></Link>
-            <Link href="/oportunidades" className="home-v2-discovery-card"><span className="home-v2-number">03</span><div><h3>Oportunidades</h3><p>Encontre financiamentos, programas de apoio ao empresariado, iniciativas juvenis, formação, apoio a empreendedores, inovação e internacionalização.</p></div><b>→</b></Link>
+            <Link href="/oportunidades" className="home-v2-discovery-card"><span className="home-v2-number">03</span><div><h3>Oportunidades</h3><p>Encontre financiamento, desenvolvimento empresarial, apoio a empreendedores, iniciativas juvenis, formação e capacitação, e internacionalização.</p></div><b>→</b></Link>
             <Link href="/concursos" className="home-v2-discovery-card"><span className="home-v2-number">04</span><div><h3>Concursos</h3><p>Consulte concursos empresariais que estão actualmente abertos.</p></div><b>→</b></Link>
           </div>
         </div>
