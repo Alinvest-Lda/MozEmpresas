@@ -47,16 +47,6 @@ export default async function Marketplace({
     const { data: claimsData } = await supabase.auth.getClaims();
     signedIn = Boolean(claimsData?.claims?.sub);
     if (signedIn) redirect("/dashboard/marketplace");
-    const { data: promotions, error: promotionError } = await supabase
-      .from("business_promotions")
-      .select("id,title,headline,body,image_url,target_url,cta_label,alt_text,slot")
-      .eq("status", "ACTIVE")
-      .lte("starts_at", new Date().toISOString())
-      .gt("ends_at", new Date().toISOString())
-      .eq("placement", "MARKETPLACE").eq("slot", "BILLBOARD")
-      .limit(6);
-
-    if (promotionError) error = true;
     {
       let query = supabase
         .from("listings")
