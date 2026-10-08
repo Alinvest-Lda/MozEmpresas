@@ -11,7 +11,7 @@ const publicLinks = [
   ["/marketplace", "Produtos e serviços"],
   ["/concursos", "Concursos"],
   ["/oportunidades", "Oportunidades"],
-  ["/parceiros", "Organizações / Parceiros"],
+  ["/parceiros", "Parceiros"],
 ] as const;
 
 const appLinks = [
