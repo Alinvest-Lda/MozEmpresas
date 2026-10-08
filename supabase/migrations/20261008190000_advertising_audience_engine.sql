@@ -65,3 +65,58 @@ grant insert on public.ad_delivery_events to anon,authenticated;
 
 -- The production rollout also creates/replaces these two functions.
 -- They always derive user identity from auth.uid(); client-supplied user IDs are ignored.
+
+
+create or replace function public.get_ad_decision(
+ p_visitor_key text,p_user_id uuid default null,p_surface text default 'DIRECTORY',p_slot text default 'BILLBOARD',p_context jsonb default '{}'::jsonb)
+returns table(campaign_source text,campaign_id uuid,title text,headline text,body text,image_url text,target_url text,cta_label text,alt_text text,creative_type text,score numeric)
+language plpgsql security definer set search_path=public
+as $$
+declare v_interests jsonb:=coalesce((select interests from public.ad_visitor_profiles where visitor_key=p_visitor_key),'{}'::jsonb); v_uid uuid:=auth.uid();
+begin
+ if p_visitor_key is null or length(p_visitor_key)<16 then raise exception 'invalid visitor key'; end if;
+ insert into public.ad_visitor_profiles(visitor_key,user_id,last_context,last_seen_at) values(p_visitor_key,v_uid,p_context,now())
+ on conflict(visitor_key) do update set user_id=coalesce(v_uid,ad_visitor_profiles.user_id),last_context=excluded.last_context,last_seen_at=now();
+ return query
+ with candidates as (
+  select 'business'::text source,bp.id,bp.title,bp.headline,bp.body,bp.image_url,bp.target_url,bp.cta_label,bp.alt_text,bp.creative_type,
+   (bp.priority::numeric+bp.bid_cpm+case when bp.campaign_kind='GUARANTEED' then 1000 else 0 end+
+    case when coalesce(array_length(bp.target_interests,1),0)=0 then 0 else coalesce((select count(*) from unnest(bp.target_interests) i where lower(i)=any(array(select jsonb_object_keys(v_interests))))*25,0) end+
+    case when coalesce(array_length(bp.target_locations,1),0)=0 then 0 else case when lower(coalesce(p_context->>'location',''))=any(bp.target_locations) then 20 else -100 end end) score
+  from business_promotions bp
+  where bp.status='ACTIVE' and bp.placement=p_surface and bp.slot=p_slot and bp.starts_at<=now() and bp.ends_at>now()
+   and coalesce((select count(*) from ad_delivery_events e where e.visitor_key=p_visitor_key and e.campaign_source='business' and e.campaign_id=bp.id and e.event_type='IMPRESSION' and e.created_at>now()-interval '24 hours'),0)<greatest(bp.frequency_cap,1)
+ ),
+ partner_candidates as (
+  select 'partner'::text source,pc.id,pc.title,pc.headline,pc.body,pc.image_url,pc.target_url,pc.cta_label,pc.alt_text,pc.creative_type,
+   (pc.priority::numeric+pc.bid_cpm+case when pc.campaign_kind='GUARANTEED' then 1000 else 0 end+
+    case when coalesce(array_length(pc.target_interests,1),0)=0 then 0 else coalesce((select count(*) from unnest(pc.target_interests) i where lower(i)=any(array(select jsonb_object_keys(v_interests))))*25,0) end+
+    case when coalesce(array_length(pc.target_locations,1),0)=0 then 0 else case when lower(coalesce(p_context->>'location',''))=any(pc.target_locations) then 20 else -100 end end) score
+  from partner_ad_campaigns pc
+  where pc.status='ACTIVE' and pc.surface=p_surface and pc.slot=p_slot and pc.starts_at<=now() and pc.ends_at>now()
+   and coalesce((select count(*) from ad_delivery_events e where e.visitor_key=p_visitor_key and e.campaign_source='partner' and e.campaign_id=pc.id and e.event_type='IMPRESSION' and e.created_at>now()-interval '24 hours'),0)<greatest(pc.frequency_cap,1)
+ )
+ select c.source,c.id,c.title,c.headline,c.body,c.image_url,c.target_url,c.cta_label,c.alt_text,c.creative_type,c.score
+ from (select * from candidates union all select * from partner_candidates) c
+ where c.score>0 order by c.score desc,md5(p_visitor_key||c.id::text) limit 1;
+end;
+$$;
+revoke all on function public.get_ad_decision(text,uuid,text,text,jsonb) from public;
+grant execute on function public.get_ad_decision(text,uuid,text,text,jsonb) to anon,authenticated;
+
+create or replace function public.record_ad_interest(
+ p_visitor_key text,p_user_id uuid default null,p_interests text[] default '{}',p_context jsonb default '{}'::jsonb)
+returns void language plpgsql security definer set search_path=public
+as $$
+declare v_interests jsonb:=coalesce((select interests from public.ad_visitor_profiles where visitor_key=p_visitor_key),'{}'::jsonb); v_item text; v_uid uuid:=auth.uid();
+begin
+ if p_visitor_key is null or length(p_visitor_key)<16 then return; end if;
+ foreach v_item in array p_interests loop
+  if length(trim(v_item))>1 then v_interests:=jsonb_set(v_interests,array[lower(trim(v_item))],to_jsonb(coalesce((v_interests->>lower(trim(v_item)))::int,0)+1),true); end if;
+ end loop;
+ insert into public.ad_visitor_profiles(visitor_key,user_id,interests,last_context,last_seen_at) values(p_visitor_key,v_uid,v_interests,p_context,now())
+ on conflict(visitor_key) do update set user_id=coalesce(v_uid,ad_visitor_profiles.user_id),interests=excluded.interests,last_context=excluded.last_context,last_seen_at=now();
+end;
+$$;
+revoke all on function public.record_ad_interest(text,uuid,text[],jsonb) from public;
+grant execute on function public.record_ad_interest(text,uuid,text[],jsonb) to anon,authenticated;
