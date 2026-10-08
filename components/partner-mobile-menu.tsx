@@ -18,7 +18,7 @@ export function PartnerMobileMenu(){
   const [open,setOpen]=useState(false);
   useEffect(()=>setOpen(false),[pathname]);
   useEffect(()=>{document.body.style.overflow=open?"hidden":"";return()=>{document.body.style.overflow=""}},[open]);
-  const active=(h:string)=>h==="/parceiro"?pathname===h:pathname===h||pathname.startsWith(h+"/");
+  const active=(h:string)=>{if(h==="/parceiro")return pathname===h;if(h==="/parceiro/oportunidades")return pathname===h||pathname.startsWith(h+"/")&&!pathname.startsWith(h+"/nova");return pathname===h||pathname.startsWith(h+"/")};
   return <>
     <button className={"partner-mobile-trigger"+(open?" open":"")} type="button" onClick={()=>setOpen(v=>!v)} aria-label={open?"Fechar menu":"Abrir menu"} aria-expanded={open} aria-controls="partner-mobile-menu"><span/><span/><span/></button>
     {open&&<button type="button" className="partner-mobile-backdrop" onClick={()=>setOpen(false)} aria-label="Fechar menu"/>}
