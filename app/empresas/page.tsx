@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
+import { PublicAd } from "@/components/public-ad";
 
 type BusinessRecord = {
   id: string;
@@ -68,11 +69,11 @@ export default async function Empresas({
       supabase.from("business_categories").select("id,name,slug").order("name").limit(24),
       supabase
         .from("business_promotions")
-        .select("id,business_id,placement,title,text,image_url,target_url,priority,businesses!inner(id,name,slug,description,location,logo_url)")
+        .select("id,business_id,placement,slot,title,headline,body,image_url,target_url,cta_label,alt_text,businesses!inner(id,name,slug,description,location,logo_url)")
         .eq("status", "ACTIVE")
         .lte("starts_at", new Date().toISOString())
         .gt("ends_at", new Date().toISOString())
-        .in("placement", ["DIRECTORY_BILLBOARD", "DIRECTORY_FEATURED"])
+        .eq("placement", "DIRECTORY").in("slot", ["BILLBOARD", "FEATURED"])
         .order("priority", { ascending: false })
         .limit(12),
     ]);
@@ -80,15 +81,15 @@ export default async function Empresas({
     categories = (categoryResult.data ?? []) as Category[];
     const promotions = (promotionResult.data ?? []) as unknown as Promotion[];
 
-    featured = promotions.filter((item) => item.placement === "DIRECTORY_FEATURED").slice(0, 3);
+    featured = promotions.filter((item) => item.slot === "FEATURED").slice(0, 3);
 
     billboardAds = promotions
-      .filter((item) => item.placement === "DIRECTORY_BILLBOARD")
+      .filter((item) => item.slot === "BILLBOARD")
       .slice(0, 3)
       .map((item) => ({
         label: "Publicidade",
         title: item.title,
-        text: item.text || "Destaque a sua empresa perante visitantes do directório.",
+        text: item.body || "Destaque a sua empresa perante visitantes do directório.",
         image: item.image_url || undefined,
         href: item.target_url || (item.businesses ? "/empresas/" + item.businesses.slug : "/contactos"),
       }));
@@ -216,6 +217,7 @@ export default async function Empresas({
           </div>
         </section>
 
+        <PublicAd surface="DIRECTORY" slot="BILLBOARD" />
         <DirectoryAdSlider ads={billboardAds} />
 
         {featured.length > 0 && (
