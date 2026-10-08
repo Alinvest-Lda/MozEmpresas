@@ -20,6 +20,13 @@ export async function POST(request:Request){
   await supabase.rpc("record_ad_interest",{p_visitor_key:payload.visitorKey,p_user_id:user?.id??null,p_interests:interests,p_context:context});
   const {data,error}=await supabase.rpc("get_ad_decision",{p_visitor_key:payload.visitorKey,p_user_id:user?.id??null,p_surface:payload.surface,p_slot:payload.slot,p_context:context});
   if(error) return NextResponse.json({error:"Não foi possível seleccionar a publicidade."},{status:500});
-  return NextResponse.json({ad:data?.[0]??null});
+  const ad=data?.[0]??null;
+  if(ad){
+    await supabase.from("ad_delivery_events").insert({
+      visitor_key:payload.visitorKey,user_id:user?.id??null,campaign_source:ad.campaign_source,
+      campaign_id:ad.campaign_id,surface:payload.surface,slot:payload.slot,event_type:"IMPRESSION",context
+    });
+  }
+  return NextResponse.json({ad});
  }catch{return NextResponse.json({error:"Pedido de publicidade inválido."},{status:400});}
 }
