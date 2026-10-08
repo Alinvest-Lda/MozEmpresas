@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DirectoryAdSlider, type DirectoryAd } from "@/components/directory-ad-slider";
+import { PublicAd } from "@/components/public-ad";
 
 const types = [["PRODUCT", "Produtos"], ["SERVICE", "Serviços"]] as const;
 
@@ -50,11 +51,11 @@ export default async function Marketplace({
     if (signedIn) redirect("/dashboard/marketplace");
     const { data: promotions, error: promotionError } = await supabase
       .from("business_promotions")
-      .select("id,title,text,image_url,target_url,priority")
+      .select("id,title,headline,body,image_url,target_url,cta_label,alt_text,slot")
       .eq("status", "ACTIVE")
       .lte("starts_at", new Date().toISOString())
       .gt("ends_at", new Date().toISOString())
-      .eq("placement", "DIRECTORY_BILLBOARD")
+      .eq("placement", "MARKETPLACE").eq("slot", "BILLBOARD")
       .order("priority", { ascending: false })
       .limit(6);
 
@@ -62,7 +63,7 @@ export default async function Marketplace({
     billboardAds = (promotions ?? []).map((item) => ({
       label: "Publicidade empresarial",
       title: item.title,
-      text: item.text || "Apresente os seus produtos e serviços ao público empresarial.",
+      text: item.body || "Apresente os seus produtos e serviços ao público empresarial.",
       image: item.image_url || undefined,
       href: item.target_url || "/contactos",
     }));
@@ -161,7 +162,7 @@ export default async function Marketplace({
           </div>
         </section>
 
-        <DirectoryAdSlider ads={billboardAds} />
+        <PublicAd surface="MARKETPLACE" slot="BILLBOARD" />
 
         <section className="marketplace-section marketplace-categories">
           <div className="marketplace-section-head">
