@@ -3,7 +3,7 @@ import Link from"next/link";
 import{createClient}from"@/lib/supabase/server";
 import{PartnerPage,PartnerSection,PartnerMetric,PartnerEmpty}from"@/components/partner-workspace";
 
-const labels:Record<string,string>={FUNDING:"Financiamento",PROGRAM:"Programa / Candidatura",AWARD_SCHOLARSHIP:"Bolsa / Prémio",PARTNERSHIP:"Parceria / Cooperação",EXPRESSION_OF_INTEREST:"Manifestação de Interesse",CALL:"Chamada · anterior",TENDER:"Concurso · anterior",TRAINING:"Capacitação · anterior",EVENT:"Evento · anterior",BUSINESS:"Negócio · anterior",OTHER:"Outro · anterior"};
+const labels:Record<string,string>={FUNDING:"Financiamento",PROGRAM:"Desenvolvimento empresarial",AWARD_SCHOLARSHIP:"Bolsa / Prémio",PARTNERSHIP:"Parceria / Cooperação",EXPRESSION_OF_INTEREST:"Manifestação de Interesse",CALL:"Chamada · anterior",TENDER:"Concurso · anterior",TRAINING:"Capacitação · anterior",EVENT:"Evento · anterior",BUSINESS:"Negócio · anterior",OTHER:"Outro · anterior"};
 const statusLabel=(s:string)=>s==="PUBLISHED"?"Publicada":s==="DRAFT"?"Rascunho":s==="CLOSED"?"Encerrada":s==="ARCHIVED"?"Arquivada":s;
 
 export default async function PartnerOpportunitiesPage(){
