@@ -11,6 +11,7 @@ const publicLinks = [
   ["/marketplace", "Produtos e serviços"],
   ["/concursos", "Concursos"],
   ["/oportunidades", "Oportunidades"],
+  ["/parceiros", "Organizações / Parceiros"],
 ] as const;
 
 const appLinks = [
@@ -87,7 +88,7 @@ export function Header({ initialSignedIn = false, initialAccountType = null }: {
         <div className="header-actions">
           <Link href="/pesquisa" className={"header-search-link" + (searchActive ? " active" : "")} aria-label="Pesquisar no MozEmpresas" title="Pesquisar no MozEmpresas">⌕<span>Pesquisar</span></Link>
           {!signedIn ? (
-            <><Link className="btn ghost desktop-only" href="/login">Entrar</Link><Link className="btn primary desktop-register" href="/registo">Criar conta</Link><Link className="header-organization-link desktop-only" href="/parceiros">Organizações / Parceiros</Link></>
+            <><Link className="btn ghost desktop-only" href="/login">Entrar</Link><Link className="btn primary desktop-register" href="/registo">Criar conta</Link></>
           ) : (insideApp ? null : <div className="header-account-actions"><Link className="btn primary header-panel-btn" href={panelHref}>{panelLabel}</Link></div>)}
           {(!insideApp || !signedIn) && (
             <div className="mobile-menu" ref={menuRef}>
@@ -98,7 +99,7 @@ export function Header({ initialSignedIn = false, initialAccountType = null }: {
                   return <Link key={href} href={href} onClick={() => setOpen(false)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>{label}</Link>;
                 })}
                 <Link href="/pesquisa" onClick={() => setOpen(false)} className={searchActive ? "active" : ""}>Pesquisar</Link>
-                {signedIn ? <Link href={panelHref} onClick={() => setOpen(false)} className="mobile-menu-panel-btn">{panelLabel}</Link> : <><Link href="/login" onClick={() => setOpen(false)}>Entrar</Link><Link className="mobile-menu-register" href="/registo" onClick={() => setOpen(false)}>Criar conta</Link><Link href="/parceiros" onClick={() => setOpen(false)}>Organizações / Parceiros</Link></>}
+                {signedIn ? <Link href={panelHref} onClick={() => setOpen(false)} className="mobile-menu-panel-btn">{panelLabel}</Link> : <><Link href="/login" onClick={() => setOpen(false)}>Entrar</Link><Link className="mobile-menu-register" href="/registo" onClick={() => setOpen(false)}>Criar conta</Link></>}
               </div>}
             </div>
           )}
