@@ -1,9 +1,10 @@
 import { AdvertisingRequestForm } from "@/components/advertising-request-form";
 
 const packages = [
-  { name: "Billboard", eyebrow: "Máxima visibilidade", text: "Posição fixa no topo do directório, com rotação entre campanhas.", placement: "DIRECTORY_BILLBOARD" },
-  { name: "Empresa em destaque", eyebrow: "Conversão", text: "Apresente a sua empresa num bloco próprio antes dos resultados orgânicos.", placement: "DIRECTORY_FEATURED" },
-  { name: "In-feed", eyebrow: "Contexto", text: "Apareça durante a navegação dos resultados do directório.", placement: "DIRECTORY_INFEED" },
+  { name: "Hero / topo", eyebrow: "Página inicial", text: "Maior visibilidade na entrada do ecossistema. Ideal para campanhas institucionais e mensagens de grande alcance." },
+  { name: "Billboard", eyebrow: "Directório e produtos", text: "Faixa de destaque antes ou entre blocos de descoberta. Ideal para marcas, ofertas e campanhas." },
+  { name: "Destaque contextual", eyebrow: "Categoria / conteúdo", text: "Presença associada ao contexto em que o público está a pesquisar ou consumir conteúdo." },
+  { name: "In-feed", eyebrow: "Navegação", text: "Formato integrado ao fluxo de conteúdo, adequado para campanhas que precisam de contexto." },
 ];
 
 export default function Publicidade() {
@@ -14,7 +15,7 @@ export default function Publicidade() {
           <span className="eyebrow">Publicidade no MozEmpresas</span>
           <h1>Coloque a sua empresa onde o mercado está a procurar.</h1>
           <p className="muted" style={{ maxWidth: 760 }}>
-            Escolha uma posição, indique o período e o objectivo da campanha. A equipa comercial confirma disponibilidade, materiais, preço e condições antes da activação.
+            Escolha onde quer aparecer, a posição, o formato e o período da campanha. A equipa comercial confirma disponibilidade, materiais, preço e condições antes da activação.
           </p>
         </section>
 
