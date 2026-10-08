@@ -9,7 +9,8 @@ import type { AccountType } from "@/lib/auth/access";
 const publicLinks = [
   ["/empresas", "Empresas"],
   ["/marketplace", "Produtos e serviços"],
-  ["/contactos", "Contactos"],
+  ["/concursos", "Concursos"],
+  ["/oportunidades", "Oportunidades"],
 ] as const;
 
 const appLinks = [
@@ -22,18 +23,12 @@ const appLinks = [
 
 const partnerLinks = [
   ["/parceiro", "Área de parceiro"],
-  ["/parceiro/oportunidades", "Oportunidades"],
+  ["/parceiro/oportunidades", "Publicações"],
   ["/parceiro/publicidade", "Publicidade"],
   ["/parceiro/inteligencia", "Inteligência"],
 ] as const;
 
-export function Header({
-  initialSignedIn = false,
-  initialAccountType = null,
-}: {
-  initialSignedIn?: boolean;
-  initialAccountType?: AccountType | null;
-}) {
+export function Header({ initialSignedIn = false, initialAccountType = null }: { initialSignedIn?: boolean; initialAccountType?: AccountType | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(initialSignedIn);
@@ -43,15 +38,9 @@ export function Header({
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null;
     let active = true;
-
     const syncSession = async (session: { user: { id: string } } | null) => {
       if (!active) return;
-      if (!session) {
-        setSignedIn(false);
-        setAccountType(null);
-        return;
-      }
-
+      if (!session) { setSignedIn(false); setAccountType(null); return; }
       setSignedIn(true);
       try {
         const supabase = createClient();
@@ -61,39 +50,20 @@ export function Header({
         if (active) setAccountType(initialAccountType === "parceiro" ? "parceiro" : "empresa");
       }
     };
-
     try {
       const supabase = createClient();
-      supabase.auth.getSession().then(({ data }) => syncSession(data.session)).catch(() => {
-        if (active) {
-          setSignedIn(false);
-          setAccountType(null);
-        }
-      });
-      const result = supabase.auth.onAuthStateChange((_event, session) => {
-        void syncSession(session);
-      });
+      supabase.auth.getSession().then(({ data }) => syncSession(data.session)).catch(() => { if (active) { setSignedIn(false); setAccountType(null); } });
+      const result = supabase.auth.onAuthStateChange((_event, session) => { void syncSession(session); });
       subscription = result.data.subscription;
-    } catch {
-      setSignedIn(false);
-      setAccountType(null);
-    }
-
-    return () => {
-      active = false;
-      subscription?.unsubscribe();
-    };
+    } catch { setSignedIn(false); setAccountType(null); }
+    return () => { active = false; subscription?.unsubscribe(); };
   }, [initialAccountType]);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  useEffect(() => { setOpen(false); }, [pathname]);
 
   useEffect(() => {
     if (!open) return;
-    const handleOutside = (event: PointerEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setOpen(false);
-    };
+    const handleOutside = (event: PointerEvent) => { if (menuRef.current && !menuRef.current.contains(event.target as Node)) setOpen(false); };
     document.addEventListener("pointerdown", handleOutside);
     return () => document.removeEventListener("pointerdown", handleOutside);
   }, [open]);
@@ -116,9 +86,9 @@ export function Header({
         </nav>
         <div className="header-actions">
           <Link href="/pesquisa" className={"header-search-link" + (searchActive ? " active" : "")} aria-label="Pesquisar no MozEmpresas" title="Pesquisar no MozEmpresas">⌕<span>Pesquisar</span></Link>
-          {signedIn ? (insideApp ? null : <div className="header-account-actions"><Link className="btn primary header-panel-btn" href={panelHref}>{panelLabel}</Link></div>) : (
-            <><Link className="btn ghost desktop-only" href="/login">Entrar</Link><Link className="btn primary desktop-register" href="/registo">Criar conta</Link></>
-          )}
+          {!signedIn ? (
+            <><Link className="btn ghost desktop-only" href="/login">Entrar</Link><Link className="btn primary desktop-register" href="/registo">Criar conta</Link><Link className="header-organization-link desktop-only" href="/parceiros">Para organizações</Link></>
+          ) : (insideApp ? null : <div className="header-account-actions"><Link className="btn primary header-panel-btn" href={panelHref}>{panelLabel}</Link></div>)}
           {(!insideApp || !signedIn) && (
             <div className="mobile-menu" ref={menuRef}>
               <button type="button" className="mobile-menu-trigger" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen((value) => !value)}>{open ? "Fechar" : "Menu"}</button>
@@ -128,7 +98,7 @@ export function Header({
                   return <Link key={href} href={href} onClick={() => setOpen(false)} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>{label}</Link>;
                 })}
                 <Link href="/pesquisa" onClick={() => setOpen(false)} className={searchActive ? "active" : ""}>Pesquisar</Link>
-                {signedIn ? <Link href={panelHref} onClick={() => setOpen(false)} className="mobile-menu-panel-btn">{panelLabel}</Link> : <><Link href="/login" onClick={() => setOpen(false)}>Entrar</Link><Link className="mobile-menu-register" href="/registo" onClick={() => setOpen(false)}>Criar conta</Link></>}
+                {signedIn ? <Link href={panelHref} onClick={() => setOpen(false)} className="mobile-menu-panel-btn">{panelLabel}</Link> : <><Link href="/login" onClick={() => setOpen(false)}>Entrar</Link><Link className="mobile-menu-register" href="/registo" onClick={() => setOpen(false)}>Criar conta</Link><Link href="/parceiros" onClick={() => setOpen(false)}>Para organizações</Link></>}
               </div>}
             </div>
           )}
