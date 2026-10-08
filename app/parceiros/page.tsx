@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 const roles = [
-  { number:"01", title:"Publicar", text:"Coloque no mercado oportunidades que aceitam participação externa: financiamento, programas, bolsas, parcerias e manifestações de interesse." },
+  { number:"01", title:"Publicar", text:"Coloque no mercado oportunidades de interesse directo para a comunidade: financiamentos, programas de apoio ao empresariado e iniciativas juvenis." },
   { number:"02", title:"Posicionar", text:"Dê mais visibilidade à sua organização, marca, produto, serviço ou oportunidade através de publicidade e campanhas no MozEmpresas." },
-  { number:"03", title:"Compreender", text:"Use dados e serviços especializados para conhecer procura, mercado, sectores, exposição e reputação." },
+  { number:"03", title:"Obter inteligência", text:"Saiba onde está a procura, como o mercado está a mover-se e como a sua organização está posicionada, através de dados e análises." },
 ];
 
 export default function ParceirosPage() {
@@ -19,7 +19,7 @@ export default function ParceirosPage() {
           </div>
           <aside className="partners-v2-side">
             <span className="eyebrow">Área de parceiro</span>
-            <strong>Publicar</strong><strong>Posicionar</strong><strong>Compreender</strong>
+            <strong>Publicar</strong><strong>Posicionar</strong><strong>Obter inteligência</strong>
             <small>Uma conta de parceiro é atribuída pela administração.</small>
           </aside>
         </section>
@@ -33,16 +33,16 @@ export default function ParceirosPage() {
           <div className="partners-v2-steps">
             <div><b>01</b><div><strong>Publique</strong><span>Defina a oportunidade, condições e período de participação.</span></div></div>
             <div><b>02</b><div><strong>Posicione</strong><span>Escolha exposição, destaque ou campanha para chegar melhor ao público.</span></div></div>
-            <div><b>03</b><div><strong>Compreenda</strong><span>Solicite dados, relatórios, inteligência, reputação ou estudos.</span></div></div>
+            <div><b>03</b><div><strong>Obtenha inteligência</strong><span>Saiba mais sobre procura, mercado, exposição, reputação e oportunidades de decisão.</span></div></div>
           </div>
         </section>
 
         <section className="partners-v2-catalogue">
           <div className="partners-v2-section-head"><div><span className="eyebrow">O que pode fazer</span><h2>Serviços e possibilidades</h2></div></div>
           <div className="partners-v2-catalogue-grid">
-            <article><span>ACTIVIDADE</span><h3>Publicar oportunidades</h3><p>Financiamento, programas/candidaturas, bolsas/prémios, parcerias/coooperação e manifestações de interesse.</p><Link href="/oportunidades">Ver oportunidades públicas →</Link></article>
+            <article><span>ACTIVIDADE</span><h3>Publicar oportunidades</h3><p>Financiamentos, programas de apoio ao empresariado e iniciativas juvenis.</p><Link href="/oportunidades">Ver oportunidades públicas →</Link></article>
             <article><span>EXPOSIÇÃO</span><h3>Promover actividade</h3><p>Publicidade, destaques, patrocínios e campanhas para apresentar a sua actividade ao público do MozEmpresas.</p><Link href="/contactos">Falar sobre exposição →</Link></article>
-            <article><span>INTELIGÊNCIA</span><h3>Compreender o mercado</h3><p>Dados empresariais, procura, mercado, sectores, benchmarking, verificação, reputação e estudos personalizados.</p><Link href="/contactos">Falar sobre inteligência →</Link></article>
+            <article><span>INTELIGÊNCIA · DADOS</span><h3>Obter inteligência</h3><p>Dados empresariais, procura, mercado, sectores, benchmarking, verificação, reputação e estudos personalizados para apoiar decisões.<Link href="/contactos">Falar sobre inteligência →</Link></article>
           </div>
         </section>
 
