@@ -56,6 +56,7 @@ export async function POST(request: Request) {
       target_url: payload.targetUrl || null,
       cta_label: payload.ctaLabel || null,
       alt_text: payload.altText || null,
+      message: payload.message || null,
       starts_at: payload.startsAt || null,
       ends_at: payload.endsAt || null,
       message: payload.message || null,
