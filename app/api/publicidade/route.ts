@@ -20,6 +20,12 @@ const schema = z.object({
   ctaLabel: z.string().trim().max(40).optional(),
   altText: z.string().trim().max(180).optional(),
   message: z.string().trim().max(3000).optional(),
+  audienceMode: z.enum(["CONTEXTUAL","INTEREST","BROAD"]).default("CONTEXTUAL"),
+  budget: z.coerce.number().nonnegative().optional(),
+  bidCpm: z.coerce.number().nonnegative().optional(),
+  frequencyCap: z.coerce.number().int().min(1).max(20).default(2),
+  targetInterests: z.string().trim().max(1000).optional(),
+  targetLocations: z.string().trim().max(500).optional(),
 });
 
 export async function POST(request: Request) {
@@ -59,6 +65,12 @@ export async function POST(request: Request) {
       starts_at: payload.startsAt || null,
       ends_at: payload.endsAt || null,
       message: payload.message || null,
+      audience_mode: payload.audienceMode,
+      budget: payload.budget ?? null,
+      bid_cpm: payload.bidCpm ?? null,
+      frequency_cap: payload.frequencyCap,
+      target_interests: (payload.targetInterests || "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean),
+      target_locations: (payload.targetLocations || "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean),
     });
 
     if (error) return NextResponse.json({ error: "Não foi possível registar o pedido." }, { status: 500 });
