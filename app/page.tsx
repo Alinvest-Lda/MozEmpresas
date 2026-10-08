@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AdvertisingHero } from "@/components/advertising-hero";
 
 const categories = [
   ["Construção e engenharia","Obras, projectos e manutenção"],
@@ -15,7 +14,6 @@ const categories = [
 export default function Home() {
   return (
     <main className="home-v2">
-      <AdvertisingHero />
 
       <section className="home-v2-hero">
         <div className="container">
