@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { PartnerPage } from "@/components/partner-workspace";
 
 const types = [
   ["FUNDING", "Financiamento", "Linhas de crédito, fundos, grants ou outros apoios financeiros."],
@@ -41,15 +42,7 @@ export default function NewPartnerOpportunity(){
 
   const selected=types.find(([v])=>v===type)||types[0];
 
-  return <main className="dashboard-main partner-workspace"><div className="dashboard-content">
-    <header className="partner-page-hero">
-      <div>
-        <span className="dashboard-kicker">Actividade · Nova publicação</span>
-        <h1>Publicar uma oportunidade</h1>
-        <p>Publique algo que a sua organização disponibiliza ao público através de candidatura, participação, benefício ou cooperação.</p>
-      </div>
-    </header>
-
+  return <PartnerPage eyebrow="Actividade · Nova publicação" title="Publicar uma oportunidade" description="Publique algo que a sua organização disponibiliza ao público através de candidatura, participação, benefício ou cooperação." action={{href:"/parceiro/oportunidades",label:"Voltar às publicações"}}>
     <div className="opportunity-publisher-layout">
       <form className="partner-form-card opportunity-publisher-form" onSubmit={submit}>
         <div className="publisher-step"><span>01</span><div><strong>Defina a oportunidade</strong><small>Escolha a natureza correcta. Se for um concurso, produto, serviço ou evento, use o módulo correspondente.</small></div></div>
@@ -92,6 +85,5 @@ export default function NewPartnerOpportunity(){
       </aside>
     </div>
   </div>
-  
-  </main>
+  </PartnerPage>
 }
