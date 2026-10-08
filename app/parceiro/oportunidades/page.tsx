@@ -17,6 +17,3 @@ export default async function PartnerOpportunitiesPage(){
   <section className="partner-opportunity-boundary"><div><span>Oportunidades</span><strong>Publicar algo para participação externa.</strong></div><div className="boundary-links"><Link href="/parceiro/publicidade">Publicidade →</Link><Link href="/parceiro/servicos">Produtos de valor →</Link></div></section>
  </PartnerPage>
 }
-<style>{`
-.partner-opportunity-boundary{margin-top:18px;border:1px solid #dbe3e0;border-radius:15px;background:#f4f8f7;padding:18px 20px;display:flex;justify-content:space-between;gap:18px;align-items:center}.partner-opportunity-boundary div:first-child{display:grid;gap:4px}.partner-opportunity-boundary span{font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:#0b6b63}.partner-opportunity-boundary strong{font-size:13px}.boundary-links{display:flex;gap:12px}.boundary-links a{font-size:12px;font-weight:800;color:#0b6b63}@media(max-width:650px){.partner-opportunity-boundary{align-items:flex-start;flex-direction:column}.boundary-links{flex-wrap:wrap}}
-`}</style>
