@@ -7,10 +7,8 @@ import { PartnerPage } from "@/components/partner-workspace";
 
 const types = [
   ["FUNDING", "Financiamento", "Linhas de crédito, fundos, grants ou outros apoios financeiros."],
-  ["PROGRAM", "Programa / Candidatura", "Programas com inscrições, candidaturas ou selecção de participantes."],
-  ["AWARD_SCHOLARSHIP", "Bolsa / Prémio", "Bolsas, prémios, fellowships ou competições com benefício atribuído."],
-  ["PARTNERSHIP", "Parceria / Cooperação", "Procura de entidades para colaboração, implementação ou cooperação."],
-  ["EXPRESSION_OF_INTEREST", "Manifestação de Interesse", "Convite para entidades apresentarem interesse numa iniciativa específica."],
+  ["PROGRAM", "Programa de apoio ao empresariado", "Programas públicos ou institucionais de apoio, capacitação, crescimento ou acesso a oportunidades."],
+  ["YOUTH_INITIATIVE", "Iniciativa juvenil", "Programas, fundos e iniciativas dirigidas a jovens, empreendedorismo e desenvolvimento juvenil."],
 ] as const;
 
 function slug(v:string){return v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-"+Date.now().toString(36)}
