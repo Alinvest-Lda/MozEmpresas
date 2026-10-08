@@ -64,7 +64,7 @@ export default function Home() {
           <div className="home-v2-discovery-grid">
             <Link href="/empresas" className="home-v2-discovery-card featured"><span className="home-v2-number">01</span><div><h3>Empresas</h3><p>Pesquise por nome, actividade e localização. Consulte perfis, contactos e portfólio.</p></div><b>→</b></Link>
             <Link href="/marketplace" className="home-v2-discovery-card"><span className="home-v2-number">02</span><div><h3>Produtos e serviços</h3><p>Descubra o que as empresas estão a oferecer e encontre fornecedores.</p></div><b>→</b></Link>
-            <Link href="/oportunidades" className="home-v2-discovery-card"><span className="home-v2-number">03</span><div><h3>Oportunidades</h3><p>Encontre financiamento, programas, bolsas, parcerias e manifestações de interesse.</p></div><b>→</b></Link>
+            <Link href="/oportunidades" className="home-v2-discovery-card"><span className="home-v2-number">03</span><div><h3>Oportunidades</h3><p>Encontre financiamentos, programas de apoio ao empresariado e iniciativas juvenis.</p></div><b>→</b></Link>
             <Link href="/concursos" className="home-v2-discovery-card"><span className="home-v2-number">04</span><div><h3>Concursos</h3><p>Consulte concursos empresariais que estão actualmente abertos.</p></div><b>→</b></Link>
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function Home() {
             <article>
               <span className="role-label">ORGANIZAÇÃO / PARCEIRO</span>
               <h3>Quero publicar e chegar ao mercado.</h3>
-              <p>Organizações parceiras publicam oportunidades, contratam exposição e podem solicitar dados, inteligência, reputação e estudos.</p>
+              <p>Organizações parceiras publicam oportunidades, contratam exposição e obtêm dados, inteligência, reputação e estudos para apoiar decisões.</p>
               <div><Link href="/parceiros" className="btn primary">Conhecer para organizações</Link><Link href="/contactos" className="text-link">Falar connosco</Link></div>
             </article>
           </div>
