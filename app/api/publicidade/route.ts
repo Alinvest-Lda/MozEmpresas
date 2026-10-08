@@ -19,6 +19,7 @@ const schema = z.object({
   targetUrl: z.string().trim().url().max(1000).optional().or(z.literal("")),
   ctaLabel: z.string().trim().max(40).optional(),
   altText: z.string().trim().max(180).optional(),
+  message: z.string().trim().max(3000).optional(),
 });
 
 export async function POST(request: Request) {
