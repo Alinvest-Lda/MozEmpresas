@@ -84,6 +84,5 @@ export default function NewPartnerOpportunity(){
         <div className="publisher-aside-card publisher-exclusion"><strong>Não publique aqui</strong><ul><li>Produtos ou serviços comerciais</li><li>Concursos de contratação</li><li>Publicidade ou campanhas</li><li>Eventos isolados</li></ul><small>Esses conteúdos têm espaços próprios no MozEmpresas.</small></div>
       </aside>
     </div>
-  </div>
   </PartnerPage>
 }
