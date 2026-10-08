@@ -7,11 +7,10 @@ import { PartnerPage } from "@/components/partner-workspace";
 
 const types = [
   ["FUNDING", "Financiamento", "Linhas de crédito, fundos, grants ou outros apoios financeiros."],
-  ["PROGRAM", "Programa de apoio ao empresariado", "Programas estruturados de apoio, crescimento, capacitação ou acesso a oportunidades para empresas e PME."],
+  ["PROGRAM", "Desenvolvimento empresarial", "Programas para empresas existentes crescerem, modernizarem-se ou melhorarem a sua capacidade."],
   ["YOUTH_INITIATIVE", "Iniciativa juvenil", "Programas e iniciativas dirigidas especificamente a jovens, empreendedorismo e desenvolvimento juvenil."],
   ["TRAINING", "Formação e capacitação", "Programas de formação, capacitação profissional, bolsas de formação ou desenvolvimento de competências."],
   ["ENTREPRENEUR_SUPPORT", "Apoio a empreendedores", "Incubação, aceleração e programas de apoio a empreendedores, startups e negócios em desenvolvimento."],
-  ["INNOVATION_TECH", "Inovação e tecnologia", "Programas e oportunidades ligados a inovação, tecnologia, transformação digital e soluções tecnológicas."],
   ["EXPORT_INTERNATIONAL", "Exportação e internacionalização", "Apoio à exportação, acesso a mercados externos e internacionalização de empresas e produtos."],
 ] as const;
 
