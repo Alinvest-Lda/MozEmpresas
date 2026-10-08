@@ -209,7 +209,7 @@ export default async function Empresas({
           </div>
         </section>
 
-        <PublicAd surface="DIRECTORY" slot="BILLBOARD" />
+        <PublicAd surface="DIRECTORY" slot="BILLBOARD" context={{query:q,location,category}} interests={[q,category].filter(Boolean)} />
 
         {featured.length > 0 && (
           <section className="directory-featured">
