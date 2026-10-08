@@ -1,1 +1,2 @@
-export default function PartnerCompaniesPage(){return <main className="dashboard-main"><div className="dashboard-content"><header className="dashboard-topbar"><div className="dashboard-welcome"><span className="dashboard-kicker">Removido</span><h1>Empresas</h1><p>A gestão de empresas de terceiros não faz parte da conta de parceiro.</p></div></header><section className="dashboard-section"><div className="empty"><div className="empty-icon">—</div><p>Esta função foi retirada do módulo de parceiro. A conta representa uma única entidade.</p></div></section></div></main>}
+import { redirect } from "next/navigation";
+export default function PartnerCompaniesPage(){redirect("/empresas")}
