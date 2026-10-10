@@ -60,8 +60,7 @@ export default async function Marketplace({
         .from("listings")
         .select("id,title,description,type,price,currency,location,business_id", { count: "exact" })
         .eq("status", "PUBLISHED")
-        .order("created_at", { ascending: false })
-        ;
+        .order("created_at", { ascending: false });
 
       if (q) {
         const safe = q.replace(/[%_,()']/g, " ").replace(/\s+/g, " ").trim();
