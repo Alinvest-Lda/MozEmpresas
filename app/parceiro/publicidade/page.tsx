@@ -16,6 +16,11 @@ export default async function PartnerAds(){
   ]);
   const active=(campaigns??[]).filter((x:any)=>["ACTIVE","RUNNING","PUBLISHED"].includes(x.status)).length;
   const pending=(campaigns??[]).filter((x:any)=>["REQUESTED","PENDING","UNDER_REVIEW"].includes(x.status)).length;
+  const impressions=(campaigns??[]).reduce((sum:number,x:any)=>sum+Number(x.impressions_count??0),0);
+  const clicks=(campaigns??[]).reduce((sum:number,x:any)=>sum+Number(x.clicks_count??0),0);
+  const investment=(campaigns??[]).reduce((sum:number,x:any)=>sum+Number(x.price_mzn??0),0);
+  const ctr=impressions>0?clicks/impressions*100:0;
+  const money=(value:number)=>value.toLocaleString("pt-MZ",{maximumFractionDigits:2})+" MZN";
 
   return <PartnerPage
     eyebrow="Posicionar · Exposição"
@@ -62,14 +67,28 @@ export default async function PartnerAds(){
     </PartnerSection>
 
     <PartnerSection
+      eyebrow="Desempenho e investimento"
+      title="Análise das campanhas"
+      description="Acompanhe investimento contratado, exposição e interacções registadas. O retorno financeiro só será calculado quando a plataforma registar conversões atribuíveis."
+    >
+      <div className="partner-metrics-grid">
+        <PartnerMetric label="Investimento registado" value={money(investment)} detail="Soma dos valores das campanhas"/>
+        <PartnerMetric label="Impressões" value={impressions.toLocaleString("pt-MZ")} detail="Exibições contabilizadas"/>
+        <PartnerMetric label="Cliques" value={clicks.toLocaleString("pt-MZ")} detail="Interacções contabilizadas"/>
+        <PartnerMetric label="CTR" value={impressions>0?ctr.toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"} detail="Cliques ÷ impressões" featured/>
+      </div>
+      <div className="partner-empty"><strong>ROI financeiro ainda não disponível</strong><p>O sistema regista exposição e cliques, mas não tem ainda conversões comerciais atribuídas para calcular vendas, receita incremental ou retorno real do investimento. Não confunda CTR com ROI.</p></div>
+    </PartnerSection>
+
+    <PartnerSection
       eyebrow="Acompanhamento"
       title="Campanhas da entidade"
-      description="Aqui acompanha os pedidos e campanhas registados. Métricas de alcance só devem aparecer quando existirem dados efectivamente medidos."
+      description="Consulte o estado e os indicadores de cada campanha. Os números apresentados provêm dos registos da plataforma."
     >
       {campaigns?.length
         ? <div className="partner-record-list">{campaigns.map((x:any)=><div key={x.id}>
-            <div><strong>{x.title||"Campanha sem título"}</strong><span>{x.product_name||"Espaço publicitário"} · {statusLabel(x.status)}</span></div>
-            <b>{x.price_mzn!=null?Number(x.price_mzn).toLocaleString("pt-MZ")+" MZN":"Em análise"}</b>
+            <div><strong>{x.title||"Campanha sem título"}</strong><span>{x.product_name||"Espaço publicitário"} · {statusLabel(x.status)}</span><span>{Number(x.impressions_count??0).toLocaleString("pt-MZ")} impressões · {Number(x.clicks_count??0).toLocaleString("pt-MZ")} cliques · CTR {Number(x.impressions_count??0)>0?(Number(x.clicks_count??0)/Number(x.impressions_count)*100).toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"}</span></div>
+            <b>{x.price_mzn!=null?money(Number(x.price_mzn)):"Em análise"}</b>
           </div>)}</div>
         : <PartnerEmpty title="Ainda sem campanhas" text="Escolha um espaço acima para iniciar uma proposta de exposição." href="#espacos" label="Ver espaços"/>
       }
