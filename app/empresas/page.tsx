@@ -75,7 +75,10 @@ export default async function Empresas({
         .eq("status", "ACTIVE")
         .lte("starts_at", new Date().toISOString())
         .gt("ends_at", new Date().toISOString())
-        .eq("placement", "DIRECTORY").in("slot", ["BILLBOARD", "FEATURED"])
+        .eq("placement", "DIRECTORY")
+        .eq("businesses.is_public", true)
+        .is("businesses.archived_at", null)
+        .in("slot", ["BILLBOARD", "FEATURED"])
         .order("created_at", { ascending: false })
         .limit(12),
     ]);
