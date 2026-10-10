@@ -27,7 +27,7 @@ export default async function MonetizacaoPage({searchParams}:{searchParams:Promi
   ids.length?supabase.rpc("business_ad_campaign_metrics"):Promise.resolve({data:[]})
  ]);
  const businesses=b.data??[], wallets=w.data??[];
- const campaignMetrics=metricResult.data??[];
+ const campaignMetrics=(metricResult.data??[]) as {campaign_id:string;impressions:number;clicks:number}[];
  const campaignImpressions=campaignMetrics.reduce((s,x)=>s+Number(x.impressions??0),0);
  const campaignClicks=campaignMetrics.reduce((s,x)=>s+Number(x.clicks??0),0);
  const campaignCtr=campaignImpressions>0?campaignClicks/campaignImpressions*100:0;
