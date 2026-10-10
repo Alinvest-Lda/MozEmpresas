@@ -26,6 +26,8 @@ type Listing = {
   location: string | null;
   business_id: string | null;
   image_url?: string | null;
+  business_name?: string | null;
+  business_logo?: string | null;
 };
 
 export default async function Marketplace({
@@ -97,12 +99,12 @@ export default async function Marketplace({
 
       const ids = [...new Set(listings.map((item) => item.business_id).filter(Boolean))];
       if (ids.length) {
-        const { data: businesses } = await supabase.from("businesses").select("id,name").in("id", ids);
-        const names = new Map((businesses ?? []).map((business) => [business.id, business.name]));
-        listings = listings.map((item) => ({
-          ...item,
-          business_id: item.business_id ? names.get(item.business_id) ?? item.business_id : null,
-        }));
+        const { data: businesses } = await supabase.from("businesses").select("id,name,logo_url").in("id", ids);
+        const suppliers = new Map((businesses ?? []).map((business) => [business.id, { name: business.name, logo: business.logo_url }]));
+        listings = listings.map((item) => {
+          const supplier = item.business_id ? suppliers.get(item.business_id) : null;
+          return { ...item, business_name: supplier?.name ?? null, business_logo: supplier?.logo ?? null };
+        });
       }
     }
   } catch {
@@ -120,23 +122,6 @@ export default async function Marketplace({
             <span className="eyebrow">Produtos & serviços</span>
             <h1>Descubra o que as empresas em Moçambique têm para oferecer.</h1>
             <p>Encontre fornecedores, soluções e oportunidades comerciais num único espaço. Pesquise primeiro; aprofunde a relação com empresas registadas.</p>
-            <form className="marketplace-main-search" action="/marketplace">
-              <div className="marketplace-main-search-input">
-                <span>⌕</span>
-                <input name="q" defaultValue={q} placeholder="O que procura para o seu negócio?" />
-              </div>
-              <select name="type" defaultValue={type || "all"} aria-label="Tipo de oferta">
-                <option value="all">Produtos e serviços</option>
-                {types.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
-              </select>
-              <button className="btn primary">Pesquisar →</button>
-            </form>
-            <div className="marketplace-quick-links">
-              <span>Procure rapidamente:</span>
-              <Link href="/marketplace?type=PRODUCT">Produtos</Link>
-              <Link href="/marketplace?type=SERVICE">Serviços</Link>
-              <Link href="/empresas">Fornecedores</Link>
-            </div>
           </div>
           <div className="marketplace-hero-panel">
             <span className="marketplace-panel-kicker">Ecossistema comercial</span>
@@ -147,17 +132,12 @@ export default async function Marketplace({
           </div>
         </section>
 
-        <PublicAd surface="MARKETPLACE" slot="BILLBOARD" context={{query:q,type,location,category}} interests={[q,type,location,category].filter(Boolean)} />
-
-        <PublicAd surface="MARKETPLACE" slot="FEATURED" context={{query:q,type,location,category}} interests={[q,type,location,category].filter(Boolean)} />
-
-        <section className="marketplace-commercial-strip marketplace-commercial-strip-compact">
-          <div>
-            <span className="eyebrow">Parceiros em destaque</span>
-            <h2>Soluções de organizações parceiras do ecossistema.</h2>
-            <p>Descubra campanhas, serviços e iniciativas de parceiros seleccionados para empresas moçambicanas.</p>
+        <section className="marketplace-exclusive-placement" aria-label="Billboard exclusivo para parceiros">
+          <div className="marketplace-exclusive-heading">
+            <span className="eyebrow">Parceiro exclusivo</span>
+            <span>Espaço reservado a campanhas de parceiros com exclusividade contratada</span>
           </div>
-          <Link href="/publicidade" className="btn primary">Conhecer espaços de destaque →</Link>
+          <PublicAd surface="MARKETPLACE" slot="BILLBOARD" className="marketplace-exclusive-billboard" context={{query:q,type,location,category,placement:"exclusive_partner"}} interests={[q,type,location,category,"exclusive_partner"].filter(Boolean)} />
         </section>
 
         <section className="marketplace-section marketplace-results-section">
@@ -178,27 +158,34 @@ export default async function Marketplace({
             </form>
             {error && <div className="notice">Algumas funções comerciais estão temporariamente indisponíveis.</div>}
             {listings.length > 0 ? (
-              <div className="marketplace-results-gallery">
-                {listings.map((item, index) => (
-                  <article className="marketplace-offer-card" key={item.id}>
-                    <div className="marketplace-offer-visual">{item.image_url ? <img src={item.image_url} alt="" /> : <span>{item.type === "PRODUCT" ? "P" : "S"}</span>}<small>{item.type === "PRODUCT" ? "PRODUTO" : "SERVIÇO"}</small></div>
-                    <div className="marketplace-offer-body">
-                      <div className="marketplace-offer-meta"><span>{String(index + 1).padStart(2, "0")}</span>{item.location && <span>⌖ {item.location}</span>}</div>
-                      <h3>{item.title}</h3>
-                      {item.business_id && <p className="marketplace-provider">Fornecedor: {item.business_id}</p>}
-                      <p>{item.description}</p>
-                      <div className="marketplace-offer-footer"><strong>{item.price != null ? item.price + " " + (item.currency || "MZN") : "Sob consulta"}</strong><Link href={"/marketplace/" + item.id}>Ver oferta →</Link></div>
-                      {item.price != null && <div className="marketplace-buy-form"><span>Negociação e compra fora da plataforma.</span><Link href={"/marketplace/" + item.id} className="btn primary">Tenho interesse →</Link></div>}
+              <div className="directory-marketplace-grid marketplace-listing-cards">
+                {listings.map((item) => (
+                  <Link href={"/marketplace/" + item.id} className="directory-marketplace-card" key={item.id}>
+                    <div className="directory-marketplace-visual">
+                      {item.image_url ? <img src={item.image_url} alt="" loading="lazy" /> : <div className="directory-marketplace-placeholder"><span>{item.type === "PRODUCT" ? "P" : "S"}</span><small>{item.type === "PRODUCT" ? "Produto" : "Serviço"}</small></div>}
+                      <span className="directory-marketplace-type">{item.type === "PRODUCT" ? "Produto" : "Serviço"}</span>
                     </div>
-                  </article>
+                    <div className="directory-marketplace-body">
+                      <div className="directory-marketplace-identity">
+                        <div className="directory-business-logo">{item.business_logo ? <img src={item.business_logo} alt="" loading="lazy" /> : (item.business_name || "F").charAt(0)}</div>
+                        <div className="directory-marketplace-name">
+                          <h3>{item.title}</h3>
+                          {item.business_name && <span>Fornecedor: {item.business_name}</span>}
+                          {item.location && <span>⌖ {item.location}</span>}
+                        </div>
+                      </div>
+                      <p>{item.description || "Consulte os detalhes desta oferta."}</p>
+                      <div className="directory-marketplace-footer">
+                        <b>{item.price != null ? item.price + " " + (item.currency || "MZN") : "Sob consulta"}</b><span>Ver oferta ↗</span>
+                      </div>
+                    </div>
+                  </Link>
                 ))}
               </div>
             ) : (
               <div className="directory-empty"><div className="directory-empty-icon">◇</div><span className="eyebrow">Sem resultados</span><h3>Não encontrámos ofertas para esta pesquisa.</h3><p>Experimente alterar os filtros ou publicar uma nova oferta.</p><div className="directory-empty-actions"><Link href="/marketplace" className="btn">Ver todas</Link><Link href="/dashboard" className="btn primary">Publicar oferta</Link></div></div>
             )}
           </section>
-
-        <PublicAd surface="MARKETPLACE" slot="INFEED" className="marketplace-infeed-ad" context={{query:q,type,location,category}} interests={[q,type,location,category].filter(Boolean)} />
 
         {!signedIn && (
           <section className="marketplace-member-gate marketplace-member-gate-premium">
