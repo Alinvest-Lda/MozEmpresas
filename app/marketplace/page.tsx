@@ -225,18 +225,7 @@ export default async function Marketplace({
           .marketplace-member-gate-premium .marketplace-gate-actions .btn{background:#fff;color:var(--brand-dark,#07544f);border-color:#fff}
           .marketplace-member-gate-premium .marketplace-gate-actions .btn.primary{background:#fff;color:var(--brand-dark,#07544f);border-color:#fff}
         `}</style>
-        {!signedIn && (
-          <section className="marketplace-member-gate marketplace-member-gate-premium">
-            <div className="marketplace-gate-copy">
-              <span className="marketplace-gate-eyebrow">Faça parte do ecossistema</span>
-              <h2>Mais visibilidade para a sua oferta. Mais oportunidades para o seu negócio.</h2>
-              <p>Crie uma presença comercial, apresente os seus produtos e serviços e conheça opções de destaque. Organizações parceiras podem beneficiar de espaços exclusivos.</p>
-            </div>
-            <div className="marketplace-gate-actions">
-              {signedIn ? <Link href="/dashboard" className="btn primary">Ir para o meu painel</Link> : <><Link href="/registo" className="btn primary">Criar conta</Link><Link href={"/login?next=" + encodeURIComponent("/marketplace")} className="btn">Entrar</Link></>}
-            </div>
-          </section>
-        )}
+}
       </div>
     </main>
   );
