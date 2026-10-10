@@ -197,6 +197,9 @@ export default async function Marketplace({
               <div className="directory-empty"><div className="directory-empty-icon">◇</div><span className="eyebrow">Sem resultados</span><h3>Não encontrámos ofertas para esta pesquisa.</h3><p>Experimente alterar os filtros ou publicar uma nova oferta.</p><div className="directory-empty-actions"><Link href="/marketplace" className="btn">Ver todas</Link><Link href="/dashboard" className="btn primary">Publicar oferta</Link></div></div>
             )}
           </section>
+
+        <PublicAd surface="MARKETPLACE" slot="INFEED" className="marketplace-infeed-ad" context={{query:q,type,location,category}} interests={[q,type,location,category].filter(Boolean)} />
+
         {!signedIn && (
           <section className="marketplace-member-gate marketplace-member-gate-premium">
             <div className="marketplace-gate-mark" aria-hidden="true">M</div>
