@@ -211,12 +211,16 @@ export default async function Marketplace({
           .marketplace-pagination{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:26px}
           .marketplace-pagination-status{font-size:12px;font-weight:700;color:var(--muted,#65716e)}
           .marketplace-pagination .is-disabled{opacity:.45;pointer-events:none}
+          .marketplace-member-gate-premium{background:var(--brand,#0b6b63);color:#fff;border:1px solid var(--brand,#0b6b63)}
+          .marketplace-member-gate-premium .marketplace-gate-copy .marketplace-gate-eyebrow{display:inline-flex;align-items:center;width:fit-content;padding:6px 9px;border:1px solid rgba(255,255,255,.45);border-left:3px solid #fff;background:rgba(255,255,255,.12);color:#fff;font-size:11px;font-weight:800;line-height:1.4;letter-spacing:.08em;text-transform:uppercase}
+          .marketplace-member-gate-premium .marketplace-gate-copy h2,.marketplace-member-gate-premium .marketplace-gate-copy p{color:#fff}
+          .marketplace-member-gate-premium .marketplace-gate-actions .btn{background:#fff;color:var(--brand-dark,#07544f);border-color:#fff}
+          .marketplace-member-gate-premium .marketplace-gate-actions .btn.primary{background:#fff;color:var(--brand-dark,#07544f);border-color:#fff}
         `}</style>
         {!signedIn && (
           <section className="marketplace-member-gate marketplace-member-gate-premium">
-            <div className="marketplace-gate-mark" aria-hidden="true">M</div>
             <div className="marketplace-gate-copy">
-              <span className="eyebrow">Faça parte do ecossistema</span>
+              <span className="marketplace-gate-eyebrow">Faça parte do ecossistema</span>
               <h2>Mais visibilidade para a sua oferta. Mais oportunidades para o seu negócio.</h2>
               <p>Crie uma presença comercial, apresente os seus produtos e serviços e conheça opções de destaque. Organizações parceiras podem beneficiar de espaços exclusivos.</p>
             </div>
