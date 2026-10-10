@@ -31,7 +31,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
   const {data:wallets}=businesses.length ? await supabase.from("business_credit_wallets").select("business_id,balance_credits").in("business_id",businesses.map(b=>b.id)) : {data:[] as {business_id:string;balance_credits:number}[]};
   const walletMap=Object.fromEntries((wallets??[]).map(w=>[w.business_id,w.balance_credits]));
   const paidProducts=(products??[]).filter(p=>p.access_type!=="FREE");
-  const metricsByCampaign=new Map((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}]));
+  const metricsByCampaign=new Map<string,{impressions:number;clicks:number}>((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}] as [string,{impressions:number;clicks:number}]));
   const campaignImpressions=(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.impressions??0),0);
   const campaignClicks=(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.clicks??0),0);
   const campaignInvestment=(promotions??[]).reduce((sum,p)=>sum+Number(p.price_mzn??0),0);
