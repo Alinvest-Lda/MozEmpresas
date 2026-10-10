@@ -33,18 +33,22 @@ type Listing = {
 export default async function Marketplace({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; type?: string; location?: string; category?: string }>;
+  searchParams: Promise<{ q?: string; type?: string; location?: string; category?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const q = params.q?.trim() || "";
   const type = params.type?.trim() || "";
   const location = params.location?.trim() || "";
   const category = params.category?.trim() || "";
+  const requestedPage = Number.parseInt(params.page || "1", 10);
+  const currentPage = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const pageSize = 24;
   const selectedCategory = categories.find(([value]) => value === category);
 
   let listings: Listing[] = [];
   let signedIn = false;
   let error = false;
+  let totalListings = 0;
 
   try {
     const supabase = await createClient();
@@ -54,10 +58,10 @@ export default async function Marketplace({
     {
       let query = supabase
         .from("listings")
-        .select("id,title,description,type,price,currency,location,business_id")
+        .select("id,title,description,type,price,currency,location,business_id", { count: "exact" })
         .eq("status", "PUBLISHED")
         .order("created_at", { ascending: false })
-        .limit(48);
+        ;
 
       if (q) {
         const safe = q.replace(/[%_,()']/g, " ").replace(/\s+/g, " ").trim();
@@ -83,8 +87,9 @@ export default async function Marketplace({
         query = query.or(terms.join(","));
       }
 
-      const result = await query;
+      const result = await query.range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
       listings = (result.data ?? []) as Listing[];
+      totalListings = result.count ?? listings.length;
       error = error || Boolean(result.error);
 
       const attachmentIds = listings.map((item) => item.id);
@@ -112,7 +117,19 @@ export default async function Marketplace({
   }
 
   const hasFilters = Boolean(q || location || category || (type && type !== "all"));
-  const resultLabel = listings.length === 1 ? "oferta encontrada" : "ofertas encontradas";
+  const totalPages = Math.max(1, Math.ceil(totalListings / pageSize));
+  const pageHref = (targetPage: number) => {
+    const next = new URLSearchParams();
+    if (q) next.set("q", q);
+    if (location) next.set("location", location);
+    if (category) next.set("category", category);
+    if (type && type !== "all") next.set("type", type);
+    if (targetPage > 1) next.set("page", String(targetPage));
+    const queryString = next.toString();
+    return "/marketplace" + (queryString ? "?" + queryString : "");
+  };
+  if (currentPage > totalPages) redirect(pageHref(totalPages));
+  const resultLabel = totalListings === 1 ? "oferta encontrada" : "ofertas encontradas";
 
   return (
     <main className="directory-page marketplace-page">
@@ -140,7 +157,7 @@ export default async function Marketplace({
                 <span className="eyebrow">{hasFilters ? "Ofertas encontradas" : "Vitrine comercial"}</span>
                 <h2>{hasFilters ? "Produtos e serviços que correspondem à sua pesquisa." : "Produtos e serviços publicados pelas empresas."}</h2>
               </div>
-              <div className="directory-results-summary"><strong>{listings.length}</strong><span>{resultLabel}</span></div>
+              <div className="directory-results-summary"><strong>{totalListings}</strong><span>{resultLabel}</span></div>
             </div>
             <form className="marketplace-filter-bar" action="/marketplace">
               <label><span>Palavra-chave</span><input name="q" defaultValue={q} placeholder="Produto, serviço ou fornecedor" /></label>
@@ -179,8 +196,20 @@ export default async function Marketplace({
             ) : (
               <div className="directory-empty"><div className="directory-empty-icon">◇</div><span className="eyebrow">Sem resultados</span><h3>Não encontrámos ofertas para esta pesquisa.</h3><p>Experimente alterar os filtros ou publicar uma nova oferta.</p><div className="directory-empty-actions"><Link href="/marketplace" className="btn">Ver todas</Link><Link href="/dashboard" className="btn primary">Publicar oferta</Link></div></div>
             )}
+            {totalPages > 1 && (
+              <nav className="marketplace-pagination" aria-label="Paginação das ofertas">
+                {currentPage > 1 ? <Link href={pageHref(currentPage - 1)} className="btn">← Anterior</Link> : <span className="btn is-disabled" aria-disabled="true">← Anterior</span>}
+                <span className="marketplace-pagination-status">Página {currentPage} de {totalPages}</span>
+                {currentPage < totalPages ? <Link href={pageHref(currentPage + 1)} className="btn primary">Seguinte →</Link> : <span className="btn is-disabled" aria-disabled="true">Seguinte →</span>}
+              </nav>
+            )}
           </section>
 
+        <style>{`
+          .marketplace-pagination{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:26px}
+          .marketplace-pagination-status{font-size:12px;font-weight:700;color:var(--muted,#65716e)}
+          .marketplace-pagination .is-disabled{opacity:.45;pointer-events:none}
+        `}</style>
         {!signedIn && (
           <section className="marketplace-member-gate marketplace-member-gate-premium">
             <div className="marketplace-gate-mark" aria-hidden="true">M</div>
