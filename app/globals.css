@@ -1874,7 +1874,7 @@ body{background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,syste
 .marketplace-offer-visual{height:160px}
 .marketplace-commercial-strip,.marketplace-member-gate{border-radius:var(--radius);box-shadow:none}
 
-/* Directory / contests / opportunities */
+/* Directory / opportunities */
 .directory-page{padding-bottom:70px}
 .directory-hero{padding-top:clamp(32px,5vw,58px)}
 .directory-search-panel,.directory-search,.opportunity-search-shell{border-radius:14px}
@@ -2249,7 +2249,7 @@ button,input,select,textarea{font-size:16px}
 
 .publication-attachments{display:grid;gap:8px;margin-top:14px}.publication-attachment{display:flex;align-items:center;gap:8px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:#fafcfb;color:var(--ink);text-decoration:none;font-size:12px;font-weight:700}.publication-attachment:hover{border-color:#9dbab5;background:#f5f9f7}
 
-/* Standard publication form pattern shared by opportunities, contests and future publishing modules. */
+/* Standard publication form pattern shared by publishing modules. */
 .publication-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
 .publication-form-grid .wide{grid-column:1/-1}
 .publication-form-grid label{display:grid;gap:7px;font-size:12px;font-weight:750;color:#343b44}
