@@ -3020,3 +3020,70 @@ button,input,select,textarea{font-size:16px}
  .marketplace-member-gate-premium .marketplace-gate-actions{grid-column:auto;flex-direction:column}
  .marketplace-member-gate-premium .marketplace-gate-actions .btn{width:100%}
 }
+
+
+/* Catálogo público — exclusividade para parceiros e hierarquia cromática do CTA final */
+.marketplace-exclusive-placement{
+  margin:24px 0 30px;
+  padding:15px;
+  border:1px solid #c8ddd6;
+  border-radius:20px;
+  background:linear-gradient(120deg,#eaf5f1 0%,#f8fbfa 58%,#eef4ff 100%);
+}
+.marketplace-exclusive-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 3px 12px;
+  color:#365b53;
+  font-size:12px;
+}
+.marketplace-exclusive-heading .eyebrow{
+  color:#0f6659;
+  font-weight:900;
+}
+.marketplace-exclusive-billboard{
+  margin:0;
+  border:1px solid #d8e5e0;
+  border-radius:15px;
+  overflow:hidden;
+  background:#fff;
+  box-shadow:0 10px 28px rgba(19,75,64,.09);
+}
+.marketplace-exclusive-billboard:empty{display:none}
+.marketplace-exclusive-billboard .public-ad-copy{padding:clamp(18px,3vw,30px)}
+.marketplace-exclusive-billboard .public-ad-copy h3{color:#143f37}
+.marketplace-exclusive-billboard .public-ad-copy .btn{background:#126b5c;color:#fff;border-color:#126b5c}
+.marketplace-exclusive-billboard .public-ad-media{background:#dcece6}
+.marketplace-listing-cards{margin-top:20px}
+.marketplace-listing-cards .directory-marketplace-footer b{color:#145b53;font-size:16px}
+.marketplace-member-gate-premium{
+  color:#f7fbfa;
+  border:1px solid #0c5148;
+  background:radial-gradient(ellipse at 88% 0%,rgba(86,190,158,.34),transparent 42%),linear-gradient(120deg,#103f38 0%,#155e53 55%,#183f62 100%);
+  box-shadow:0 18px 42px rgba(13,65,56,.2);
+}
+.marketplace-member-gate-premium .eyebrow{color:#a8e4d2}
+.marketplace-gate-copy h2{color:#fff}
+.marketplace-gate-copy p{color:#d3e7e1}
+.marketplace-gate-mark{
+  color:#145b50;
+  background:linear-gradient(145deg,#e0f7ef,#fff);
+  box-shadow:0 8px 22px rgba(0,0,0,.15);
+}
+.marketplace-member-gate-premium .marketplace-gate-actions .btn{
+  border-color:rgba(255,255,255,.42);
+  color:#fff;
+  background:rgba(255,255,255,.09);
+}
+.marketplace-member-gate-premium .marketplace-gate-actions .btn.primary{
+  background:#f3c969;
+  border-color:#f3c969;
+  color:#263b34;
+}
+.marketplace-member-gate-premium .marketplace-gate-actions .btn:hover{filter:brightness(1.06)}
+@media(max-width:650px){
+  .marketplace-exclusive-heading{align-items:flex-start;flex-direction:column}
+  .marketplace-exclusive-placement{padding:10px;border-radius:16px}
+}
