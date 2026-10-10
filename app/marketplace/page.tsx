@@ -143,8 +143,8 @@ export default async function Marketplace({
         <section className="marketplace-section marketplace-results-section">
             <div className="marketplace-section-head">
               <div>
-                <span className="eyebrow">{hasFilters ? "Resultados" : "Ofertas recentes"}</span>
-                <h2>{hasFilters ? "Ofertas que correspondem à sua pesquisa." : "O que está a ser publicado."}</h2>
+                <span className="eyebrow">{hasFilters ? "Ofertas encontradas" : "Vitrine comercial"}</span>
+                <h2>{hasFilters ? "Produtos e serviços que correspondem à sua pesquisa." : "Produtos e serviços publicados pelas empresas."}</h2>
               </div>
               <div className="directory-results-summary"><strong>{listings.length}</strong><span>{resultLabel}</span></div>
             </div>
