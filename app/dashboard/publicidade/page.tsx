@@ -34,9 +34,6 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
   const metricsByCampaign=new Map((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}]));
   const campaignImpressions=(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.impressions??0),0);
   const campaignClicks=(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.clicks??0),0);
-  const metricsByCampaign=new Map((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}]));
-  const campaignImpressions=(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.impressions??0),0);
-  const campaignClicks=(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.clicks??0),0);
   const campaignInvestment=(promotions??[]).reduce((sum,p)=>sum+Number(p.price_mzn??0),0);
   const campaignCtr=campaignImpressions>0?campaignClicks/campaignImpressions*100:0;
 
@@ -76,7 +73,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
 
     <section className="dashboard-section" style={{marginTop:18}}>
       <div className="dashboard-section-head"><div><span className="dashboard-kicker">Campanhas</span><h2>Histórico publicitário</h2><p className="muted">Aqui ficam apenas campanhas publicitárias. Os Serviços MozEmpresas têm espaço próprio.</p></div><Link href="/dashboard/servicos" className="text-link">Ver Serviços MozEmpresas →</Link></div>
-      {(promotions??[]).length ? (promotions??[]).map(p=>{const b=Array.isArray(p.businesses)?p.businesses[0]:p.businesses;return <div key={p.id} style={{display:"flex",justifyContent:"space-between",gap:16,padding:"14px 0",borderTop:"1px solid #eee"}}><div><strong>{p.title}</strong><div className="muted">{b?.name||"Empresa"} · {placement[p.placement]||p.placement} · {p.payment_method==="CREDITS"?String(p.credits_charged??0)+" créditos":money(p.price_mzn)}</div></div><span>{p.status}</span></div>}) : <p className="muted">Ainda não existem campanhas publicitárias.</p>}
+      {(promotions??[]).length ? (promotions??[]).map(p=>{const b=Array.isArray(p.businesses)?p.businesses[0]:p.businesses;const m=metricsByCampaign.get(p.id)??{impressions:0,clicks:0};return <div key={p.id} style={{display:"flex",justifyContent:"space-between",gap:16,padding:"14px 0",borderTop:"1px solid #eee"}}><div><strong>{p.title}</strong><div className="muted">{b?.name||"Empresa"} · {placement[p.placement]||p.placement} · {p.payment_method==="CREDITS"?String(p.credits_charged??0)+" créditos":money(p.price_mzn)}</div><div className="muted">{m.impressions.toLocaleString("pt-MZ")} impressões · {m.clicks.toLocaleString("pt-MZ")} cliques · CTR {m.impressions>0?(m.clicks/m.impressions*100).toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"}</div></div><span>{p.status}</span></div>}) : <p className="muted">Ainda não existem campanhas publicitárias.</p>}
     </section>
   </div></main>;
 }
