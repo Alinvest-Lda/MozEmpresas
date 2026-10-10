@@ -16,7 +16,7 @@ export default async function OpportunityDetail({params}:{params:Promise<{slug:s
   userId?supabase.from("businesses").select("id,name").eq("owner_id",userId).order("name"):Promise.resolve({data:[]}),
   supabase.from("publication_attachments").select("id,file_name,mime_type,storage_path,kind").eq("resource_type","OPPORTUNITY").eq("resource_id",item.id).order("created_at")
  ]);
- const now=Date.now();const opensAt=item.opens_at?new Date(item.opens_at):null;const deadline=item.closes_at?new Date(item.closes_at):null;const notOpenYet=Boolean(opensAt&&opensAt.getTime()>now);const isClosed=Boolean(deadline&&deadline.getTime()<now);const canApply=!notOpenYet&&!isClosed;
+ const now=Date.now();const opensAt=item.opens_at?new Date(item.opens_at):null;const deadline=item.closes_at?new Date(item.closes_at):null;const notOpenYet=Boolean(opensAt&&opensAt.getTime()>now);const isClosed=Boolean(deadline&&deadline.getTime()<now);
  const actionLabel=item.type==="FUNDING"?"Apresentar interesse / candidatura":item.type==="PARTNERSHIP"?"Contactar para cooperação":item.type==="EXPRESSION_OF_INTEREST"?"Manifestar interesse":item.type==="AWARD_SCHOLARSHIP"?"Candidatar-se":"Participar / candidatar-se";
 
  return <><main className="opportunity-detail-page opportunity-detail-new"><div className="container">
