@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 type Ad={campaign_source:"business"|"partner";campaign_id:string;title:string;headline:string|null;body:string|null;image_url:string|null;target_url:string|null;cta_label:string|null;alt_text:string|null;creative_type:string;score:number};
-type Props={surface:"HOME"|"DIRECTORY"|"MARKETPLACE"|"OPPORTUNITIES";slot?:"HERO"|"BILLBOARD"|"FEATURED"|"INFEED"|"CONTEXT";className?:string;context?:Record<string,string>;interests?:string[]};
+type Props={surface:"HOME"|"DIRECTORY"|"MARKETPLACE"|"OPPORTUNITIES";slot?:"HERO"|"BILLBOARD"|"EXCLUSIVE"|"FEATURED"|"INFEED"|"CONTEXT";variant?:"standard"|"billboard";className?:string;context?:Record<string,string>;interests?:string[]};
 
 function visitorKey(){
  if(typeof window==="undefined") return "";
@@ -19,7 +19,7 @@ function visitorKey(){
  }
 }
 
-export function PublicAd({surface,slot="BILLBOARD",className="",context={},interests=[]}:Props){
+export function PublicAd({surface,slot="BILLBOARD",variant="standard",className="",context={},interests=[]}:Props){
  const[ad,setAd]=useState<Ad|null>(null);
  useEffect(()=>{
   const key=visitorKey(); if(!key)return;
@@ -31,6 +31,15 @@ export function PublicAd({surface,slot="BILLBOARD",className="",context={},inter
   const key=visitorKey();
   void fetch("/api/ads/event",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({visitorKey:key,campaignSource:ad.campaign_source,campaignId:ad.campaign_id,surface,slot,eventType:"CLICK",context})}).catch(()=>{});
  };
+ if(variant==="billboard") return <aside className={"public-ad public-ad-billboard "+className} aria-label="Publicidade de parceiro">
+  {ad.image_url?<img className="public-ad-billboard-image" src={ad.image_url} alt={ad.alt_text||ad.headline||ad.title}/>:<div className="public-ad-billboard-image-fallback"/>}
+  <div className="public-ad-billboard-overlay"/>
+  <div className="public-ad-billboard-content">
+   <span className="public-ad-billboard-kicker">Parceiro exclusivo</span>
+   <div className="public-ad-billboard-copy"><h2>{ad.headline||ad.title}</h2>{ad.body&&<p>{ad.body}</p>}</div>
+   {ad.target_url&&<a href={ad.target_url} onClick={click} className="public-ad-billboard-cta">{ad.cta_label||"Saber mais"} <b>→</b></a>}
+  </div>
+ </aside>;
  return <aside className={"public-ad "+className} aria-label="Publicidade">
   <div className="public-ad-media">{ad.image_url?<img src={ad.image_url} alt={ad.alt_text||ad.headline||ad.title}/>:<span>PUBLICIDADE</span>}</div>
   <div className="public-ad-copy"><small>Publicidade</small><h3>{ad.headline||ad.title}</h3>{ad.body&&<p>{ad.body}</p>}{ad.target_url&&<a href={ad.target_url} onClick={click} className="btn primary">{ad.cta_label||"Saber mais"} →</a>}</div>
