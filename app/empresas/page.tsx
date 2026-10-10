@@ -342,7 +342,7 @@ export default async function Empresas({
                       </div>
                       {business.location && <div className="directory-business-location">⌖ {business.location}</div>}
                       <p>{business.description || "Perfil empresarial no ecossistema MozEmpresas."}</p>
-                      <div className="directory-business-bottom"><span className="directory-business-action">Ver perfil da empresa</span><span className="directory-business-offer">Ver produtos e serviços →</span></div>
+                      <div className="directory-business-bottom"><span className="directory-business-action">Ver perfil da empresa</span><span className="directory-business-offer">Ver contactos e ofertas →</span></div>
                     </div>
                   </Link>
                 ))}
@@ -354,6 +354,8 @@ export default async function Empresas({
                 <Link href="/registo" className="btn primary full">Registar empresa →</Link>
               </aside>
             </div>
+          ) : error ? (
+            <div className="notice">Não foi possível carregar os resultados neste momento. Tente novamente dentro de instantes.</div>
           ) : (
             <div className="directory-empty">
               <div className="directory-empty-icon">⌕</div>
