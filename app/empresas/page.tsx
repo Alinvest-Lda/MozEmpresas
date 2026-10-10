@@ -266,29 +266,6 @@ export default async function Empresas({
           </section>
         )}
 
-        {categories.length > 0 && (
-          <section className="directory-discovery">
-            <div className="directory-section-head">
-              <div>
-                <span className="eyebrow">Descoberta rápida</span>
-                <h2>Procure por actividade.</h2>
-              </div>
-              <span className="directory-section-note">Categorias do directório</span>
-            </div>
-            <div className="directory-category-list">
-              {categories.map((item) => (
-                <Link
-                  href={"/empresas?category=" + encodeURIComponent(item.id)}
-                  className={category === item.id ? "active" : ""}
-                  key={item.id}
-                >
-                  {item.name}<span>→</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
         <section className="directory-results">
           <div className="directory-results-head">
             <div>
@@ -296,7 +273,7 @@ export default async function Empresas({
               <h2>{hasFilters ? "Empresas que correspondem à sua pesquisa" : "Empresas disponíveis no directório"}</h2>
             </div>
             <div className="directory-results-summary">
-              <strong>{data.length}</strong>
+              <strong>{totalResults}</strong>
               <span>{resultLabel}</span>
             </div>
           </div>
@@ -321,38 +298,45 @@ export default async function Empresas({
           )}
 
           {data.length > 0 ? (
-            <div className="directory-results-layout">
-              <div className="directory-results-list">
-                {data.map((business, index) => (
-                  <Link href={"/empresas/" + business.slug} className="directory-business-card" key={business.id}>
-                    <div className="directory-business-number">{String(index + 1).padStart(2, "0")}</div>
-                    <div className="directory-business-content">
-                      <div className="directory-business-visuals" aria-hidden="true">
-                        <div className="directory-portfolio-strip">
-                          {(business.portfolio.length ? business.portfolio : business.cover_url ? [{image_url:business.cover_url,title:"Imagem de capa"}] : []).slice(0,4).map((image,index)=><span key={image.image_url+index}><img src={image.image_url} alt="" /></span>)}
-                          {!business.portfolio.length && !business.cover_url && <span className="directory-portfolio-empty">Sem imagens de portfólio</span>}
+            <div className="directory-marketplace-grid">
+              {data.map((business) => {
+                const gallery = business.portfolio.length ? business.portfolio : business.cover_url ? [{ image_url: business.cover_url, title: "Imagem de capa" }] : [];
+                const leadImage = gallery[0]?.image_url;
+                return (
+                  <Link href={"/empresas/" + business.slug} className="directory-marketplace-card" key={business.id}>
+                    <div className="directory-marketplace-visual">
+                      {leadImage ? <img src={leadImage} alt="" loading="lazy" /> : <div className="directory-marketplace-placeholder"><span>{business.name.charAt(0)}</span><small>Perfil empresarial</small></div>}
+                      <span className="directory-marketplace-type">{categories.find((item) => item.id === business.category_id)?.name || "Empresa"}</span>
+                    </div>
+                    <div className="directory-marketplace-body">
+                      <div className="directory-marketplace-identity">
+                        <div className="directory-business-logo">
+                          {business.logo_url ? <img src={business.logo_url} alt="" loading="lazy" /> : business.name.charAt(0)}
                         </div>
-                      </div>
-                      <div className="directory-business-title">
-                        <div>
+                        <div className="directory-marketplace-name">
                           <h3>{business.name}</h3>
-                          <span>Empresa</span>
+                          {business.location && <span>⌖ {business.location}</span>}
                         </div>
-                        <b>→</b>
                       </div>
-                      {business.location && <div className="directory-business-location">⌖ {business.location}</div>}
-                      <p>{business.description || "Perfil empresarial no ecossistema MozEmpresas."}</p>
-                      <div className="directory-business-bottom"><span className="directory-business-action">Ver perfil da empresa</span><span className="directory-business-offer">Ver contactos e ofertas →</span></div>
+                      <p>{business.description || "Conheça a actividade, os contactos e as ofertas desta empresa."}</p>
+                      <div className="directory-marketplace-footer">
+                        <span>Ver perfil</span><b aria-hidden="true">↗</b>
+                      </div>
                     </div>
                   </Link>
-                ))}
-              </div>
-              <aside className="directory-side-card">
+                );
+              })}
+            </div>
+            <div className="directory-register-strip">
+              <div>
                 <span className="eyebrow">Para empresas</span>
-                <h3>A sua empresa ainda não está aqui?</h3>
-                <p>Crie um perfil no MozEmpresas para apresentar a sua actividade, produtos, serviços e contactos.</p>
-                <Link href="/registo" className="btn primary full">Registar empresa →</Link>
-              </aside>
+                <h3>Quer dar mais visibilidade à sua empresa?</h3>
+                <p>Crie o seu perfil e explore as opções de destaque e publicidade no MozEmpresas.</p>
+              </div>
+              <div className="directory-register-actions">
+                <Link href="/registo" className="btn">Registar empresa</Link>
+                <Link href="/publicidade" className="btn primary">Promover empresa →</Link>
+              </div>
             </div>
           ) : error ? (
             <div className="notice">Não foi possível carregar os resultados neste momento. Tente novamente dentro de instantes.</div>
