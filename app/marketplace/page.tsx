@@ -132,13 +132,7 @@ export default async function Marketplace({
           </div>
         </section>
 
-        <section className="marketplace-exclusive-placement" aria-label="Billboard exclusivo para parceiros">
-          <div className="marketplace-exclusive-heading">
-            <span className="eyebrow">Parceiro exclusivo</span>
-            <span>Espaço reservado a campanhas de parceiros com exclusividade contratada</span>
-          </div>
-          <PublicAd surface="MARKETPLACE" slot="BILLBOARD" className="marketplace-exclusive-billboard" context={{query:q,type,location,category,placement:"exclusive_partner"}} interests={[q,type,location,category,"exclusive_partner"].filter(Boolean)} />
-        </section>
+        <PublicAd surface="MARKETPLACE" slot="EXCLUSIVE" variant="billboard" className="marketplace-exclusive-billboard" context={{query:q,type,location,category,placement:"exclusive_partner"}} interests={[q,type,location,category,"exclusive_partner"].filter(Boolean)} />
 
         <section className="marketplace-section marketplace-results-section">
             <div className="marketplace-section-head">
