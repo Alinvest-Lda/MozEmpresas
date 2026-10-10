@@ -220,7 +220,6 @@ export default async function Marketplace({
           .marketplace-pagination-status{font-size:12px;font-weight:700;color:var(--muted,#65716e)}
           .marketplace-pagination .is-disabled{opacity:.45;pointer-events:none}
         `}</style>
-}
       </div>
     </main>
   );
