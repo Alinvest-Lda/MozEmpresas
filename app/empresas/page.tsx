@@ -67,9 +67,6 @@ export default async function Empresas({
 
   try {
     const supabase = await createClient();
-    const { data: claimsData } = await supabase.auth.getClaims();
-    const viewerId = claimsData?.claims?.sub as string | undefined;
-
     const [categoryResult, promotionResult] = await Promise.all([
       supabase.from("business_categories").select("id,name,slug").order("name").limit(24),
       supabase
@@ -92,7 +89,7 @@ export default async function Empresas({
 
     let query = supabase
       .from("businesses")
-      .select("id,name,slug,description,location,logo_url,cover_url,category_id,owner_id")
+      .select("id,name,slug,description,location,logo_url,cover_url,category_id,owner_id", { count: "exact" })
       .eq("is_public", true)
       .is("archived_at", null)
       .order("name")
@@ -133,7 +130,7 @@ export default async function Empresas({
       query = query.not("id", "in", `(${sponsoredIds.join(",")})`);
     }
 
-    const result = await query.select("id,name,slug,description,location,logo_url,cover_url,category_id,owner_id", { count: "exact" });
+    const result = await query;
     const records = (result.data ?? []) as BusinessRecord[];
     totalResults = result.count ?? records.length;
     error = error || Boolean(result.error);
