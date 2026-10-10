@@ -9,7 +9,6 @@ import type { AccountType } from "@/lib/auth/access";
 const publicLinks = [
   ["/empresas", "Empresas"],
   ["/marketplace", "Produtos e serviços"],
-  ["/concursos", "Concursos"],
   ["/oportunidades", "Oportunidades"],
   ["/parceiros", "Parceiros"],
 ] as const;
