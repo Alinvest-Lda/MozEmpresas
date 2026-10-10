@@ -812,41 +812,33 @@
 /* Canonical public discovery pages: Empresas is the visual and UX reference */
 .directory-search.marketplace-search,
 .directory-search.opportunities-search{grid-template-columns:minmax(0,1.35fr) minmax(170px,.7fr) minmax(180px,.7fr) auto}
-.directory-search.contests-search{grid-template-columns:minmax(0,1.4fr) minmax(180px,.75fr) minmax(170px,.7fr) auto}
 .directory-search-context{padding:11px 16px;border-right:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
 .directory-search-context span{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
 .directory-search-context strong{font-size:12px;margin-top:7px;color:var(--navy)}
 .marketplace-shortcuts .directory-category-list{gap:9px}
 .marketplace-result-card,
-.contest-result-card,
 .opportunity-result-card{grid-template-columns:25px 58px minmax(0,1fr)}
 .marketplace-type-icon,
-.contest-type-icon,
 .opportunity-type-icon{width:58px;height:58px;border-radius:11px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-size:20px;font-weight:800}
 .listing-provider{font-size:10px;color:var(--muted);margin-top:8px}
 .marketplace-result-bottom,
-.contest-result-bottom,
 .opportunity-result-bottom{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-top:12px;font-size:10px;color:var(--muted)}
 .marketplace-result-bottom strong{font-size:15px;color:var(--ink)}
 .marketplace-result-bottom span,
-.contest-result-bottom>span:last-child,
 .opportunity-result-bottom>span:last-child{color:var(--brand);font-weight:800}
-.contest-result-bottom strong{color:var(--ink)}
 @media(max-width:850px){
   .directory-search.marketplace-search,
-  .directory-search.opportunities-search,
-  .directory-search.contests-search{grid-template-columns:1fr 1fr}
+  .directory-search.opportunities-search{grid-template-columns:1fr 1fr}
   .directory-search-context{border-right:0}
-  .marketplace-type-icon,.contest-type-icon,.opportunity-type-icon{width:45px;height:45px;font-size:17px}
-  .marketplace-result-card,.contest-result-card,.opportunity-result-card{grid-template-columns:45px minmax(0,1fr)}
+  .marketplace-type-icon,.opportunity-type-icon{width:45px;height:45px;font-size:17px}
+  .marketplace-result-card,.opportunity-result-card{grid-template-columns:45px minmax(0,1fr)}
 }
 @media(max-width:560px){
   .directory-search.marketplace-search,
-  .directory-search.opportunities-search,
-  .directory-search.contests-search{display:block}
+  .directory-search.opportunities-search{display:block}
   .directory-search-context{border-right:0;border-bottom:1px solid var(--line)}
-  .marketplace-result-card,.contest-result-card,.opportunity-result-card{grid-template-columns:45px minmax(0,1fr)}
-  .marketplace-result-bottom,.contest-result-bottom,.opportunity-result-bottom{align-items:flex-start;flex-direction:column;gap:5px}
+  .marketplace-result-card,.opportunity-result-card{grid-template-columns:45px minmax(0,1fr)}
+  .marketplace-result-bottom,.opportunity-result-bottom{align-items:flex-start;flex-direction:column;gap:5px}
 }
 
 /* Landing billboard: one stable 450px desktop advertising footprint */
@@ -1861,12 +1853,12 @@ body{background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,syste
 .mobile-menu{display:none}
 
 /* Public discovery pages */
-.page,.marketplace-page,.contests-page,.opportunities-page{padding-top:clamp(30px,5vw,58px)}
-.page-header,.directory-hero,.marketplace-discovery-hero,.opportunities-hero,.contests-hero{margin-bottom:0}
+.page,.marketplace-page,.opportunities-page{padding-top:clamp(30px,5vw,58px)}
+.page-header,.directory-hero,.marketplace-discovery-hero,.opportunities-hero{margin-bottom:0}
 .page-header h1,.directory-hero-copy h1,.marketplace-hero-copy h1,.opportunities-hero h1{max-width:900px}
 .toolbar{border-radius:14px;padding:7px;background:var(--surface);box-shadow:var(--shadow-sm)}
 .toolbar input,.toolbar select{border-radius:9px;min-height:42px}
-.card,.business-card,.listing,.opportunity-list-card,.opportunity-featured-card,.opportunity-type-card,.marketplace-category-card,.marketplace-offer-card,.contest-card,.contest-side-card,.opportunity-side-card,.detail-card,.directory-business-card{border-radius:var(--radius)}
+.card,.business-card,.listing,.opportunity-list-card,.opportunity-featured-card,.opportunity-type-card,.marketplace-category-card,.marketplace-offer-card,.opportunity-side-card,.detail-card,.directory-business-card{border-radius:var(--radius)}
 .grid,.opportunity-results-grid,.marketplace-results-gallery,.marketplace-category-grid{gap:16px}
 
 /* Marketplace: one clear discovery hierarchy */
@@ -1888,10 +1880,6 @@ body{background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,syste
 .directory-search-panel,.directory-search,.opportunity-search-shell{border-radius:14px}
 .directory-search{box-shadow:var(--shadow-md)}
 .directory-active-filters{border-radius:12px}
-.contest-command-bar{border-radius:14px;box-shadow:var(--shadow-sm)}
-.contest-results-layout{grid-template-columns:minmax(0,1fr) 290px;gap:20px}
-.contest-card{min-height:0}
-.contest-side-rail{top:90px}
 .opportunity-featured-grid,.opportunity-results-grid{gap:16px}
 .opportunity-list-card{min-height:245px;border-radius:var(--radius)}
 .opportunity-publisher-cta{border-radius:var(--radius);box-shadow:var(--shadow-md)}
@@ -1940,8 +1928,6 @@ button,input,select,textarea{font-size:16px}
   .dashboard-main{padding-inline:22px}
   .dashboard-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .dashboard-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .contest-results-layout{grid-template-columns:1fr}
-  .contest-side-rail{position:static;grid-template-columns:1fr 1fr}
 }
 
 @media(max-width:850px){
@@ -1976,9 +1962,9 @@ button,input,select,textarea{font-size:16px}
   .topbar-inner{height:60px}
   .brand{font-size:20px}
   .mobile-menu-panel{top:44px}
-  .page,.marketplace-page,.contests-page,.opportunities-page{padding-top:26px}
+  .page,.marketplace-page,.opportunities-page{padding-top:26px}
   .page-header h1,.directory-hero-copy h1,.marketplace-hero-copy h1,.opportunities-hero h1{font-size:clamp(34px,10vw,44px);line-height:1.02}
-  .page-header-row,.section-head,.marketplace-section-head,.opportunity-section-heading,.contest-discovery-head{align-items:flex-start;flex-direction:column}
+  .page-header-row,.section-head,.marketplace-section-head,.opportunity-section-heading{align-items:flex-start;flex-direction:column}
   .toolbar{display:grid;grid-template-columns:1fr;gap:7px}
   .toolbar input,.toolbar select,.toolbar .btn{width:100%}
   .marketplace-discovery-hero{padding:26px 0 24px;gap:18px}
@@ -2009,14 +1995,6 @@ button,input,select,textarea{font-size:16px}
   .access-role-form{grid-template-columns:1fr}
   .access-role-form .btn{width:100%}
   .access-table{min-width:660px}
-  .contest-side-rail{grid-template-columns:1fr}
-  .contest-card{grid-template-columns:1fr!important;padding:16px}
-  .contest-type-icon{display:none}
-  .contest-card .directory-business-content{grid-column:auto!important}
-  .contest-card .directory-business-title{display:block}
-  .contest-card .directory-business-title>b{display:none}
-  .contest-sort,.contest-sort form{width:100%}
-  .contest-sort form{display:grid;grid-template-columns:1fr auto}
   .opportunity-featured-grid,.opportunity-results-grid{grid-template-columns:1fr}
   .opportunity-detail-hero,.opportunity-detail-layout{gap:22px}
   .opportunity-calendar{grid-template-columns:1fr}
@@ -2454,7 +2432,7 @@ button,input,select,textarea{font-size:16px}
 .responsive-state-block{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
 .access-table-wrap{overflow:visible}.access-table{display:block}.access-table thead{display:none}.access-table tbody{display:grid;gap:9px}.access-table tr{display:grid;grid-template-columns:1fr;gap:10px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#fff}.access-table td{display:block;padding:0!important;border:0!important}.access-table td:nth-child(2)::before{content:"Empresa";display:block;font-size:10px;color:var(--muted);margin-bottom:3px}.access-table td:nth-child(3)::before{content:"Função";display:block;font-size:10px;color:var(--muted);margin-bottom:3px}.access-table td:nth-child(4)::before{content:"Acções";display:block;font-size:10px;color:var(--muted);margin-bottom:5px}.access-role-form{display:grid;grid-template-columns:1fr;gap:8px}.access-role-form select,.access-role-form .btn{width:100%;min-height:44px}
 .opportunity-card{padding:16px!important}.opportunity-card p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.opportunity-result-bottom{display:grid!important;grid-template-columns:1fr!important;gap:7px!important}.opportunity-mobile-cta{display:block;font-weight:800;order:-1}
-.responsive-meta{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important}.responsive-meta span{padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:#f7faf9}.contest-card{grid-template-columns:1fr!important;padding:16px!important;gap:9px!important}.contest-card-index,.contest-type-icon{display:none!important}.contest-result-bottom{align-items:flex-start!important;gap:5px!important}
+.responsive-meta{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important}.responsive-meta span{padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:#f7faf9}
 }
 @media (max-width:600px){.responsive-priority .dashboard-action-icon{display:none}.responsive-state-block{grid-template-columns:1fr!important}.finance-row{display:grid!important;grid-template-columns:1fr;gap:7px}.finance-row>div:last-child{display:flex;justify-content:space-between;gap:8px}.finance-two-col{grid-template-columns:1fr!important}.responsive-next{margin-top:14px!important}}
 
