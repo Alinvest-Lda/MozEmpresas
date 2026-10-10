@@ -69,6 +69,8 @@ export default async function Home() {
             ))}
             <div className="home-v2-billboard-dots" aria-hidden="true"><span/><span/><span/><span/><span/></div>
           </div>
+        </div>
+      </section>
 
       <section className="home-v2-hero">
         <div className="container">
