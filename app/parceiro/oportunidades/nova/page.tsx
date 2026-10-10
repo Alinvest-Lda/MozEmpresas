@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PartnerPage } from "@/components/partner-workspace";
 
@@ -17,9 +17,9 @@ const types = [
 function slug(v:string){return v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-"+Date.now().toString(36)}
 
 export default function NewPartnerOpportunity(){
-  const r=useRouter(),search=useSearchParams(),editId=search.get("editar");
-  const [pending,setPending]=useState(false),[error,setError]=useState(""),[type,setType]=useState("FUNDING"),[record,setRecord]=useState<any>(null),[loading,setLoading]=useState(Boolean(editId));
-  useEffect(()=>{let active=true;(async()=>{if(!editId){setLoading(false);return}const s=createClient();const{data:{user}}=await s.auth.getUser();if(!user){if(active){setError("Sessão expirada.");setLoading(false)}return}const{data,error}=await s.from("opportunities").select("id,title,type,status,description,organization,location,opens_at,closes_at,requirements").eq("id",editId).eq("owner_id",user.id).maybeSingle();if(active){if(error||!data)setError("Não foi possível carregar a publicação.");else{setRecord(data);setType(data.type||"FUNDING")}setLoading(false)}})();return()=>{active=false}},[editId]);
+  const r=useRouter();
+  const [pending,setPending]=useState(false),[error,setError]=useState(""),[type,setType]=useState("FUNDING"),[record,setRecord]=useState<any>(null),[editId,setEditId]=useState<string|null>(null),[loading,setLoading]=useState(true);
+  useEffect(()=>{let active=true;const id=new URLSearchParams(window.location.search).get("editar");setEditId(id);if(!id){setLoading(false);return()=>{active=false}};(async()=>{const s=createClient();const{data:{user}}=await s.auth.getUser();if(!user){if(active){setError("Sessão expirada.");setLoading(false)}return}const{data,error}=await s.from("opportunities").select("id,title,type,status,description,organization,location,opens_at,closes_at,requirements").eq("id",id).eq("owner_id",user.id).maybeSingle();if(active){if(error||!data)setError("Não foi possível carregar a publicação.");else{setRecord(data);setType(data.type||"FUNDING")}setLoading(false)}})();return()=>{active=false}},[]);
 
   async function submit(ev:FormEvent<HTMLFormElement>){
     ev.preventDefault();setPending(true);setError("");
