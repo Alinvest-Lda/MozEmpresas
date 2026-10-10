@@ -7,13 +7,13 @@ import { PublicAd } from "@/components/public-ad";
 
 const types = [["PRODUCT", "Produtos"], ["SERVICE", "Serviços"]] as const;
 
-const discoveryCategories = [
-  ["Tecnologia & Software", "Soluções digitais, software, equipamentos e suporte.", "01"],
-  ["Construção & Engenharia", "Materiais, obras, projectos e serviços técnicos.", "02"],
-  ["Consultoria & Serviços", "Consultoria empresarial, financeira, jurídica e operacional.", "03"],
-  ["Logística & Transportes", "Transporte, distribuição, armazenagem e apoio logístico.", "04"],
-  ["Recursos Humanos", "Formação, recrutamento e soluções para equipas.", "05"],
-  ["Equipamentos & Fornecimento", "Equipamentos, consumíveis e fornecimento empresarial.", "06"],
+const categories = [
+  ["technology", "Tecnologia e software", ["tecnologia", "software", "digital", "informática"]],
+  ["construction", "Construção e engenharia", ["construção", "engenharia", "obras", "materiais"]],
+  ["consulting", "Consultoria e serviços profissionais", ["consultoria", "consultor", "serviços profissionais", "gestão"]],
+  ["logistics", "Logística e transportes", ["logística", "transporte", "armazenagem", "distribuição"]],
+  ["hr", "Recursos humanos e formação", ["recursos humanos", "recrutamento", "formação", "capacitação"]],
+  ["equipment", "Equipamentos e fornecimento", ["equipamentos", "fornecimento", "consumíveis", "material"]],
 ] as const;
 
 type Listing = {
@@ -31,12 +31,14 @@ type Listing = {
 export default async function Marketplace({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; type?: string; location?: string }>;
+  searchParams: Promise<{ q?: string; type?: string; location?: string; category?: string }>;
 }) {
   const params = await searchParams;
   const q = params.q?.trim() || "";
   const type = params.type?.trim() || "";
   const location = params.location?.trim() || "";
+  const category = params.category?.trim() || "";
+  const selectedCategory = categories.find(([value]) => value === category);
 
   let listings: Listing[] = [];
   let signedIn = false;
@@ -74,6 +76,10 @@ export default async function Marketplace({
       }
       if (type && type !== "all") query = query.eq("type", type);
       if (location) query = query.ilike("location", `%${location}%`);
+      if (selectedCategory) {
+        const terms = selectedCategory[2].map((term) => `title.ilike.%${term}%,description.ilike.%${term}%`);
+        query = query.or(terms.join(","));
+      }
 
       const result = await query;
       listings = (result.data ?? []) as Listing[];
@@ -103,7 +109,7 @@ export default async function Marketplace({
     error = true;
   }
 
-  const hasFilters = Boolean(q || location || (type && type !== "all"));
+  const hasFilters = Boolean(q || location || category || (type && type !== "all"));
   const resultLabel = listings.length === 1 ? "oferta encontrada" : "ofertas encontradas";
 
   return (
@@ -141,49 +147,17 @@ export default async function Marketplace({
           </div>
         </section>
 
-        <PublicAd surface="MARKETPLACE" slot="BILLBOARD" context={{query:q,type,location}} interests={[q,type,location].filter(Boolean)} />
+        <PublicAd surface="MARKETPLACE" slot="BILLBOARD" context={{query:q,type,location,category}} interests={[q,type,location,category].filter(Boolean)} />
 
-        <section className="marketplace-section marketplace-categories">
-          <div className="marketplace-section-head">
-            <div>
-              <span className="eyebrow">Explore por categoria</span>
-              <h2>Comece pelo que o seu negócio precisa.</h2>
-            </div>
-            <span className="marketplace-section-note">Descoberta rápida</span>
-          </div>
-          <div className="marketplace-category-grid">
-            {discoveryCategories.map(([title, description, number]) => (
-              <Link href={"/empresas?q=" + encodeURIComponent(title.split(" & ")[0])} className="marketplace-category-card" key={title}>
-                <span className="marketplace-category-number">{number}</span>
-                <span className="marketplace-category-arrow">↗</span>
-                <h3>{title}</h3>
-                <p>{description}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
+        <PublicAd surface="MARKETPLACE" slot="FEATURED" context={{query:q,type,location,category}} interests={[q,type,location,category].filter(Boolean)} />
 
-        <section className="marketplace-commercial-strip">
+        <section className="marketplace-commercial-strip marketplace-commercial-strip-compact">
           <div>
-            <span className="eyebrow">Publicidade empresarial</span>
-            <h2>Coloque a sua oferta onde os compradores estão a descobrir.</h2>
-            <p>Empresas podem promover produtos, serviços e campanhas em posições de destaque no ecossistema MozEmpresas.</p>
+            <span className="eyebrow">Parceiros em destaque</span>
+            <h2>Soluções de organizações parceiras do ecossistema.</h2>
+            <p>Descubra campanhas, serviços e iniciativas de parceiros seleccionados para empresas moçambicanas.</p>
           </div>
-          <Link href="/publicidade" className="btn primary">Conhecer publicidade →</Link>
-        </section>
-
-        <section className="marketplace-section marketplace-needs">
-          <div className="marketplace-section-head">
-            <div>
-              <span className="eyebrow">Além do catálogo</span>
-              <h2>As empresas também procuram soluções.</h2>
-            </div>
-            <Link href="/oportunidades" className="marketplace-text-link">Ver oportunidades →</Link>
-          </div>
-          <div className="marketplace-needs-grid">
-            <article><span>NECESSIDADE EMPRESARIAL</span><h3>Encontre quem pode resolver um problema específico.</h3><p>O MozEmpresas pode ligar necessidades empresariais a fornecedores e prestadores adequados.</p><Link href="/oportunidades">Explorar oportunidades →</Link></article>
-            <article><span>FORNECEDORES</span><h3>Apresente a sua capacidade a outras empresas.</h3><p>Construa uma presença comercial com produtos, serviços, localização e contactos.</p><Link href="/registo">Registar empresa →</Link></article>
-          </div>
+          <Link href="/publicidade" className="btn primary">Conhecer espaços de destaque →</Link>
         </section>
 
         <section className="marketplace-section marketplace-results-section">
@@ -195,10 +169,11 @@ export default async function Marketplace({
               <div className="directory-results-summary"><strong>{listings.length}</strong><span>{resultLabel}</span></div>
             </div>
             <form className="marketplace-filter-bar" action="/marketplace">
-              <input name="q" defaultValue={q} placeholder="Palavra-chave" />
-              <input name="location" defaultValue={location} placeholder="Localização" />
-              <select name="type" defaultValue={type || "all"}><option value="all">Todos</option>{types.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
-              <button className="btn primary">Filtrar</button>
+              <label><span>Palavra-chave</span><input name="q" defaultValue={q} placeholder="Produto, serviço ou fornecedor" /></label>
+              <label><span>Localização</span><input name="location" defaultValue={location} placeholder="Província ou cidade" /></label>
+              <label><span>Categoria</span><select name="category" defaultValue={category}><option value="">Todas as categorias</option>{categories.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+              <label><span>Tipo de oferta</span><select name="type" defaultValue={type || "all"}><option value="all">Produtos e serviços</option>{types.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+              <button className="btn primary">Aplicar filtros</button>
               {hasFilters && <Link href="/marketplace" className="btn">Limpar</Link>}
             </form>
             {error && <div className="notice">Algumas funções comerciais estão temporariamente indisponíveis.</div>}
@@ -223,11 +198,12 @@ export default async function Marketplace({
             )}
           </section>
         {!signedIn && (
-          <section className="marketplace-member-gate">
-            <div>
-              <span className="eyebrow">Ecossistema comercial</span>
-              <h2>Encontre, compare e depois entre em contacto.</h2>
-              <p>O catálogo é público para facilitar a descoberta. Para publicar, guardar contactos, responder a necessidades ou iniciar uma compra, entre na sua conta.</p>
+          <section className="marketplace-member-gate marketplace-member-gate-premium">
+            <div className="marketplace-gate-mark" aria-hidden="true">M</div>
+            <div className="marketplace-gate-copy">
+              <span className="eyebrow">Faça parte do ecossistema</span>
+              <h2>Mais visibilidade para a sua oferta. Mais oportunidades para o seu negócio.</h2>
+              <p>Crie uma presença comercial, apresente os seus produtos e serviços e conheça opções de destaque. Organizações parceiras podem beneficiar de espaços exclusivos.</p>
             </div>
             <div className="marketplace-gate-actions">
               {signedIn ? <Link href="/dashboard" className="btn primary">Ir para o meu painel</Link> : <><Link href="/registo" className="btn primary">Criar conta</Link><Link href={"/login?next=" + encodeURIComponent("/marketplace")} className="btn">Entrar</Link></>}
