@@ -5,7 +5,7 @@ import { z } from "zod";
 const schema=z.object({
  visitorKey:z.string().min(16).max(120),
  surface:z.enum(["HOME","DIRECTORY","MARKETPLACE","OPPORTUNITIES"]),
- slot:z.enum(["HERO","BILLBOARD","FEATURED","INFEED","CONTEXT"]),
+ slot:z.enum(["HERO","BILLBOARD","EXCLUSIVE","FEATURED","INFEED","CONTEXT"]),
  context:z.record(z.string(),z.string()).optional(),
  interests:z.array(z.string()).max(20).optional(),
 });
