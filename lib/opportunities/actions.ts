@@ -27,8 +27,8 @@ export async function applyToOpportunity(formData: FormData) {
     if (!membership && !owned) redirect("/oportunidades?application=forbidden");
   }
 
-  const { data: opportunity } = await supabase.from("opportunities").select("id,status,closes_at,owner_id").eq("id", opportunityId).maybeSingle();
-  if (!opportunity || opportunity.owner_id === userId || opportunity.status !== "PUBLISHED" || (opportunity.closes_at && new Date(opportunity.closes_at).getTime() < Date.now())) redirect("/oportunidades?application=closed");
+  const { data: opportunity } = await supabase.from("opportunities").select("id,status,opens_at,closes_at,owner_id").eq("id", opportunityId).maybeSingle();
+  if (!opportunity || opportunity.owner_id === userId || opportunity.status !== "PUBLISHED" || (opportunity.opens_at && new Date(opportunity.opens_at).getTime() > Date.now()) || (opportunity.closes_at && new Date(opportunity.closes_at).getTime() < Date.now())) redirect("/oportunidades?application=closed");
 
   const { error } = await supabase.from("opportunity_applications").upsert({
     opportunity_id: opportunityId, applicant_user_id: userId, applicant_business_id: businessId,
