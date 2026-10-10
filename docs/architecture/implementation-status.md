@@ -13,8 +13,7 @@ O produto encontra-se em produção com a experiência final-user separada de fu
 - Dashboard com navegação persistente e separação entre Trabalho, Empresa, Serviços e Conta.
 - Gestão inicial de empresas e acessos/equipa.
 - Catálogo de serviços MozEmpresas e pedidos de serviço.
-- Serviço pago de concursos empresariais registado em `platform_services`.
-- Concursos retirados do workspace do utilizador final.
+- Concursos removidos do produto, da navegação pública e do catálogo de serviços.
 - Oportunidades e Parceiros retirados do workspace do utilizador final.
 - Rotas públicas de oportunidades/parceiros retiradas da navegação principal.
 - Rota legada de publicação de oportunidade neutralizada até à criação do módulo de parceiros.
@@ -25,8 +24,8 @@ O produto encontra-se em produção com a experiência final-user separada de fu
 - Contrato funcional do novo módulo de Parceiros documentado em `docs/architecture/partner-module.md`.
 
 ## Arquitectura preservada para evolução
-- As tabelas e estruturas de backend relacionadas com oportunidades, concursos e anexos permanecem disponíveis para reutilização no módulo de parceiros e para o serviço de concursos.
-- O módulo de serviços permite adicionar novos serviços pagos sem voltar a introduzir esses recursos no dashboard final-user.
+- As estruturas de oportunidades permanecem disponíveis para o módulo de Parceiros; concursos não fazem parte do produto MozEmpresas.
+- O módulo de serviços permite adicionar serviços pagos relevantes sem introduzir módulos que não fazem parte da proposta de valor do produto.
 - A separação actual é: **final-user → directório/marketplace/serviços**; **parceiros → workspace próprio da relação estratégica com a MozEmpresas**.
 - O parceiro representa uma entidade única; vários gestores podem actuar sobre a mesma conta.
 - `business_partner_relationships` não é o núcleo conceptual da conta de parceiro.
