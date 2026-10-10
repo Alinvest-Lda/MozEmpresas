@@ -7,7 +7,7 @@ const schema=z.object({
  campaignSource:z.enum(["business","partner"]),
  campaignId:z.string().uuid(),
  surface:z.enum(["HOME","DIRECTORY","MARKETPLACE","OPPORTUNITIES"]),
- slot:z.enum(["HERO","BILLBOARD","FEATURED","INFEED","CONTEXT"]),
+ slot:z.enum(["HERO","BILLBOARD","EXCLUSIVE","FEATURED","INFEED","CONTEXT"]),
  eventType:z.enum(["IMPRESSION","CLICK"]),
  context:z.record(z.string(),z.string()).optional(),
 });
