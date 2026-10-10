@@ -49,23 +49,24 @@ type Promotion = {
 export default async function Empresas({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; location?: string; category?: string }>;
+  searchParams: Promise<{ q?: string; location?: string; category?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const q = params.q?.trim() || "";
   const location = params.location?.trim() || "";
   const category = params.category?.trim() || "";
+  const pageSize = 24;
+  const parsedPage = Number.parseInt(params.page || "1", 10);
+  const currentPage = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 
   let data: Business[] = [];
   let categories: Category[] = [];
   let featured: Promotion[] = [];
   let error = false;
+  let totalResults = 0;
 
   try {
     const supabase = await createClient();
-    const { data: claimsData } = await supabase.auth.getClaims();
-    const viewerId = claimsData?.claims?.sub as string | undefined;
-
     const [categoryResult, promotionResult] = await Promise.all([
       supabase.from("business_categories").select("id,name,slug").order("name").limit(24),
       supabase
@@ -74,7 +75,10 @@ export default async function Empresas({
         .eq("status", "ACTIVE")
         .lte("starts_at", new Date().toISOString())
         .gt("ends_at", new Date().toISOString())
-        .eq("placement", "DIRECTORY").in("slot", ["BILLBOARD", "FEATURED"])
+        .eq("placement", "DIRECTORY")
+        .eq("businesses.is_public", true)
+        .is("businesses.archived_at", null)
+        .in("slot", ["BILLBOARD", "FEATURED"])
         .order("created_at", { ascending: false })
         .limit(12),
     ]);
@@ -88,10 +92,11 @@ export default async function Empresas({
 
     let query = supabase
       .from("businesses")
-      .select("id,name,slug,description,location,logo_url,cover_url,category_id,owner_id")
-      .or(viewerId ? "is_public.eq.true,owner_id.eq." + viewerId : "is_public.eq.true")
+      .select("id,name,slug,description,location,logo_url,cover_url,category_id,owner_id", { count: "exact" })
+      .eq("is_public", true)
+      .is("archived_at", null)
       .order("name")
-      .limit(60);
+      .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
 
     if (q) {
       const safe = q
@@ -130,6 +135,7 @@ export default async function Empresas({
 
     const result = await query;
     const records = (result.data ?? []) as BusinessRecord[];
+    totalResults = result.count ?? records.length;
     error = error || Boolean(result.error);
     if (records.length) {
       const ids=records.map((item)=>item.id);
@@ -145,7 +151,17 @@ export default async function Empresas({
   }
 
   const hasFilters = Boolean(q || location || category);
-  const resultLabel = data.length === 1 ? "empresa encontrada" : "empresas encontradas";
+  const resultLabel = totalResults === 1 ? "empresa encontrada" : "empresas encontradas";
+  const totalPages = Math.max(1, Math.ceil(totalResults / pageSize));
+  const pageHref = (page: number) => {
+    const next = new URLSearchParams();
+    if (q) next.set("q", q);
+    if (location) next.set("location", location);
+    if (category) next.set("category", category);
+    if (page > 1) next.set("page", String(page));
+    const queryString = next.toString();
+    return "/empresas" + (queryString ? "?" + queryString : "");
+  };
 
   return (
     <main className="directory-page">
@@ -310,15 +326,11 @@ export default async function Empresas({
                 {data.map((business, index) => (
                   <Link href={"/empresas/" + business.slug} className="directory-business-card" key={business.id}>
                     <div className="directory-business-number">{String(index + 1).padStart(2, "0")}</div>
-                    <div className="directory-business-logo">
-                      {business.logo_url ? <img src={business.logo_url} alt="" /> : business.name.charAt(0)}
-                    </div>
                     <div className="directory-business-content">
                       <div className="directory-business-visuals" aria-hidden="true">
-                        <div className="directory-business-logo directory-business-logo-overlap">{business.logo_url ? <img src={business.logo_url} alt="" /> : business.name.charAt(0)}</div>
                         <div className="directory-portfolio-strip">
-                          {(business.portfolio.length ? business.portfolio : business.cover_url ? [{image_url:business.cover_url,title:"Imagem de capa"}] : []).slice(0,5).map((image,index)=><span key={image.image_url+index}><img src={image.image_url} alt="" /></span>)}
-                          {!business.portfolio.length && !business.cover_url && <span className="directory-portfolio-empty">Portfólio</span>}
+                          {(business.portfolio.length ? business.portfolio : business.cover_url ? [{image_url:business.cover_url,title:"Imagem de capa"}] : []).slice(0,4).map((image,index)=><span key={image.image_url+index}><img src={image.image_url} alt="" /></span>)}
+                          {!business.portfolio.length && !business.cover_url && <span className="directory-portfolio-empty">Sem imagens de portfólio</span>}
                         </div>
                       </div>
                       <div className="directory-business-title">
@@ -330,7 +342,7 @@ export default async function Empresas({
                       </div>
                       {business.location && <div className="directory-business-location">⌖ {business.location}</div>}
                       <p>{business.description || "Perfil empresarial no ecossistema MozEmpresas."}</p>
-                      <div className="directory-business-bottom"><span className="directory-business-action">Ver perfil da empresa</span><span className="directory-business-offer">Ver produtos e serviços →</span></div>
+                      <div className="directory-business-bottom"><span className="directory-business-action">Ver perfil da empresa</span><span className="directory-business-offer">Ver contactos e ofertas →</span></div>
                     </div>
                   </Link>
                 ))}
@@ -342,6 +354,8 @@ export default async function Empresas({
                 <Link href="/registo" className="btn primary full">Registar empresa →</Link>
               </aside>
             </div>
+          ) : error ? (
+            <div className="notice">Não foi possível carregar os resultados neste momento. Tente novamente dentro de instantes.</div>
           ) : (
             <div className="directory-empty">
               <div className="directory-empty-icon">⌕</div>
@@ -353,6 +367,16 @@ export default async function Empresas({
                 <Link href="/registo" className="btn primary">Registar empresa</Link>
               </div>
             </div>
+          )}
+
+          {totalResults > 0 && totalPages > 1 && (
+            <nav className="directory-pagination" aria-label="Paginação de empresas">
+              <span>Página {Math.min(currentPage, totalPages)} de {totalPages}</span>
+              <div>
+                {currentPage > 1 && <Link href={pageHref(currentPage - 1)} className="btn">← Anterior</Link>}
+                {currentPage < totalPages && <Link href={pageHref(currentPage + 1)} className="btn primary">Seguinte →</Link>}
+              </div>
+            </nav>
           )}
         </section>
       </div>

@@ -31,6 +31,7 @@ export default async function BusinessDetail({ params }: { params: Promise<{ slu
     .select("id,name,slug,description,location,phone,email,website,logo_url,cover_url,created_at,category_id")
     .eq("slug", slug)
     .eq("is_public", true)
+    .is("archived_at", null)
     .maybeSingle();
 
   if (!rawBusiness) notFound();
