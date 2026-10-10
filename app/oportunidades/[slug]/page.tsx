@@ -3,8 +3,8 @@ import{notFound}from"next/navigation";
 import{createClient}from"@/lib/supabase/server";
 import{applyToOpportunity}from"@/lib/opportunities/actions";
 
-const labels:Record<string,string>={FUNDING:"Financiamento",PROGRAM:"Programa / Candidatura",AWARD_SCHOLARSHIP:"Bolsa / Prémio",PARTNERSHIP:"Parceria / Cooperação",EXPRESSION_OF_INTEREST:"Manifestação de Interesse",CALL:"Chamada · publicação anterior",TRAINING:"Capacitação · publicação anterior",EVENT:"Evento · publicação anterior",TENDER:"Concurso · publicação anterior",BUSINESS:"Negócio · publicação anterior",OTHER:"Publicação anterior"};
-const icons:Record<string,string>={FUNDING:"◈",PROGRAM:"↗",AWARD_SCHOLARSHIP:"✦",PARTNERSHIP:"⌘",EXPRESSION_OF_INTEREST:"◎",CALL:"↗",TRAINING:"◇",EVENT:"◷",TENDER:"▣",BUSINESS:"◆",OTHER:"•"};
+const labels:Record<string,string>={FUNDING:"Financiamento",PROGRAM:"Programa / Candidatura",AWARD_SCHOLARSHIP:"Bolsa / Prémio",PARTNERSHIP:"Parceria / Cooperação",EXPRESSION_OF_INTEREST:"Manifestação de Interesse",CALL:"Chamada · publicação anterior",TRAINING:"Capacitação · publicação anterior",EVENT:"Evento · publicação anterior",BUSINESS:"Negócio · publicação anterior",OTHER:"Publicação anterior"};
+const icons:Record<string,string>={FUNDING:"◈",PROGRAM:"↗",AWARD_SCHOLARSHIP:"✦",PARTNERSHIP:"⌘",EXPRESSION_OF_INTEREST:"◎",CALL:"↗",TRAINING:"◇",EVENT:"◷",BUSINESS:"◆",OTHER:"•"};
 function dateLabel(value:string|null){return value?new Date(value).toLocaleDateString("pt-MZ",{day:"2-digit",month:"long",year:"numeric"}):"Não indicado"}
 
 export default async function OpportunityDetail({params}:{params:Promise<{slug:string}>}){
