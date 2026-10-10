@@ -28,8 +28,8 @@ export default async function MonetizacaoPage({searchParams}:{searchParams:Promi
  ]);
  const businesses=b.data??[], wallets=w.data??[];
  const campaignMetrics=(metricResult.data??[]) as {campaign_id:string;impressions:number;clicks:number}[];
- const campaignImpressions=campaignMetrics.reduce((s,x)=>s+Number(x.impressions??0),0);
- const campaignClicks=campaignMetrics.reduce((s,x)=>s+Number(x.clicks??0),0);
+ const campaignImpressions=campaignMetrics.reduce((s:number,x:{campaign_id:string;impressions:number;clicks:number})=>s+Number(x.impressions??0),0);
+ const campaignClicks=campaignMetrics.reduce((s:number,x:{campaign_id:string;impressions:number;clicks:number})=>s+Number(x.clicks??0),0);
  const campaignCtr=campaignImpressions>0?campaignClicks/campaignImpressions*100:0;
  const ads=(ad.data??[]).filter(x=>!since||x.created_at>=since), services=(svc.data??[]).filter(x=>!since||x.created_at>=since), purchases=(cp.data??[]).filter(x=>!since||x.created_at>=since), payments=(pay.data??[]).filter(x=>!since||x.created_at>=since), events=(ev.data??[]).filter(x=>!since||x.created_at>=since);
  const balance=wallets.reduce((s,x)=>s+Number(x.balance_credits??0),0);
