@@ -2827,3 +2827,72 @@ button,input,select,textarea{font-size:16px}
  .directory-results-head{gap:12px}
  .directory-active-filters{flex-wrap:wrap}
 }
+
+
+/* Directory refinement: clearer search hierarchy, advertising before results, responsive cards. */
+.directory-page>.container{max-width:1240px}
+.directory-hero{padding:clamp(30px,4vw,48px) 0 24px}
+.directory-hero-copy{max-width:900px}
+.directory-hero h1{max-width:850px;font-size:clamp(36px,4.8vw,60px);line-height:1.04}
+.directory-hero-copy p{max-width:760px}
+.directory-search-panel{margin-top:24px;padding:14px;border:1px solid #dce6e2;border-radius:18px;background:linear-gradient(135deg,#f1f7f5 0%,#fff 78%);box-shadow:0 10px 28px rgba(20,44,41,.06)}
+.directory-search{max-width:none;width:100%;grid-template-columns:minmax(260px,1.5fr) minmax(170px,.78fr) minmax(190px,.88fr) auto;border:1px solid #d5e0dc;border-radius:13px;box-shadow:none;overflow:hidden}
+.directory-search-field{padding:13px 16px;background:#fff}
+.directory-search-field:focus-within{background:#fbfdfc;box-shadow:inset 0 0 0 2px #c4ded7}
+.directory-search-field>span{font-size:10px;margin-bottom:7px}
+.directory-search-field input,.directory-search-field select{font-size:14px;min-height:25px}
+.directory-search-button{align-self:stretch;margin:6px;min-width:132px;border-radius:10px;padding:12px 20px;white-space:nowrap}
+.directory-clear{display:inline-flex;margin:10px 4px 0;color:var(--brand);font-size:12px;font-weight:800}
+.directory-featured{padding:28px 0 12px}
+.directory-featured-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.directory-featured-card{min-width:0}
+.directory-featured-main>div:last-child{min-width:0}
+.directory-featured-main h3{overflow-wrap:anywhere}
+.directory-featured-card>p{overflow-wrap:anywhere}
+.directory-results{padding-top:28px}
+.directory-marketplace-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.directory-marketplace-card{min-width:0;height:100%}
+.directory-marketplace-visual{aspect-ratio:16/10}
+.directory-marketplace-body{padding:clamp(14px,1.5vw,19px)}
+.directory-marketplace-name h3{font-size:clamp(14px,1.25vw,17px)}
+.directory-marketplace-name span{overflow-wrap:anywhere}
+.directory-marketplace-body>p{overflow-wrap:anywhere}
+.directory-register-strip{flex-wrap:wrap}
+.directory-register-actions{min-width:0}
+@media(max-width:1100px){
+ .directory-search{grid-template-columns:minmax(0,1.25fr) minmax(150px,.8fr) minmax(165px,.9fr)}
+ .directory-search-button{grid-column:1/-1;min-height:44px}
+ .directory-marketplace-grid,.directory-featured-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+ .directory-hero{padding:30px 0 20px}
+ .directory-hero h1{font-size:clamp(34px,6.5vw,46px)}
+ .directory-search-panel{padding:9px;margin-top:20px}
+ .directory-search{grid-template-columns:repeat(2,minmax(0,1fr));border-radius:12px}
+ .directory-search-field{padding:12px}
+ .directory-search-keyword{grid-column:1/-1;border-right:0}
+ .directory-search-category{border-right:0}
+ .directory-search-button{grid-column:1/-1;width:auto;min-height:46px;margin:6px}
+ .directory-featured{padding-top:22px}
+ .directory-marketplace-grid,.directory-featured-grid{gap:13px}
+ .directory-marketplace-visual{aspect-ratio:4/3}
+ .directory-register-strip{gap:16px}
+}
+@media(max-width:540px){
+ .directory-hero{padding-top:24px}
+ .directory-hero h1{font-size:34px;letter-spacing:-.045em}
+ .directory-hero-copy p{font-size:14px}
+ .directory-search{display:grid;grid-template-columns:minmax(0,1fr)}
+ .directory-search-keyword{grid-column:auto}
+ .directory-search-field{border-right:0;border-bottom:1px solid var(--line)}
+ .directory-search-button{grid-column:auto;width:calc(100% - 12px);margin:6px}
+ .directory-marketplace-grid,.directory-featured-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+ .directory-marketplace-visual{aspect-ratio:16/9}
+ .directory-marketplace-body{padding:16px}
+ .directory-marketplace-name h3{font-size:16px}
+ .directory-featured-card{min-height:0;padding-bottom:1px}
+ .directory-results-head h2{font-size:25px}
+ .directory-results-summary{align-self:flex-start}
+ .directory-register-strip{padding:18px}
+ .directory-register-strip h3{font-size:19px}
+}
