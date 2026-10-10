@@ -298,7 +298,8 @@ export default async function Empresas({
           )}
 
           {data.length > 0 ? (
-            <div className="directory-marketplace-grid">
+            <>
+              <div className="directory-marketplace-grid">
               {data.map((business) => {
                 const gallery = business.portfolio.length ? business.portfolio : business.cover_url ? [{ image_url: business.cover_url, title: "Imagem de capa" }] : [];
                 const leadImage = gallery[0]?.image_url;
@@ -338,6 +339,7 @@ export default async function Empresas({
                 <Link href="/publicidade" className="btn primary">Promover empresa →</Link>
               </div>
             </div>
+            </>
           ) : error ? (
             <div className="notice">Não foi possível carregar os resultados neste momento. Tente novamente dentro de instantes.</div>
           ) : (
