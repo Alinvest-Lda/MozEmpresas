@@ -38,7 +38,9 @@ export default async function Marketplace({
   const params = await searchParams;
   const q = params.q?.trim() || "";
   const requestedType = params.type?.trim().toUpperCase() || "";
-  const type = ["PRODUCT", "SERVICE", "ALL"].includes(requestedType) ? requestedType.toLowerCase() === "all" ? "all" : requestedType : "";
+  let type = "";
+  if (requestedType === "ALL") type = "all";
+  else if (requestedType === "PRODUCT" || requestedType === "SERVICE") type = requestedType;
   const location = params.location?.trim() || "";
   const category = params.category?.trim() || "";
   const requestedPage = Number.parseInt(params.page || "1", 10);
