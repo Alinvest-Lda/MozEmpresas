@@ -57,7 +57,6 @@ export default async function Marketplace({
     const supabase = await createClient();
     const { data: claimsData } = await supabase.auth.getClaims();
     signedIn = Boolean(claimsData?.claims?.sub);
-    if (signedIn) redirect("/dashboard/marketplace");
     {
       let query = supabase
         .from("listings")
@@ -65,10 +64,10 @@ export default async function Marketplace({
         .eq("status", "PUBLISHED")
         .order("created_at", { ascending: false });
 
+      const searchGroups: string[] = [];
       if (q) {
         const safe = q.replace(/[%_,()']/g, " ").replace(/\s+/g, " ").trim();
         if (safe) {
-          // Search both the offer itself and the supplier name.
           const { data: matchingBusinesses } = await supabase
             .from("businesses")
             .select("id")
@@ -77,17 +76,25 @@ export default async function Marketplace({
             .limit(100);
 
           const businessIds = [...new Set((matchingBusinesses ?? []).map((business) => business.id))];
-          const clauses = [`title.ilike.%${safe}%`, `description.ilike.%${safe}%`];
-          if (businessIds.length) clauses.push(`business_id.in.(${businessIds.join(",")})`);
-          query = query.or(clauses.join(","));
+          const searchTerms = [`title.ilike.%${safe}%`, `description.ilike.%${safe}%`];
+          if (businessIds.length) searchTerms.push(`business_id.in.(${businessIds.join(",")})`);
+          searchGroups.push(`or(${searchTerms.join(",")})`);
         }
+      }
+      if (selectedCategory) {
+        const terms = selectedCategory[2].flatMap((term) => [
+          `title.ilike.%${term}%`,
+          `description.ilike.%${term}%`,
+        ]);
+        searchGroups.push(`or(${terms.join(",")})`);
+      }
+      if (searchGroups.length === 1) {
+        query = query.or(searchGroups[0].slice(3, -1));
+      } else if (searchGroups.length > 1) {
+        query = query.or(`and(${searchGroups.join(",")})`);
       }
       if (type && type !== "all") query = query.eq("type", type);
       if (location) query = query.ilike("location", `%${location}%`);
-      if (selectedCategory) {
-        const terms = selectedCategory[2].map((term) => `title.ilike.%${term}%,description.ilike.%${term}%`);
-        query = query.or(terms.join(","));
-      }
 
       const result = await query.range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
       listings = (result.data ?? []) as Listing[];
@@ -117,6 +124,7 @@ export default async function Marketplace({
   } catch {
     error = true;
   }
+  if (signedIn) redirect("/dashboard/marketplace");
 
   const hasFilters = Boolean(q || location || category || (type && type !== "all"));
   const totalPages = Math.max(1, Math.ceil(totalListings / pageSize));
