@@ -17,12 +17,13 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
   const { data:{user} } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{data:owned},{data:members},{data:products},{data:promotions},{data:categories}] = await Promise.all([
+  const [{data:owned},{data:members},{data:products},{data:promotions},{data:categories},{data:campaignMetrics}] = await Promise.all([
     supabase.from("businesses").select("id,name").eq("owner_id",user.id).order("name"),
     supabase.from("business_members").select("business_id").eq("user_id",user.id).in("role",["owner","admin","operator"]),
     supabase.from("ad_products").select("id,name,placement,description,duration_days,direct_price_mzn,credit_price,capacity,access_type,audience_level").eq("active",true).order("placement").order("duration_days"),
-    supabase.from("business_promotions").select("id,title,placement,status,starts_at,ends_at,payment_method,price_mzn,credits_charged,impressions_count,clicks_count,businesses:business_id(name)").order("created_at",{ascending:false}).limit(100),
+    supabase.from("business_promotions").select("id,title,placement,status,starts_at,ends_at,payment_method,price_mzn,credits_charged,businesses:business_id(name)").order("created_at",{ascending:false}).limit(100),
     supabase.from("business_categories").select("name").order("name"),
+    supabase.rpc("business_ad_campaign_metrics"),
   ]);
   const ids=[...new Set((members??[]).map(x=>x.business_id))];
   const {data:managed}=ids.length ? await supabase.from("businesses").select("id,name").in("id",ids).order("name") : {data:[] as {id:string;name:string}[]};
@@ -30,8 +31,12 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
   const {data:wallets}=businesses.length ? await supabase.from("business_credit_wallets").select("business_id,balance_credits").in("business_id",businesses.map(b=>b.id)) : {data:[] as {business_id:string;balance_credits:number}[]};
   const walletMap=Object.fromEntries((wallets??[]).map(w=>[w.business_id,w.balance_credits]));
   const paidProducts=(products??[]).filter(p=>p.access_type!=="FREE");
-  const campaignImpressions=(promotions??[]).reduce((sum,p)=>sum+Number(p.impressions_count??0),0);
-  const campaignClicks=(promotions??[]).reduce((sum,p)=>sum+Number(p.clicks_count??0),0);
+  const metricsByCampaign=new Map((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}]));
+  const campaignImpressions=(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.impressions??0),0);
+  const campaignClicks=(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.clicks??0),0);
+  const metricsByCampaign=new Map((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}]));
+  const campaignImpressions=(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.impressions??0),0);
+  const campaignClicks=(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.clicks??0),0);
   const campaignInvestment=(promotions??[]).reduce((sum,p)=>sum+Number(p.price_mzn??0),0);
   const campaignCtr=campaignImpressions>0?campaignClicks/campaignImpressions*100:0;
 
