@@ -3021,69 +3021,96 @@ button,input,select,textarea{font-size:16px}
  .marketplace-member-gate-premium .marketplace-gate-actions .btn{width:100%}
 }
 
-
-/* Catálogo público — exclusividade para parceiros e hierarquia cromática do CTA final */
-.marketplace-exclusive-placement{
-  margin:24px 0 30px;
-  padding:15px;
-  border:1px solid #c8ddd6;
-  border-radius:20px;
-  background:linear-gradient(120deg,#eaf5f1 0%,#f8fbfa 58%,#eef4ff 100%);
-}
-.marketplace-exclusive-heading{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin:0 3px 12px;
-  color:#365b53;
-  font-size:12px;
-}
-.marketplace-exclusive-heading .eyebrow{
-  color:#0f6659;
-  font-weight:900;
-}
-.marketplace-exclusive-billboard{
-  margin:0;
-  border:1px solid #d8e5e0;
-  border-radius:15px;
+/* Billboard de parceiros — linguagem visual da landing page */
+.public-ad-billboard{
+  position:relative;
+  display:block;
+  min-height:365px;
+  margin:22px 0 28px;
+  padding:0;
   overflow:hidden;
-  background:#fff;
-  box-shadow:0 10px 28px rgba(19,75,64,.09);
-}
-.marketplace-exclusive-billboard:empty{display:none}
-.marketplace-exclusive-billboard .public-ad-copy{padding:clamp(18px,3vw,30px)}
-.marketplace-exclusive-billboard .public-ad-copy h3{color:#143f37}
-.marketplace-exclusive-billboard .public-ad-copy .btn{background:#126b5c;color:#fff;border-color:#126b5c}
-.marketplace-exclusive-billboard .public-ad-media{background:#dcece6}
-.marketplace-listing-cards{margin-top:20px}
-.marketplace-listing-cards .directory-marketplace-footer b{color:#145b53;font-size:16px}
-.marketplace-member-gate-premium{
-  color:#f7fbfa;
-  border:1px solid #0c5148;
-  background:radial-gradient(ellipse at 88% 0%,rgba(86,190,158,.34),transparent 42%),linear-gradient(120deg,#103f38 0%,#155e53 55%,#183f62 100%);
-  box-shadow:0 18px 42px rgba(13,65,56,.2);
-}
-.marketplace-member-gate-premium .eyebrow{color:#a8e4d2}
-.marketplace-gate-copy h2{color:#fff}
-.marketplace-gate-copy p{color:#d3e7e1}
-.marketplace-gate-mark{
-  color:#145b50;
-  background:linear-gradient(145deg,#e0f7ef,#fff);
-  box-shadow:0 8px 22px rgba(0,0,0,.15);
-}
-.marketplace-member-gate-premium .marketplace-gate-actions .btn{
-  border-color:rgba(255,255,255,.42);
+  isolation:isolate;
+  border:0;
+  border-radius:20px;
+  background:#142c29;
   color:#fff;
-  background:rgba(255,255,255,.09);
 }
-.marketplace-member-gate-premium .marketplace-gate-actions .btn.primary{
-  background:#f3c969;
-  border-color:#f3c969;
-  color:#263b34;
+.public-ad-billboard-image,
+.public-ad-billboard-image-fallback{
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
 }
-.marketplace-member-gate-premium .marketplace-gate-actions .btn:hover{filter:brightness(1.06)}
+.public-ad-billboard-image-fallback{background:linear-gradient(110deg,#142c29,#28534b)}
+.public-ad-billboard-overlay{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:linear-gradient(90deg,rgba(7,28,25,.91) 0%,rgba(7,28,25,.72) 34%,rgba(7,28,25,.30) 68%,rgba(7,28,25,.08) 100%);
+}
+.public-ad-billboard-content{
+  position:relative;
+  z-index:2;
+  min-height:365px;
+  padding:38px 48px 40px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  color:#fff;
+}
+.public-ad-billboard-kicker{
+  display:inline-flex;
+  align-items:center;
+  min-height:25px;
+  color:#b7ded7;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.public-ad-billboard-copy{max-width:610px;margin:auto 0 20px;padding-top:26px}
+.public-ad-billboard-copy h2{
+  max-width:590px;
+  margin:0 0 14px;
+  color:#fff;
+  font-size:clamp(34px,4.4vw,58px);
+  line-height:.98;
+  letter-spacing:-.055em;
+}
+.public-ad-billboard-copy p{max-width:510px;margin:0;color:#d5e1df;font-size:13px;line-height:1.6}
+.public-ad-billboard-cta{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  min-height:40px;
+  padding:0 16px;
+  border-radius:9px;
+  background:#fff;
+  color:#17312e;
+  font-size:10px;
+  font-weight:800;
+}
+.public-ad-billboard-cta b{color:#0b6b63;font-size:15px}
+.marketplace-gate-copy>.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  width:fit-content;
+  padding:5px 9px;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:var(--brand-soft);
+  color:var(--brand-dark);
+  font-size:10px;
+  font-weight:800;
+  line-height:1.4;
+}
 @media(max-width:650px){
-  .marketplace-exclusive-heading{align-items:flex-start;flex-direction:column}
-  .marketplace-exclusive-placement{padding:10px;border-radius:16px}
+  .public-ad-billboard,.public-ad-billboard-content{min-height:310px}
+  .public-ad-billboard-content{padding:25px 22px 28px}
+  .public-ad-billboard-overlay{background:linear-gradient(90deg,rgba(7,28,25,.88),rgba(7,28,25,.48))}
+  .public-ad-billboard-copy h2{font-size:clamp(29px,8vw,40px)}
 }
