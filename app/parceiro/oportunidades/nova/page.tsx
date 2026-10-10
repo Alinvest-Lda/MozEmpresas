@@ -46,7 +46,7 @@ export default function NewPartnerOpportunity(){
   return <PartnerPage eyebrow="Actividade · Nova publicação" title="Nova publicação" description="Construa uma publicação clara para o público do MozEmpresas. Primeiro escolha o tipo, depois explique a oportunidade e finalmente defina o período." action={{href:"/parceiro/oportunidades",label:"Voltar às publicações"}}>
     <div className="opportunity-publisher-layout">
       <form className="partner-form-card opportunity-publisher-form" onSubmit={submit}><div className="partner-form-head"><span className="partner-kicker">Publicar</span><h2>Informação da oportunidade</h2><p>Os campos essenciais ajudam o público a perceber rapidamente se deve participar e qual é o próximo passo.</p></div>
-        <div className="publisher-step"><span>01</span><div><strong>Defina a oportunidade</strong><small>Escolha a natureza correcta. Se for um concurso, produto, serviço ou evento, use o módulo correspondente.</small></div></div>
+        <div className="publisher-step"><span>01</span><div><strong>Defina a oportunidade</strong><small>Este espaço destina-se a financiamento, programas, capacitação, apoio empresarial e internacionalização.</small></div></div>
 
         <label>Título<input name="title" required placeholder="Ex.: Linha de financiamento para jovens agricultores"/></label>
 
