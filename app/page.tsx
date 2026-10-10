@@ -53,7 +53,7 @@ export default async function Home() {
             {[
               { image:"https://images.pexels.com/photos/10375953/pexels-photo-10375953.jpeg?cs=srgb&dl=pexels-rdne-10375953.jpg&fm=jpg", title:"Encontre empresas para fazer negócio.", body:"Pesquise empresas, fornecedores e soluções em Moçambique.", cta:"Explorar empresas", href:"/empresas", external:false, alt:"Profissionais negros a trocar documentos numa reunião" },
               { image:"https://images.pexels.com/photos/9301291/pexels-photo-9301291.jpeg?cs=srgb&dl=pexels-mikhail-nilov-9301291.jpg&fm=jpg", title:"Descubra quem está a fazer acontecer.", body:"Conheça empresas, produtos e serviços disponíveis no mercado.", cta:"Ver produtos e serviços", href:"/marketplace", external:false, alt:"Equipa negra a colaborar numa reunião de trabalho" },
-              { image:"https://images.pexels.com/photos/5668496/pexels-photo-5668496.jpeg?cs=srgb&dl=pexels-sora-shimazaki-5668496.jpg&fm=jpg", title:"Novas oportunidades começam com informação.", body:"Explore concursos, oportunidades e iniciativas relevantes para o seu negócio.", cta:"Ver oportunidades", href:"/oportunidades", external:false, alt:"Profissional negra a trabalhar durante uma reunião" },
+              { image:"https://images.pexels.com/photos/5668496/pexels-photo-5668496.jpeg?cs=srgb&dl=pexels-sora-shimazaki-5668496.jpg&fm=jpg", title:"Novas oportunidades começam com informação.", body:"Explore oportunidades e iniciativas relevantes para o seu negócio.", cta:"Ver oportunidades", href:"/oportunidades", external:false, alt:"Profissional negra a trabalhar durante uma reunião" },
               { image:"https://images.pexels.com/photos/5685959/pexels-photo-5685959.jpeg?cs=srgb&dl=pexels-tima-miroshnichenko-5685959.jpg&fm=jpg", title:"O mercado empresarial num só lugar.", body:"Encontre contactos, soluções e novas possibilidades para a sua actividade.", cta:"Pesquisar", href:"/empresas", external:false, alt:"Empresária negra a trabalhar e comunicar ao telefone" },
               { image:"https://images.pexels.com/photos/6169636/pexels-photo-6169636.jpeg?cs=srgb&dl=pexels-tima-miroshnichenko-6169636.jpg&fm=jpg", title:"Ligue a sua empresa ao mercado.", body:"Encontre parceiros, fornecedores e clientes através de uma presença empresarial mais visível.", cta:"Registar empresa", href:"/registo", external:false, alt:"Profissional negro a gerir mercadoria num armazém" }
             ].map((slide,index)=>(
@@ -78,7 +78,7 @@ export default async function Home() {
             <div className="home-v2-copy">
               <span className="eyebrow">Directório e ecossistema empresarial</span>
               <h1>Encontre quem pode <span>fazer negócio</span> consigo.</h1>
-              <p>Descubra empresas, produtos, serviços, concursos e oportunidades em Moçambique. Pesquise, compare e encontre quem pode fazer negócio consigo.</p>
+              <p>Descubra empresas, produtos, serviços e oportunidades em Moçambique. Pesquise, compare e encontre quem pode fazer negócio consigo.</p>
 
               <form action="/empresas" className="home-v2-search">
                 <div><span>⌕</span><input name="q" placeholder="Empresa, produto, serviço ou actividade" /></div>
@@ -90,7 +90,6 @@ export default async function Home() {
                 <span>Explorar:</span>
                 <Link href="/empresas">Empresas</Link>
                 <Link href="/marketplace">Produtos e serviços</Link>
-                <Link href="/concursos">Concursos</Link>
                 <Link href="/oportunidades">Oportunidades</Link>
               </div>
             </div>
@@ -122,12 +121,11 @@ export default async function Home() {
               premiumAd ? {href:premiumAd.target_url||"/empresas",external:premiumAd.target_url?.startsWith("http")||false,image:premiumAd.image_url,title:premiumAd.title||"Empresa em destaque",body:premiumAd.body||"Conheça esta presença empresarial.",cta:premiumAd.cta_label||"Conhecer",alt:premiumAd.alt_text||premiumAd.title||"Empresa em destaque"} : {href:"/empresas",external:false,image:"https://images.pexels.com/photos/10375953/pexels-photo-10375953.jpeg?cs=srgb&dl=pexels-rdne-10375953.jpg&fm=jpg",title:"Empresas para conhecer.",body:"Pesquise organizações e encontre contactos, ofertas e parceiros em Moçambique.",cta:"Explorar empresas",alt:"Profissionais negros a trocar documentos numa reunião"},
               exclusiveAd ? {href:exclusiveAd.target_url||"/marketplace",external:exclusiveAd.target_url?.startsWith("http")||false,image:exclusiveAd.image_url,title:exclusiveAd.title||"Oferta em destaque",body:exclusiveAd.body||"Descubra uma solução disponível no mercado.",cta:exclusiveAd.cta_label||"Ver oferta",alt:exclusiveAd.alt_text||exclusiveAd.title||"Oferta em destaque"} : {href:"/marketplace",external:false,image:"https://images.pexels.com/photos/9301291/pexels-photo-9301291.jpeg?cs=srgb&dl=pexels-mikhail-nilov-9301291.jpg&fm=jpg",title:"Produtos e serviços.",body:"Encontre soluções e fornecedores para as necessidades da sua actividade.",cta:"Explorar ofertas",alt:"Equipa negra reunida em ambiente profissional"},
               {href:"/oportunidades",external:false,image:"https://images.pexels.com/photos/5668496/pexels-photo-5668496.jpeg?cs=srgb&dl=pexels-sora-shimazaki-5668496.jpg&fm=jpg",title:"Oportunidades para avançar.",body:"Financiamento, desenvolvimento empresarial, iniciativas e capacitação.",cta:"Ver oportunidades",alt:"Profissional negra a analisar informação numa reunião"},
-              {href:"/concursos",external:false,image:"https://images.pexels.com/photos/5685959/pexels-photo-5685959.jpeg?cs=srgb&dl=pexels-tima-miroshnichenko-5685959.jpg&fm=jpg",title:"Informação que pode gerar negócio.",body:"Consulte concursos abertos e acompanhe novas possibilidades para a sua empresa.",cta:"Ver concursos",alt:"Empresária negra a trabalhar ao telefone"}
             ].map((card,index)=>(
               <a key={index} href={card.href} className={"home-v2-ad-card home-v2-ad-card-"+(index+1)} target={card.external?"_blank":undefined} rel={card.external?"noreferrer":undefined}>
                 <div className="home-v2-ad-card-media">{card.image?<img src={card.image} alt={card.alt}/>:<div/>}</div>
                 <div className="home-v2-ad-card-body">
-                  <span>{index===0?"Empresas":index===1?"Produtos e serviços":index===2?"Oportunidades":"Concursos"}</span>
+                  <span>{index===0?"Empresas":index===1?"Produtos e serviços":"Oportunidades"}</span>
                   <h3>{card.title}</h3><p>{card.body}</p><b>{card.cta} <i>→</i></b>
                 </div>
               </a>
