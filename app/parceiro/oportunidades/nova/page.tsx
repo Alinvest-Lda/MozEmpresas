@@ -59,7 +59,7 @@ export default function NewPartnerOpportunity(){
         <div className="publisher-guidance"><strong>{selected[1]}</strong><span>{selected[2]}</span></div>
 
         <div className="publisher-step"><span>02</span><div><strong>Apresente a oportunidade</strong><small>Explique o que é, quem pode participar e o que a entidade espera receber.</small></div></div>
-        <label>Entidade publicadora<input name="organization" required defaultValue={record?.organization||""} placeholder="Ex.: BCI" required/></label>
+        <label>Entidade publicadora<input name="organization" required defaultValue={record?.organization||""} placeholder="Ex.: BCI"/></label>
         <label>Descrição<textarea name="description" rows={7} required defaultValue={record?.description||""} placeholder="Explique a oportunidade, finalidade, público elegível, benefício e como participar."/></label>
         <div className="partner-form-two">
           <label>Localização<input name="location" defaultValue={record?.location||""} placeholder="Moçambique / Maputo / Nacional"/></label>
