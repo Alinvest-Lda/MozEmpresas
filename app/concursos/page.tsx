@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-const servicePath = "/dashboard/servicos/concursos-empresariais";
 const loginPath = "/login?next=%2Fdashboard%2Fservicos%2Fconcursos-empresariais";
 
 const steps = [
