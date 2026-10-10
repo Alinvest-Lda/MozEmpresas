@@ -15,7 +15,7 @@ export default async function PartnerAds(){
     s.rpc("partner_ad_campaigns_list"),
     s.rpc("partner_ad_campaign_metrics")
   ]);
-  const metricsByCampaign=new Map((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}]));
+  const metricsByCampaign=new Map<string,{impressions:number;clicks:number}>((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}] as [string,{impressions:number;clicks:number}]));
   const measuredCampaigns=(campaigns??[]).map((x:any)=>({...x,...(metricsByCampaign.get(x.id)||{impressions:0,clicks:0})}));
   const active=(campaigns??[]).filter((x:any)=>["ACTIVE","RUNNING","PUBLISHED"].includes(x.status)).length;
   const pending=(campaigns??[]).filter((x:any)=>["REQUESTED","PENDING","UNDER_REVIEW"].includes(x.status)).length;
