@@ -10,14 +10,17 @@ const statusLabel=(status:string)=>{
 
 export default async function PartnerAds(){
   const s=await createClient();
-  const [{data:products},{data:campaigns}]=await Promise.all([
+  const [{data:products},{data:campaigns},{data:campaignMetrics}]=await Promise.all([
     s.rpc("partner_ad_products_list"),
-    s.rpc("partner_ad_campaigns_list")
+    s.rpc("partner_ad_campaigns_list"),
+    s.rpc("partner_ad_campaign_metrics")
   ]);
+  const metricsByCampaign=new Map((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}]));
+  const measuredCampaigns=(campaigns??[]).map((x:any)=>({...x,...(metricsByCampaign.get(x.id)||{impressions:0,clicks:0})}));
   const active=(campaigns??[]).filter((x:any)=>["ACTIVE","RUNNING","PUBLISHED"].includes(x.status)).length;
   const pending=(campaigns??[]).filter((x:any)=>["REQUESTED","PENDING","UNDER_REVIEW"].includes(x.status)).length;
-  const impressions=(campaigns??[]).reduce((sum:number,x:any)=>sum+Number(x.impressions_count??0),0);
-  const clicks=(campaigns??[]).reduce((sum:number,x:any)=>sum+Number(x.clicks_count??0),0);
+  const impressions=measuredCampaigns.reduce((sum:number,x:any)=>sum+x.impressions,0);
+  const clicks=measuredCampaigns.reduce((sum:number,x:any)=>sum+x.clicks,0);
   const investment=(campaigns??[]).reduce((sum:number,x:any)=>sum+Number(x.price_mzn??0),0);
   const ctr=impressions>0?clicks/impressions*100:0;
   const money=(value:number)=>value.toLocaleString("pt-MZ",{maximumFractionDigits:2})+" MZN";
@@ -85,9 +88,9 @@ export default async function PartnerAds(){
       title="Campanhas da entidade"
       description="Consulte o estado e os indicadores de cada campanha. Os números apresentados provêm dos registos da plataforma."
     >
-      {campaigns?.length
-        ? <div className="partner-record-list">{campaigns.map((x:any)=><div key={x.id}>
-            <div><strong>{x.title||"Campanha sem título"}</strong><span>{x.product_name||"Espaço publicitário"} · {statusLabel(x.status)}</span><span>{Number(x.impressions_count??0).toLocaleString("pt-MZ")} impressões · {Number(x.clicks_count??0).toLocaleString("pt-MZ")} cliques · CTR {Number(x.impressions_count??0)>0?(Number(x.clicks_count??0)/Number(x.impressions_count)*100).toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"}</span></div>
+      {measuredCampaigns.length
+        ? <div className="partner-record-list">{measuredCampaigns.map((x:any)=><div key={x.id}>
+            <div><strong>{x.title||"Campanha sem título"}</strong><span>{x.product_name||"Espaço publicitário"} · {statusLabel(x.status)}</span><span>{x.impressions.toLocaleString("pt-MZ")} impressões · {x.clicks.toLocaleString("pt-MZ")} cliques · CTR {x.impressions>0?(x.clicks/x.impressions*100).toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"}</span></div>
             <b>{x.price_mzn!=null?money(Number(x.price_mzn)):"Em análise"}</b>
           </div>)}</div>
         : <PartnerEmpty title="Ainda sem campanhas" text="Escolha um espaço acima para iniciar uma proposta de exposição." href="#espacos" label="Ver espaços"/>
