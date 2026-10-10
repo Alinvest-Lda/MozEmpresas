@@ -7,11 +7,16 @@ type Props={surface:"HOME"|"DIRECTORY"|"MARKETPLACE"|"OPPORTUNITIES";slot?:"HERO
 
 function visitorKey(){
  if(typeof window==="undefined") return "";
- const key=localStorage.getItem("mozempresas_ad_visitor");
- if(key) return key;
- const value=crypto.randomUUID()+"-"+Math.random().toString(36).slice(2);
- localStorage.setItem("mozempresas_ad_visitor",value);
- return value;
+ try {
+  const key=window.localStorage.getItem("mozempresas_ad_visitor");
+  if(key) return key;
+  const value=(typeof crypto!=="undefined" && "randomUUID" in crypto ? crypto.randomUUID() : "visitor")+"-"+Math.random().toString(36).slice(2);
+  window.localStorage.setItem("mozempresas_ad_visitor",value);
+  return value;
+ } catch {
+  // Privacy settings may block storage. Keep ads optional instead of breaking the page.
+  return "";
+ }
 }
 
 export function PublicAd({surface,slot="BILLBOARD",className="",context={},interests=[]}:Props){
