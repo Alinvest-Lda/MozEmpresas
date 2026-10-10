@@ -42,17 +42,9 @@ const serviceDetails: Record<string, { includes: string[]; steps: string[] }> = 
     includes: ["Definição dos requisitos", "Pesquisa de potenciais fornecedores", "Filtragem por categoria e localização", "Apresentação estruturada dos resultados"],
     steps: ["Define o que procura", "Realizamos a pesquisa", "Recebe uma selecção organizada para avaliação"],
   },
-  "concursos-empresariais": {
-    includes: ["Estruturação do concurso", "Publicação do processo", "Organização de requisitos e documentação", "Gestão da informação do processo"],
-    steps: ["Definimos o processo", "Publicamos e estruturamos a oportunidade", "Acompanhamos a informação do concurso"],
-  },
   "mapeamento-comercial": {
     includes: ["Definição do mercado-alvo", "Levantamento de empresas e segmentos", "Organização dos potenciais contactos", "Relatório estruturado"],
     steps: ["Definimos o universo de pesquisa", "Mapeamos empresas e segmentos", "Entregamos os resultados organizados"],
-  },
-  "monitoria-concursos-oportunidades": {
-    includes: ["Definição dos critérios de monitoria", "Pesquisa recorrente", "Filtragem de oportunidades relevantes", "Comunicação dos resultados"],
-    steps: ["Definimos o que deve ser acompanhado", "Monitoramos as fontes relevantes", "Sinalizamos oportunidades de acordo com os critérios"],
   },
   "relatorio-empresarial": {
     includes: ["Análise da presença na plataforma", "Consolidação de informação disponível", "Identificação de sinais comerciais", "Relatório estruturado"],
