@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "MozEmpresas — Ecossistema empresarial de Moçambique",
-  description: "Descubra empresas, produtos, serviços, concursos e oportunidades em Moçambique.",
+  description: "Descubra empresas, produtos, serviços e oportunidades em Moçambique.",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
