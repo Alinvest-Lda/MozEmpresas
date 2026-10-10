@@ -186,8 +186,7 @@ export default async function Marketplace({
           </div>
         </section>
 
-        {signedIn ? (
-          <section className="marketplace-section marketplace-results-section">
+        <section className="marketplace-section marketplace-results-section">
             <div className="marketplace-section-head">
               <div>
                 <span className="eyebrow">{hasFilters ? "Resultados" : "Ofertas recentes"}</span>
@@ -223,7 +222,7 @@ export default async function Marketplace({
               <div className="directory-empty"><div className="directory-empty-icon">◇</div><span className="eyebrow">Sem resultados</span><h3>Não encontrámos ofertas para esta pesquisa.</h3><p>Experimente alterar os filtros ou publicar uma nova oferta.</p><div className="directory-empty-actions"><Link href="/marketplace" className="btn">Ver todas</Link><Link href="/dashboard" className="btn primary">Publicar oferta</Link></div></div>
             )}
           </section>
-        ) : (
+        {!signedIn && (
           <section className="marketplace-member-gate">
             <div>
               <span className="eyebrow">Ecossistema comercial</span>
