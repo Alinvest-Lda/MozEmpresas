@@ -2896,3 +2896,50 @@ button,input,select,textarea{font-size:16px}
  .directory-register-strip{padding:18px}
  .directory-register-strip h3{font-size:19px}
 }
+
+
+/* Pesquisa refinada — altura compacta e linguagem visual partilhada */
+.directory-search-panel{padding:11px}
+.directory-search-field{padding:10px 14px}
+.directory-search-field>span{margin-bottom:5px}
+.directory-search-field input,.directory-search-field select{min-height:22px;padding-top:3px;padding-bottom:3px}
+.directory-search-button{padding:10px 18px;min-height:42px}
+@media(max-width:760px){.directory-search-field{padding:10px 12px}.directory-search-button{min-height:42px}}
+@media(max-width:540px){.directory-search-panel{padding:8px}.directory-search-field{padding:9px 11px}}
+
+/* Pesquisa transversal — mesmo alinhamento e menor altura dos controlos */
+.global-search-page{padding-top:clamp(28px,4vw,48px)}
+.global-search-hero{border-radius:20px}
+.global-search-form{gap:12px;padding:12px;border-radius:16px;background:linear-gradient(135deg,#f1f7f5 0%,#fff 78%);border:1px solid #dce6e2;box-shadow:0 8px 24px rgba(20,44,41,.05)}
+.global-search-query>span,.global-search-form-side label>span{font-size:10px;letter-spacing:.04em;margin-bottom:5px}
+.global-search-input{min-height:44px;border-radius:10px}
+.global-search-input input{min-height:42px;padding-top:9px;padding-bottom:9px}
+.global-search-form-side select{min-height:44px;border-radius:10px}
+.global-search-form-side .btn{min-height:44px;border-radius:10px;padding:10px 18px;white-space:nowrap}
+.global-search-hint{margin-top:12px}
+.global-search-result{border-radius:13px}
+@media(max-width:760px){.global-search-form{padding:9px;gap:9px}.global-search-form-side{gap:9px}.global-search-form-side .btn{min-height:42px}}
+@media(max-width:600px){.global-search-hero,.global-search-empty{padding:20px}.global-search-form{padding:8px}.global-search-input{min-height:42px}.global-search-form-side select{min-height:42px}}
+
+/* Produtos e serviços — pesquisa compacta, resultados responsivos e hierarquia clara */
+.marketplace-discovery-hero{align-items:center}
+.marketplace-main-search{min-width:0;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(180px,.72fr) auto;gap:0;align-items:stretch;margin-top:22px;padding:8px;border:1px solid #dce6e2;border-radius:16px;background:linear-gradient(135deg,#f1f7f5 0%,#fff 78%);box-shadow:0 8px 24px rgba(20,44,41,.05)}
+.marketplace-main-search-input{min-width:0;min-height:44px;border:1px solid #e1e9e6;border-radius:10px 0 0 10px;background:#fff}
+.marketplace-main-search-input input{min-width:0;min-height:42px;padding:9px 10px}
+.marketplace-main-search select{min-width:0;min-height:44px;height:auto;padding:8px 12px;border:1px solid #e1e9e6;border-left:0;border-radius:0;background:#fff}
+.marketplace-main-search>.btn{min-height:42px;margin:2px 0 2px 8px;padding:9px 17px;border-radius:10px;white-space:nowrap}
+.marketplace-quick-links{gap:10px;flex-wrap:wrap}
+.marketplace-section-head{align-items:flex-end;gap:14px}
+.marketplace-category-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.marketplace-category-card{min-width:0;border-radius:15px;padding:18px}
+.marketplace-category-card h3,.marketplace-category-card p{overflow-wrap:anywhere}
+.marketplace-results-gallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.marketplace-offer-card{min-width:0;height:100%;display:flex;flex-direction:column;overflow:hidden;border-radius:16px}
+.marketplace-offer-visual{height:auto;aspect-ratio:16/10;flex-shrink:0}
+.marketplace-offer-body{min-width:0;display:flex;flex:1;flex-direction:column;padding:16px}
+.marketplace-offer-body h3,.marketplace-offer-body p{overflow-wrap:anywhere}
+.marketplace-offer-body>p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.marketplace-offer-footer{margin-top:auto;gap:10px;flex-wrap:wrap}
+.marketplace-commercial-strip{margin-top:26px;gap:20px}
+@media(max-width:1050px){.marketplace-main-search{grid-template-columns:minmax(0,1fr) minmax(160px,.7fr)}.marketplace-main-search>.btn{grid-column:1/-1;margin:7px 0 0;width:100%}.marketplace-results-gallery,.marketplace-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.marketplace-main-search{grid-template-columns:minmax(0,1fr);padding:8px}.marketplace-main-search-input{border-radius:10px}.marketplace-main-search select{border:1px solid #e1e9e6;border-radius:10px;margin-top:7px}.marketplace-main-search>.btn{grid-column:auto;margin:8px 0 0}.marketplace-results-gallery,.marketplace-category-grid{grid-template-columns:1fr;gap:13px}.marketplace-offer-visual{aspect-ratio:16/9}.marketplace-offer-body{padding:15px}.marketplace-section-head{align-items:flex-start;flex-direction:column}.marketplace-commercial-strip{padding:20px;display:block}.marketplace-commercial-strip .btn{margin-top:14px;width:100%}}
