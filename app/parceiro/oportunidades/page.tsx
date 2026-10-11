@@ -28,7 +28,8 @@ const statusLabel = (status: string) =>
   status === "CLOSED" ? "Encerrada" :
   status === "ARCHIVED" ? "Arquivada" : status;
 
-export default async function PartnerOpportunitiesPage() {
+export default async function PartnerOpportunitiesPage({ searchParams }: { searchParams?: Promise<{ saved?: string; updated?: string; error?: string }> }) {
+  const params = searchParams ? await searchParams : {};
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -52,6 +53,9 @@ export default async function PartnerOpportunitiesPage() {
       description="Um espaço de gestão: publique, acompanhe prazos e consulte o histórico das oportunidades abertas pela sua organização."
       action={{ href: "/parceiro/oportunidades/nova", label: "Nova oportunidade" }}
     >
+      {params.saved && <div className="notice" role="status">A oportunidade foi guardada com sucesso.</div>}
+      {params.updated && <div className="notice" role="status">O estado da publicação foi actualizado.</div>}
+      {params.error && <div className="notice" role="alert">Não foi possível actualizar a publicação. Confirme as permissões e tente novamente.</div>}
       <div className="partner-pub-toolbar">
         <Link className="btn" href="/parceiro/oportunidades/candidaturas">Ver candidaturas recebidas →</Link>
       </div>
