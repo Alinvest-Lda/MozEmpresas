@@ -170,6 +170,7 @@ export default async function Dashboard() {
           <Link href="/dashboard/marketplace?tab=vender"><strong>Quero vender</strong><span>Publique produtos e serviços e acompanhe interesse comercial.</span><b>→</b></Link>
           <Link href="/dashboard/marketplace?tab=comprar"><strong>Quero comprar</strong><span>Descubra ofertas e registe interesses para iniciar relações.</span><b>→</b></Link>
           <Link href="/dashboard/monetizacao"><strong>Quero perceber o investimento</strong><span>Analise publicidade, créditos, serviços e histórico comercial.</span><b>→</b></Link>
+          <Link href="/dashboard/guardados"><strong>Quero regressar ao que guardei</strong><span>Favoritos, pesquisas guardadas, alertas e actividade recente.</span><b>→</b></Link>
         </div>
       </section>
     </div>
