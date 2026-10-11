@@ -14,8 +14,10 @@ export default async function OpportunitiesPage({searchParams}:{searchParams?:Pr
  let query=supabase.from("opportunities").select("id,title,slug,type,description,organization,location,opens_at,closes_at").eq("status","PUBLISHED");
  if(type)query=query.eq("type",type);
  if(q){const term=q.replace(/[,%()]/g," ").trim();if(term)query=query.or(`title.ilike.%${term}%,description.ilike.%${term}%,organization.ilike.%${term}%,location.ilike.%${term}%`);}
+ const nowIso=new Date().toISOString();
+ query=query.or(`opens_at.is.null,opens_at.lte.${nowIso}`).or(`closes_at.is.null,closes_at.gte.${nowIso}`);
  const{data:items}=await query.order("closes_at",{ascending:true,nullsFirst:false}).limit(60);
- const opportunities=(items??[]).filter((x:any)=>{const now=Date.now();return(!x.opens_at||new Date(x.opens_at).getTime()<=now)&&(!x.closes_at||new Date(x.closes_at).getTime()>=now);});
+ const opportunities=items??[];
  const currentTypes=["FUNDING","PROGRAM","YOUTH_INITIATIVE","TRAINING","ENTREPRENEUR_SUPPORT","EXPORT_INTERNATIONAL","AWARD_SCHOLARSHIP","PARTNERSHIP","EXPRESSION_OF_INTEREST","INNOVATION_TECH"];
  return <main className="page opportunities-hub"><div className="container">
   <section className="opportunities-hero"><div><span className="eyebrow">Oportunidades</span><h1>Possibilidades abertas por organizações.</h1><p>Financiamento, desenvolvimento empresarial, apoio a empreendedores, iniciativas juvenis, formação e capacitação, e internacionalização. Aqui, uma oportunidade significa que existe uma possibilidade concreta de acesso, candidatura ou participação.</p></div><div className="opportunities-definition"><span>REGRA DO MÓDULO</span><strong>Aceder · candidatar-se · participar</strong><small>Produtos, serviços e publicidade têm os seus próprios espaços.</small></div></section>
