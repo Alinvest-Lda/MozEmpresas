@@ -1,0 +1,2 @@
+drop policy if exists "active partner ad products are readable" on public.partner_ad_products;
+create policy "active partner ad products are readable" on public.partner_ad_products for select to authenticated using (active = true);
