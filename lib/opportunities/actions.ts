@@ -64,6 +64,15 @@ export async function applyToOpportunity(formData: FormData) {
     }
   }
   if (submissionError) redirect("/oportunidades?application=error");
+  await supabase.from("platform_conversion_events").insert({
+    user_id: userId,
+    visitor_key: "user:" + userId,
+    event_type: "OPPORTUNITY_APPLY",
+    entity_type: "opportunity",
+    entity_id: opportunityId,
+    source: "opportunity_detail",
+    metadata: { action: existingApplication ? "updated" : "submitted" },
+  });
   redirect("/oportunidades/" + (formData.get("slug") || "") + "?application=submitted");
 }
 
