@@ -48,5 +48,7 @@ export async function updateAccountStatus(_state: AccountState, formData: FormDa
   const { error } = await supabase.from("profiles").update({ account_status: status }).eq("id", user.id);
   if (error) return { error: "Não foi possível actualizar o estado da conta." };
   revalidatePath("/dashboard/conta");
-  return { success: status === "ACTIVE" ? "Conta activada." : status === "INACTIVE" ? "Conta desactivada." : "Conta marcada para eliminação." };
+  revalidatePath("/conta/estado");
+  revalidatePath("/dashboard");
+  return { success: status === "ACTIVE" ? "Conta activada. Já pode voltar ao painel." : status === "INACTIVE" ? "Conta desactivada." : "Conta marcada para eliminação." };
 }
