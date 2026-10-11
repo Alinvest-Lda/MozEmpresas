@@ -10,10 +10,12 @@ export default async function SavedItemsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/dashboard/guardados");
 
-  const [{ data: favorites }, { data: searches }, { data: notifications }] = await Promise.all([
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const [{ data: favorites }, { data: searches }, { data: notifications }, { data: events }] = await Promise.all([
     supabase.from("user_favorites").select("id,entity_type,title,href,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
     supabase.from("user_saved_searches").select("id,title,entity_type,filters,alert_enabled,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
     supabase.from("notifications").select("id,title,body,resource_type,resource_id,read_at,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+    supabase.from("platform_conversion_events").select("id,event_type,entity_type,source,created_at").eq("user_id", user.id).gte("created_at", since).order("created_at", { ascending: false }).limit(500),
   ]);
 
   const searchHref = (entityType: string, filters: Record<string,string>) => {
@@ -40,6 +42,13 @@ export default async function SavedItemsPage() {
         </div>
       </header>
 
+      <section className="workspace-metrics" aria-label="Actividade dos últimos 30 dias">
+        <article className="workspace-metric workspace-metric-featured"><span>Eventos registados</span><strong>{(events??[]).length}</strong><small>Últimos 30 dias</small></article>
+        <article className="workspace-metric"><span>Contactos iniciados</span><strong>{(events??[]).filter(e=>e.event_type==="CONTACT_CLICK").length}</strong><small>Telefone, email ou website</small></article>
+        <article className="workspace-metric"><span>Partilhas</span><strong>{(events??[]).filter(e=>e.event_type==="WHATSAPP_SHARE").length}</strong><small>Partilhas via WhatsApp</small></article>
+        <article className="workspace-metric"><span>Itens guardados</span><strong>{(events??[]).filter(e=>e.event_type==="FAVORITE_SAVED"||e.event_type==="SEARCH_SAVED").length}</strong><small>Favoritos e pesquisas</small></article>
+      </section>
+
       <section className="workspace-secondary-grid">
         <article className="workspace-panel">
           <div className="workspace-panel-head"><div><span className="dashboard-kicker">Favoritos</span><h2>Itens guardados</h2><p>Empresas e publicações que quer consultar novamente.</p></div></div>
@@ -49,6 +58,11 @@ export default async function SavedItemsPage() {
           <div className="workspace-panel-head"><div><span className="dashboard-kicker">Pesquisas guardadas</span><h2>As suas pesquisas</h2><p>Os alertas estão activos por defeito para novas correspondências.</p></div></div>
           {(searches??[]).length ? <div className="workspace-entity-list">{(searches??[]).map(item=><div key={item.id} className="saved-item-row"><Link href={searchHref(item.entity_type,item.filters as Record<string,string>)}><span>{item.entity_type==="businesses"?"DIRECTÓRIO":item.entity_type==="marketplace"?"MARKETPLACE":"OPORTUNIDADES"} · {item.alert_enabled?"ALERTAS ACTIVOS":"ALERTAS PAUSADOS"}</span><strong>{item.title}</strong><small>Guardada {dateLabel(item.created_at)}</small></Link><RemoveSavedItem kind="search" id={item.id}/></div>)}</div> : <div className="workspace-empty"><strong>Sem pesquisas guardadas.</strong><p>Faça uma pesquisa no directório, Marketplace ou Oportunidades e guarde os filtros.</p><Link href="/empresas" className="btn primary">Pesquisar empresas</Link></div>}
         </article>
+      </section>
+
+      <section className="workspace-panel">
+        <div className="workspace-panel-head"><div><span className="dashboard-kicker">Actividade registada</span><h2>Interacções dos últimos 30 dias</h2><p>Eventos registados enquanto estava autenticado. Os indicadores não representam vendas nem retorno financeiro.</p></div></div>
+        {(events??[]).length ? <div className="workspace-activity-list">{(events??[]).slice(0,8).map(item=><div key={item.id}><span>{item.event_type.replaceAll("_"," ")}</span><strong>{item.entity_type||"Plataforma"}</strong><small>{item.source||"Interacção"} · {dateLabel(item.created_at)}</small></div>)}</div> : <div className="workspace-empty"><strong>Ainda não há eventos associados à conta.</strong><p>Os contactos, partilhas e itens guardados começarão a aparecer à medida que utilizar a plataforma com sessão iniciada.</p></div>}
       </section>
 
       <section className="workspace-panel">
