@@ -8,7 +8,8 @@ type Business = { id:string; name:string; slug:string; location:string|null; is_
 type Activity = { label:string; title:string; meta:string; href:string; created_at?:string };
 type Action = { label:string; title:string; text:string; href:string };
 
-export default async function Dashboard() {
+export default async function Dashboard({ searchParams }: { searchParams?: Promise<{ confirmed?: string }> }) {
+  const params = await searchParams;
   const supabase = await createClient();
   const { data:{ user } } = await supabase.auth.getUser();
 
@@ -99,6 +100,7 @@ export default async function Dashboard() {
 
   return <main className="dashboard-main workspace-dashboard">
     <div className="dashboard-content">
+      {params?.confirmed === "1" && <p className="notice" role="status">Email confirmado. A sua conta está pronta para utilização.</p>}
       <header className="workspace-hero">
         <div className="workspace-hero-copy">
           <span className="dashboard-kicker">Área empresarial · Visão geral</span>
