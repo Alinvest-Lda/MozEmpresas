@@ -108,7 +108,7 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
   }
 
   if (profile.account_status === "INACTIVE") {
-    redirect("/dashboard/conta?view=estado&inactive=1");
+    redirect("/conta/estado?inactive=1");
   }
 
   if (profile.account_status && profile.account_status !== "ACTIVE") {
