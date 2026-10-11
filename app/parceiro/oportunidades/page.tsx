@@ -34,12 +34,13 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data } = await supabase
+  const { data: accountId } = await supabase.rpc("current_partner_account_id");
+  const { data } = accountId ? await supabase
     .from("opportunities")
     .select("id,title,slug,type,organization,location,closes_at,status,created_at")
-    .eq("owner_id", user.id)
+    .eq("partner_account_id", accountId)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(50) : { data: [] };
 
   const rows = data ?? [];
   const published = rows.filter((row: any) => row.status === "PUBLISHED").length;
