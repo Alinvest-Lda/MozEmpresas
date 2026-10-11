@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 const schema=z.object({businessId:z.string().uuid(),userId:z.string().uuid(),role:z.enum(["admin","operator","member","viewer"])});
 
 async function manager(supabase:Awaited<ReturnType<typeof createClient>>,businessId:string,userId:string){
+ const {data:profile,error:profileError}=await supabase.from("profiles").select("account_status").eq("id",userId).maybeSingle();
+ if(profileError||!profile||profile.account_status!=="ACTIVE")return false;
  const {data:owned}=await supabase.from("businesses").select("id").eq("id",businessId).eq("owner_id",userId).is("archived_at",null).maybeSingle();
  if(owned)return true;
  const {data:member}=await supabase.from("business_members").select("role").eq("business_id",businessId).eq("user_id",userId).in("role",["owner","admin"]).maybeSingle();
