@@ -36,7 +36,7 @@ export default function NewPartnerOpportunity(){
     const s=createClient(),{data:{user}}=await s.auth.getUser();
     if(!user){setError("Sessão expirada.");setPending(false);return}
     const payload={title,type:String(f.get("type")||"FUNDING"),status,description,organization,location:String(f.get("location")||"").trim()||null,opens_at:opens?new Date(opens).toISOString():null,closes_at:closes?new Date(closes).toISOString():null,requirements:String(f.get("requirements")||"").trim()||null};
-    if(editId){const{error}=await s.from("opportunities").update(payload).eq("id",editId).eq("owner_id",user.id);if(error){setError("Não foi possível guardar: "+error.message);setPending(false);return}}
+    if(editId){const{data:updated,error}=await s.from("opportunities").update(payload).eq("id",editId).eq("owner_id",user.id).select("id").maybeSingle();if(error||!updated){setError(error?"Não foi possível guardar: "+error.message:"Não foi possível localizar a publicação para edição.");setPending(false);return}}
     else{const{data:account,error:accountError}=await s.rpc("current_partner_account_id");if(accountError||!account){setError("Conta de parceiro não identificada.");setPending(false);return}const slug=title.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-"+crypto.randomUUID().slice(0,8);const{error}=await s.from("opportunities").insert({...payload,owner_id:user.id,partner_account_id:account,slug});if(error){setError("Não foi possível publicar: "+error.message);setPending(false);return}}
     r.push("/parceiro/oportunidades?saved=1");r.refresh();setPending(false);
   }
