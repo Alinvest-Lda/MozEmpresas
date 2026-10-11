@@ -42,6 +42,6 @@ export function AccountStatusForm({ status }: { status: "ACTIVE" | "INACTIVE" | 
     <button className="btn" type="submit" name="status" value="ACTIVE" disabled={pending || status === "DELETED"}>Activar</button>
     <button className="btn" type="submit" name="status" value="INACTIVE" disabled={pending || status === "DELETED"}>Desactivar</button>
     <button className="btn danger" type="submit" name="status" value="DELETED" disabled={pending || status === "DELETED"}>Solicitar eliminação</button>
-    {state.error && <p className="notice">{state.error}</p>}{state.success && <p className="account-success">{state.success}</p>}
+    {state.error && <p className="notice">{state.error}</p>}{state.success && <p className="account-success">{state.success}</p>}{state.success?.startsWith("Conta activada") && <a className="text-link" href="/dashboard">Ir ao painel →</a>}
   </form>;
 }
