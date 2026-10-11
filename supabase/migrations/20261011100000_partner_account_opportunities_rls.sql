@@ -18,21 +18,15 @@ as $function$
   limit 1
 $function$;
 
-revoke all on function public.current_partner_opportunity_role() from anon;
 revoke all on function public.current_partner_opportunity_role() from public;
 grant execute on function public.current_partner_opportunity_role() to authenticated;
 
 drop policy if exists "owners manage opportunities" on public.opportunities;
 drop policy if exists "published opportunities readable" on public.opportunities;
 
-create policy "published opportunities readable by public"
+create policy "opportunities readable by public or partner account"
 on public.opportunities for select
-to anon
-using (status = 'PUBLISHED');
-
-create policy "opportunities readable by authenticated users and partner account"
-on public.opportunities for select
-to authenticated
+to anon, authenticated
 using (
   status = 'PUBLISHED'
   or owner_id = (select auth.uid())
