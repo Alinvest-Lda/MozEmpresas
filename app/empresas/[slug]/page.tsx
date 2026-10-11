@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Metadata } from "next";
 import { FavoriteButton } from "@/components/save-to-mozempresas";
+import { TrackedLink, TrackPageView } from "@/components/platform-tracking";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -83,6 +84,7 @@ export default async function BusinessDetail({ params }: { params: Promise<{ slu
 
   return (
     <main className="page">
+      <TrackPageView entityType="business" entityId={business.id} source="business_profile" />
       <div className="container">
         <Link href="/empresas" className="muted">← Voltar ao directório</Link>
 
@@ -137,10 +139,10 @@ export default async function BusinessDetail({ params }: { params: Promise<{ slu
             <span className="eyebrow">Contacto empresarial</span>
             <h3>Fale com {business.name}</h3>
             <p className="muted">Escolha o canal disponibilizado pela empresa para iniciar o contacto.</p>
-            {business.phone && <a className="btn primary full" href={"tel:" + business.phone}>Ligar</a>}
-            {business.email && <a className="btn full" style={{ marginTop: 9 }} href={"mailto:" + business.email}>Enviar email</a>}
-            {business.website && <a className="btn full" style={{ marginTop: 9 }} href={business.website} target="_blank" rel="noreferrer">Website</a>}
-            <a className="btn full" style={{ marginTop: 9 }} href={"https://wa.me/?text=" + encodeURIComponent(business.name + " — " + (process.env.NEXT_PUBLIC_SITE_URL || "https://moz-empresas.vercel.app") + "/empresas/" + business.slug)} target="_blank" rel="noreferrer">Partilhar no WhatsApp</a>
+            {business.phone && <TrackedLink eventType="CONTACT_CLICK" entityType="business" entityId={business.id} source="phone" className="btn primary full" href={"tel:" + business.phone}>Ligar</TrackedLink>}
+            {business.email && <TrackedLink eventType="CONTACT_CLICK" entityType="business" entityId={business.id} source="email" className="btn full" href={"mailto:" + business.email}>Enviar email</TrackedLink>}
+            {business.website && <TrackedLink eventType="CONTACT_CLICK" entityType="business" entityId={business.id} source="website" className="btn full" href={business.website} target="_blank" rel="noreferrer">Website</TrackedLink>}
+            <TrackedLink eventType="WHATSAPP_SHARE" entityType="business" entityId={business.id} source="whatsapp" className="btn full" href={"https://wa.me/?text=" + encodeURIComponent(business.name + " — " + (process.env.NEXT_PUBLIC_SITE_URL || "https://moz-empresas.vercel.app") + "/empresas/" + business.slug)} target="_blank" rel="noreferrer">Partilhar no WhatsApp</TrackedLink>
             {!business.phone && !business.email && !business.website && <p className="muted">A empresa ainda não disponibilizou canais directos de contacto.</p>}
             <div className="business-signup-prompt"><strong>Entre no MozEmpresas</strong><span>Guarde empresas, acompanhe ofertas e avance para compras ou contactos quando estiver pronto.</span><Link href="/registo" className="text-link">Criar conta →</Link></div>
           </aside>
