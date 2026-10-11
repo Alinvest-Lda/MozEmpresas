@@ -1,42 +1,59 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { FavoriteButton } from "@/components/save-to-mozempresas";
+import { TrackedLink, TrackPageView } from "@/components/platform-tracking";
 import { createClient } from "@/lib/supabase/server";
 import { createOrder } from "@/lib/commerce/actions";
+
+export async function generateMetadata({params}:{params:Promise<{id:string}>}):Promise<Metadata>{
+  const {id}=await params;
+  try{
+    const s=await createClient();
+    const {data}=await s.from("listings").select("title,description,location,type").eq("id",id).eq("status","PUBLISHED").maybeSingle();
+    if(!data)return {title:"Oferta | MozEmpresas"};
+    const description=[data.description,data.location].filter(Boolean).join(" · ").slice(0,160);
+    const url=`${process.env.NEXT_PUBLIC_SITE_URL||"https://moz-empresas.vercel.app"}/marketplace/${id}`;
+    return {title:`${data.title} | MozEmpresas`,description,alternates:{canonical:url},openGraph:{title:`${data.title} | MozEmpresas`,description,url,type:"article"}};
+  }catch{return {title:"Oferta | MozEmpresas"}}
+}
 
 export default async function ListingPage({params}:{params:Promise<{id:string}>}) {
   const {id}=await params; const supabase=await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
-  if (!claimsData?.claims?.sub) redirect("/login?next=/marketplace/" + encodeURIComponent(id));
+  const userId = typeof claimsData?.claims?.sub === "string" ? claimsData.claims.sub : null;
   const {data:item}=await supabase.from("listings").select("id,title,slug,description,type,status,price,currency,location,business_id,created_at").eq("id",id).eq("status","PUBLISHED").maybeSingle();
   if(!item) notFound();
   const { data: attachments } = await supabase.from("listing_attachments").select("id,file_name,mime_type,size_bytes,kind,storage_path,created_at").eq("listing_id", id).order("created_at", { ascending: true });
   const media = (attachments ?? []).map((file) => ({ ...file, url: supabase.storage.from("listing-media").getPublicUrl(file.storage_path).data.publicUrl }));
   let business=null;
   if(item.business_id){const {data}=await supabase.from("businesses").select("id,name,slug,location,phone,email,website").eq("id",item.business_id).maybeSingle();business=data;}
-  return <main className="page"><div className="container">
+  return <main className="page"><TrackPageView entityType="listing" entityId={item.id} source="marketplace_detail"/><div className="container">
     <Link href="/marketplace" className="muted">← Voltar ao marketplace</Link>
     <div className="detail-grid"><article className="card detail-card">
       <div className="listing-top"><span className="tag">{item.type==="PRODUCT"?"Produto":"Serviço"}</span><span className="status-dot">Publicado</span></div>
       <h1>{item.title}</h1><p className="detail-description">{item.description}</p>
+      <FavoriteButton entityType="listing" entityId={item.id} title={item.title} href={"/marketplace/"+item.id} />
       {media.filter((file) => file.kind === "IMAGE").length > 0 && <div className="listing-media-grid">{media.filter((file) => file.kind === "IMAGE").map((file) => <a href={file.url} target="_blank" rel="noreferrer" key={file.id}><img src={file.url} alt={file.file_name} /></a>)}</div>}
       <div className="detail-price">{item.price!=null ? item.price+" "+(item.currency||"MZN") : "Sob consulta"}</div>
+      <TrackedLink eventType="WHATSAPP_SHARE" entityType="listing" entityId={item.id} source="whatsapp" href={"https://wa.me/?text="+encodeURIComponent(item.title+" — "+(process.env.NEXT_PUBLIC_SITE_URL||"https://moz-empresas.vercel.app")+"/marketplace/"+item.id)} target="_blank" rel="noreferrer" className="btn">Partilhar no WhatsApp</TrackedLink>
       {item.location&&<p className="muted" style={{marginTop:12}}>Disponível em {item.location}</p>}
     </article>
     <aside className="card"><span className="eyebrow">Fornecedor</span><h3>{business?.name||"Empresa participante"}</h3>
       {business?.location&&<p className="muted">{business.location}</p>}
       {business?.slug&&<Link href={"/empresas/"+business.slug} className="btn primary full">Ver empresa</Link>}
-      {business?.phone&&<a href={"tel:"+business.phone} className="btn full" style={{marginTop:9}}>Contactar por telefone</a>}
-      {business?.email&&<a href={"mailto:"+business.email} className="btn full" style={{marginTop:9}}>Enviar email</a>}
+      {business?.phone&&<TrackedLink eventType="CONTACT_CLICK" entityType="listing" entityId={item.id} source="phone" href={"tel:"+business.phone} className="btn full" >Contactar por telefone</TrackedLink>}
+      {business?.email&&<TrackedLink eventType="CONTACT_CLICK" entityType="listing" entityId={item.id} source="email" href={"mailto:"+business.email} className="btn full" >Enviar email</TrackedLink>}
       <div className="detail-action-panel">
         <span className="eyebrow">Contactar fornecedor</span>
         <h3 style={{margin:"5px 0 7px"}}>Diga ao fornecedor o que procura.</h3>
         <p className="muted">O seu pedido cria um contacto comercial. Não há pagamento dentro do MozEmpresas; a empresa fornecedora responderá para dar seguimento à negociação.</p>
-        <form action={createOrder} className="detail-action-form">
+        {userId ? <form action={createOrder} className="detail-action-form">
           <input type="hidden" name="listing_id" value={item.id} />
           <label className="field-label">Quantidade<input type="number" name="quantity" min="1" step="1" defaultValue="1" /></label>
           <label className="field-label">Mensagem<textarea name="notes" rows={5} placeholder="Ex.: Temos interesse nesta solução para 20 colaboradores. Gostaríamos de receber disponibilidade, prazo e condições comerciais." required /></label>
           <button className="btn primary full" type="submit">Enviar pedido de contacto →</button>
-        </form>
+        </form> : <Link href={"/login?next="+encodeURIComponent("/marketplace/"+item.id)} className="btn primary full">Entrar para contactar o fornecedor →</Link>}
       </div>
     </aside></div>
     <section className="detail-section"><span className="eyebrow">Materiais da oferta</span><h2>Ficheiros disponibilizados</h2>{media.filter((file) => file.kind === "DOCUMENT").length ? <div className="attachment-list">{media.filter((file) => file.kind === "DOCUMENT").map((file) => <a href={file.url} target="_blank" rel="noreferrer" key={file.id}><strong>{file.file_name}</strong><span>{file.mime_type} · {Math.ceil(file.size_bytes / 1024)} KB</span></a>)}</div> : <p className="muted">Não foram disponibilizados documentos para esta oferta.</p>}</section>
