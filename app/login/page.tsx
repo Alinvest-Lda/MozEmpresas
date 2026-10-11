@@ -10,7 +10,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
         <aside className="auth-brand-panel">
           <Link href="/" className="auth-logo">Moz<span>Empresas</span></Link>
           <h1>Uma conta para participar em todo o ecossistema.</h1>
-          <p>Entre para gerir a sua presença empresarial, comprar, vender, participar em concursos, responder a oportunidades e criar novas relações de negócio.</p>
+          <p>Entre para gerir a sua presença empresarial, comprar, vender, responder a oportunidades e criar novas relações de negócio.</p>
           <div className="auth-points">
             <span>01 <b>Gira a sua empresa</b></span>
             <span>02 <b>Compre e venda no ecossistema</b></span>
