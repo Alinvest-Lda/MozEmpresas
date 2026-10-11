@@ -25,9 +25,14 @@ grant execute on function public.current_partner_opportunity_role() to authentic
 drop policy if exists "owners manage opportunities" on public.opportunities;
 drop policy if exists "published opportunities readable" on public.opportunities;
 
-create policy "opportunities readable by public or partner account"
+create policy "published opportunities readable by public"
 on public.opportunities for select
-to anon, authenticated
+to anon
+using (status = 'PUBLISHED');
+
+create policy "opportunities readable by authenticated users and partner account"
+on public.opportunities for select
+to authenticated
 using (
   status = 'PUBLISHED'
   or owner_id = (select auth.uid())
