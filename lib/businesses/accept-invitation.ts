@@ -25,6 +25,14 @@ export async function acceptBusinessInvitation(formData: FormData) {
 
   if (!invitation) redirect("/dashboard/acessos?invite=invalid");
 
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("id")
+    .eq("id", invitation.business_id)
+    .is("archived_at", null)
+    .maybeSingle();
+  if (!business) redirect("/dashboard/acessos?invite=invalid");
+
   const { error: memberError } = await supabase.from("business_members").insert({
     business_id: invitation.business_id, user_id: user.id, role: invitation.role,
   });
