@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PublicAd } from "@/components/public-ad";
+import { SaveSearchButton } from "@/components/save-to-mozempresas";
 
 const types = [["PRODUCT", "Produtos"], ["SERVICE", "Serviços"]] as const;
 
@@ -177,6 +178,7 @@ export default async function Marketplace({
               <button className="btn primary">Aplicar filtros</button>
               {hasFilters && <Link href="/marketplace" className="btn">Limpar</Link>}
             </form>
+            {hasFilters && <SaveSearchButton entityType="marketplace" title={["Marketplace", q, location, category, type && type !== "all" ? type : ""].filter(Boolean).join(" · ")} filters={{q, location, category, type: type || "all"}} nextPath={pageHref(1)} />}
             {error && <div className="notice">Algumas funções comerciais estão temporariamente indisponíveis.</div>}
             {listings.length > 0 ? (
               <div className="directory-marketplace-grid marketplace-listing-cards">
