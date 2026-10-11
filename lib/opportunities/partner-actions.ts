@@ -14,8 +14,8 @@ export async function changeOpportunityStatus(formData: FormData) {
   const { data: claims } = await supabase.auth.getClaims();
   const userId = claims?.claims?.sub;
   if (!userId) redirect("/login");
-  const { error } = await supabase.from("opportunities").update({status,updated_at:new Date().toISOString()}).eq("id",id).eq("owner_id",userId);
-  if (error) redirect("/parceiro/oportunidades?error=status");
+  const { data: updatedOpportunity, error } = await supabase.from("opportunities").update({status,updated_at:new Date().toISOString()}).eq("id",id).eq("owner_id",userId).select("id").maybeSingle();
+  if (error || !updatedOpportunity) redirect("/parceiro/oportunidades?error=status");
   revalidatePath("/parceiro/oportunidades");
   revalidatePath("/oportunidades");
   redirect("/parceiro/oportunidades?updated=1");
@@ -42,8 +42,8 @@ export async function changeOpportunityApplicationStatus(formData: FormData) {
     .eq("owner_id", userId)
     .maybeSingle();
   if (ownershipError || !ownedOpportunity) redirect("/parceiro/oportunidades/candidaturas?error=status");
-  const { error } = await supabase.from("opportunity_applications").update({status,updated_at:new Date().toISOString()}).eq("id",id).eq("opportunity_id",application.opportunity_id);
-  if (error) redirect("/parceiro/oportunidades/candidaturas?error=status");
+  const { data: updatedApplication, error } = await supabase.from("opportunity_applications").update({status,updated_at:new Date().toISOString()}).eq("id",id).eq("opportunity_id",application.opportunity_id).select("id").maybeSingle();
+  if (error || !updatedApplication) redirect("/parceiro/oportunidades/candidaturas?error=status");
   revalidatePath("/parceiro/oportunidades/candidaturas");
   redirect("/parceiro/oportunidades/candidaturas?updated=1");
 }
