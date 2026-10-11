@@ -107,9 +107,13 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
     profile = refreshedProfile;
   }
 
+  if (profile.account_status === "INACTIVE") {
+    redirect("/dashboard/conta?view=estado&inactive=1");
+  }
+
   if (profile.account_status && profile.account_status !== "ACTIVE") {
     await supabase.auth.signOut();
-    return { error: "Esta conta não está activa. Contacte o suporte para recuperar o acesso." };
+    return { error: "Esta conta tem um pedido de eliminação ou um estado que exige revisão do suporte." };
   }
 
   let partner = false;
