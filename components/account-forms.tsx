@@ -32,7 +32,13 @@ export function PasswordForm() {
 
 export function AccountStatusForm({ status }: { status: "ACTIVE" | "INACTIVE" | "DELETED" }) {
   const [state, action, pending] = useActionState<AccountState, FormData>(updateAccountStatus, {});
-  return <form action={action} className="account-status-buttons">
+  function confirmStatusChange(event: React.FormEvent<HTMLFormElement>) {
+    const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    if (submitter?.value === "DELETED" && !window.confirm("Solicitar a eliminação vai bloquear a utilização normal da sua conta. Este pedido não apaga imediatamente os dados nem a conta de autenticação. Pretende continuar?")) {
+      event.preventDefault();
+    }
+  }
+  return <form action={action} onSubmit={confirmStatusChange} className="account-status-buttons">
     <button className="btn" type="submit" name="status" value="ACTIVE" disabled={pending || status === "DELETED"}>Activar</button>
     <button className="btn" type="submit" name="status" value="INACTIVE" disabled={pending || status === "DELETED"}>Desactivar</button>
     <button className="btn danger" type="submit" name="status" value="DELETED" disabled={pending || status === "DELETED"}>Solicitar eliminação</button>
