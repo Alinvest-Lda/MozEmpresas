@@ -30,16 +30,40 @@ export async function applyToOpportunity(formData: FormData) {
   const { data: opportunity } = await supabase.from("opportunities").select("id,status,opens_at,closes_at,owner_id").eq("id", opportunityId).maybeSingle();
   if (!opportunity || opportunity.owner_id === userId || opportunity.status !== "PUBLISHED" || (opportunity.opens_at && new Date(opportunity.opens_at).getTime() > Date.now()) || (opportunity.closes_at && new Date(opportunity.closes_at).getTime() < Date.now())) redirect("/oportunidades?application=closed");
 
-  const { error } = await supabase.from("opportunity_applications").upsert({
-    opportunity_id: opportunityId, applicant_user_id: userId, applicant_business_id: businessId,
-    cover_note: coverNote, status: "SUBMITTED", submitted_at: new Date().toISOString()
-  }, { onConflict: "opportunity_id,applicant_user_id" });
-  if (error) redirect("/oportunidades?application=error");
+  const { data: existingApplication, error: existingError } = await supabase
+    .from("opportunity_applications")
+    .select("id")
+    .eq("opportunity_id", opportunityId)
+    .eq("applicant_user_id", userId)
+    .maybeSingle();
+  if (existingError) redirect("/oportunidades?application=error");
 
-  await supabase.from("notifications").insert({
-    user_id: opportunity.owner_id, type: "OPPORTUNITY_APPLICATION", title: "Nova resposta a uma oportunidade",
-    body: "Uma candidatura foi submetida no MozEmpresas.", resource_type: "opportunity", resource_id: opportunityId
-  });
+  let submissionError;
+  if (existingApplication) {
+    const { error } = await supabase
+      .from("opportunity_applications")
+      .update({ applicant_business_id: businessId, cover_note: coverNote })
+      .eq("id", existingApplication.id)
+      .eq("applicant_user_id", userId);
+    submissionError = error;
+  } else {
+    const { error } = await supabase.from("opportunity_applications").insert({
+      opportunity_id: opportunityId,
+      applicant_user_id: userId,
+      applicant_business_id: businessId,
+      cover_note: coverNote,
+      status: "SUBMITTED",
+      submitted_at: new Date().toISOString()
+    });
+    submissionError = error;
+    if (!error) {
+      await supabase.from("notifications").insert({
+        user_id: opportunity.owner_id, type: "OPPORTUNITY_APPLICATION", title: "Nova resposta a uma oportunidade",
+        body: "Uma candidatura foi submetida no MozEmpresas.", resource_type: "opportunity", resource_id: opportunityId
+      });
+    }
+  }
+  if (submissionError) redirect("/oportunidades?application=error");
   redirect("/oportunidades/" + (formData.get("slug") || "") + "?application=submitted");
 }
 
