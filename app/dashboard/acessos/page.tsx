@@ -12,8 +12,8 @@ const roleLabels: Record<string, string> = {
 const permissionGroups = [
   ["Proprietário", "Controlo total da empresa, equipa, publicações e actividade comercial."],
   ["Administrador", "Gestão da empresa, equipa, ofertas, compras, vendas e participações."],
-  ["Operador", "Operação diária de ofertas, compras, vendas, oportunidades e concursos."],
-  ["Membro", "Participação em compras, oportunidades e concursos."],
+  ["Operador", "Execução das operações diárias permitidas na empresa."],
+  ["Membro", "Participação nas actividades autorizadas pela empresa."],
   ["Consulta", "Acesso de leitura à informação autorizada."],
 ];
 
@@ -27,12 +27,14 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: ownedBusinesses } = await supabase.from("businesses").select("id,name,slug").eq("owner_id", user.id).order("name");
+  const { data: ownedBusinesses } = await supabase.from("businesses").select("id,name,slug").eq("owner_id", user.id).is("archived_at", null).order("name");
   const { data: memberships } = await supabase.from("business_members").select("business_id,role").eq("user_id", user.id).neq("role","viewer");
   const memberIds = [...new Set((memberships ?? []).map(item => item.business_id))];
-  const { data: memberBusinesses } = memberIds.length ? await supabase.from("businesses").select("id,name,slug").in("id",memberIds) : { data: [] };
+  const manageableMembershipIds = [...new Set((memberships ?? []).filter(item => item.role === "admin").map(item => item.business_id))];
+  const { data: memberBusinesses } = memberIds.length ? await supabase.from("businesses").select("id,name,slug").in("id",memberIds).is("archived_at", null) : { data: [] };
   const businesses = [...(ownedBusinesses ?? []), ...(memberBusinesses ?? []).filter(item => !(ownedBusinesses ?? []).some(o => o.id === item.id))];
-  const businessIds = (ownedBusinesses ?? []).map((item) => item.id);
+  const businessIds = [...new Set([...(ownedBusinesses ?? []).map((item) => item.id), ...manageableMembershipIds])];
+  const manageableBusinesses = businesses.filter((business) => businessIds.includes(business.id));
   const { data: members } = businessIds.length
     ? await supabase.from("business_members").select("business_id,user_id,role,created_at").in("business_id", businessIds).order("created_at")
     : { data: [] };
@@ -59,8 +61,8 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
           <div className="dashboard-section-head">
             <div><span className="dashboard-kicker">Adicionar pessoa</span><h2>Convidar para a equipa</h2><p>O convite fica associado à empresa e à função escolhida.</p></div>
           </div>
-          {ownedBusinesses?.length ? (
-            <InviteForm businesses={ownedBusinesses} />
+          {manageableBusinesses.length ? (
+            <InviteForm businesses={manageableBusinesses} />
                     ) : (
             <div className="empty"><p>Crie primeiro uma empresa para poder convidar a equipa.</p><Link href="/dashboard/empresas" className="btn primary">Criar empresa</Link></div>
           )}
@@ -80,7 +82,7 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
                     <td><div className="access-person"><span className="access-avatar">{displayName.slice(0,1).toUpperCase()}</span><div><strong>{displayName}</strong><small>Conta associada</small></div></div></td>
                     <td>{business?.name || "—"}</td>
                     <td><span className={"access-role " + (member.role === "owner" ? "owner" : "")}>{roleLabels[member.role] || member.role}</span></td>
-                    <td>{member.role === "owner" ? <span className="muted">Controlo principal</span> : <form action={updateBusinessMemberRole} className="access-role-form">
+                    <td>{member.role === "owner" ? <span className="muted">Controlo principal</span> : !businessIds.includes(member.business_id) ? <span className="muted">Sem permissões de gestão</span> : <form action={updateBusinessMemberRole} className="access-role-form">
                       <input type="hidden" name="businessId" value={member.business_id} /><input type="hidden" name="userId" value={member.user_id} />
                       <select name="role" defaultValue={member.role}><option value="admin">Administrador</option><option value="operator">Operador</option><option value="member">Membro</option><option value="viewer">Consulta</option></select><button className="btn" type="submit">Guardar</button><button className="btn danger" type="submit" formAction={removeBusinessMember} name="revoke" value="1">Revogar</button>
                     </form>}</td>
