@@ -23,25 +23,26 @@ function slug(v:string){return v.toLowerCase().normalize("NFD").replace(/[\u0300
 export default function NewPartnerOpportunity(){
   const r=useRouter();
   const [pending,setPending]=useState(false),[error,setError]=useState(""),[type,setType]=useState("FUNDING"),[record,setRecord]=useState<any>(null),[editId,setEditId]=useState<string|null>(null),[loading,setLoading]=useState(true);
-  useEffect(()=>{let active=true;const id=new URLSearchParams(window.location.search).get("editar");setEditId(id);if(!id){setLoading(false);return()=>{active=false}};(async()=>{const s=createClient();const{data:{user}}=await s.auth.getUser();if(!user){if(active){setError("Sessão expirada.");setLoading(false)}return}const{data,error}=await s.from("opportunities").select("id,title,type,status,description,organization,location,opens_at,closes_at,requirements").eq("id",id).eq("owner_id",user.id).maybeSingle();if(active){if(error||!data)setError("Não foi possível carregar a publicação.");else{setRecord(data);setType(data.type||"FUNDING")}setLoading(false)}})();return()=>{active=false}},[]);
+  useEffect(()=>{let active=true;const id=new URLSearchParams(window.location.search).get("editar");setEditId(id);if(!id){setLoading(false);return()=>{active=false}};(async()=>{const s=createClient();const{data:{user}}=await s.auth.getUser();if(!user){if(active){setError("Sessão expirada.");setLoading(false)}return}const{data,error}=await s.from("opportunities").select("id,title,type,status,description,organization,location,opens_at,closes_at,requirements").eq("id",id).eq("owner_id",user.id).maybeSingle();if(active){if(error||!data)setError("Não foi possível carregar a publicação.");else{setRecord(data);setType(types.some(([value])=>value===data.type)?data.type:"")}setLoading(false)}})();return()=>{active=false}},[]);
 
   async function submit(ev:FormEvent<HTMLFormElement>){
     ev.preventDefault();setPending(true);setError("");
     const f=new FormData(ev.currentTarget),submitter=(ev.nativeEvent as SubmitEvent).submitter as HTMLButtonElement|null;
     const status=submitter?.value==="DRAFT"?"DRAFT":"PUBLISHED";
-    const title=String(f.get("title")||"").trim(),description=String(f.get("description")||"").trim(),organization=String(f.get("organization")||"").trim();
+    const title=String(f.get("title")||"").trim(),description=String(f.get("description")||"").trim(),organization=String(f.get("organization")||"").trim(),selectedType=String(f.get("type")||"");
     const opens=String(f.get("opens_at")||""),closes=String(f.get("closes_at")||"");
     if(!title||!description||!organization){setError("Preencha o título, a descrição e a entidade publicadora.");setPending(false);return}
+    if(!types.some(([value])=>value===selectedType)){setError("Seleccione uma categoria válida para esta oportunidade.");setPending(false);return}
     if(opens&&closes&&new Date(closes).getTime()<new Date(opens).getTime()){setError("A data de encerramento não pode anteceder a abertura.");setPending(false);return}
     const s=createClient(),{data:{user}}=await s.auth.getUser();
     if(!user){setError("Sessão expirada.");setPending(false);return}
-    const payload={title,type:String(f.get("type")||"FUNDING"),status,description,organization,location:String(f.get("location")||"").trim()||null,opens_at:opens?new Date(opens).toISOString():null,closes_at:closes?new Date(closes).toISOString():null,requirements:String(f.get("requirements")||"").trim()||null};
+    const payload={title,type:selectedType,status,description,organization,location:String(f.get("location")||"").trim()||null,opens_at:opens?new Date(opens).toISOString():null,closes_at:closes?new Date(closes).toISOString():null,requirements:String(f.get("requirements")||"").trim()||null};
     if(editId){const{data:updated,error}=await s.from("opportunities").update(payload).eq("id",editId).eq("owner_id",user.id).select("id").maybeSingle();if(error||!updated){setError(error?"Não foi possível guardar: "+error.message:"Não foi possível localizar a publicação para edição.");setPending(false);return}}
     else{const{data:account,error:accountError}=await s.rpc("current_partner_account_id");if(accountError||!account){setError("Conta de parceiro não identificada.");setPending(false);return}const slug=title.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-"+crypto.randomUUID().slice(0,8);const{error}=await s.from("opportunities").insert({...payload,owner_id:user.id,partner_account_id:account,slug});if(error){setError("Não foi possível publicar: "+error.message);setPending(false);return}}
     r.push("/parceiro/oportunidades?saved=1");r.refresh();setPending(false);
   }
 
-  const selected=types.find(([v])=>v===type)||types[0];
+  const selected=types.find(([v])=>v===type)||null;
 
   return <PartnerPage eyebrow={editId?"Actividade · Editar publicação":"Actividade · Nova publicação"} title={editId?"Editar publicação":"Nova publicação"} description="Prepare uma oportunidade clara, valide as datas e escolha entre guardar um rascunho ou publicar." action={{href:"/parceiro/oportunidades",label:"Voltar às publicações"}}>
     {loading?<div className="partner-form-card">A carregar publicação…</div>:<div className="opportunity-publisher-layout">
@@ -60,7 +61,7 @@ export default function NewPartnerOpportunity(){
           </div>
         </fieldset>
 
-        <div className="publisher-guidance"><strong>{selected[1]}</strong><span>{selected[2]}</span></div>
+        <div className="publisher-guidance">{selected?<><strong>{selected[1]}</strong><span>{selected[2]}</span></>:<><strong>Categoria anterior</strong><span>Seleccione uma das categorias actuais para reclassificar esta publicação antes de a guardar.</span></>}</div>
 
         <div className="publisher-step"><span>02</span><div><strong>Apresente a oportunidade</strong><small>Explique o que é, quem pode participar e o que a entidade espera receber.</small></div></div>
         <label>Entidade publicadora<input name="organization" required defaultValue={record?.organization||""} placeholder="Ex.: BCI"/></label>
