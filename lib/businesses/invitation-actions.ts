@@ -23,8 +23,16 @@ export async function inviteBusinessMember(_state: { error?: string; success?: b
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada." };
 
-  const { data: business } = await supabase.from("businesses").select("id,name").eq("id", parsed.data.businessId).eq("owner_id", user.id).maybeSingle();
-  if (!business) return { error: "Apenas o proprietário pode convidar membros nesta fase." };
+  const { data: ownedBusiness } = await supabase.from("businesses").select("id,name").eq("id", parsed.data.businessId).eq("owner_id", user.id).is("archived_at", null).maybeSingle();
+  let business = ownedBusiness;
+  if (!business) {
+    const { data: adminMembership } = await supabase.from("business_members").select("business_id,role").eq("business_id", parsed.data.businessId).eq("user_id", user.id).eq("role", "admin").maybeSingle();
+    if (adminMembership) {
+      const { data: managedBusiness } = await supabase.from("businesses").select("id,name").eq("id", parsed.data.businessId).is("archived_at", null).maybeSingle();
+      business = managedBusiness;
+    }
+  }
+  if (!business) return { error: "Não tem permissões para convidar membros nesta empresa." };
 
   const token = randomBytes(32).toString("hex");
   const tokenHash = createHash("sha256").update(token).digest("hex");
