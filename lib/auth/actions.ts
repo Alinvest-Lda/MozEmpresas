@@ -173,7 +173,11 @@ export async function signUp(_state: AuthState, formData: FormData): Promise<Aut
   }
 
   if (data.session && data.user) {
-    await createProfile(data.user.id, parsed.data.fullName);
+    const created = await createProfile(data.user.id, parsed.data.fullName);
+    if (!created) {
+      await supabase.auth.signOut();
+      return { error: "A conta foi criada, mas não foi possível preparar o perfil. Contacte o suporte antes de tentar entrar." };
+    }
     redirect("/dashboard");
   }
 
