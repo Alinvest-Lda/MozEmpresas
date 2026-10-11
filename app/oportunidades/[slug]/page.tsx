@@ -2,10 +2,24 @@ import Link from"next/link";
 import{notFound}from"next/navigation";
 import{createClient}from"@/lib/supabase/server";
 import{applyToOpportunity}from"@/lib/opportunities/actions";
+import type{Metadata}from"next";
+import{FavoriteButton}from"@/components/save-to-mozempresas";
 
 const labels:Record<string,string>={FUNDING:"Financiamento",PROGRAM:"Desenvolvimento empresarial",YOUTH_INITIATIVE:"Iniciativa juvenil",TRAINING:"Formação e capacitação",ENTREPRENEUR_SUPPORT:"Apoio a empreendedores",EXPORT_INTERNATIONAL:"Exportação e internacionalização",AWARD_SCHOLARSHIP:"Bolsa / Prémio",PARTNERSHIP:"Parceria / Cooperação",EXPRESSION_OF_INTEREST:"Manifestação de interesse",INNOVATION_TECH:"Inovação e tecnologia",CALL:"Chamada · publicação anterior",EVENT:"Evento · publicação anterior",BUSINESS:"Negócio · publicação anterior",OTHER:"Publicação anterior"};
 const icons:Record<string,string>={FUNDING:"◈",PROGRAM:"↗",YOUTH_INITIATIVE:"✦",TRAINING:"◇",ENTREPRENEUR_SUPPORT:"⌘",EXPORT_INTERNATIONAL:"↗",AWARD_SCHOLARSHIP:"✦",PARTNERSHIP:"⌘",EXPRESSION_OF_INTEREST:"◎",INNOVATION_TECH:"✧",CALL:"↗",EVENT:"◷",BUSINESS:"◆",OTHER:"•"};
 function dateLabel(value:string|null){return value?new Date(value).toLocaleDateString("pt-MZ",{day:"2-digit",month:"long",year:"numeric"}):"Não indicado"}
+
+export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{
+ const{slug}=await params;
+ try{
+  const s=await createClient();
+  const{data}=await s.from("opportunities").select("title,description,organization,location,closes_at").eq("slug",slug).eq("status","PUBLISHED").maybeSingle();
+  if(!data)return{title:"Oportunidade | MozEmpresas"};
+  const description=[data.description,data.organization,data.location].filter(Boolean).join(" · ").slice(0,160);
+  const url=`${process.env.NEXT_PUBLIC_SITE_URL||"https://moz-empresas.vercel.app"}/oportunidades/${slug}`;
+  return{title:`${data.title} | MozEmpresas`,description,alternates:{canonical:url},openGraph:{title:`${data.title} | MozEmpresas`,description,url,type:"article"}};
+ }catch{return{title:"Oportunidade | MozEmpresas"}}
+}
 
 export default async function OpportunityDetail({params,searchParams}:{params:Promise<{slug:string}>;searchParams?:Promise<{application?:string}>}){
  const{slug}=await params;const query=searchParams?await searchParams:{};const supabase=await createClient();const{data:claimsData}=await supabase.auth.getClaims();const userId=claimsData?.claims?.sub||null;
@@ -40,6 +54,7 @@ export default async function OpportunityDetail({params,searchParams}:{params:Pr
    <section className="opportunity-detail-section"><span className="eyebrow">Documentos</span><h2>Materiais da entidade.</h2>{attachments?.length?<div className="publication-attachments">{attachments.map((file:any)=>{const url=supabase.storage.from("publication-media").getPublicUrl(file.storage_path).data.publicUrl;return <a className="publication-attachment" href={url} target="_blank" rel="noreferrer" key={file.id}>{file.kind==="IMAGE"?"Imagem":"Documento"} · {file.file_name}</a>})}</div>:<p className="opportunity-detail-longtext">Não foram anexados documentos a esta oportunidade.</p>}</section>
   </article><aside className="opportunity-detail-sidebar">
    <div className="opportunity-side-card"><span className="eyebrow">Participação</span><h3>{application?"A sua participação está registada.":notOpenYet?"As candidaturas ainda não abriram.":isClosed?"O prazo desta oportunidade terminou.":"O próximo passo é participar."}</h3><p>{application?"Pode acompanhar o estado da sua participação na sua área.":notOpenYet?"Consulte as condições e regresse quando o período de participação começar.":isClosed?"Esta oportunidade já não aceita novas participações.":"Leia as condições, prepare os documentos necessários e envie a sua participação através do processo indicado pela entidade."}</p>{application&&<div className="notice">Estado: {application.status}</div>}{application&&<Link href="/dashboard" className="btn primary full">Abrir a minha área</Link>}</div>
+   <div className="opportunity-side-card"><span className="eyebrow">Guardar e partilhar</span><h3>Regresse a esta oportunidade quando precisar.</h3><FavoriteButton entityType="opportunity" entityId={item.id} title={item.title} href={"/oportunidades/"+item.slug}/><a className="btn full" style={{marginTop:9}} href={"https://wa.me/?text="+encodeURIComponent(item.title+" — "+(process.env.NEXT_PUBLIC_SITE_URL||"https://moz-empresas.vercel.app")+"/oportunidades/"+item.slug)} target="_blank" rel="noreferrer">Partilhar no WhatsApp</a></div>
    <div className="opportunity-side-card muted-side"><span className="eyebrow">Nota de confiança</span><p>O MozEmpresas apresenta informação publicada pela entidade responsável. Confirme sempre os termos e canais oficiais antes de enviar documentos, dinheiro ou informação sensível.</p></div>
   </aside></div>
  </div></main><style>{`
