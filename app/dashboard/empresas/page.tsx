@@ -50,7 +50,7 @@ export default async function MyBusinesses({searchParams}:{searchParams?:Promise
           <div className="business-presence-copy">
             <span className="dashboard-kicker">Presença empresarial</span>
             <h1>A sua empresa no ecossistema</h1>
-            <p>Crie uma presença clara e confiável para ser encontrada no directório, apresentar o que faz e abrir portas para produtos, serviços, concursos, oportunidades e parcerias.</p>
+            <p>Crie uma presença clara e confiável para ser encontrada no directório, apresentar o que faz e abrir portas para produtos, serviços, oportunidades e parcerias.</p>
           </div>
           <aside className="business-presence-status">
             <span>Estado da sua presença</span>
@@ -66,7 +66,7 @@ export default async function MyBusinesses({searchParams}:{searchParams?:Promise
         <section className="business-presence-guide" aria-label="Como funciona a presença empresarial">
           <div className="business-guide-item"><b>01 · IDENTIDADE</b><strong>Dados essenciais</strong><span>Nome, actividade, localização e contactos que tornam a empresa reconhecível.</span></div>
           <div className="business-guide-item"><b>02 · PRESENÇA</b><strong>Perfil público</strong><span>Uma página empresarial que pode ser descoberta e consultada no directório.</span></div>
-          <div className="business-guide-item"><b>03 · ACTIVIDADE</b><strong>Ecossistema</strong><span>Produtos, serviços, oportunidades, concursos e relações comerciais podem ser ligados ao perfil.</span></div>
+          <div className="business-guide-item"><b>03 · ACTIVIDADE</b><strong>Ecossistema</strong><span>Produtos, serviços, oportunidades e relações comerciais podem ser ligados ao perfil.</span></div>
         </section>
         {view === "lista" ? (
           allBusinesses.length ? (
