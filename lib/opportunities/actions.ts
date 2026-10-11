@@ -56,12 +56,7 @@ export async function applyToOpportunity(formData: FormData) {
       submitted_at: new Date().toISOString()
     });
     submissionError = error;
-    if (!error) {
-      await supabase.from("notifications").insert({
-        user_id: opportunity.owner_id, type: "OPPORTUNITY_APPLICATION", title: "Nova resposta a uma oportunidade",
-        body: "Uma candidatura foi submetida no MozEmpresas.", resource_type: "opportunity", resource_id: opportunityId
-      });
-    }
+    // The database trigger notifies the opportunity owner after a successful insert.
   }
   if (submissionError) redirect("/oportunidades?application=error");
   await supabase.from("platform_conversion_events").insert({
