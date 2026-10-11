@@ -13,6 +13,16 @@ export async function acceptBusinessInvitation(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.email) redirect("/login");
 
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("account_status")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (profileError || !profile || profile.account_status !== "ACTIVE") {
+    await supabase.auth.signOut();
+    redirect("/login?inactive=1");
+  }
+
   const tokenHash = createHash("sha256").update(token).digest("hex");
   const { data: invitation } = await supabase
     .from("business_invitations")
