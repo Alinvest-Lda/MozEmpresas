@@ -14,7 +14,7 @@ export async function getCurrentAccountContext() {
     return { supabase, user: null, accountType: null as AccountType | null, accountStatus: null as string | null };
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("user_type,account_status")
     .eq("id", user.id)
@@ -32,7 +32,7 @@ export async function getCurrentAccountContext() {
     supabase,
     user,
     accountType: isPartner ? "parceiro" as const : normalizeAccountType(profile?.user_type),
-    accountStatus: profile?.account_status ?? "ACTIVE",
+    accountStatus: profileError || !profile ? "UNKNOWN" : profile.account_status ?? "ACTIVE",
   };
 }
 
