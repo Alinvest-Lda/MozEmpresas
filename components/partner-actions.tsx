@@ -23,7 +23,7 @@
   <div className="partner-form-head"><div><span className="dashboard-kicker">Pedido de campanha</span><h3>{productName}</h3><p>{productPrice!=null?Number(productPrice).toLocaleString("pt-MZ")+" MZN":"Preço sob proposta"}{durationDays?" · até "+durationDays+" dias":""}</p></div></div>
   <label>Nome da campanha<input name="title" required maxLength={160} placeholder="Ex.: Campanha institucional Q4"/></label>
   <label>Objectivo<textarea name="objective" required rows={3} placeholder="O que pretende alcançar?"/></label>
-  <div className="partner-form-two"><label>Início<input name="starts_at" type="datetime-local" required min={new Date(Date.now()+60000).toISOString().slice(0,16)}/></label><label>Fim<input name="ends_at" type="datetime-local" required/></label></div>
+  <div className="partner-form-two"><label>Início<input name="starts_at" type="datetime-local" required min={new Date(Date.now()+60000-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16)}/></label><label>Fim<input name="ends_at" type="datetime-local" required/></label></div>
   <label>Alvos opcionais<small>Uma linha por alvo: PROVINCE:Maputo ou CATEGORY:Tecnologia</small><textarea name="targets" rows={3}/></label>
   <F error={e} ok={ok}/><button className="btn primary" disabled={p}>{p?"A enviar…":"Enviar pedido para análise →"}</button>
  </form>;
