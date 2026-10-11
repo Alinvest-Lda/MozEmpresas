@@ -9,7 +9,7 @@ export default function Registo() {
         <aside className="auth-brand-panel">
           <Link href="/" className="auth-logo">Moz<span>Empresas</span></Link>
           <h1>Entre no ecossistema empresarial de Moçambique.</h1>
-          <p>Crie a sua conta e, a partir do painel, apresente a sua empresa, encontre fornecedores, publique ofertas, participe em concursos e responda a oportunidades.</p>
+          <p>Crie a sua conta e, a partir do painel, apresente a sua empresa, encontre fornecedores, publique ofertas e responda a oportunidades.</p>
           <div className="auth-points">
             <span>01 <b>Crie a sua conta</b></span>
             <span>02 <b>Associe a sua empresa</b></span>
