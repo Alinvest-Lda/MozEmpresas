@@ -64,25 +64,50 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
     return { error: "Não foi possível iniciar sessão. Verifique o email e a password." };
   }
 
-  let profile: { full_name: string; user_type: string; account_status?: string } | null = null;
+  let profile: { full_name: string; user_type: string; account_status?: string | null } | null = null;
 
-  if (data.user) {
-    const { data: existingProfile } = await supabase
+  if (!data.user) {
+    await supabase.auth.signOut();
+    return { error: "Não foi possível validar a conta. Tente novamente." };
+  }
+
+  const { data: existingProfile, error: profileReadError } = await supabase
+    .from("profiles")
+    .select("full_name,user_type,account_status")
+    .eq("id", data.user.id)
+    .maybeSingle();
+
+  if (profileReadError) {
+    await supabase.auth.signOut();
+    return { error: "Não foi possível verificar o estado da conta. Tente novamente mais tarde." };
+  }
+
+  profile = existingProfile;
+  if (!profile) {
+    const created = await createProfile(
+      data.user.id,
+      data.user.user_metadata?.full_name ||
+        data.user.email?.split("@")[0] ||
+        "Utilizador"
+    );
+    if (!created) {
+      await supabase.auth.signOut();
+      return { error: "Não foi possível preparar o perfil da conta. Contacte o suporte." };
+    }
+
+    const { data: refreshedProfile, error: refreshError } = await supabase
       .from("profiles")
       .select("full_name,user_type,account_status")
       .eq("id", data.user.id)
       .maybeSingle();
-    profile = existingProfile;
-    await createProfile(
-      data.user.id,
-      profile?.full_name ||
-        data.user.user_metadata?.full_name ||
-        data.user.email?.split("@")[0] ||
-        "Utilizador"
-    );
+    if (refreshError || !refreshedProfile) {
+      await supabase.auth.signOut();
+      return { error: "Não foi possível verificar o estado da conta. Contacte o suporte." };
+    }
+    profile = refreshedProfile;
   }
 
-  if (profile?.account_status && profile.account_status !== "ACTIVE") {
+  if (profile.account_status && profile.account_status !== "ACTIVE") {
     await supabase.auth.signOut();
     return { error: "Esta conta não está activa. Contacte o suporte para recuperar o acesso." };
   }
