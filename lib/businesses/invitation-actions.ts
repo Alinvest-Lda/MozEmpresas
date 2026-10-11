@@ -1,6 +1,7 @@
 "use server";
 
 import { createHash, randomBytes } from "crypto";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -22,6 +23,15 @@ export async function inviteBusinessMember(_state: { error?: string; success?: b
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Sessão expirada." };
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("account_status")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (profileError || !profile || profile.account_status !== "ACTIVE") {
+    return { error: "A sua conta não está activa ou não foi possível validar o seu estado." };
+  }
 
   const { data: ownedBusiness } = await supabase.from("businesses").select("id,name").eq("id", parsed.data.businessId).eq("owner_id", user.id).is("archived_at", null).maybeSingle();
   let business = ownedBusiness;
@@ -52,5 +62,8 @@ export async function inviteBusinessMember(_state: { error?: string; success?: b
   });
 
   revalidatePath("/dashboard/acessos");
-  return { success: true, invitePath: "/convites/" + token };
+  const requestHeaders = await headers();
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || requestHeaders.get("origin");
+  const invitePath = "/convites/" + token;
+  return { success: true, invitePath: baseUrl ? new URL(invitePath, baseUrl).toString() : invitePath };
 }
