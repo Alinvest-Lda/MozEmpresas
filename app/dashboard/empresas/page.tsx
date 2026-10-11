@@ -13,15 +13,35 @@ export default async function MyBusinesses({searchParams}:{searchParams?:Promise
   if (!user) redirect("/login");
 
   const [{ data: businesses }, { data: memberships }, { data: categories }] = await Promise.all([
-    supabase.from("businesses").select("id,name,slug,description,location,is_public,logo_url,cover_url,created_at").eq("owner_id", user.id).order("created_at",{ascending:false}),
+    supabase.from("businesses").select("id,name,slug,description,location,is_public,logo_url,cover_url,phone,email,website,category_id,created_at").eq("owner_id", user.id).order("created_at",{ascending:false}),
     supabase.from("business_members").select("business_id,role").eq("user_id", user.id).in("role", ["owner","admin","operator"]),
     supabase.from("business_categories").select("id,name,slug").order("name").limit(100),
   ]);
 
   const memberIds = [...new Set((memberships ?? []).map((m) => m.business_id))];
-  const { data: memberBusinesses } = memberIds.length ? await supabase.from("businesses").select("id,name,slug,description,location,is_public,logo_url,cover_url,created_at").in("id", memberIds).order("created_at",{ascending:false}) : { data: [] as typeof businesses };
+  const { data: memberBusinesses } = memberIds.length ? await supabase.from("businesses").select("id,name,slug,description,location,is_public,logo_url,cover_url,phone,email,website,category_id,created_at").in("id", memberIds).order("created_at",{ascending:false}) : { data: [] as typeof businesses };
   const allBusinesses = [...(businesses ?? []), ...(memberBusinesses ?? []).filter((b) => !(businesses ?? []).some((o) => o.id === b.id))];
   const publicCount = allBusinesses.filter((business) => business.is_public).length;
+  const readiness = new Map(allBusinesses.map((business) => {
+    const checks = [
+      Boolean(business.name?.trim()),
+      Boolean(business.description?.trim()),
+      Boolean(business.location?.trim()),
+      Boolean(business.category_id),
+      Boolean(business.phone || business.email || business.website),
+      Boolean(business.logo_url),
+      Boolean(business.cover_url),
+    ];
+    const missing = [
+      !business.description?.trim() ? "descrição" : "",
+      !business.location?.trim() ? "localização" : "",
+      !business.category_id ? "actividade" : "",
+      !business.phone && !business.email && !business.website ? "contacto" : "",
+      !business.logo_url ? "logótipo" : "",
+      !business.cover_url ? "imagem de capa" : "",
+    ].filter(Boolean);
+    return [business.id, { percent: Math.round(checks.filter(Boolean).length / checks.length * 100), missing }];
+  }));
 
   return (
     <main className="dashboard-main">
@@ -60,9 +80,10 @@ export default async function MyBusinesses({searchParams}:{searchParams?:Promise
                     </div>
                     <span className="tag">{business.is_public ? "Publicado" : "Privado"}</span>
                   </div>
-                  <div className="business-readiness"><span>Presença</span><strong>{[business.name,business.description,business.location,business.logo_url,business.cover_url].filter(Boolean).length >= 4 ? "Completa" : "A completar"}</strong></div>
+                  <div className="business-readiness"><span>Completude do perfil</span><strong>{readiness.get(business.id)?.percent ?? 0}% · {(readiness.get(business.id)?.percent ?? 0) >= 85 ? "Bem apresentado" : "A completar"}</strong><div role="progressbar" aria-valuenow={readiness.get(business.id)?.percent ?? 0} aria-valuemin={0} aria-valuemax={100} style={{height:6,background:"#e5ebe8",borderRadius:999,overflow:"hidden",marginTop:8}}><span style={{display:"block",height:"100%",width:(readiness.get(business.id)?.percent ?? 0)+"%",background:"#0b6b63",borderRadius:999}}/></div></div>
                   <p>{business.description || "Complete a apresentação da empresa para melhorar a informação disponível no directório."}</p>
-                  <div className="business-management-next"><span>Próximo passo</span><strong>Adicionar portfólio e ofertas</strong></div>
+                  {(readiness.get(business.id)?.missing?.length ?? 0) > 0 && <p className="muted" style={{fontSize:12}}>Por completar: {readiness.get(business.id)?.missing.join(", ")}.</p>}
+                  <div className="business-management-next"><span>Próximo passo</span><strong>{(readiness.get(business.id)?.percent ?? 0) < 85 ? "Completar dados do perfil" : "Adicionar portfólio e ofertas"}</strong></div>
                   <div className="business-card-actions">
                     <Link href={"/empresas/" + business.slug} className="text-link">Ver perfil público →</Link>
                     <Link href={"/dashboard/empresas/" + business.id} className="text-link">Gerir perfil →</Link>
