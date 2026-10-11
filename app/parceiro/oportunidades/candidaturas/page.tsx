@@ -12,7 +12,8 @@ export default async function PartnerOpportunityApplicationsPage({searchParams}:
  const supabase=await createClient();
  const {data:{user}}=await supabase.auth.getUser();
  if(!user)return null;
- const {data:opportunities,error:opError}=await supabase.from("opportunities").select("id,title,slug,status").eq("owner_id",user.id).order("created_at",{ascending:false});
+ const {data:accountId,error:accountError}=await supabase.rpc("current_partner_account_id");
+ const {data:opportunities,error:opError}=accountId?await supabase.from("opportunities").select("id,title,slug,status").eq("partner_account_id",accountId).order("created_at",{ascending:false}):{data:[],error:accountError||new Error("Conta de parceiro não identificada")};
  const ids=(opportunities||[]).map((x:any)=>x.id);
  const {data:applications,error:appError}=ids.length?await supabase.from("opportunity_applications").select("id,opportunity_id,applicant_user_id,applicant_business_id,cover_note,status,submitted_at,created_at").in("opportunity_id",ids).order("created_at",{ascending:false}):{data:[],error:null};
  const businessIds=[...new Set((applications||[]).map((x:any)=>x.applicant_business_id).filter(Boolean))];
