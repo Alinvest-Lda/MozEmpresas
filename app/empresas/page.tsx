@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PublicAd } from "@/components/public-ad";
+import { SaveSearchButton } from "@/components/save-to-mozempresas";
 
 type BusinessRecord = {
   id: string;
@@ -222,6 +223,7 @@ export default async function Empresas({
                 Limpar pesquisa
               </Link>
             )}
+            {hasFilters && <SaveSearchButton entityType="businesses" title={["Empresas", q, location].filter(Boolean).join(" · ")} filters={{q, location, category}} nextPath={"/empresas" + (new URLSearchParams({q,location,category}).toString() ? "?" + new URLSearchParams({q,location,category}).toString() : "")} />}
           </div>
         </section>
 
