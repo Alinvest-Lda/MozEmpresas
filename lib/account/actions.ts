@@ -42,7 +42,8 @@ export async function updateAccountStatus(_state: AccountState, formData: FormDa
   if (!user) redirect("/login");
   const { data: currentProfile, error: profileReadError } = await supabase.from("profiles").select("account_status").eq("id", user.id).maybeSingle();
   if (profileReadError) return { error: "Não foi possível verificar o estado actual da conta." };
-  if (currentProfile?.account_status === "DELETED" && status !== "DELETED") {
+  if (!currentProfile) return { error: "Não foi possível localizar o perfil da conta. Contacte o suporte." };
+  if (currentProfile.account_status === "DELETED" && status !== "DELETED") {
     return { error: "A conta já tem um pedido de eliminação. Contacte o suporte para rever este estado." };
   }
   const { error } = await supabase.from("profiles").update({ account_status: status }).eq("id", user.id);
