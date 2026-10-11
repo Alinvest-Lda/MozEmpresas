@@ -1,6 +1,28 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { Metadata } from "next";
+import { FavoriteButton } from "@/components/save-to-mozempresas";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.from("businesses").select("name,description,location,logo_url").eq("slug",slug).eq("is_public",true).is("archived_at",null).maybeSingle();
+    if (!data) return { title: "Empresa | MozEmpresas" };
+    const description = [data.description, data.location].filter(Boolean).join(" · ").slice(0, 160) || "Conheça esta empresa, os seus produtos, serviços e contactos no MozEmpresas.";
+    const url = `${process.env.NEXT_PUBLIC_SITE_URL || "https://moz-empresas.vercel.app"}/empresas/${slug}`;
+    return {
+      title: `${data.name} | MozEmpresas`,
+      description,
+      alternates: { canonical: url },
+      openGraph: { title: `${data.name} | MozEmpresas`, description, url, type: "website", images: data.logo_url ? [data.logo_url] : [] },
+      twitter: { card: data.logo_url ? "summary_large_image" : "summary", title: `${data.name} | MozEmpresas`, description, images: data.logo_url ? [data.logo_url] : [] },
+    };
+  } catch {
+    return { title: "Empresa | MozEmpresas" };
+  }
+}
 
 export default async function BusinessDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -77,6 +99,7 @@ export default async function BusinessDetail({ params }: { params: Promise<{ slu
                 <span className="eyebrow">{category || "Empresa"}</span>
                 <h1>{business.name}</h1>
                 <p className="muted">{business.location || "Moçambique"}</p>
+                <FavoriteButton entityType="business" entityId={business.id} title={business.name} href={"/empresas/" + business.slug} />
               </div>
             </div>
 
@@ -117,6 +140,7 @@ export default async function BusinessDetail({ params }: { params: Promise<{ slu
             {business.phone && <a className="btn primary full" href={"tel:" + business.phone}>Ligar</a>}
             {business.email && <a className="btn full" style={{ marginTop: 9 }} href={"mailto:" + business.email}>Enviar email</a>}
             {business.website && <a className="btn full" style={{ marginTop: 9 }} href={business.website} target="_blank" rel="noreferrer">Website</a>}
+            <a className="btn full" style={{ marginTop: 9 }} href={"https://wa.me/?text=" + encodeURIComponent(business.name + " — " + (process.env.NEXT_PUBLIC_SITE_URL || "https://moz-empresas.vercel.app") + "/empresas/" + business.slug)} target="_blank" rel="noreferrer">Partilhar no WhatsApp</a>
             {!business.phone && !business.email && !business.website && <p className="muted">A empresa ainda não disponibilizou canais directos de contacto.</p>}
             <div className="business-signup-prompt"><strong>Entre no MozEmpresas</strong><span>Guarde empresas, acompanhe ofertas e avance para compras ou contactos quando estiver pronto.</span><Link href="/registo" className="text-link">Criar conta →</Link></div>
           </aside>
