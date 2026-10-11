@@ -107,6 +107,15 @@ export async function createOrder(formData: FormData) {
     p_notes: notes,
   });
   if (orderError || !orderId) redirect("/dashboard/marketplace?request=error");
+  await supabase.from("platform_conversion_events").insert({
+    user_id: userId,
+    visitor_key: "user:" + userId,
+    event_type: "CONTACT_CLICK",
+    entity_type: "listing",
+    entity_id: listing.id,
+    source: "commerce_order",
+    metadata: { action: "contact_request", order_id: String(orderId) },
+  });
   redirect("/dashboard/marketplace?request=" + orderId);
 }
 
