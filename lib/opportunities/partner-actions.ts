@@ -14,7 +14,9 @@ export async function changeOpportunityStatus(formData: FormData) {
   const { data: claims } = await supabase.auth.getClaims();
   const userId = claims?.claims?.sub;
   if (!userId) redirect("/login");
-  const { data: updatedOpportunity, error } = await supabase.from("opportunities").update({status,updated_at:new Date().toISOString()}).eq("id",id).eq("owner_id",userId).select("id").maybeSingle();
+  const { data: accountId } = await supabase.rpc("current_partner_account_id");
+  if (!accountId) redirect("/parceiro/oportunidades?error=status");
+  const { data: updatedOpportunity, error } = await supabase.from("opportunities").update({status,updated_at:new Date().toISOString()}).eq("id",id).eq("partner_account_id",accountId).select("id").maybeSingle();
   if (error || !updatedOpportunity) redirect("/parceiro/oportunidades?error=status");
   revalidatePath("/parceiro/oportunidades");
   revalidatePath("/oportunidades");
@@ -29,6 +31,8 @@ export async function changeOpportunityApplicationStatus(formData: FormData) {
   const { data: claims } = await supabase.auth.getClaims();
   const userId = claims?.claims?.sub;
   if (!userId) redirect("/login");
+  const { data: accountId } = await supabase.rpc("current_partner_account_id");
+  if (!accountId) redirect("/parceiro/oportunidades/candidaturas?error=status");
   const { data: application, error: applicationError } = await supabase
     .from("opportunity_applications")
     .select("id,opportunity_id")
@@ -39,7 +43,7 @@ export async function changeOpportunityApplicationStatus(formData: FormData) {
     .from("opportunities")
     .select("id")
     .eq("id", application.opportunity_id)
-    .eq("owner_id", userId)
+    .eq("partner_account_id", accountId)
     .maybeSingle();
   if (ownershipError || !ownedOpportunity) redirect("/parceiro/oportunidades/candidaturas?error=status");
   const { data: updatedApplication, error } = await supabase.from("opportunity_applications").update({status,updated_at:new Date().toISOString()}).eq("id",id).eq("opportunity_id",application.opportunity_id).select("id").maybeSingle();
