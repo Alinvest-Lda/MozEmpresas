@@ -2,7 +2,7 @@ import Link from "next/link";
 import { signIn } from "@/lib/auth/actions";
 import { AuthForm } from "@/components/auth-form";
 
-export default async function Login({ searchParams }: { searchParams: Promise<{ registered?: string; confirmed?: string; next?: string }> }) {
+export default async function Login({ searchParams }: { searchParams: Promise<{ registered?: string; confirmed?: string; passwordReset?: string; next?: string }> }) {
   const params = await searchParams;
   return (
     <main className="auth-page">
@@ -23,6 +23,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
           <p className="muted">Use apenas as suas credenciais. As capacidades disponíveis serão determinadas pela sua empresa e pelas permissões atribuídas.</p>
           {params.registered === "1" && <p className="notice" style={{ marginTop: 18 }}>Conta criada. Se a confirmação de email estiver activa, confirme o email antes de entrar.</p>}
           {params.confirmed === "1" && <p className="notice" style={{ marginTop: 18 }}>Email confirmado. Já pode entrar na sua conta.</p>}
+          {params.passwordReset === "1" && <p className="notice" style={{ marginTop: 18 }}>Password actualizada. Entre com a nova password.</p>}
           {params.confirmed === "error" && <p className="notice" style={{ marginTop: 18 }}>Não foi possível confirmar o email. Solicite um novo link de confirmação ou contacte o suporte.</p>}
           <AuthForm action={signIn} mode="login" next={params.next} />
           <p className="auth-switch muted">Ainda não tem conta? <Link href="/registo">Criar conta</Link></p>
