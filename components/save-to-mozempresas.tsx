@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { recordConversionEvent } from "@/components/platform-tracking";
 
 type SearchEntity = "businesses" | "marketplace" | "opportunities";
 type FavoriteEntity = "business" | "listing" | "opportunity";
@@ -45,6 +46,7 @@ export function SaveSearchButton({
       } else if (error) {
         setMessage("Não foi possível guardar a pesquisa. Tente novamente.");
       } else {
+        await recordConversionEvent({eventType:"SEARCH_SAVED",entityType,source:"saved_search_button",metadata:{title}});
         setMessage("Pesquisa guardada. Receberá avisos na sua área quando houver novas correspondências.");
       }
     } catch {
@@ -96,6 +98,7 @@ export function FavoriteButton({
       } else if (error) {
         setMessage("Não foi possível guardar este item.");
       } else {
+        await recordConversionEvent({eventType:"FAVORITE_SAVED",entityType,entityId,source:"favorite_button"});
         setSaved(true);
         setMessage("Adicionado aos favoritos.");
       }
