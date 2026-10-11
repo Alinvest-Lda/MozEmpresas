@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import type { AuthState } from "@/lib/auth/actions";
 
 type Props = {
@@ -42,9 +43,14 @@ export function AuthForm({ action, mode, next }: Props) {
       </div>
 
       {!signup && (
-        <p className="muted" style={{ margin: "4px 0 16px", fontSize: 13 }}>
-          Depois de entrar, pode usar as capacidades disponíveis para a sua conta e empresa.
-        </p>
+        <>
+          <p className="muted" style={{ margin: "4px 0 10px", fontSize: 13 }}>
+            Depois de entrar, pode usar as capacidades disponíveis para a sua conta e empresa.
+          </p>
+          <p className="muted" style={{ margin: "0 0 16px", fontSize: 13 }}>
+            <Link href="/recuperar-password">Esqueceu-se da password?</Link>
+          </p>
+        </>
       )}
 
       {signup && (
