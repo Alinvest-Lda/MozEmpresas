@@ -74,7 +74,7 @@ export default async function MyOpportunities({
               <p>Inclua datas realistas e os requisitos essenciais para que os interessados possam avaliar a oportunidade.</p>
             </div>
           </div>
-          <form action={createOpportunity} className="business-form-grid">
+          <form action={createOpportunity} className="business-form-grid opportunity-form">
             <label>Título<input name="title" required minLength={4} maxLength={180} placeholder="Ex.: Fornecimento de material de escritório" /></label>
             <label>Tipo<select name="type" required defaultValue="CALL">{Object.entries(typeLabels).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
             <label>Organização / entidade<input name="organization" maxLength={180} defaultValue={profile?.full_name || ""} placeholder="Nome da entidade responsável" /></label>
@@ -94,16 +94,16 @@ export default async function MyOpportunities({
             <Link href="/oportunidades" className="text-link">Ver oportunidades públicas →</Link>
           </div>
           {opportunities?.length ? (
-            <div className="dashboard-list">
+            <div className="opportunity-list">
               {opportunities.map((item) => (
-                <article className="dashboard-list-item" key={item.id}>
+                <article className="opportunity-list-item" key={item.id}>
                   <div>
                     <span className="dashboard-kicker">{typeLabels[item.type] || item.type} · {statusLabels[item.status] || item.status}</span>
                     <strong>{item.title}</strong>
                     <small>{item.organization || "Entidade não indicada"}{item.location ? " · " + item.location : ""}</small>
                     <small>{item.closes_at ? "Encerra em " + new Date(item.closes_at).toLocaleString("pt-MZ") : "Sem data de encerramento"}</small>
                   </div>
-                  <div className="dashboard-list-actions">
+                  <div className="opportunity-list-actions">
                     {item.status !== "ARCHIVED" && <Link href={"/oportunidades/" + item.slug} className="text-link">Ver publicação →</Link>}
                     {item.status === "PUBLISHED" && <form action={updateOpportunityStatus}><input type="hidden" name="opportunity_id" value={item.id} /><input type="hidden" name="status" value="CLOSED" /><button className="btn secondary" type="submit">Encerrar</button></form>}
                     {item.status === "CLOSED" && <form action={updateOpportunityStatus}><input type="hidden" name="opportunity_id" value={item.id} /><input type="hidden" name="status" value="PUBLISHED" /><button className="btn secondary" type="submit">Reabrir</button></form>}
