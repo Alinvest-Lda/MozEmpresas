@@ -8,7 +8,7 @@ type DashboardNavLink = readonly [href: string, label: string];
 type DashboardNavGroup = { label: string; links: DashboardNavLink[] };
 
 export const dashboardNavGroups: DashboardNavGroup[] = [
-  { label: "Operação", links: [["/dashboard","Visão geral"],["/pesquisa","Pesquisa transversal"],["/dashboard/marketplace","Comprar e vender"],["/dashboard/guardados","Guardados"]] },
+  { label: "Operação", links: [["/dashboard","Visão geral"],["/pesquisa","Pesquisa transversal"],["/dashboard/marketplace","Comprar e vender"],["/dashboard/oportunidades","Oportunidades"],["/dashboard/guardados","Guardados"]] },
   { label: "Presença", links: [["/dashboard/empresas","Presença da empresa"],["/empresas","Directório"],["/dashboard/publicidade","Publicidade"]] },
   { label: "Gestão", links: [["/dashboard/acessos","Acessos e equipa"],["/dashboard/servicos","Serviços MozEmpresas"],["/dashboard/monetizacao","Monetização"],["/dashboard/monetizacao/creditos","Créditos"],["/dashboard/financeiro","Gestão financeira"]] },
   { label: "Conta", links: [["/dashboard/conta","A minha conta"],["/dashboard/notificacoes","Notificações"]] },
