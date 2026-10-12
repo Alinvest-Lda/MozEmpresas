@@ -1,14 +1,17 @@
 import Link from "next/link";
 export const dynamic="force-dynamic";
 import { createClient } from "@/lib/supabase/server";
+import { getManagedBusinessIds } from "@/lib/businesses/permissions";
 import { CreditPurchaseForm } from "@/components/credit-purchase-form";
 function money(v:number|string|null|undefined){return v==null?"—":Number(v).toLocaleString("pt-MZ")+" MZN";}
 export default async function CreditosPage({searchParams}:{searchParams:Promise<{success?:string;error?:string}>}){
  const params=await searchParams; const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user)return null;
- const [{data:owned},{data:members},{data:packages}]=await Promise.all([
-  supabase.from("businesses").select("id,name").eq("owner_id",user.id).order("name"),supabase.from("business_members").select("business_id").eq("user_id",user.id).in("role",["owner","admin","operator"]),supabase.from("credit_packages").select("id,code,name,credit_volume,price_mzn,active").eq("active",true).order("credit_volume")]);
- const ids=[...new Set((members??[]).map(x=>x.business_id))]; const {data:managed}=ids.length?await supabase.from("businesses").select("id,name").in("id",ids).order("name"):{data:[] as {id:string;name:string}[]};
- const businesses=[...(owned??[]),...(managed??[]).filter(b=>!(owned??[]).some(o=>o.id===b.id))];
+ const bid=await getManagedBusinessIds(supabase,user.id);
+ const [{data:businessRows},{data:packages}]=await Promise.all([
+  bid.length?supabase.from("businesses").select("id,name").in("id",bid).order("name"):Promise.resolve({data:[] as {id:string;name:string}[]}),
+  supabase.from("credit_packages").select("id,code,name,credit_volume,price_mzn,active").eq("active",true).order("credit_volume")
+ ]);
+ const businesses=businessRows??[];
  const {data:wallets}=businesses.length?await supabase.from("business_credit_wallets").select("id,business_id,balance_credits").in("business_id",businesses.map(b=>b.id)):{data:[] as {id:string;business_id:string;balance_credits:number}[]};
  const walletMap=new Map((wallets??[]).map(w=>[w.business_id,w.balance_credits])); const walletIds=(wallets??[]).map(w=>w.id);
  const {data:transactions}=walletIds.length?await supabase.from("credit_transactions").select("id,wallet_id,type,credits,amount_mzn,description,created_at").in("wallet_id",walletIds).order("created_at",{ascending:false}).limit(20):{data:[] as {id:string;wallet_id:string;type:string;credits:number;amount_mzn:number|null;description:string|null;created_at:string}[]};
