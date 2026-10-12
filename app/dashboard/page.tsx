@@ -32,7 +32,7 @@ export default async function Dashboard({ searchParams }: { searchParams?: Promi
     name=profile?.full_name||user.email?.split("@")[0]||"Utilizador";
     const ownedBusinesses=(owned??[]) as Business[];
     const memberIds=[...new Set((memberships??[]).map(x=>x.business_id))];
-    const {data:memberBusinesses}=memberIds.length?await supabase.from("businesses").select("id,name,slug,location,is_public").in("id",memberIds):{data:[]};
+    const {data:memberBusinesses}=memberIds.length?await supabase.from("businesses").select("id,name,slug,location,is_public").in("id",memberIds).is("archived_at",null):{data:[]};
     businesses=[...ownedBusinesses,...((memberBusinesses??[]) as Business[]).filter(b=>!ownedBusinesses.some(o=>o.id===b.id))];
 
     const ids=await getManagedBusinessIds(supabase,user.id);
