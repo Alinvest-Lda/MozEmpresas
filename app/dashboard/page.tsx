@@ -120,13 +120,6 @@ export default async function Dashboard({ searchParams }: { searchParams?: Promi
         </div>
       </header>
 
-      <section className="workspace-decision-cards" aria-label="Decisões prioritárias">
-        <Link href="/dashboard/empresas" className="workspace-decision-card workspace-decision-card-dark"><span className="workspace-card-label">01 · PRESENÇA</span><strong>{presencePercent}%</strong><h2>{publicBusinesses.length ? "A sua presença está activa" : "A sua presença ainda não está activa"}</h2><p>{publicBusinesses.length} de {businesses.length} empresa(s) com presença pública no directório.</p><b>Gerir presença <span>→</span></b></Link>
-        <Link href="/dashboard/marketplace?tab=comprar" className="workspace-decision-card"><span className="workspace-card-label">02 · MERCADO</span><strong>{opportunities.length}</strong><h2>{opportunities.length ? "Ofertas recentes detectadas" : "Mercado à sua espera"}</h2><p>{opportunities.length ? "Veja produtos e serviços públicos recentes que podem ser relevantes para a sua actividade." : "Explore produtos, serviços e relações comerciais disponíveis."}</p><b>Explorar mercado <span>→</span></b></Link>
-        <Link href="/dashboard/empresas" className="workspace-decision-card"><span className="workspace-card-label">03 · ATENÇÃO</span><strong>{attentionCount}</strong><h2>{attentionCount ? "Há itens que merecem revisão" : "Sem itens críticos"}</h2><p>{attentionCount ? "Priorize perfis por publicar, notificações e actividade que exige seguimento." : "Não foram detectados sinais que exijam intervenção imediata."}</p><b>{attentionCount ? "Rever agora" : "Ver estado"} <span>→</span></b></Link>
-        <Link href={nextAction.href} className="workspace-decision-card"><span className="workspace-card-label">04 · PRÓXIMO PASSO</span><strong>01</strong><h2>{nextAction.title}</h2><p>{nextAction.text}</p><b>Executar próxima acção <span>→</span></b></Link>
-      </section>
-
       <section className="workspace-metrics" aria-label="Indicadores principais">
         <article className="workspace-metric workspace-metric-featured"><span>Presença</span><strong>{presencePercent}%</strong><small>{publicBusinesses.length}/{businesses.length} empresa(s) publicada(s)</small></article>
         <article className="workspace-metric"><span>Ofertas</span><strong>{publishedListings.length}</strong><small>Produtos e serviços disponíveis</small></article>
@@ -144,15 +137,6 @@ export default async function Dashboard({ searchParams }: { searchParams?: Promi
           </div>
         </section>
 
-        <section className="workspace-panel workspace-next-panel">
-          <div className="workspace-panel-head"><div><span className="dashboard-kicker">Leitura executiva</span><h2>Estado actual</h2></div></div>
-          <div className="workspace-readout-list">
-            <div><span>Presença empresarial</span><strong>{presencePercent>=100?"Consolidada":presencePercent>0?"Parcial":"Inexistente"}</strong><small>{publicBusinesses.length} perfil(is) público(s)</small></div>
-            <div><span>Capacidade comercial</span><strong>{publishedListings.length?"Apresentada":"Por apresentar"}</strong><small>{publishedListings.length} oferta(s) publicável(is)</small></div>
-            <div><span>Mercado</span><strong>{activeOrders?"Em movimento":"Disponível"}</strong><small>{activeOrders?activeOrders+" negociação(ões) em aberto":"Sem negociação em aberto detectada"}</small></div>
-            <div><span>Comunicações</span><strong>{unread?"Por consultar":"Em dia"}</strong><small>{unread} notificação(ões) não lida(s)</small></div>
-          </div>
-        </section>
       </div>
 
       <div className="workspace-secondary-grid">
