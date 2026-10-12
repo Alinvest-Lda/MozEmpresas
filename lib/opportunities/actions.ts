@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { savePublicationAttachments } from "@/lib/publications/attachments";
+import { canManageBusiness } from "@/lib/businesses/permissions";
 
 const text = (v: FormDataEntryValue | null) => typeof v === "string" ? v.trim() : "";
 
@@ -21,11 +22,11 @@ export async function applyToOpportunity(formData: FormData) {
   const coverNote = text(formData.get("cover_note")) || null;
   if (!opportunityId) redirect("/oportunidades");
 
-  if (businessId) {
-    const { data: membership } = await supabase.from("business_members").select("id").eq("business_id", businessId).eq("user_id", userId).maybeSingle();
-    const { data: owned } = await supabase.from("businesses").select("id").eq("id", businessId).eq("owner_id", userId).maybeSingle();
-    if (!membership && !owned) redirect("/oportunidades?application=forbidden");
+  if (businessId && !(await canManageBusiness(supabase, userId, businessId))) {
+    // Association alone is insufficient: viewer/member roles cannot act for a business.
+    redirect("/oportunidades?application=forbidden");
   }
+  if (coverNote && coverNote.length > 5000) redirect("/oportunidades?application=error");
 
   const { data: opportunity } = await supabase.from("opportunities").select("id,status,opens_at,closes_at,owner_id").eq("id", opportunityId).maybeSingle();
   if (!opportunity || opportunity.owner_id === userId || opportunity.status !== "PUBLISHED" || (opportunity.opens_at && new Date(opportunity.opens_at).getTime() > Date.now()) || (opportunity.closes_at && new Date(opportunity.closes_at).getTime() < Date.now())) redirect("/oportunidades?application=closed");
