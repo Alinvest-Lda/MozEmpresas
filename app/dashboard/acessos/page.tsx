@@ -89,7 +89,12 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
                   </tr>;
                 })}</tbody>
               </table>{!members?.length && <div className="empty"><p>Ainda não existem outros membros com acesso atribuído.</p></div>}</div>
-            ) : null}
+            ) : (
+              <div className="empty">
+                <p>Ainda não tem uma empresa disponível para gerir acessos.</p>
+                <Link href="/dashboard/empresas?view=criar" className="btn primary">Criar empresa →</Link>
+              </div>
+            )}
           </section>
 
           <aside className="dashboard-section">
