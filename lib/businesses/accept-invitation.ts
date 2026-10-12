@@ -18,7 +18,7 @@ export async function acceptBusinessInvitation(formData: FormData) {
     .select("account_status")
     .eq("id", user.id)
     .maybeSingle();
-  if (profileError || !profile || profile.account_status !== "ACTIVE") {
+  if (profileError || !profile || (profile.account_status && profile.account_status !== "ACTIVE")) {
     await supabase.auth.signOut();
     redirect("/login?inactive=1");
   }
