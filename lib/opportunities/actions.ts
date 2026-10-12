@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { savePublicationAttachments } from "@/lib/publications/attachments";
 import { canManageBusiness } from "@/lib/businesses/permissions";
@@ -116,3 +117,38 @@ export async function createOpportunity(formData: FormData) {
   }
   redirect("/dashboard/oportunidades?publish=success");
 }
+
+export async function updateOpportunityStatus(formData: FormData) {
+  const { supabase, userId } = await user();
+  const opportunityId = text(formData.get("opportunity_id"));
+  const status = text(formData.get("status")).toUpperCase();
+  if (!opportunityId || !["PUBLISHED", "CLOSED", "ARCHIVED"].includes(status)) {
+    redirect("/dashboard/oportunidades?status=error");
+  }
+
+  const { data: opportunity, error: lookupError } = await supabase
+    .from("opportunities")
+    .select("id,status")
+    .eq("id", opportunityId)
+    .eq("owner_id", userId)
+    .maybeSingle();
+  if (lookupError || !opportunity) redirect("/dashboard/oportunidades?status=forbidden");
+  if (opportunity.status === "ARCHIVED" && status !== "ARCHIVED") {
+    redirect("/dashboard/oportunidades?status=invalid-transition");
+  }
+  if (opportunity.status === status) redirect("/dashboard/oportunidades?status=unchanged");
+
+  const { data: updated, error } = await supabase
+    .from("opportunities")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", opportunityId)
+    .eq("owner_id", userId)
+    .select("id")
+    .maybeSingle();
+  if (error || !updated) redirect("/dashboard/oportunidades?status=error");
+
+  revalidatePath("/dashboard/oportunidades");
+  revalidatePath("/oportunidades");
+  redirect("/dashboard/oportunidades?status=updated");
+}
+
