@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export const dashboardNavGroups = [
+export const dashboardNavGroups: readonly { label: string; links: readonly (readonly [string, string])[] }[] = [
   { label: "Operação", links: [["/dashboard","Visão geral"],["/pesquisa","Pesquisa transversal"],["/dashboard/marketplace","Comprar e vender"],["/dashboard/guardados","Guardados"]] },
   { label: "Presença", links: [["/dashboard/empresas","Presença da empresa"],["/empresas","Directório"],["/dashboard/publicidade","Publicidade"]] },
   { label: "Gestão", links: [["/dashboard/acessos","Acessos e equipa"],["/dashboard/servicos","Serviços MozEmpresas"],["/dashboard/monetizacao","Monetização"],["/dashboard/monetizacao/creditos","Créditos"],["/dashboard/financeiro","Gestão financeira"]] },
