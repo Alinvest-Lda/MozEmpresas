@@ -33,10 +33,11 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
     "self-change-protected": { kind: "warning", message: "Não pode alterar a sua própria função nem revogar o seu próprio acesso. Peça a outro administrador para o fazer." },
     "invalid-request": { kind: "error", message: "Os dados enviados são inválidos. Actualize a página e tente novamente." },
   };
-  const inviteFeedback: Record<string, { kind: "success" | "error"; message: string }> = {
+  const inviteFeedback: Record<string, { kind: "success" | "warning" | "error"; message: string }> = {
     accepted: { kind: "success", message: "Convite aceite. A empresa já está associada à sua conta." },
+    "accepted-audit-warning": { kind: "warning", message: "Convite aceite, mas não foi possível registar o evento na auditoria." },
     invalid: { kind: "error", message: "Este convite é inválido, expirou ou não corresponde ao email da conta autenticada." },
-    error: { kind: "error", message: "Não foi possível concluir a aceitação do convite. Tente novamente." },
+    error: { kind: "error", message: "Não foi possível concluir a aceitação do convite. Verifique o acesso antes de tentar novamente." },
   };
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
@@ -77,7 +78,7 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
 
         <nav className="commerce-nav" aria-label="Gestão de acessos"><Link href="/dashboard/acessos" className={view==="membros"?"active":""}>Membros</Link><Link href="/dashboard/acessos?view=convites" className={view==="convites"?"active":""}>Convites</Link><Link href="/dashboard/acessos?view=auditoria" className={view==="auditoria"?"active":""}>Auditoria</Link></nav>
         {params?.status && feedback[params.status] && <p role="status" className={feedback[params.status].kind === "success" ? "account-success" : feedback[params.status].kind === "warning" ? "notice" : "form-error"}>{feedback[params.status].message}</p>}
-        {params?.invite && inviteFeedback[params.invite] && <p role="status" className={inviteFeedback[params.invite].kind === "success" ? "account-success" : "form-error"}>{inviteFeedback[params.invite].message}</p>}
+        {params?.invite && inviteFeedback[params.invite] && <p role="status" className={inviteFeedback[params.invite].kind === "success" ? "account-success" : inviteFeedback[params.invite].kind === "warning" ? "notice" : "form-error"}>{inviteFeedback[params.invite].message}</p>}
         {view==="membros" && <section className="dashboard-section access-invite-card">
           <div className="dashboard-section-head">
             <div><span className="dashboard-kicker">Adicionar pessoa</span><h2>Convidar para a equipa</h2><p>O convite fica associado à empresa e à função escolhida.</p></div>
