@@ -85,10 +85,20 @@ export async function createOpportunity(formData: FormData) {
   const opensAt = text(formData.get("opens_at")) || null;
   const closesAt = text(formData.get("closes_at")) || null;
 
-  if (!title || !description || !["CALL","FUNDING","PARTNERSHIP","TRAINING","EVENT"].includes(type)) {
-    redirect("/dashboard/oportunidades?publish=error");
-  }
-  if (closesAt && opensAt && new Date(closesAt).getTime() < new Date(opensAt).getTime()) {
+  const allowedTypes = ["CALL", "TENDER", "FUNDING", "PARTNERSHIP", "TRAINING", "EVENT", "BUSINESS", "OTHER"];
+  const opensTime = opensAt ? new Date(opensAt).getTime() : null;
+  const closesTime = closesAt ? new Date(closesAt).getTime() : null;
+  if (
+    title.length < 4 || title.length > 180 ||
+    description.length < 10 || description.length > 10000 ||
+    !allowedTypes.includes(type) ||
+    (organization && organization.length > 180) ||
+    (location && location.length > 180) ||
+    (requirements && requirements.length > 5000) ||
+    (opensTime !== null && !Number.isFinite(opensTime)) ||
+    (closesTime !== null && !Number.isFinite(closesTime)) ||
+    (closesTime !== null && opensTime !== null && closesTime < opensTime)
+  ) {
     redirect("/dashboard/oportunidades?publish=error");
   }
 
