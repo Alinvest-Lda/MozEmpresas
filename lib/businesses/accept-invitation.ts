@@ -50,7 +50,13 @@ export async function acceptBusinessInvitation(formData: FormData) {
     redirect("/dashboard/acessos?invite=error");
   }
 
-  await supabase.from("business_invitations").update({ accepted_at: new Date().toISOString() }).eq("id", invitation.id);
+  const { error: acceptanceError } = await supabase
+    .from("business_invitations")
+    .update({ accepted_at: new Date().toISOString() })
+    .eq("id", invitation.id)
+    .is("accepted_at", null);
+  if (acceptanceError) redirect("/dashboard/acessos?invite=error");
+
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/acessos");
   redirect("/dashboard/acessos?invite=accepted");
