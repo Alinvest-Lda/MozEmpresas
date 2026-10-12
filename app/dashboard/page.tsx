@@ -127,7 +127,7 @@ export default async function Dashboard({ searchParams }: { searchParams?: Promi
         <article className="workspace-metric"><span>Atenção</span><strong>{attentionCount}</strong><small>{attentionCount?"Itens que merecem revisão":"Sem alertas detectados"}</small></article>
       </section>
 
-      <div className="workspace-primary-grid">
+      <div className="workspace-primary-grid workspace-primary-grid-single">
         <section className="workspace-panel">
           <div className="workspace-panel-head"><div><span className="dashboard-kicker">Centro de decisão</span><h2>O que merece atenção agora</h2><p>Não são funcionalidades. São sinais para ajudar a decidir o próximo movimento.</p></div></div>
           <div className="workspace-action-list">
