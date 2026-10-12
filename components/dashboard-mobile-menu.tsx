@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/auth/actions";
-import { dashboardNavGroups } from "@/components/dashboard-sidebar-nav";
+import { dashboardNavGroups, isDashboardNavActive } from "@/components/dashboard-sidebar-nav";
 
 export function DashboardMobileMenu({ platformAccess, unreadNotifications = 0 }: { platformAccess?: string | null; unreadNotifications?: number }) {
   const pathname = usePathname() || "/dashboard";
@@ -19,8 +19,6 @@ export function DashboardMobileMenu({ platformAccess, unreadNotifications = 0 }:
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  const isActive = (href: string) =>
-    href === "/dashboard" ? pathname === href : pathname === href || pathname.startsWith(href + "/");
 
   return (
     <>
@@ -53,7 +51,7 @@ export function DashboardMobileMenu({ platformAccess, unreadNotifications = 0 }:
             <div className="dashboard-mobile-nav-group" key={group.label}>
               <span>{group.label}</span>
               {group.links.map(([href, label]) => {
-                const active = isActive(href);
+                const active = isDashboardNavActive(pathname, href);
                 return (
                   <Link
                     key={href}
