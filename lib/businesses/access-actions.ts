@@ -57,6 +57,7 @@ export async function updateBusinessMemberRole(formData: FormData) {
   if (!user || !(await manager(supabase, parsed.data.businessId, user.id))) {
     redirect("/dashboard/acessos?status=permission-denied");
   }
+  if (user.id === parsed.data.userId) redirect("/dashboard/acessos?status=self-change-protected");
 
   const { data: current, error: currentError } = await supabase
     .from("business_members")
@@ -106,6 +107,7 @@ export async function removeBusinessMember(formData: FormData) {
   if (!user || !(await manager(supabase, parsed.data.businessId, user.id))) {
     redirect("/dashboard/acessos?status=permission-denied");
   }
+  if (user.id === parsed.data.userId) redirect("/dashboard/acessos?status=self-change-protected");
 
   const { data: member, error: memberError } = await supabase
     .from("business_members")
