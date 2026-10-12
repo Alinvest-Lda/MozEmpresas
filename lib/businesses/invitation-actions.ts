@@ -29,7 +29,7 @@ export async function inviteBusinessMember(_state: { error?: string; success?: b
     .select("account_status")
     .eq("id", user.id)
     .maybeSingle();
-  if (profileError || !profile || profile.account_status !== "ACTIVE") {
+  if (profileError || !profile || (profile.account_status && profile.account_status !== "ACTIVE")) {
     return { error: "A sua conta não está activa ou não foi possível validar o seu estado." };
   }
 
@@ -44,26 +44,42 @@ export async function inviteBusinessMember(_state: { error?: string; success?: b
   }
   if (!business) return { error: "Não tem permissões para convidar membros nesta empresa." };
 
+  const normalizedEmail = parsed.data.email.toLowerCase();
+  const { data: pendingInvitations, error: pendingError } = await supabase
+    .from("business_invitations")
+    .select("id")
+    .eq("business_id", business.id)
+    .eq("email", normalizedEmail)
+    .is("accepted_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .limit(1);
+  if (pendingError) return { error: "Não foi possível verificar os convites pendentes." };
+  if (pendingInvitations?.length) return { error: "Já existe um convite pendente para este email nesta empresa." };
+
   const token = randomBytes(32).toString("hex");
   const tokenHash = createHash("sha256").update(token).digest("hex");
   const { error } = await supabase.from("business_invitations").insert({
-    business_id: business.id, email: parsed.data.email.toLowerCase(), role: parsed.data.role,
+    business_id: business.id, email: normalizedEmail, role: parsed.data.role,
     invited_by: user.id, token_hash: tokenHash,
   });
   if (error) return { error: "Não foi possível criar o convite." };
-  await supabase.from("access_audit_log").insert({
+  const { error: auditError } = await supabase.from("access_audit_log").insert({
     business_id: business.id,
     actor_user_id: user.id,
     target_user_id: null,
     action: "INVITE_SENT",
     role_from: null,
     role_to: parsed.data.role,
-    metadata: { email: parsed.data.email.toLowerCase() },
+    metadata: { email: normalizedEmail },
   });
 
   revalidatePath("/dashboard/acessos");
   const requestHeaders = await headers();
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || requestHeaders.get("origin");
   const invitePath = "/convites/" + token;
-  return { success: true, invitePath: baseUrl ? new URL(invitePath, baseUrl).toString() : invitePath };
+  return {
+    success: true,
+    invitePath: baseUrl ? new URL(invitePath, baseUrl).toString() : invitePath,
+    warning: auditError ? "O convite foi criado, mas não foi possível registar o evento na auditoria." : undefined,
+  };
 }
