@@ -1,18 +1,30 @@
 export const dynamic="force-dynamic";
 import {createClient} from "@/lib/supabase/server";
 import {createSupportTicket,addSupportMessage} from "@/lib/support/actions";
+import {getManagedBusinessIds} from "@/lib/businesses/permissions";
 
 const areas=["Técnico","Comercial","Conta e acessos","Pagamentos e créditos","Publicidade","Serviços MozEmpresas"];
 
-export default async function SupportPage(){
+export default async function SupportPage({searchParams}:{searchParams?:Promise<{status?:string}>}){
+ const params=await searchParams;
  const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user)return null;
+ const managedIds=await getManagedBusinessIds(supabase,user.id);
+ const feedback:Record<string,{kind:"success"|"error"|"warning";message:string}>={
+  created:{kind:"success",message:"Atendimento criado. Pode acompanhar as respostas nesta página."},
+  replied:{kind:"success",message:"Resposta enviada."},
+  invalid:{kind:"error",message:"Preencha a área, o assunto e a mensagem. Verifique os limites dos campos."},
+  "business-denied":{kind:"error",message:"Não tem acesso à empresa seleccionada. Actualize a página e tente novamente."},
+  error:{kind:"error",message:"Não foi possível concluir a operação. Tente novamente."},
+  "reply-error":{kind:"error",message:"Não foi possível enviar a resposta. O atendimento mantém-se no histórico."},
+ };
  const [{data:businesses},{data:tickets}]=await Promise.all([
-  supabase.from("businesses").select("id,name").eq("owner_id",user.id).order("name"),
+  managedIds.length?supabase.from("businesses").select("id,name").in("id",managedIds).is("archived_at",null).order("name"):Promise.resolve({data:[]}),
   supabase.from("support_tickets").select("id,business_id,area,subject,status,priority,created_at,updated_at").eq("user_id",user.id).order("updated_at",{ascending:false}).limit(30)
  ]);
  const ids=(tickets??[]).map(t=>t.id);
  const {data:messages}=ids.length?await supabase.from("support_messages").select("id,ticket_id,sender_role,body,created_at").in("ticket_id",ids).order("created_at",{ascending:true}):{data:[]};
  return <main className="dashboard-main"><div className="dashboard-content">
+  {params?.status&&feedback[params.status]&&<p className={feedback[params.status].kind==="success"?"account-success":feedback[params.status].kind==="warning"?"notice":"form-error"} role="status">{feedback[params.status].message}</p>}
   <header className="dashboard-topbar"><div><span className="dashboard-kicker">Central de suporte</span><h1>Fale directamente com o backoffice.</h1><p>Abra um atendimento técnico ou comercial, associe-o a uma empresa e acompanhe toda a conversa no mesmo lugar.</p></div></header>
   <nav className="commerce-nav" aria-label="Suporte"><a className="active" href="#novo">Novo atendimento</a><a href="#atendimentos">Meus atendimentos</a><a href="#como-funciona">Como funciona</a></nav>
   <section id="novo" className="dashboard-section"><div className="dashboard-section-head"><div><span className="dashboard-kicker">Novo atendimento</span><h2>Em que podemos ajudar?</h2><p>Escolha a área para que o backoffice encaminhe o atendimento correctamente.</p></div></div>
