@@ -13,13 +13,13 @@ export default async function MyBusinesses({searchParams}:{searchParams?:Promise
   if (!user) redirect("/login");
 
   const [{ data: businesses }, { data: memberships }, { data: categories }] = await Promise.all([
-    supabase.from("businesses").select("id,name,slug,description,location,is_public,logo_url,cover_url,phone,email,website,category_id,created_at").eq("owner_id", user.id).order("created_at",{ascending:false}),
+    supabase.from("businesses").select("id,name,slug,description,location,is_public,logo_url,cover_url,phone,email,website,category_id,created_at").eq("owner_id", user.id).is("archived_at",null).order("created_at",{ascending:false}),
     supabase.from("business_members").select("business_id,role").eq("user_id", user.id).in("role", ["owner","admin","operator"]),
     supabase.from("business_categories").select("id,name,slug").order("name").limit(100),
   ]);
 
   const memberIds = [...new Set((memberships ?? []).map((m) => m.business_id))];
-  const { data: memberBusinesses } = memberIds.length ? await supabase.from("businesses").select("id,name,slug,description,location,is_public,logo_url,cover_url,phone,email,website,category_id,created_at").in("id", memberIds).order("created_at",{ascending:false}) : { data: [] as typeof businesses };
+  const { data: memberBusinesses } = memberIds.length ? await supabase.from("businesses").select("id,name,slug,description,location,is_public,logo_url,cover_url,phone,email,website,category_id,created_at").in("id", memberIds).is("archived_at",null).order("created_at",{ascending:false}) : { data: [] as typeof businesses };
   const allBusinesses = [...(businesses ?? []), ...(memberBusinesses ?? []).filter((b) => !(businesses ?? []).some((o) => o.id === b.id))];
   const publicCount = allBusinesses.filter((business) => business.is_public).length;
   const readiness = new Map(allBusinesses.map((business) => {
