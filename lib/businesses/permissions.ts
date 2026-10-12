@@ -7,18 +7,25 @@ export async function getManagedBusinessIds(supabase: SupabaseClient, userId: st
     supabase.from("businesses").select("id").eq("owner_id", userId).is("archived_at", null),
     supabase.from("business_members").select("business_id").eq("user_id", userId).in("role", [...MANAGER_ROLES]),
   ]);
-  return [...new Set([...(owned ?? []).map((row) => row.id), ...(memberships ?? []).map((row) => row.business_id)])];
+  const membershipIds = [...new Set((memberships ?? []).map((row) => row.business_id))];
+  const { data: activeMembershipBusinesses } = membershipIds.length
+    ? await supabase.from("businesses").select("id").in("id", membershipIds).is("archived_at", null)
+    : { data: [] as { id: string }[] };
+  return [...new Set([
+    ...(owned ?? []).map((row) => row.id),
+    ...(activeMembershipBusinesses ?? []).map((row) => row.id),
+  ])];
 }
 
 export async function canManageBusiness(supabase: SupabaseClient, userId: string, businessId: string): Promise<boolean> {
-  const { data: owned } = await supabase
+  const { data: business } = await supabase
     .from("businesses")
-    .select("id")
+    .select("id,owner_id")
     .eq("id", businessId)
-    .eq("owner_id", userId)
     .is("archived_at", null)
     .maybeSingle();
-  if (owned) return true;
+  if (!business) return false;
+  if (business.owner_id === userId) return true;
   const { data: member } = await supabase
     .from("business_members")
     .select("role")
