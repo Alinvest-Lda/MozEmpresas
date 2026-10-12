@@ -854,3 +854,11 @@
 
 /* The decision list spans the full workspace after duplicate readouts were removed. */
 .workspace-primary-grid-single{grid-template-columns:minmax(0,1fr)}
+
+/* Responsive account-level grids */
+.credit-wallet-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:900px){.credit-wallet-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.credit-wallet-grid{grid-template-columns:minmax(0,1fr)}}
+.advertising-performance-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media(max-width:900px){.advertising-performance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.advertising-performance-grid{grid-template-columns:minmax(0,1fr)}}
