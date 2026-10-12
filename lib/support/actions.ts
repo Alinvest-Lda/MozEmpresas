@@ -15,7 +15,9 @@ const supportAreas = [
 ] as const;
 
 async function activeUser() {
-  const { supabase, user } = await activeUser();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login?next=/dashboard/suporte");
 
   const { data: profile, error } = await supabase
     .from("profiles")
