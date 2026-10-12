@@ -56,13 +56,27 @@ export default async function MarketplaceWorkspace({
   const activeTab = ["comprar", "vender", "negociacoes"].includes(params.tab || "") ? params.tab! : "comprar";
   const flash = params.publish === "success"
     ? "Oferta publicada com sucesso."
-    : params.request && params.request !== "error" && params.request !== "forbidden"
-      ? "Interesse registado. A negociação continuará directamente entre as empresas."
-      : params.status === "updated"
-        ? "Estado da negociação actualizado."
-        : params.status === "cancelled"
-          ? "Interesse encerrado."
-          : "";
+    : params.publish === "forbidden"
+      ? "Não tem permissão para publicar ofertas por esta empresa."
+      : params.publish === "error"
+        ? "Não foi possível publicar a oferta. Verifique os campos e os anexos."
+        : params.request && !["error","forbidden"].includes(params.request)
+          ? "Interesse registado. A negociação continuará directamente entre as empresas."
+          : params.request === "forbidden"
+            ? "Não tem permissão para agir em nome da empresa seleccionada."
+            : params.request === "error"
+              ? "Não foi possível registar o interesse. A oferta pode ter sido encerrada ou os dados são inválidos."
+              : params.status === "updated"
+                ? "Estado da negociação actualizado."
+                : params.status === "cancelled"
+                  ? "Interesse encerrado."
+                  : params.status === "forbidden"
+                    ? "Não tem permissão para alterar esta negociação ou oferta."
+                    : params.status === "invalid-transition"
+                      ? "Esta mudança de estado não é permitida a partir da fase actual."
+                      : params.status === "error"
+                        ? "Não foi possível concluir a operação. Verifique o estado actual e tente novamente."
+                        : "";
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
