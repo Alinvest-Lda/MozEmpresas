@@ -30,6 +30,7 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
     "permission-denied": { kind: "error", message: "Não tem permissões suficientes para executar esta acção." },
     "member-not-found": { kind: "error", message: "O membro já não existe ou não tem acesso a esta empresa." },
     "owner-protected": { kind: "warning", message: "A função do proprietário principal não pode ser alterada nem revogada por esta acção." },
+    "self-change-protected": { kind: "warning", message: "Não pode alterar a sua própria função nem revogar o seu próprio acesso. Peça a outro administrador para o fazer." },
     "invalid-request": { kind: "error", message: "Os dados enviados são inválidos. Actualize a página e tente novamente." },
   };
   const inviteFeedback: Record<string, { kind: "success" | "error"; message: string }> = {
