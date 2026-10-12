@@ -44,7 +44,7 @@ export default async function Dashboard({ searchParams }: { searchParams?: Promi
       supabase.from("commerce_orders").select("id",{count:"exact",head:true}).eq("buyer_user_id",user.id).in("status",["INTERESTED","CONTACTED","NEGOTIATING","AGREED"]),
       supabase.from("commerce_orders").select("id,status,created_at").eq("buyer_user_id",user.id).order("created_at",{ascending:false}).limit(10),
       ids.length
-        ? supabase.from("commerce_order_items").select("order_id,seller_business_id").in("seller_business_id",ids).order("created_at",{ascending:false}).limit(100)
+        ? supabase.from("commerce_order_items").select("order_id,seller_business_id").in("seller_business_id",ids).order("created_at",{ascending:false})
         : Promise.resolve({data:[]}),
     ]);
     const sellerOrderIds=[...new Set((sellerItemsResult.data??[]).map((item)=>item.order_id))];
