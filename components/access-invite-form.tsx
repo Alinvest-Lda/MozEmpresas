@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { inviteBusinessMember } from "@/lib/businesses/invitation-actions";
 
 type Business = { id: string; name: string; slug: string | null };
-type InviteState = { error?: string; success?: boolean; invitePath?: string };
+type InviteState = { error?: string; success?: boolean; invitePath?: string; warning?: string };
 
 export function InviteForm({ businesses }: { businesses: Business[] }) {
   const [state, action, pending] = useActionState<InviteState, FormData>(inviteBusinessMember, {});
@@ -16,6 +16,6 @@ export function InviteForm({ businesses }: { businesses: Business[] }) {
       <button className="btn primary" type="submit" disabled={pending}>{pending ? "A criar..." : "Criar convite"}</button>
     </form>
     {state.error && <p className="notice">{state.error}</p>}
-    {state.success && state.invitePath && <div className="account-success"><strong>Convite criado.</strong><p>Envie este link à pessoa convidada:</p><code>{state.invitePath}</code></div>}
+    {state.success && state.invitePath && <div className="account-success"><strong>Convite criado.</strong><p>Envie este link à pessoa convidada:</p><code>{state.invitePath}</code>{state.warning && <p className="notice">{state.warning}</p>}</div>}
   </>;
 }
