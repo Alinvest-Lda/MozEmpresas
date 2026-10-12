@@ -20,7 +20,7 @@ async function verifyActiveProfile(supabase: Awaited<ReturnType<typeof createCli
   if (error || !profile) {
     return { ok: false as const, message: "Não foi possível verificar o perfil e o estado da conta." };
   }
-  if (profile.account_status !== "ACTIVE") {
+  if (profile.account_status && profile.account_status !== "ACTIVE") {
     return { ok: false as const, message: "A sua conta não está activa. Reactive-a antes de alterar o perfil ou a password." };
   }
   return { ok: true as const };
