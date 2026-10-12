@@ -63,8 +63,13 @@ export async function createSupportTicket(formData: FormData) {
     body,
   });
 
+  if (messageError) {
+    // Avoid leaving an empty ticket when the initial message could not be saved.
+    await supabase.from("support_tickets").delete().eq("id", ticket.id).eq("user_id", user.id);
+    redirect("/dashboard/suporte?status=error");
+  }
+
   revalidatePath("/dashboard/suporte");
-  if (messageError) redirect("/dashboard/suporte?status=error");
   redirect("/dashboard/suporte?status=created");
 }
 
