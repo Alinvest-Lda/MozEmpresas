@@ -65,10 +65,6 @@ export default async function SavedItemsPage() {
         {(events??[]).length ? <div className="workspace-activity-list">{(events??[]).slice(0,8).map(item=><div key={item.id}><span>{item.event_type.replaceAll("_"," ")}</span><strong>{item.entity_type||"Plataforma"}</strong><small>{item.source||"Interacção"} · {dateLabel(item.created_at)}</small></div>)}</div> : <div className="workspace-empty"><strong>Ainda não há eventos associados à conta.</strong><p>Os contactos, partilhas e itens guardados começarão a aparecer à medida que utilizar a plataforma com sessão iniciada.</p></div>}
       </section>
 
-      <section className="workspace-panel">
-        <div className="workspace-panel-head"><div><span className="dashboard-kicker">Actividade recente</span><h2>Notificações recentes</h2><p>Correspondências com pesquisas guardadas e outros avisos da conta.</p></div><Link href="/dashboard/notificacoes" className="text-link">Abrir notificações →</Link></div>
-        {(notifications??[]).length ? <div className="workspace-activity-list">{(notifications??[]).map(item=><div key={item.id}><span>{item.read_at?"LIDA":"NOVA"}</span><strong>{item.title}</strong><small>{item.body||"Notificação da sua conta"} · {dateLabel(item.created_at)}</small></div>)}</div> : <div className="workspace-empty"><strong>Ainda não há notificações.</strong><p>Quando houver novas correspondências com as suas pesquisas guardadas, os avisos aparecerão aqui.</p></div>}
-      </section>
     </div>
     <style>{`
       .saved-item-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #e5ebe8}
