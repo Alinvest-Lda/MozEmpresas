@@ -10,13 +10,33 @@ const passwordSchema = z.object({ password: z.string().min(8), confirmPassword: 
 
 export type AccountState = { error?: string; success?: string };
 
+async function verifyActiveProfile(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("account_status")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error || !profile) {
+    return { ok: false as const, message: "Não foi possível verificar o perfil e o estado da conta." };
+  }
+  if (profile.account_status !== "ACTIVE") {
+    return { ok: false as const, message: "A sua conta não está activa. Reactive-a antes de alterar o perfil ou a password." };
+  }
+  return { ok: true as const };
+}
+
 export async function updateProfile(_state: AccountState, formData: FormData): Promise<AccountState> {
   const parsed = profileSchema.safeParse({ fullName: formData.get("fullName"), location: formData.get("location") || "", website: formData.get("website") || "", bio: formData.get("bio") || "" });
   if (!parsed.success) return { error: "Verifique os dados do perfil." };
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const { error } = await supabase.from("profiles").upsert({ id: user.id, full_name: parsed.data.fullName, location: parsed.data.location || null, website: parsed.data.website || null, bio: parsed.data.bio || null }, { onConflict: "id" });
+
+  const access = await verifyActiveProfile(supabase, user.id);
+  if (!access.ok) return { error: access.message };
+
+  const { error } = await supabase.from("profiles").update({ full_name: parsed.data.fullName, location: parsed.data.location || null, website: parsed.data.website || null, bio: parsed.data.bio || null }).eq("id", user.id);
   if (error) return { error: "Não foi possível actualizar o perfil." };
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/conta");
@@ -29,6 +49,10 @@ export async function updatePassword(_state: AccountState, formData: FormData): 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const access = await verifyActiveProfile(supabase, user.id);
+  if (!access.ok) return { error: access.message };
+
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) return { error: "Não foi possível alterar a password." };
   return { success: "Password actualizada com sucesso." };
