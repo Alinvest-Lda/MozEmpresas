@@ -36,18 +36,23 @@ export default async function Dashboard({ searchParams }: { searchParams?: Promi
     businesses=[...ownedBusinesses,...((memberBusinesses??[]) as Business[]).filter(b=>!ownedBusinesses.some(o=>o.id===b.id))];
 
     const ids=await getManagedBusinessIds(supabase,user.id);
-    if(ids.length){
-      const [{data:ls},{count:orders},{count:active},{data:recentOrders},{data:marketOpportunities}] = await Promise.all([
-        supabase.from("listings").select("id,title,business_id,status").in("business_id",ids).order("created_at",{ascending:false}).limit(20),
-        supabase.from("commerce_orders").select("id",{count:"exact",head:true}).eq("buyer_user_id",user.id),
-        supabase.from("commerce_orders").select("id",{count:"exact",head:true}).eq("buyer_user_id",user.id).in("status",["INTERESTED","CONTACTED","NEGOTIATING","AGREED"]),
-        supabase.from("commerce_orders").select("id,status,created_at").eq("buyer_user_id",user.id).order("created_at",{ascending:false}).limit(3),
-        supabase.from("listings").select("id,title,type,location,created_at").eq("status","PUBLISHED").not("business_id","in",`(${ids.join(",")})`).order("created_at",{ascending:false}).limit(3),
-      ]);
-      listings=ls??[]; orderCount=orders??0; activeOrders=active??0;
-      opportunities=(marketOpportunities??[]) as typeof opportunities;
-      recentCommerce=(recentOrders??[]) as typeof recentCommerce;
-    }
+    const [listingResult, ordersResult, activeOrdersResult, recentOrdersResult] = await Promise.all([
+      ids.length
+        ? supabase.from("listings").select("id,title,business_id,status").in("business_id",ids).order("created_at",{ascending:false}).limit(20)
+        : Promise.resolve({data:[]}),
+      supabase.from("commerce_orders").select("id",{count:"exact",head:true}).eq("buyer_user_id",user.id),
+      supabase.from("commerce_orders").select("id",{count:"exact",head:true}).eq("buyer_user_id",user.id).in("status",["INTERESTED","CONTACTED","NEGOTIATING","AGREED"]),
+      supabase.from("commerce_orders").select("id,status,created_at").eq("buyer_user_id",user.id).order("created_at",{ascending:false}).limit(3),
+    ]);
+    const marketQuery=supabase.from("listings").select("id,title,type,location,created_at").eq("status","PUBLISHED");
+    const marketResult=ids.length
+      ? await marketQuery.not("business_id","in",`(${ids.join(",")})`).order("created_at",{ascending:false}).limit(3)
+      : await marketQuery.order("created_at",{ascending:false}).limit(3);
+    listings=listingResult.data??[];
+    orderCount=ordersResult.count??0;
+    activeOrders=activeOrdersResult.count??0;
+    opportunities=(marketResult.data??[]) as typeof opportunities;
+    recentCommerce=(recentOrdersResult.data??[]) as typeof recentCommerce;
     unread=notificationCount??0;
   } else {
     // Public visual preview: synthetic data only.
