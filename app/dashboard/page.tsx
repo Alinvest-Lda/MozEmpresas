@@ -20,7 +20,7 @@ export default async function Dashboard({ searchParams }: { searchParams?: Promi
   let activeOrders = 0;
   let unread = 0;
   let opportunities:{id:string; title:string; type:string; location:string|null; created_at:string}[] = [];
-  let recentCommerce:{id:string; status:string; created_at:string}[] = [];
+  let recentCommerce:{id:string; status:string; created_at:string; direction:"Compra"|"Venda"}[] = [];
 
   if (user) {
     const [{data:profile},{data:owned},{data:memberships},{count:notificationCount}] = await Promise.all([
@@ -36,23 +36,34 @@ export default async function Dashboard({ searchParams }: { searchParams?: Promi
     businesses=[...ownedBusinesses,...((memberBusinesses??[]) as Business[]).filter(b=>!ownedBusinesses.some(o=>o.id===b.id))];
 
     const ids=await getManagedBusinessIds(supabase,user.id);
-    const [listingResult, ordersResult, activeOrdersResult, recentOrdersResult] = await Promise.all([
+    const [listingResult, ordersResult, activeOrdersResult, recentOrdersResult, sellerItemsResult] = await Promise.all([
       ids.length
         ? supabase.from("listings").select("id,title,business_id,status").in("business_id",ids).order("created_at",{ascending:false}).limit(20)
         : Promise.resolve({data:[]}),
       supabase.from("commerce_orders").select("id",{count:"exact",head:true}).eq("buyer_user_id",user.id),
       supabase.from("commerce_orders").select("id",{count:"exact",head:true}).eq("buyer_user_id",user.id).in("status",["INTERESTED","CONTACTED","NEGOTIATING","AGREED"]),
       supabase.from("commerce_orders").select("id,status,created_at").eq("buyer_user_id",user.id).order("created_at",{ascending:false}).limit(3),
+      ids.length
+        ? supabase.from("commerce_order_items").select("order_id,seller_business_id").in("seller_business_id",ids).order("created_at",{ascending:false}).limit(100)
+        : Promise.resolve({data:[]}),
     ]);
+    const sellerOrderIds=[...new Set((sellerItemsResult.data??[]).map((item)=>item.order_id))];
+    const {data:sellerOrderRows}=sellerOrderIds.length
+      ? await supabase.from("commerce_orders").select("id,status,created_at").in("id",sellerOrderIds).order("created_at",{ascending:false})
+      : {data:[]};
+    const activeSellerOrders=(sellerOrderRows??[]).filter((order)=>!["COMPLETED","CANCELLED"].includes(order.status));
     const marketQuery=supabase.from("listings").select("id,title,type,location,created_at").eq("status","PUBLISHED");
     const marketResult=ids.length
       ? await marketQuery.not("business_id","in",`(${ids.join(",")})`).order("created_at",{ascending:false}).limit(3)
       : await marketQuery.order("created_at",{ascending:false}).limit(3);
     listings=listingResult.data??[];
-    orderCount=ordersResult.count??0;
-    activeOrders=activeOrdersResult.count??0;
+    orderCount=(ordersResult.count??0)+new Set((sellerOrderRows??[]).map((order)=>order.id)).size;
+    activeOrders=(activeOrdersResult.count??0)+activeSellerOrders.length;
     opportunities=(marketResult.data??[]) as typeof opportunities;
-    recentCommerce=(recentOrdersResult.data??[]) as typeof recentCommerce;
+    recentCommerce=[
+      ...((recentOrdersResult.data??[]) as {id:string;status:string;created_at:string}[]).map((order)=>({...order,direction:"Compra" as const})),
+      ...((sellerOrderRows??[]) as {id:string;status:string;created_at:string}[]).map((order)=>({...order,direction:"Venda" as const})),
+    ].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,5);
     unread=notificationCount??0;
   } else {
     // Public visual preview: synthetic data only.
@@ -100,7 +111,7 @@ export default async function Dashboard({ searchParams }: { searchParams?: Promi
   const activity:Activity[]=[
     ...publishedListings.slice(0,2).map(x=>({label:"Oferta",title:x.title||"Oferta publicada",meta:"Produto ou serviço disponível no mercado",href:"/dashboard/marketplace?tab=vender",created_at:undefined})),
     ...businesses.slice(0,2).map(b=>({label:b.is_public?"Presença activa":"Revisão",title:b.name,meta:b.is_public?"Perfil visível no directório":"Perfil ainda não publicado",href:"/dashboard/empresas",created_at:b.created_at})),
-    ...recentCommerce.slice(0,2).map(o=>({label:"Mercado",title:"Actividade comercial",meta:`Estado: ${o.status.toLowerCase().replaceAll("_"," ")}`,href:"/dashboard/marketplace?tab=negociacoes",created_at:o.created_at})),
+    ...recentCommerce.slice(0,2).map(o=>({label:"Mercado",title:"Actividade comercial",meta:`${o.direction} · ${o.status.toLowerCase().replaceAll("_"," ")}`,href:"/dashboard/marketplace?tab=negociacoes",created_at:o.created_at})),
   ].sort((a,b)=>new Date(b.created_at||0).getTime()-new Date(a.created_at||0).getTime()).slice(0,5);
 
   return <main className="dashboard-main workspace-dashboard">
