@@ -13,10 +13,14 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
   { label: "Conta", links: [["/dashboard/conta","A minha conta"],["/dashboard/notificacoes","Notificações"]] },
 ];
 
+const allDashboardNavLinks: DashboardNavLink[] = [];
+for (const group of dashboardNavGroups) {
+  for (const link of group.links) allDashboardNavLinks.push(link);
+}
+
 export function isDashboardNavActive(pathname: string, href: string) {
   if (href === "/dashboard") return pathname === href;
-  const hasMoreSpecificMatch = dashboardNavGroups
-    .flatMap((group) => group.links)
+  const hasMoreSpecificMatch = allDashboardNavLinks
     .some(([candidate]) => candidate !== href
       && candidate.length > href.length
       && candidate.startsWith(href + "/")
