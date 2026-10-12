@@ -46,18 +46,30 @@ export async function acceptBusinessInvitation(formData: FormData) {
   const { error: memberError } = await supabase.from("business_members").insert({
     business_id: invitation.business_id, user_id: user.id, role: invitation.role,
   });
-  if (memberError && !memberError.message.toLowerCase().includes("duplicate")) {
+  if (memberError && memberError.code !== "23505") {
     redirect("/dashboard/acessos?invite=error");
   }
 
-  const { error: acceptanceError } = await supabase
+  const { data: acceptedInvitation, error: acceptanceError } = await supabase
     .from("business_invitations")
     .update({ accepted_at: new Date().toISOString() })
     .eq("id", invitation.id)
-    .is("accepted_at", null);
-  if (acceptanceError) redirect("/dashboard/acessos?invite=error");
+    .is("accepted_at", null)
+    .select("id")
+    .maybeSingle();
+  if (acceptanceError || !acceptedInvitation) redirect("/dashboard/acessos?invite=error");
+
+  const { error: auditError } = await supabase.from("access_audit_log").insert({
+    business_id: invitation.business_id,
+    actor_user_id: user.id,
+    target_user_id: user.id,
+    action: "INVITE_ACCEPTED",
+    role_from: null,
+    role_to: invitation.role,
+    metadata: { email: user.email.toLowerCase() },
+  });
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/acessos");
-  redirect("/dashboard/acessos?invite=accepted");
+  redirect(auditError ? "/dashboard/acessos?invite=accepted-audit-warning" : "/dashboard/acessos?invite=accepted");
 }
