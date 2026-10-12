@@ -14,9 +14,21 @@ async function auth() {
 }
 
 async function manages(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, businessId: string) {
-  const { data: owner } = await supabase.from("businesses").select("id").eq("id", businessId).eq("owner_id", userId).maybeSingle();
-  if (owner) return true;
-  const { data: member } = await supabase.from("business_members").select("role").eq("business_id", businessId).eq("user_id", userId).in("role", ["owner","admin","operator"]).maybeSingle();
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("id,owner_id")
+    .eq("id", businessId)
+    .is("archived_at", null)
+    .maybeSingle();
+  if (!business) return false;
+  if (business.owner_id === userId) return true;
+  const { data: member } = await supabase
+    .from("business_members")
+    .select("role")
+    .eq("business_id", businessId)
+    .eq("user_id", userId)
+    .in("role", ["owner","admin","operator"])
+    .maybeSingle();
   return Boolean(member);
 }
 
