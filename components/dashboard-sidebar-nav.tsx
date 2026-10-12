@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import styles from "@/components/dashboard-sidebar-nav.module.css";
 
 type DashboardNavLink = readonly [href: string, label: string];
 type DashboardNavGroup = { label: string; links: DashboardNavLink[] };
@@ -31,7 +32,7 @@ export function isDashboardNavActive(pathname: string, href: string) {
 export function DashboardSidebarNav({ platformAccess, unreadNotifications = 0 }: { platformAccess?: string | null; unreadNotifications?: number }) {
   const pathname = usePathname() || "/dashboard";
   return (
-    <nav className="dashboard-sidebar-nav" aria-label="Navegação da área empresarial">
+    <nav className={`dashboard-sidebar-nav ${styles.standardNav}`} aria-label="Navegação da área empresarial">
       {dashboardNavGroups.map((group) => (
         <div className="dashboard-nav-group" key={group.label}>
           <span>{group.label}</span>
