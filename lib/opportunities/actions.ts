@@ -8,7 +8,7 @@ import { canManageBusiness } from "@/lib/businesses/permissions";
 
 const text = (v: FormDataEntryValue | null) => typeof v === "string" ? v.trim() : "";
 
-function parseMaputoDate(value: string): Date | null {
+function parseMaputoDate(value: string | null): Date | null {
   if (!value) return null;
   const hasTimezone = /(?:Z|[+-]\\d{2}:?\\d{2})$/i.test(value);
   const parsed = new Date(hasTimezone ? value : value + "+02:00");
