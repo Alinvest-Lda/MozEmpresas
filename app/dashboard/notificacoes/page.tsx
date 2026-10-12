@@ -4,7 +4,7 @@ import {createClient} from "@/lib/supabase/server";
 import {markNotificationRead,markAllNotificationsRead} from "@/lib/notifications/actions";
 
 function dateLabel(value:string){return new Intl.DateTimeFormat("pt-MZ",{dateStyle:"medium",timeStyle:"short"}).format(new Date(value));}
-const typeLabels:Record<string,string>={SERVICE_REQUEST:"Serviços",ORDER:"Comprar e vender",PAYMENT:"Pagamentos",ADVERTISING:"Publicidade",ACCOUNT:"Conta",SYSTEM:"Sistema",SAVED_SEARCH_MATCH:"Pesquisa guardada"};
+const typeLabels:Record<string,string>={SERVICE_REQUEST:"Serviços",ORDER:"Comprar e vender",OPPORTUNITY_APPLICATION:"Oportunidades",PAYMENT:"Pagamentos",ADVERTISING:"Publicidade",ACCOUNT:"Conta",SYSTEM:"Sistema",SAVED_SEARCH_MATCH:"Pesquisa guardada"};
 
 export default async function NotificationsPage({searchParams}:{searchParams?:Promise<{filter?:string}>}){
  const params=await searchParams; const filter=params?.filter||"all"; const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user)return null;
