@@ -2,14 +2,15 @@ export const dynamic="force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getManagedBusinessIds } from "@/lib/businesses/permissions";
 const money=(v:number|string|null|undefined)=>v==null?"—":Number(v).toLocaleString("pt-MZ",{minimumFractionDigits:2,maximumFractionDigits:2})+" MZN";
 const method=(v:string|null)=>v==="MPESA"?"M-Pesa":v==="BANK_TRANSFER"?"Transferência bancária":v==="CREDITS"?"Créditos":v||"—";
 const status=(v:string)=>v==="PAID"||v==="CONFIRMED"?"Pago":v==="PENDING"||v==="PENDING_PAYMENT"?"Pendente":v==="COMPLETED"?"Concluído":v==="IN_PROGRESS"?"Em execução":v==="FAILED"?"Falhou":v==="REFUNDED"?"Reembolsado":v==="CANCELLED"?"Cancelado":v;
 export default async function FinancePage(){
  const s=await createClient(); const {data:{user}}=await s.auth.getUser(); if(!user)redirect("/login");
- const [{data:owned},{data:members}]=await Promise.all([s.from("businesses").select("id,name").eq("owner_id",user.id).order("name"),s.from("business_members").select("business_id").eq("user_id",user.id).in("role",["owner","admin","operator"])]);
- const ids=[...new Set((members??[]).map(x=>x.business_id))]; const {data:managed}=ids.length?await s.from("businesses").select("id,name").in("id",ids).order("name"):{data:[] as {id:string;name:string}[]};
- const businesses=[...(owned??[]),...(managed??[]).filter(b=>!(owned??[]).some(o=>o.id===b.id))]; const bid=businesses.map(b=>b.id);
+ const bid=await getManagedBusinessIds(s,user.id);
+ const {data:businessRows}=bid.length?await s.from("businesses").select("id,name").in("id",bid).order("name"):{data:[] as {id:string;name:string}[]};
+ const businesses=businessRows??[];
  const [{data:payments},{data:docs},{data:orders},{data:wallets},{data:creditRequests}]=await Promise.all([
   bid.length?s.from("financial_payments").select("id,business_id,amount_mzn,method,status,reference,created_at").in("business_id",bid).order("created_at",{ascending:false}).limit(30):Promise.resolve({data:[]}),
   bid.length?s.from("financial_documents").select("id,business_id,document_type,document_number,status,amount_mzn,issued_at").in("business_id",bid).order("issued_at",{ascending:false}).limit(30):Promise.resolve({data:[]}),
