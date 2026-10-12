@@ -17,8 +17,26 @@ const permissionGroups = [
   ["Consulta", "Acesso de leitura à informação autorizada."],
 ];
 
-export default async function AcessosPage({searchParams}:{searchParams?:Promise<{view?:string}>}) {
-  const params=await searchParams; const view=["membros","auditoria","convites"].includes(params?.view||"")?params?.view||"membros":"membros";
+export default async function AcessosPage({searchParams}:{searchParams?:Promise<{view?:string;status?:string;invite?:string}>}) {
+  const params = await searchParams;
+  const view = ["membros", "auditoria", "convites"].includes(params?.view || "") ? params?.view || "membros" : "membros";
+  const feedback: Record<string, { kind: "success" | "warning" | "error"; message: string }> = {
+    "role-updated": { kind: "success", message: "Função actualizada e alteração registada." },
+    "role-updated-audit-warning": { kind: "warning", message: "A função foi actualizada, mas não foi possível registar a alteração na auditoria." },
+    "access-revoked": { kind: "success", message: "Acesso revogado e evento registado." },
+    "access-revoked-audit-warning": { kind: "warning", message: "O acesso foi revogado, mas não foi possível registar o evento na auditoria." },
+    "role-error": { kind: "error", message: "Não foi possível actualizar a função. Verifique as permissões e tente novamente." },
+    "access-error": { kind: "error", message: "Não foi possível revogar o acesso. Nenhuma confirmação foi emitida." },
+    "permission-denied": { kind: "error", message: "Não tem permissões suficientes para executar esta acção." },
+    "member-not-found": { kind: "error", message: "O membro já não existe ou não tem acesso a esta empresa." },
+    "owner-protected": { kind: "warning", message: "A função do proprietário principal não pode ser alterada nem revogada por esta acção." },
+    "invalid-request": { kind: "error", message: "Os dados enviados são inválidos. Actualize a página e tente novamente." },
+  };
+  const inviteFeedback: Record<string, { kind: "success" | "error"; message: string }> = {
+    accepted: { kind: "success", message: "Convite aceite. A empresa já está associada à sua conta." },
+    invalid: { kind: "error", message: "Este convite é inválido, expirou ou não corresponde ao email da conta autenticada." },
+    error: { kind: "error", message: "Não foi possível concluir a aceitação do convite. Tente novamente." },
+  };
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   const userId = claimsData?.claims?.sub;
@@ -57,6 +75,8 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
         </div>
 
         <nav className="commerce-nav" aria-label="Gestão de acessos"><Link href="/dashboard/acessos" className={view==="membros"?"active":""}>Membros</Link><Link href="/dashboard/acessos?view=convites" className={view==="convites"?"active":""}>Convites</Link><Link href="/dashboard/acessos?view=auditoria" className={view==="auditoria"?"active":""}>Auditoria</Link></nav>
+        {params?.status && feedback[params.status] && <p role="status" className={feedback[params.status].kind === "success" ? "account-success" : feedback[params.status].kind === "warning" ? "notice" : "form-error"}>{feedback[params.status].message}</p>}
+        {params?.invite && inviteFeedback[params.invite] && <p role="status" className={inviteFeedback[params.invite].kind === "success" ? "account-success" : "form-error"}>{inviteFeedback[params.invite].message}</p>}
         {view==="membros" && <section className="dashboard-section access-invite-card">
           <div className="dashboard-section-head">
             <div><span className="dashboard-kicker">Adicionar pessoa</span><h2>Convidar para a equipa</h2><p>O convite fica associado à empresa e à função escolhida.</p></div>
@@ -104,7 +124,7 @@ export default async function AcessosPage({searchParams}:{searchParams?:Promise<
           </aside>
         </div>}
 
-        {view==="convites" && <section className="dashboard-section"><div className="dashboard-section-head"><div><span className="dashboard-kicker">Convites</span><h2>Convites de acesso</h2><p>Controle convites pendentes e o seu prazo.</p></div></div>{(invitations??[]).length?(invitations??[]).map(i=><div className="credit-request-row" key={i.id}><div><strong>{i.email} · {roleLabels[i.role]||i.role}</strong><small>{businessMap.get(i.business_id)?.name||"Empresa"} · criado {new Date(i.created_at).toLocaleString("pt-MZ")} · expira {new Date(i.expires_at).toLocaleString("pt-MZ")}</small></div><span>{i.accepted_at?"Aceite":"Pendente"}</span></div>):<p className="muted">Não existem convites registados.</p>}</section>}
+        {view==="convites" && <section className="dashboard-section"><div className="dashboard-section-head"><div><span className="dashboard-kicker">Convites</span><h2>Convites de acesso</h2><p>Controle convites pendentes e o seu prazo.</p></div></div>{(invitations??[]).length?(invitations??[]).map(i=><div className="credit-request-row" key={i.id}><div><strong>{i.email} · {roleLabels[i.role]||i.role}</strong><small>{businessMap.get(i.business_id)?.name||"Empresa"} · criado {new Date(i.created_at).toLocaleString("pt-MZ")} · expira {new Date(i.expires_at).toLocaleString("pt-MZ")}</small></div><span>{i.accepted_at ? "Aceite" : new Date(i.expires_at).getTime() <= Date.now() ? "Expirado" : "Pendente"}</span></div>):<p className="muted">Não existem convites registados.</p>}</section>}
 
         {view==="auditoria" && <section className="dashboard-section"><div className="dashboard-section-head"><div><span className="dashboard-kicker">Segurança</span><h2>Auditoria de acessos</h2><p>Registo das alterações de função e eventos de acesso associados às empresas que administra.</p></div></div>{(auditLogs??[]).length?(auditLogs??[]).map(log=><div className="credit-request-row" key={log.id}><div><strong>{log.action}</strong><small>{businessMap.get(log.business_id)?.name||"Empresa"} · actor {profileMap.get(log.actor_user_id)?.full_name || (log.actor_user_id ? log.actor_user_id.slice(0,8) : "—")} · alvo {profileMap.get(log.target_user_id)?.full_name || (log.target_user_id ? log.target_user_id.slice(0,8) : "—")}</small></div><span>{log.role_from&&log.role_to?log.role_from+" → "+log.role_to:new Date(log.created_at).toLocaleString("pt-MZ")}</span></div>):<p className="muted">Ainda não existem eventos de auditoria.</p>}</section>}
       </div></main>
