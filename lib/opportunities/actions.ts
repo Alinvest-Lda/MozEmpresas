@@ -13,6 +13,15 @@ async function user() {
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims?.sub;
   if (!userId) redirect("/login");
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("account_status")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profileError || !profile || (profile.account_status && profile.account_status !== "ACTIVE")) {
+    redirect("/login?inactive=1");
+  }
   return { supabase, userId };
 }
 
