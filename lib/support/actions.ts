@@ -14,6 +14,20 @@ const supportAreas = [
   "Serviços MozEmpresas",
 ] as const;
 
+async function activeUser() {
+  const { supabase, user } = await activeUser();
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("account_status")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (error || !profile || (profile.account_status && profile.account_status !== "ACTIVE")) {
+    redirect("/login?inactive=1");
+  }
+  return { supabase, user };
+}
+
 export async function createSupportTicket(formData: FormData) {
   const area = String(formData.get("area") || "").trim();
   const subject = String(formData.get("subject") || "").trim();
@@ -30,9 +44,7 @@ export async function createSupportTicket(formData: FormData) {
     redirect("/dashboard/suporte?status=invalid");
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login?next=/dashboard/suporte");
+  const { supabase, user } = await activeUser();
 
   if (businessId) {
     const managedIds = await getManagedBusinessIds(supabase, user.id);
@@ -81,9 +93,7 @@ export async function addSupportMessage(formData: FormData) {
     redirect("/dashboard/suporte?status=invalid");
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login?next=/dashboard/suporte");
+  const { supabase, user } = await activeUser();
 
   const { data: ticket, error: ticketError } = await supabase
     .from("support_tickets")
