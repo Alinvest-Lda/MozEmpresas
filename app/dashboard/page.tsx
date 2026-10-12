@@ -170,16 +170,6 @@ export default async function Dashboard({ searchParams }: { searchParams?: Promi
         </section>
       </div>
 
-      <section className="workspace-panel">
-        <div className="workspace-panel-head"><div><span className="dashboard-kicker">Navegação orientada à decisão</span><h2>Onde agir</h2><p>Entre directamente no contexto que corresponde à decisão que pretende tomar.</p></div></div>
-        <div className="workspace-context-grid">
-          <Link href="/dashboard/empresas"><strong>Quero melhorar a presença</strong><span>Empresas, perfis, publicação e informação institucional.</span><b>→</b></Link>
-          <Link href="/dashboard/marketplace?tab=vender"><strong>Quero vender</strong><span>Publique produtos e serviços e acompanhe interesse comercial.</span><b>→</b></Link>
-          <Link href="/dashboard/marketplace?tab=comprar"><strong>Quero comprar</strong><span>Descubra ofertas e registe interesses para iniciar relações.</span><b>→</b></Link>
-          <Link href="/dashboard/monetizacao"><strong>Quero perceber o investimento</strong><span>Analise publicidade, créditos, serviços e histórico comercial.</span><b>→</b></Link>
-          <Link href="/dashboard/guardados"><strong>Quero regressar ao que guardei</strong><span>Favoritos, pesquisas guardadas, alertas e actividade recente.</span><b>→</b></Link>
-        </div>
-      </section>
     </div>
   </main>;
 }
