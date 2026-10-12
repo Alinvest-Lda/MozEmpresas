@@ -2988,3 +2988,17 @@ body:has(.dashboard-shell) > footer,
 body:has(.partner-shell) > footer {
   display: none;
 }
+
+/* Opportunity workspace: simple form controls and compact publication rows. */
+.opportunity-form label{display:grid;gap:6px;font-size:12px;font-weight:650;color:var(--ink)}
+.opportunity-form input,.opportunity-form select,.opportunity-form textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:#fff;padding:10px 11px;color:var(--ink);font:inherit;font-size:12px}
+.opportunity-form input:focus,.opportunity-form select:focus,.opportunity-form textarea:focus{outline:2px solid #2f71661c;border-color:#88aaa3}
+.opportunity-form small{font-size:10px;color:var(--muted);font-weight:400}
+.opportunity-list{display:grid;gap:0}
+.opportunity-list-item{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:15px 0;border-bottom:1px solid var(--line)}
+.opportunity-list-item>div:first-child{display:grid;gap:5px;min-width:0}
+.opportunity-list-item>div:first-child>strong{font-size:14px}
+.opportunity-list-item small{font-size:11px;color:var(--muted)}
+.opportunity-list-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.opportunity-list-actions form{margin:0}
+@media(max-width:700px){.opportunity-list-item{align-items:flex-start;flex-direction:column}.opportunity-list-actions{justify-content:flex-start}.opportunity-form{grid-template-columns:1fr}}
