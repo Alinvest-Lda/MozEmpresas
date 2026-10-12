@@ -8,6 +8,13 @@ import { canManageBusiness } from "@/lib/businesses/permissions";
 
 const text = (v: FormDataEntryValue | null) => typeof v === "string" ? v.trim() : "";
 
+function parseMaputoDate(value: string): Date | null {
+  if (!value) return null;
+  const hasTimezone = /(?:Z|[+-]\\d{2}:?\\d{2})$/i.test(value);
+  const parsed = new Date(hasTimezone ? value : value + "+02:00");
+  return Number.isFinite(parsed.getTime()) ? parsed : null;
+}
+
 async function user() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
@@ -95,8 +102,10 @@ export async function createOpportunity(formData: FormData) {
   const closesAt = text(formData.get("closes_at")) || null;
 
   const allowedTypes = ["CALL", "TENDER", "FUNDING", "PARTNERSHIP", "TRAINING", "EVENT", "BUSINESS", "OTHER"];
-  const opensTime = opensAt ? new Date(opensAt).getTime() : null;
-  const closesTime = closesAt ? new Date(closesAt).getTime() : null;
+  const opensDate = parseMaputoDate(opensAt);
+  const closesDate = parseMaputoDate(closesAt);
+  const opensTime = opensDate?.getTime() ?? null;
+  const closesTime = closesDate?.getTime() ?? null;
   if (
     title.length < 4 || title.length > 180 ||
     description.length < 10 || description.length > 10000 ||
@@ -123,8 +132,8 @@ export async function createOpportunity(formData: FormData) {
     organization,
     location,
     requirements,
-    opens_at: opensAt ? new Date(opensAt).toISOString() : null,
-    closes_at: closesAt ? new Date(closesAt).toISOString() : null,
+    opens_at: opensDate?.toISOString() ?? null,
+    closes_at: closesDate?.toISOString() ?? null,
     status: "PUBLISHED",
   }).select("id").single();
 
