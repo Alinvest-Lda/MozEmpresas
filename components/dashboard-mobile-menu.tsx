@@ -40,14 +40,28 @@ export function DashboardMobileMenu({ platformAccess, unreadNotifications = 0 }:
       <aside id="dashboard-mobile-menu" className={"dashboard-mobile-menu" + (open ? " open" : "")} aria-hidden={!open}>
         <div className="dashboard-mobile-menu-head">
           <div>
-            <small>Área empresarial</small>
+            <small>{platformAccess === "super_admin" ? "Administração global" : "Área empresarial"}</small>
             <strong>MozEmpresas</strong>
           </div>
           <button type="button" className="dashboard-mobile-close" aria-label="Fechar menu" onClick={() => setOpen(false)}>×</button>
         </div>
 
-        <nav className="dashboard-mobile-nav" aria-label="Navegação móvel da área empresarial">
-          {dashboardNavGroups.map((group) => (
+        <nav className="dashboard-mobile-nav" aria-label={platformAccess === "super_admin" ? "Navegação móvel do Super Admin" : "Navegação móvel da área empresarial"}>
+          {platformAccess === "super_admin" ? (
+            <div className="dashboard-mobile-nav-group">
+              <span>Administração global</span>
+              {([
+                ["/dashboard/admin", "Visão geral da plataforma"],
+                ["/dashboard/admin/monetizacao", "Monetização"],
+                ["/admin/parceiros", "Acessos de parceiros"],
+                ["/dashboard/notificacoes", "Notificações"],
+                ["/dashboard/conta", "Conta e segurança"],
+              ] as const).map(([href, label]) => {
+                const active = href === "/dashboard/admin" ? pathname === href : pathname === href || pathname.startsWith(href + "/");
+                return <Link key={href} href={href} className={"dashboard-mobile-nav-link" + (active ? " active" : "")} aria-current={active ? "page" : undefined} onClick={() => setOpen(false)}><i className="nav-dot" /><span>{label}</span>{href === "/dashboard/notificacoes" && unreadNotifications > 0 ? <b className="dashboard-nav-badge">{unreadNotifications > 99 ? "99+" : unreadNotifications}</b> : null}</Link>;
+              })}
+            </div>
+          ) : dashboardNavGroups.map((group) => (
             <div className="dashboard-mobile-nav-group" key={group.label}>
               <span>{group.label}</span>
               {group.links.map(([href, label]) => {
