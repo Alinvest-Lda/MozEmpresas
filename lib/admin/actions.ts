@@ -2,29 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
 const listingStatuses = ["DRAFT", "PUBLISHED", "PAUSED", "SOLD_OUT", "ARCHIVED"] as const;
-
-async function requirePlatformMember() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, member: null };
-  const { data: member } = await supabase
-    .from("platform_members")
-    .select("role,active")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  return { supabase, user, member };
-}
 
 export async function moderateBusiness(formData: FormData) {
   const id = String(formData.get("businessId") || "");
   const isPublic = String(formData.get("isPublic") || "") === "true";
   if (!z.string().uuid().safeParse(id).success) return { error: "Empresa inválida." };
 
-  const { supabase, user, member } = await requirePlatformMember();
-  if (!user || !member?.active) return { error: "Sem autorização para moderar empresas." };
+  const { supabase, authorized } = await getSuperAdminContext();
+  if (!authorized) return { error: "Sem autorização para moderar empresas." };
 
   const { error } = await supabase.from("businesses").update({
     is_public: isPublic,
