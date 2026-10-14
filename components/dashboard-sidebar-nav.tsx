@@ -31,6 +31,28 @@ export function isDashboardNavActive(pathname: string, href: string) {
 
 export function DashboardSidebarNav({ platformAccess, unreadNotifications = 0 }: { platformAccess?: string | null; unreadNotifications?: number }) {
   const pathname = usePathname() || "/dashboard";
+  if (platformAccess === "super_admin") {
+    const adminLinks: DashboardNavLink[] = [
+      ["/dashboard/admin", "Visão geral da plataforma"],
+      ["/dashboard/admin/monetizacao", "Monetização"],
+      ["/admin/parceiros", "Acessos de parceiros"],
+      ["/dashboard/notificacoes", "Notificações"],
+      ["/dashboard/conta", "Conta e segurança"],
+    ];
+    return (
+      <nav className={`dashboard-sidebar-nav ${styles.standardNav}`} aria-label="Navegação do Super Admin">
+        <div className="dashboard-nav-group">
+          <span>Administração global</span>
+          {adminLinks.map(([href, label]) => {
+            const active = href === "/dashboard/admin"
+              ? pathname === href
+              : pathname === href || pathname.startsWith(href + "/");
+            return <Link className={"dashboard-nav-link" + (active ? " active" : "")} href={href} key={href} aria-current={active ? "page" : undefined}><i className="nav-dot" />{label}{href === "/dashboard/notificacoes" && unreadNotifications > 0 ? <b className="dashboard-nav-badge">{unreadNotifications > 99 ? "99+" : unreadNotifications}</b> : null}</Link>;
+          })}
+        </div>
+      </nav>
+    );
+  }
   return (
     <nav className={`dashboard-sidebar-nav ${styles.standardNav}`} aria-label="Navegação da área empresarial">
       {dashboardNavGroups.map((group) => (
