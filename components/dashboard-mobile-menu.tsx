@@ -85,7 +85,7 @@ export function DashboardMobileMenu({ platformAccess, unreadNotifications = 0 }:
             </div>
           ))}
 
-          {platformAccess ? (
+          {platformAccess && platformAccess !== "super_admin" ? (
             <div className="dashboard-mobile-nav-group">
               <span>Plataforma</span>
               <Link
