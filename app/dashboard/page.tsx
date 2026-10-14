@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getManagedBusinessIds } from "@/lib/businesses/permissions";
 
@@ -12,6 +13,17 @@ export default async function Dashboard({ searchParams }: { searchParams?: Promi
   const params = await searchParams;
   const supabase = await createClient();
   const { data:{ user } } = await supabase.auth.getUser();
+
+  if (user) {
+    const { data: platformMember, error: platformMemberError } = await supabase
+      .from("platform_members")
+      .select("role,active")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!platformMemberError && platformMember?.active === true && platformMember.role === "super_admin") {
+      redirect("/dashboard/admin");
+    }
+  }
 
   let name = "Administrador";
   let businesses: Business[] = [];
