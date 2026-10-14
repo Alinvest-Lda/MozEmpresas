@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { canManageBusiness, getManagedBusinessIds } from "@/lib/businesses/permissions";
 
 const schema = z.object({
@@ -12,14 +13,6 @@ const schema = z.object({
 });
 
 const requestStatuses = ["REQUESTED", "UNDER_REVIEW", "QUOTED", "ACCEPTED", "IN_PROGRESS", "COMPLETED"] as const;
-
-async function currentPlatformMember() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, member: null };
-  const { data: member } = await supabase.from("platform_members").select("role,active").eq("user_id", user.id).maybeSingle();
-  return { supabase, user, member };
-}
 
 export async function requestPlatformService(formData: FormData) {
   const parsed = schema.safeParse({
@@ -65,8 +58,8 @@ export async function updatePlatformServiceRequest(formData: FormData) {
     return { error: "O valor proposto é inválido." };
   }
 
-  const { supabase, user, member } = await currentPlatformMember();
-  if (!user || !member?.active) return { error: "Sem autorização para gerir pedidos." };
+  const { supabase, authorized, user } = await getSuperAdminContext();
+  if (!authorized || !user) return { error: "Sem autorização para gerir pedidos." };
 
   const { data: request } = await supabase.from("service_requests").select("requester_user_id,service_id").eq("id", requestId).maybeSingle();
   const { error } = await supabase.from("service_requests").update({
