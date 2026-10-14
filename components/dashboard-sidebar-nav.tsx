@@ -64,7 +64,7 @@ export function DashboardSidebarNav({ platformAccess, unreadNotifications = 0 }:
           })}
         </div>
       ))}
-      {platformAccess && (
+      {platformAccess && platformAccess !== "super_admin" && (
         <div className="dashboard-nav-group">
           <span>Plataforma</span>
           <Link className={"dashboard-nav-link" + (pathname.startsWith("/dashboard/admin") ? " active" : "")} href="/dashboard/admin" aria-current={pathname.startsWith("/dashboard/admin") ? "page" : undefined}>
