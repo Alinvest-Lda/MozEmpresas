@@ -19,7 +19,7 @@ export async function DashboardSidebar() {
     <>
       <DashboardMobileMenu platformAccess={platformAccess} unreadNotifications={unreadNotifications ?? 0} />
       <aside className="dashboard-sidebar">
-      <div className="dashboard-brand"><small>Área empresarial</small><strong>MozEmpresas</strong></div>
+      <div className="dashboard-brand"><small>{platformAccess === "super_admin" ? "Administração global" : "Área empresarial"}</small><strong>MozEmpresas</strong></div>
       <DashboardSidebarNav platformAccess={platformAccess} unreadNotifications={unreadNotifications ?? 0} />
       <div className="dashboard-user">
         <Link className="dashboard-account-link" href="/dashboard/conta">A minha conta</Link>
