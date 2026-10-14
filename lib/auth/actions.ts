@@ -124,9 +124,23 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
     partner = false;
   }
 
-  const target: string = partner
-    ? (isPartnerPath(requestedNext) && requestedNext ? requestedNext : "/parceiro")
-    : (isPartnerPath(requestedNext) ? "/dashboard" : requestedNext || "/dashboard");
+  const { data: platformMember, error: platformMemberError } = await supabase
+    .from("platform_members")
+    .select("role,active")
+    .eq("user_id", data.user.id)
+    .maybeSingle();
+
+  if (platformMemberError) {
+    await supabase.auth.signOut();
+    return { error: "Não foi possível validar as permissões da plataforma. Tente novamente." };
+  }
+
+  const isSuperAdmin = platformMember?.active === true && platformMember.role === "super_admin";
+  const target: string = isSuperAdmin
+    ? (requestedNext && (requestedNext === "/dashboard/admin" || requestedNext.startsWith("/dashboard/admin/") || requestedNext === "/admin/parceiros") ? requestedNext : "/dashboard/admin")
+    : partner
+      ? (isPartnerPath(requestedNext) && requestedNext ? requestedNext : "/parceiro")
+      : (isPartnerPath(requestedNext) ? "/dashboard" : requestedNext || "/dashboard");
 
   redirect(target);
 }
