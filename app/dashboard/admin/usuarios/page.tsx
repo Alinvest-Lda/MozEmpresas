@@ -8,21 +8,20 @@ type SearchParams = Promise<{ q?: string; tipo?: string; estado?: string }>;
 const userTypes: Record<string, string> = {
   empresa: "Empresa",
   parceiro: "Parceiro",
-  individual: "Individual",
+  profissional: "Profissional",
 };
 const accountStatuses: Record<string, string> = {
   ACTIVE: "Activo",
   INACTIVE: "Inactivo",
   SUSPENDED: "Suspenso",
-  DEACTIVATED: "Desactivado",
-  PENDING: "Pendente",
+  DELETED: "Eliminado",
 };
 
 export default async function AdminUsersPage({ searchParams }: { searchParams?: SearchParams }) {
   const params = await searchParams;
   const q = (params?.q ?? "").trim().slice(0, 120);
-  const type = ["empresa", "parceiro", "individual"].includes(params?.tipo ?? "") ? params?.tipo ?? "" : "";
-  const status = ["ACTIVE", "INACTIVE", "SUSPENDED", "DEACTIVATED", "PENDING"].includes(params?.estado ?? "") ? params?.estado ?? "" : "";
+  const type = ["empresa", "parceiro", "profissional"].includes(params?.tipo ?? "") ? params?.tipo ?? "" : "";
+  const status = ["ACTIVE", "INACTIVE", "DELETED"].includes(params?.estado ?? "") ? params?.estado ?? "" : "";
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
 
@@ -68,8 +67,8 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
           <div className="dashboard-section-head"><div><span className="dashboard-kicker">Directório interno</span><h2>Perfis da plataforma</h2><p>Máximo de 100 registos por consulta, ordenados pelos mais recentes.</p></div></div>
           <form className="commerce-form-grid" method="get">
             <label>Nome do utilizador<input name="q" defaultValue={q} maxLength={120} placeholder="Pesquisar por nome" /></label>
-            <label>Tipo de conta<select name="tipo" defaultValue={type}><option value="">Todos os tipos</option><option value="empresa">Empresa</option><option value="parceiro">Parceiro</option><option value="individual">Individual</option></select></label>
-            <label>Estado da conta<select name="estado" defaultValue={status}><option value="">Todos os estados</option><option value="ACTIVE">Activo</option><option value="INACTIVE">Inactivo</option><option value="SUSPENDED">Suspenso</option><option value="DEACTIVATED">Desactivado</option><option value="PENDING">Pendente</option></select></label>
+            <label>Tipo de conta<select name="tipo" defaultValue={type}><option value="">Todos os tipos</option><option value="empresa">Empresa</option><option value="parceiro">Parceiro</option><option value="profissional">Profissional</option></select></label>
+            <label>Estado da conta<select name="estado" defaultValue={status}><option value="">Todos os estados</option><option value="ACTIVE">Activo</option><option value="INACTIVE">Inactivo</option><option value="DELETED">Eliminado</option></select></label>
             <div className="wide" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}><button className="btn primary" type="submit">Aplicar filtros</button>{q || type || status ? <Link className="btn" href="/dashboard/admin/usuarios">Limpar filtros</Link> : null}</div>
           </form>
 
