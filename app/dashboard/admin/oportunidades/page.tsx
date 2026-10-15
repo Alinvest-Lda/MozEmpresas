@@ -20,7 +20,7 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
     .limit(100);
 
   if (q) {
-    const safeQuery = q.replace(/[%,_]/g, " ").trim();
+    const safeQuery = q.replace(/[%,_,()]/g, " ").trim();
     if (safeQuery) query = query.or(`title.ilike.%${safeQuery}%,organization.ilike.%${safeQuery}%,location.ilike.%${safeQuery}%`);
   }
   if (type) query = query.eq("type", type);
