@@ -52,6 +52,8 @@ export function DashboardMobileMenu({ platformAccess, unreadNotifications = 0 }:
               <span>Administração global</span>
               {([
                 ["/dashboard/admin", "Visão geral da plataforma"],
+                ["/dashboard/admin/usuarios", "Utilizadores e acessos"],
+                ["/dashboard/admin/suporte", "Central de suporte"],
                 ["/dashboard/admin/monetizacao", "Monetização"],
                 ["/admin/parceiros", "Acessos de parceiros"],
                 ["/dashboard/notificacoes", "Notificações"],
