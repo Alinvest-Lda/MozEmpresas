@@ -32,8 +32,8 @@ export async function moderateListing(formData: FormData) {
     return { error: "Oferta ou estado inválido." };
   }
 
-  const { supabase, user, member } = await requirePlatformMember();
-  if (!user || !member?.active) return { error: "Sem autorização para moderar ofertas." };
+  const { supabase, authorized } = await getSuperAdminContext();
+  if (!authorized) return { error: "Sem autorização para moderar ofertas." };
 
   const { error } = await supabase.from("listings").update({
     status,
