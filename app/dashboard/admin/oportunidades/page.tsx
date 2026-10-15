@@ -53,7 +53,7 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
         <div className="admin-request-list" style={{ marginTop: 16 }}>
           {opportunities.map((item) => <article className="admin-request-card" key={item.id}>
             <div className="admin-request-head"><div><span className="dashboard-kicker">{item.type} · {item.organization || "Organização não indicada"} · {item.location || "Localização não indicada"}</span><h3>{item.title}</h3><small>Registada em {new Date(item.created_at).toLocaleDateString("pt-MZ")} · Actualizada em {new Date(item.updated_at).toLocaleDateString("pt-MZ")}</small></div><span className="tag">{item.status}</span></div>
-            <p>{item.description.length > 360 ? item.description.slice(0, 360) + "…" : item.description}</p>
+            <p>{(item.description ?? "").length > 360 ? (item.description ?? "").slice(0, 360) + "…" : item.description || "Sem descrição indicada."}</p>
             <div className="admin-request-meta" style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 8 }}>
               {item.opens_at ? <span>Abre: {new Date(item.opens_at).toLocaleDateString("pt-MZ")}</span> : null}
               {item.closes_at ? <span>Encerra: {new Date(item.closes_at).toLocaleDateString("pt-MZ")}</span> : <span>Sem prazo de encerramento registado</span>}
