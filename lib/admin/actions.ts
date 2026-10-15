@@ -21,6 +21,7 @@ export async function moderateBusiness(formData: FormData) {
 
   if (error) return { error: "Não foi possível actualizar a visibilidade da empresa." };
   revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard/admin/empresas");
   revalidatePath("/empresas");
   return { success: true };
 }
