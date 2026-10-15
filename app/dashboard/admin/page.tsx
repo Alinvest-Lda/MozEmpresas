@@ -110,8 +110,11 @@ export default async function AdminPage() {
 
     <section className="card" style={{marginTop:18}}>
       <span className="eyebrow">Administração</span><h2 style={{marginTop:10}}>Áreas da plataforma</h2>
-      <div className="grid" style={{marginTop:18}}><a className="card" href="/dashboard/admin/monetizacao"><strong>Monetização</strong><p style={{marginTop:6}}>Planos, assinaturas e publicidade.</p></a>
-        {["Utilizadores e acessos","Empresas e validação","Produtos e serviços","Oportunidades","Parceiros","Publicidade","Relatórios"].map((item)=><div className="card" key={item}><strong>{item}</strong><p style={{marginTop:6}}>Módulo preparado para evolução.</p></div>)}
+      <div className="grid" style={{marginTop:18}}>
+        <a className="card" href="/dashboard/admin/usuarios"><strong>Utilizadores e acessos</strong><p style={{marginTop:6}}>Consultar perfis registados e localizar contas.</p></a>
+        <a className="card" href="/admin/parceiros"><strong>Acessos de parceiros</strong><p style={{marginTop:6}}>Criar acessos dedicados para organizações parceiras.</p></a>
+        <a className="card" href="/dashboard/admin/suporte"><strong>Central de suporte</strong><p style={{marginTop:6}}>Filtrar atendimentos e responder a tickets.</p></a>
+        <a className="card" href="/dashboard/admin/monetizacao"><strong>Monetização</strong><p style={{marginTop:6}}>Consultar planos, assinaturas e inventário publicitário.</p></a>
       </div>
     </section>
   </div></main>;
