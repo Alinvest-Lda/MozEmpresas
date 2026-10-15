@@ -9,17 +9,17 @@ const replySchema = z.object({
   body: z.string().trim().min(1).max(5000),
 });
 
-export async function replySupportAsStaff(formData: FormData) {
+export async function replySupportAsStaff(formData: FormData): Promise<void> {
   const parsed = replySchema.safeParse({
     ticketId: formData.get("ticket_id"),
     body: formData.get("body"),
   });
 
-  if (!parsed.success) return { error: "Verifique o pedido e a mensagem." };
+  if (!parsed.success) return;
 
   const { supabase, user, authorized } = await getSuperAdminContext();
   if (!user || !authorized) {
-    return { error: "Sem autorização para responder a pedidos de suporte." };
+    return;
   }
 
   const { data: ticket, error: ticketError } = await supabase
@@ -28,7 +28,7 @@ export async function replySupportAsStaff(formData: FormData) {
     .eq("id", parsed.data.ticketId)
     .maybeSingle();
 
-  if (ticketError || !ticket) return { error: "O pedido de suporte não foi encontrado." };
+  if (ticketError || !ticket) return;
 
   const { error: messageError } = await supabase.from("support_messages").insert({
     ticket_id: parsed.data.ticketId,
@@ -37,7 +37,7 @@ export async function replySupportAsStaff(formData: FormData) {
     body: parsed.data.body,
   });
 
-  if (messageError) return { error: "Não foi possível enviar a resposta." };
+  if (messageError) return;
 
   const { error: updateError } = await supabase
     .from("support_tickets")
@@ -45,9 +45,9 @@ export async function replySupportAsStaff(formData: FormData) {
     .eq("id", parsed.data.ticketId);
 
   if (updateError) {
-    return { error: "A resposta foi enviada, mas não foi possível actualizar o estado do pedido." };
+    return;
   }
 
   revalidatePath("/dashboard/admin/suporte");
-  return { success: true };
+  return;
 }
