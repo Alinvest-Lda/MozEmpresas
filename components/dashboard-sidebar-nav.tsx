@@ -36,6 +36,7 @@ export function DashboardSidebarNav({ platformAccess, unreadNotifications = 0 }:
       ["/dashboard/admin", "Visão geral da plataforma"],
       ["/dashboard/admin/usuarios", "Utilizadores e acessos"],
       ["/dashboard/admin/empresas", "Empresas"],
+      ["/dashboard/admin/oportunidades", "Oportunidades"],
       ["/dashboard/admin/suporte", "Central de suporte"],
       ["/dashboard/admin/monetizacao", "Monetização"],
       ["/admin/parceiros", "Acessos de parceiros"],
