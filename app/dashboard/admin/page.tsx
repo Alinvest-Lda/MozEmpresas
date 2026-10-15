@@ -113,6 +113,7 @@ export default async function AdminPage() {
       <div className="grid" style={{marginTop:18}}>
         <a className="card" href="/dashboard/admin/usuarios"><strong>Utilizadores e acessos</strong><p style={{marginTop:6}}>Consultar perfis registados e localizar contas.</p></a>
         <a className="card" href="/dashboard/admin/empresas"><strong>Empresas</strong><p style={{marginTop:6}}>Pesquisar empresas, consultar contactos e gerir visibilidade.</p></a>
+        <a className="card" href="/dashboard/admin/oportunidades"><strong>Oportunidades</strong><p style={{marginTop:6}}>Consultar publicações, tipos, estados e prazos de candidatura.</p></a>
         <a className="card" href="/admin/parceiros"><strong>Acessos de parceiros</strong><p style={{marginTop:6}}>Criar acessos dedicados para organizações parceiras.</p></a>
         <a className="card" href="/dashboard/admin/suporte"><strong>Central de suporte</strong><p style={{marginTop:6}}>Filtrar atendimentos e responder a tickets.</p></a>
         <a className="card" href="/dashboard/admin/monetizacao"><strong>Monetização</strong><p style={{marginTop:6}}>Consultar planos, assinaturas e inventário publicitário.</p></a>
