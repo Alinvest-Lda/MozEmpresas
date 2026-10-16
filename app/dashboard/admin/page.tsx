@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { updatePlatformServiceRequest } from "@/lib/services/actions";
 import { moderateBusiness, moderateListing } from "@/lib/admin/actions";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
+import { redirect } from "next/navigation";
 
 const statuses = [
   ["REQUESTED", "Recebido"],
@@ -13,7 +14,12 @@ const statuses = [
   ["COMPLETED", "Concluído"],
 ] as const;
 
-export default async function AdminPage() {
+type SearchParams = Promise<{ result?: string; action?: string }>;
+
+export default async function AdminPage({ searchParams }: { searchParams?: SearchParams }) {
+  const params = await searchParams;
+  const result = params?.result === "success" || params?.result === "error" ? params.result : "";
+  const action = ["business", "listing", "service"].includes(params?.action ?? "") ? params?.action ?? "" : "";
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
 
@@ -37,6 +43,11 @@ export default async function AdminPage() {
       <h1>Painel da plataforma</h1>
       <p className="muted">Gestão central da plataforma, separada dos espaços empresariais.</p>
     </div>
+    {result ? <div className="notice" role={result === "error" ? "alert" : "status"} style={{ marginTop: 16 }}>
+      {result === "success"
+        ? action === "business" ? "Visibilidade da empresa actualizada." : action === "listing" ? "Estado da oferta actualizado." : "Pedido de serviço actualizado."
+        : action === "business" ? "Não foi possível actualizar a empresa. Verifique os dados e as permissões." : action === "listing" ? "Não foi possível actualizar a oferta. Verifique os dados e as permissões." : "Não foi possível actualizar o pedido. Verifique os dados e as permissões."}
+    </div> : null}
 
     <div className="grid">
       <div className="card"><span className="muted">Empresas</span><h2>{businesses ?? 0}</h2><p>Presenças registadas.</p></div>
@@ -61,7 +72,7 @@ export default async function AdminPage() {
               <span className="tag">{statusLabel.get(request.status as typeof statuses[number][0]) || request.status}</span>
             </div>
             <p>{request.notes || "Sem observações adicionais."}</p>
-            <form action={async (formData) => { "use server"; await updatePlatformServiceRequest(formData); }} className="admin-request-form">
+            <form action={async (formData) => { "use server"; const outcome = await updatePlatformServiceRequest(formData); redirect(`/dashboard/admin?result=${"error" in outcome ? "error" : "success"}&action=service`); }} className="admin-request-form">
               <input type="hidden" name="requestId" value={request.id} />
               <label><span>Estado</span><select name="status" defaultValue={request.status}>{statuses.map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label>
               <label><span>Valor proposto</span><input name="requestedPrice" type="number" min="0" step="0.01" defaultValue={request.requested_price ?? ""} placeholder="Sob consulta" /></label>
@@ -78,7 +89,7 @@ export default async function AdminPage() {
       <div className="admin-request-list">
         {adminBusinesses?.length ? adminBusinesses.map((business) => <article className="admin-request-card" key={business.id}>
           <div className="admin-request-head"><div><span className="dashboard-kicker">{business.location || "Localização não indicada"}</span><h3>{business.name}</h3><small>{new Date(business.created_at).toLocaleString("pt-MZ")}</small></div><span className="tag">{business.is_public ? "Pública" : "Privada"}</span></div>
-          <form action={async (formData) => { "use server"; await moderateBusiness(formData); }} className="admin-request-form">
+          <form action={async (formData) => { "use server"; const outcome = await moderateBusiness(formData); redirect(`/dashboard/admin?result=${"error" in outcome ? "error" : "success"}&action=business`); }} className="admin-request-form">
             <input type="hidden" name="businessId" value={business.id} />
             <label><span>Visibilidade</span><select name="isPublic" defaultValue={business.is_public ? "true" : "false"}><option value="true">Publicada</option><option value="false">Privada</option></select></label>
             <button className="btn primary" type="submit">Actualizar</button>
@@ -94,7 +105,7 @@ export default async function AdminPage() {
           const business = Array.isArray(listing.businesses) ? listing.businesses[0] : listing.businesses;
           return <article className="admin-request-card" key={listing.id}>
             <div className="admin-request-head"><div><span className="dashboard-kicker">{listing.type === "PRODUCT" ? "Produto" : "Serviço"} · {business?.name || "Sem empresa"}</span><h3>{listing.title}</h3><small>{new Date(listing.created_at).toLocaleString("pt-MZ")}</small></div><span className="tag">{listing.status}</span></div>
-            <form action={async (formData) => { "use server"; await moderateListing(formData); }} className="admin-request-form">
+            <form action={async (formData) => { "use server"; const outcome = await moderateListing(formData); redirect(`/dashboard/admin?result=${"error" in outcome ? "error" : "success"}&action=listing`); }} className="admin-request-form">
               <input type="hidden" name="listingId" value={listing.id} />
               <label><span>Estado</span><select name="status" defaultValue={listing.status}>{["DRAFT","PUBLISHED","PAUSED","SOLD_OUT","ARCHIVED"].map((value)=><option value={value} key={value}>{value}</option>)}</select></label>
               <button className="btn primary" type="submit">Actualizar</button>
