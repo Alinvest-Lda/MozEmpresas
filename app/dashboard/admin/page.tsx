@@ -23,12 +23,26 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
 
-  const [{ count: businesses }, { count: users }, { count: listings }, { count: opportunities }, { data: requests }] = await Promise.all([
+  const [
+    { count: businesses },
+    { count: users },
+    { count: listings },
+    { count: opportunities },
+    { data: requests },
+    { count: newRequests },
+    { count: reviewRequests },
+    { count: privateBusinesses },
+    { count: draftListings },
+  ] = await Promise.all([
     supabase.from("businesses").select("id", { count: "exact", head: true }),
     supabase.from("profiles").select("id", { count: "exact", head: true }),
     supabase.from("listings").select("id", { count: "exact", head: true }),
     supabase.from("opportunities").select("id", { count: "exact", head: true }),
     supabase.from("service_requests").select("id,status,requested_price,currency,notes,created_at,updated_at,requester_user_id,requester_business_id,platform_services(name),businesses:requester_business_id(name)").order("created_at", { ascending: false }).limit(30),
+    supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "REQUESTED"),
+    supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "UNDER_REVIEW"),
+    supabase.from("businesses").select("id", { count: "exact", head: true }).eq("is_public", false).is("archived_at", null),
+    supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "DRAFT"),
   ]);
 
   const statusLabel = new Map(statuses);
@@ -49,16 +63,45 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
         : action === "business" ? "Não foi possível actualizar a empresa. Verifique os dados e as permissões." : action === "listing" ? "Não foi possível actualizar a oferta. Verifique os dados e as permissões." : "Não foi possível actualizar o pedido. Verifique os dados e as permissões."}
     </div> : null}
 
-    <div className="grid">
-      <div className="card"><span className="muted">Empresas</span><h2>{businesses ?? 0}</h2><p>Presenças registadas.</p></div>
-      <div className="card"><span className="muted">Utilizadores</span><h2>{users ?? 0}</h2><p>Contas na plataforma.</p></div>
-      <div className="card"><span className="muted">Ofertas</span><h2>{listings ?? 0}</h2><p>Produtos e serviços publicados.</p></div>
-      <div className="card"><span className="muted">Oportunidades</span><h2>{opportunities ?? 0}</h2><p>Oportunidades registadas.</p></div>
-    </div>
+    <section className="admin-control-center" aria-label="Resumo operacional">
+      <div className="admin-control-heading">
+        <div><span className="dashboard-kicker">Centro de controlo</span><h2>O que precisa de atenção</h2><p>Indicadores operacionais para orientar a próxima acção.</p></div>
+        <a className="btn" href="/dashboard/admin/suporte">Abrir suporte <span aria-hidden="true">↗</span></a>
+      </div>
+      <div className="admin-control-stats">
+        <a className="admin-control-stat admin-control-stat-priority" href="#pedidos-servico">
+          <span className="admin-control-stat-label">Pedidos por tratar</span><strong>{(newRequests ?? 0) + (reviewRequests ?? 0)}</strong><span>{newRequests ?? 0} recebidos · {reviewRequests ?? 0} em análise</span><b>Rever pedidos <span aria-hidden="true">→</span></b>
+        </a>
+        <a className="admin-control-stat" href="/dashboard/admin/empresas">
+          <span className="admin-control-stat-label">Empresas privadas</span><strong>{privateBusinesses ?? 0}</strong><span>Registos não arquivados sem publicação pública</span><b>Consultar empresas <span aria-hidden="true">→</span></b>
+        </a>
+        <a className="admin-control-stat" href="#ofertas">
+          <span className="admin-control-stat-label">Ofertas em rascunho</span><strong>{draftListings ?? 0}</strong><span>Produtos e serviços ainda em DRAFT</span><b>Rever ofertas <span aria-hidden="true">→</span></b>
+        </a>
+        <a className="admin-control-stat" href="/dashboard/admin/usuarios">
+          <span className="admin-control-stat-label">Utilizadores</span><strong>{users ?? 0}</strong><span>Contas registadas na plataforma</span><b>Localizar conta <span aria-hidden="true">→</span></b>
+        </a>
+      </div>
+      <div className="admin-control-secondary">
+        <span><strong>{businesses ?? 0}</strong> empresas registadas</span>
+        <span><strong>{listings ?? 0}</strong> ofertas no total</span>
+        <span><strong>{opportunities ?? 0}</strong> oportunidades registadas</span>
+      </div>
+    </section>
 
-    <section className="dashboard-section" style={{marginTop:18}}>
+    <section className="dashboard-section admin-quick-actions">
+      <div className="dashboard-section-head"><div><span className="dashboard-kicker">Atalhos operacionais</span><h2>Ir directamente para</h2><p>Aceda às áreas mais utilizadas sem percorrer o painel.</p></div></div>
+      <div className="dashboard-action-grid">
+        <a className="dashboard-action-card" href="#pedidos-servico"><span className="dashboard-action-icon">01</span><span><strong>Pedidos de serviços</strong><small>Actualizar estado, valor e nota operacional.</small></span></a>
+        <a className="dashboard-action-card" href="/dashboard/admin/empresas"><span className="dashboard-action-icon">02</span><span><strong>Directório de empresas</strong><small>Pesquisar registos e gerir visibilidade.</small></span></a>
+        <a className="dashboard-action-card" href="/dashboard/admin/oportunidades"><span className="dashboard-action-icon">03</span><span><strong>Oportunidades</strong><small>Consultar publicações e prazos.</small></span></a>
+        <a className="dashboard-action-card" href="/dashboard/admin/suporte"><span className="dashboard-action-icon">04</span><span><strong>Central de suporte</strong><small>Filtrar atendimentos e responder a tickets.</small></span></a>
+      </div>
+    </section>
+
+    <section className="dashboard-section" id="pedidos-servico" style={{marginTop:18}}>
       <div className="dashboard-section-head">
-        <div><span className="dashboard-kicker">Operação</span><h2>Pedidos de serviços MozEmpresas</h2><p>Acompanhe os pedidos recebidos e actualize o estado operacional.</p></div>
+        <div><span className="dashboard-kicker">Operação prioritária</span><h2>Pedidos de serviços MozEmpresas</h2><p>Acompanhe os pedidos recebidos e actualize o estado operacional.</p></div>
         <span className="directory-results-summary"><strong>{requests?.length ?? 0}</strong><span>pedidos recentes</span></span>
       </div>
 
@@ -98,7 +141,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
       </div>
     </section>
 
-    <section className="dashboard-section" style={{marginTop:18}}>
+    <section className="dashboard-section" id="ofertas" style={{marginTop:18}}>
       <div className="dashboard-section-head"><div><span className="dashboard-kicker">Moderação</span><h2>Ofertas recentes</h2><p>Controlo do estado de produtos e serviços publicados.</p></div></div>
       <div className="admin-request-list">
         {adminListings?.length ? adminListings.map((listing) => {
