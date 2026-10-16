@@ -49,9 +49,9 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
   const deletionRequests = (users ?? []).filter((profile) => Boolean(profile.deletion_requested_at)).length;
 
   return (
-    <main className="dashboard-main">
+    <main className="dashboard-main admin-workspace">
       <div className="dashboard-content">
-        <header className="page-header">
+        <header className="dashboard-topbar">
           <span className="eyebrow">Administração global</span>
           <h1>Utilizadores e acessos</h1>
           <p className="muted">Consulte o tipo de conta, estado, associação empresarial e privilégios da plataforma. Esta fase é de consulta; não altera contas nem permissões.</p>
