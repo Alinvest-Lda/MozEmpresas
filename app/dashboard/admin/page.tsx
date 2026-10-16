@@ -31,6 +31,8 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     { data: requests },
     { count: newRequests },
     { count: reviewRequests },
+    { count: acceptedRequests },
+    { count: inProgressRequests },
     { count: privateBusinesses },
     { count: draftListings },
   ] = await Promise.all([
@@ -41,28 +43,25 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     supabase.from("service_requests").select("id,status,requested_price,currency,notes,created_at,updated_at,requester_user_id,requester_business_id,platform_services(name),businesses:requester_business_id(name)").order("created_at", { ascending: false }).limit(30),
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "REQUESTED"),
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "UNDER_REVIEW"),
+    supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "ACCEPTED"),
+    supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "IN_PROGRESS"),
     supabase.from("businesses").select("id", { count: "exact", head: true }).eq("is_public", false).is("archived_at", null),
     supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "DRAFT"),
   ]);
 
   const statusLabel = new Map(statuses);
+  const requestPriority = new Map(statuses.map(([value], index) => [value, index]));
+  const prioritizedRequests = [...(requests ?? [])].sort((a, b) =>
+    (requestPriority.get(a.status as typeof statuses[number][0]) ?? 99) -
+    (requestPriority.get(b.status as typeof statuses[number][0]) ?? 99) ||
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
   const [{ data: adminBusinesses }, { data: adminListings }] = await Promise.all([
     supabase.from("businesses").select("id,name,is_public,location,created_at").order("created_at", { ascending: false }).limit(20),
     supabase.from("listings").select("id,title,type,status,business_id,created_at,businesses:business_id(name)").order("created_at", { ascending: false }).limit(20),
   ]);
 
   return <main className="dashboard-main admin-workspace"><div className="dashboard-content">
-    <div className="dashboard-topbar">
-      <span className="eyebrow">Administração MozEmpresas</span>
-      <h1>Painel da plataforma</h1>
-      <p className="muted">Gestão central da plataforma, com prioridades operacionais e acesso rápido às tarefas.</p>
-    </div>
-    {result ? <div className="notice" role={result === "error" ? "alert" : "status"} style={{ marginTop: 16 }}>
-      {result === "success"
-        ? action === "business" ? "Visibilidade da empresa actualizada." : action === "listing" ? "Estado da oferta actualizado." : "Pedido de serviço actualizado."
-        : action === "business" ? "Não foi possível actualizar a empresa. Verifique os dados e as permissões." : action === "listing" ? "Não foi possível actualizar a oferta. Verifique os dados e as permissões." : "Não foi possível actualizar o pedido. Verifique os dados e as permissões."}
-    </div> : null}
-
     <section className="admin-control-center" aria-label="Resumo operacional">
       <div className="admin-control-heading">
         <div><span className="dashboard-kicker">Centro de controlo</span><h2>O que precisa de atenção</h2><p>Indicadores operacionais para orientar a próxima acção.</p></div>
@@ -78,16 +77,25 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
         <a className="admin-control-stat" href="#ofertas">
           <span className="admin-control-stat-label">Ofertas em rascunho</span><strong>{draftListings ?? 0}</strong><span>Produtos e serviços ainda em DRAFT</span><b>Rever ofertas <span aria-hidden="true">→</span></b>
         </a>
-        <a className="admin-control-stat" href="/dashboard/admin/usuarios">
-          <span className="admin-control-stat-label">Utilizadores</span><strong>{users ?? 0}</strong><span>Contas registadas na plataforma</span><b>Localizar conta <span aria-hidden="true">→</span></b>
+        <a className="admin-control-stat" href="#pedidos-servico">
+          <span className="admin-control-stat-label">Pedidos em execução</span><strong>{inProgressRequests ?? 0}</strong><span>Pedidos com trabalho operacional iniciado</span><b>Acompanhar pedidos <span aria-hidden="true">→</span></b>
         </a>
       </div>
       <div className="admin-control-secondary">
+        <span><strong>{users ?? 0}</strong> utilizadores registados</span>
         <span><strong>{businesses ?? 0}</strong> empresas registadas</span>
         <span><strong>{listings ?? 0}</strong> ofertas no total</span>
         <span><strong>{opportunities ?? 0}</strong> oportunidades registadas</span>
+        <span><strong>{acceptedRequests ?? 0}</strong> pedidos aceites</span>
+        <span><strong>{inProgressRequests ?? 0}</strong> pedidos em execução</span>
       </div>
     </section>
+
+    {result ? <div className="notice" role={result === "error" ? "alert" : "status"} style={{ marginBottom: 16 }}>
+      {result === "success"
+        ? action === "business" ? "Visibilidade da empresa actualizada." : action === "listing" ? "Estado da oferta actualizado." : "Pedido de serviço actualizado."
+        : action === "business" ? "Não foi possível actualizar a empresa. Verifique os dados e as permissões." : action === "listing" ? "Não foi possível actualizar a oferta. Verifique os dados e as permissões." : "Não foi possível actualizar o pedido. Verifique os dados e as permissões."}
+    </div> : null}
 
     <section className="dashboard-section admin-quick-actions">
       <div className="dashboard-section-head"><div><span className="dashboard-kicker">Atalhos operacionais</span><h2>Ir directamente para</h2><p>Aceda às áreas mais utilizadas sem percorrer o painel.</p></div></div>
@@ -106,13 +114,17 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
       </div>
 
       <div className="admin-request-list">
-        {requests?.length ? requests.map((request) => {
+        {prioritizedRequests.length ? prioritizedRequests.map((request) => {
           const service = Array.isArray(request.platform_services) ? request.platform_services[0] : request.platform_services;
           const business = Array.isArray(request.businesses) ? request.businesses[0] : request.businesses;
           return <article className="admin-request-card" key={request.id}>
             <div className="admin-request-head">
               <div><span className="dashboard-kicker">{service?.name || "Serviço MozEmpresas"}</span><h3>{business?.name || "Pedido individual"}</h3><small>{new Date(request.created_at).toLocaleString("pt-MZ")}</small></div>
               <span className="tag">{statusLabel.get(request.status as typeof statuses[number][0]) || request.status}</span>
+            </div>
+            <div className="admin-request-meta" style={{display:"flex",flexWrap:"wrap",gap:"8px 16px",marginTop:10}}>
+              <span>Valor proposto: <strong>{request.requested_price != null ? `${request.currency || "MZN"} ${Number(request.requested_price).toLocaleString("pt-MZ")}` : "Por definir"}</strong></span>
+              <span>Última actualização: {new Date(request.updated_at || request.created_at).toLocaleDateString("pt-MZ")}</span>
             </div>
             <p>{request.notes || "Sem observações adicionais."}</p>
             <form action={async (formData) => { "use server"; const outcome = await updatePlatformServiceRequest(formData); redirect(`/dashboard/admin?result=${"error" in outcome ? "error" : "success"}&action=service`); }} className="admin-request-form">
@@ -158,16 +170,13 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
       </div>
     </section>
 
-    <section className="card" style={{marginTop:18}}>
-      <span className="eyebrow">Administração</span><h2 style={{marginTop:10}}>Áreas da plataforma</h2>
-      <div className="grid" style={{marginTop:18}}>
-        <a className="card" href="/dashboard/admin/usuarios"><strong>Utilizadores e acessos</strong><p style={{marginTop:6}}>Consultar perfis registados e localizar contas.</p></a>
-        <a className="card" href="/dashboard/admin/empresas"><strong>Empresas</strong><p style={{marginTop:6}}>Pesquisar empresas, consultar contactos e gerir visibilidade.</p></a>
-        <a className="card" href="/dashboard/admin/oportunidades"><strong>Oportunidades</strong><p style={{marginTop:6}}>Consultar publicações, tipos, estados e prazos de candidatura.</p></a>
-        <a className="card" href="/dashboard/admin/publicidade"><strong>Publicidade e campanhas</strong><p style={{marginTop:6}}>Consultar campanhas empresariais e de parceiros, estados e indicadores de entrega.</p></a>
-        <a className="card" href="/admin/parceiros"><strong>Acessos de parceiros</strong><p style={{marginTop:6}}>Criar acessos dedicados para organizações parceiras.</p></a>
-        <a className="card" href="/dashboard/admin/suporte"><strong>Central de suporte</strong><p style={{marginTop:6}}>Filtrar atendimentos e responder a tickets.</p></a>
-        <a className="card" href="/dashboard/admin/monetizacao"><strong>Monetização</strong><p style={{marginTop:6}}>Consultar planos, assinaturas e inventário publicitário.</p></a>
+    <section className="dashboard-section admin-advanced-areas">
+      <div className="dashboard-section-head"><div><span className="dashboard-kicker">Gestão especializada</span><h2>Outras áreas de controlo</h2><p>Ferramentas administrativas que não precisam de ocupar o primeiro nível de atenção.</p></div></div>
+      <div className="dashboard-action-grid">
+        <a className="dashboard-action-card" href="/dashboard/admin/usuarios"><span className="dashboard-action-icon">05</span><span><strong>Utilizadores e acessos</strong><small>Consultar perfis e localizar contas.</small></span></a>
+        <a className="dashboard-action-card" href="/dashboard/admin/publicidade"><span className="dashboard-action-icon">06</span><span><strong>Publicidade e campanhas</strong><small>Ver campanhas e indicadores de entrega.</small></span></a>
+        <a className="dashboard-action-card" href="/admin/parceiros"><span className="dashboard-action-icon">07</span><span><strong>Acessos de parceiros</strong><small>Gerir acessos de organizações parceiras.</small></span></a>
+        <a className="dashboard-action-card" href="/dashboard/admin/monetizacao"><span className="dashboard-action-icon">08</span><span><strong>Monetização</strong><small>Consultar planos, assinaturas e inventário publicitário.</small></span></a>
       </div>
     </section>
   </div></main>;
