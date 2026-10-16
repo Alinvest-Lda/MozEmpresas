@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
 export type PartnerAccessState = { error?: string };
 
@@ -13,12 +14,11 @@ function hashToken(token: string) {
 }
 
 export async function requireSuperAdmin(nextPath = "/admin/parceiros") {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+  const { user, authorized } = await getSuperAdminContext();
 
-  const { data: isSuperAdmin } = await supabase.rpc("is_super_admin");
-  if (!isSuperAdmin) redirect("/dashboard");
+  if (!user) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+  if (!authorized) redirect("/dashboard");
+
   return user;
 }
 
