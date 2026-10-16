@@ -30,8 +30,8 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
   const published = (opportunities ?? []).filter((item) => item.status === "PUBLISHED").length;
   const withClosingDate = (opportunities ?? []).filter((item) => Boolean(item.closes_at)).length;
 
-  return <main className="dashboard-main"><div className="dashboard-content">
-    <header className="page-header">
+  return <main className="dashboard-main admin-workspace"><div className="dashboard-content">
+    <header className="dashboard-topbar">
       <span className="eyebrow">Administração global</span>
       <h1>Oportunidades</h1>
       <p className="muted">Consulta e acompanhamento das oportunidades registadas. A alteração de estados será activada após validar todos os estados permitidos e as regras de publicação do módulo.</p>
