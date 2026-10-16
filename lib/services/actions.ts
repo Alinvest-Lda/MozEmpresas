@@ -61,15 +61,31 @@ export async function updatePlatformServiceRequest(formData: FormData) {
   const { supabase, authorized, user } = await getSuperAdminContext();
   if (!authorized || !user) return { error: "Sem autorização para gerir pedidos." };
 
-  const { data: request } = await supabase.from("service_requests").select("requester_user_id,service_id").eq("id", requestId).maybeSingle();
-  const { error } = await supabase.from("service_requests").update({
-    status,
-    requested_price: requestedPrice,
-    notes: notes || null,
-    updated_at: new Date().toISOString(),
-  }).eq("id", requestId);
+  const { data: request, error: requestError } = await supabase
+    .from("service_requests")
+    .select("id,requester_user_id,service_id")
+    .eq("id", requestId)
+    .maybeSingle();
 
-  if (error) return { error: "Não foi possível actualizar o pedido." };
+  if (requestError || !request) {
+    return { error: "Pedido não encontrado ou indisponível." };
+  }
+
+  const { data: updatedRequest, error } = await supabase
+    .from("service_requests")
+    .update({
+      status,
+      requested_price: requestedPrice,
+      notes: notes || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", requestId)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !updatedRequest) {
+    return { error: "Não foi possível actualizar o pedido." };
+  }
 
   if (request?.requester_user_id && request.requester_user_id !== user.id) {
     const { data: service } = await supabase.from("platform_services").select("name").eq("id", request.service_id).maybeSingle();
