@@ -55,7 +55,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     <div className="dashboard-topbar">
       <span className="eyebrow">Administração MozEmpresas</span>
       <h1>Painel da plataforma</h1>
-      <p className="muted">Gestão central da plataforma, separada dos espaços empresariais.</p>
+      <p className="muted">Gestão central da plataforma, com prioridades operacionais e acesso rápido às tarefas.</p>
     </div>
     {result ? <div className="notice" role={result === "error" ? "alert" : "status"} style={{ marginTop: 16 }}>
       {result === "success"
