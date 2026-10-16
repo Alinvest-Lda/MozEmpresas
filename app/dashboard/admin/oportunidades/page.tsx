@@ -50,7 +50,7 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
         <div className="wide" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}><button className="btn primary" type="submit">Aplicar filtros</button>{q || type || status ? <Link className="btn" href="/dashboard/admin/oportunidades">Limpar filtros</Link> : null}</div>
       </form>
       {error ? <div className="notice" role="alert" style={{ marginTop: 16 }}>Não foi possível carregar as oportunidades. Verifique as permissões da base de dados e tente novamente.</div> : opportunities?.length ? (
-        <div className="admin-request-list" style={{ marginTop: 16 }}>
+        <div className="admin-directory-list" style={{ marginTop: 16 }}>
           {opportunities.map((item) => <article className="admin-request-card" key={item.id}>
             <div className="admin-request-head"><div><span className="dashboard-kicker">{item.type} · {item.organization || "Organização não indicada"} · {item.location || "Localização não indicada"}</span><h3>{item.title}</h3><small>Registada em {new Date(item.created_at).toLocaleDateString("pt-MZ")} · Actualizada em {new Date(item.updated_at).toLocaleDateString("pt-MZ")}</small></div><span className="tag">{item.status}</span></div>
             <p>{(item.description ?? "").length > 360 ? (item.description ?? "").slice(0, 360) + "…" : item.description || "Sem descrição indicada."}</p>
