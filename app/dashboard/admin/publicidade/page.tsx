@@ -101,7 +101,7 @@ export default async function AdminAdvertisingPage() {
 
     <section className="dashboard-section" style={{marginTop:18}}>
       <div className="dashboard-section-head"><div><span className="dashboard-kicker">Fila de campanhas</span><h2>Campanhas recentes</h2><p>Até 100 campanhas por origem, ordenadas pelas mais recentes. Esta primeira fase é de consulta, sem mutações de estado.</p></div><span className="directory-results-summary"><strong>{campaigns.length}</strong><span>registos carregados</span></span></div>
-      <div className="admin-request-list">
+      <div className="admin-directory-list">
         {campaigns.map((campaign) => <article className="admin-request-card" key={campaign.origin + "-" + campaign.id}>
           <div className="admin-request-head"><div><span className="dashboard-kicker">{campaign.origin} · {campaign.position}{campaign.slot ? " · " + campaign.slot : ""}</span><h3>{campaign.headline || campaign.title || "Campanha sem título"}</h3><small>{campaign.advertiser} · criada em {fmtDate(campaign.created_at)}</small></div><span className="tag">{campaign.status || "Sem estado"}</span></div>
           <div className="admin-request-meta"><span>Início: {fmtDate(campaign.starts_at)}</span><span>Fim: {fmtDate(campaign.ends_at)}</span><span>Impressões: {fmtNumber(campaign.impressions_count)}</span><span>Cliques: {fmtNumber(campaign.clicks_count)}</span><span>CTR: {ctr(campaign.clicks_count, campaign.impressions_count)}</span><span>{campaign.price}</span></div>
