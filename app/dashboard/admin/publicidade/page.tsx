@@ -39,7 +39,12 @@ function businessName(campaign: Campaign) {
   return Array.isArray(value) ? value[0]?.name || "Empresa não identificada" : value?.name || "Empresa não identificada";
 }
 
-export default async function AdminAdvertisingPage() {
+type SearchParams = Promise<{ alerta?: string }>;
+
+export default async function AdminAdvertisingPage({ searchParams }: { searchParams?: SearchParams }) {
+  const params = await searchParams;
+  const alertFilter = params?.alerta === "pendentes" || params?.alerta === "expiradas" ? params.alerta : "";
+  const nowIso = new Date().toISOString();
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return <main className="dashboard-main admin-workspace"><div className="dashboard-content"><div className="notice">Acesso reservado ao Super Admin.</div></div></main>;
 
@@ -49,12 +54,20 @@ export default async function AdminAdvertisingPage() {
     { count: impressionEvents },
     { count: clickEvents },
   ] = await Promise.all([
-    supabase.from("business_promotions")
-      .select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,impressions_count,clicks_count,target_url,business:business_id(name)")
-      .order("created_at", { ascending: false }).limit(100),
-    supabase.from("partner_ad_campaigns")
-      .select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,impressions_count,clicks_count,target_url")
-      .order("created_at", { ascending: false }).limit(100),
+    (() => {
+      let query = supabase.from("business_promotions")
+        .select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,impressions_count,clicks_count,target_url,business:business_id(name)");
+      if (alertFilter === "pendentes") query = query.eq("status", "PENDING");
+      if (alertFilter === "expiradas") query = query.eq("status", "ACTIVE").lt("ends_at", nowIso);
+      return query.order("created_at", { ascending: false }).limit(100);
+    })(),
+    (() => {
+      let query = supabase.from("partner_ad_campaigns")
+        .select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,impressions_count,clicks_count,target_url");
+      if (alertFilter === "pendentes") query = query.eq("status", "REQUESTED");
+      if (alertFilter === "expiradas") query = query.eq("status", "ACTIVE").lt("ends_at", nowIso);
+      return query.order("created_at", { ascending: false }).limit(100);
+    })(),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "IMPRESSION"),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "CLICK"),
   ]);
@@ -77,7 +90,8 @@ export default async function AdminAdvertisingPage() {
     <div className="dashboard-topbar">
       <span className="eyebrow">Administração global</span>
       <h1>Publicidade e campanhas</h1>
-      <p className="muted">Fila de consulta para campanhas empresariais e de parceiros, com desempenho registado e controlo de estado a preparar.</p>
+      <p className="muted">{alertFilter === "pendentes" ? "A mostrar campanhas que aguardam análise: PENDING nas empresariais e REQUESTED nas de parceiros." : alertFilter === "expiradas" ? "A mostrar campanhas ainda ACTIVE cujo prazo final já passou." : "Fila de consulta para campanhas empresariais e de parceiros, com desempenho registado e controlo de estado a preparar."}</p>
+      {alertFilter ? <p className="notice" style={{marginTop:12}}>Filtro de alerta activo. <a href="/dashboard/admin/publicidade">Ver todas as campanhas</a></p> : null}
     </div>
 
     <div className="grid">
