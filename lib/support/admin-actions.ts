@@ -9,17 +9,17 @@ const replySchema = z.object({
   body: z.string().trim().min(1).max(5000),
 });
 
-export async function replySupportAsStaff(formData: FormData): Promise<void> {
+export async function replySupportAsStaff(formData: FormData): Promise<{ success: true } | { error: string }> {
   const parsed = replySchema.safeParse({
     ticketId: formData.get("ticket_id"),
     body: formData.get("body"),
   });
 
-  if (!parsed.success) return;
+  if (!parsed.success) return { error: "A resposta é inválida ou excede o limite permitido." };
 
   const { supabase, user, authorized } = await getSuperAdminContext();
   if (!user || !authorized) {
-    return;
+    return { error: "Sem autorização para responder a atendimentos." };
   }
 
   const { data: ticket, error: ticketError } = await supabase
@@ -28,7 +28,7 @@ export async function replySupportAsStaff(formData: FormData): Promise<void> {
     .eq("id", parsed.data.ticketId)
     .maybeSingle();
 
-  if (ticketError || !ticket) return;
+  if (ticketError || !ticket) return { error: "Atendimento não encontrado." };
 
   const { error: messageError } = await supabase.from("support_messages").insert({
     ticket_id: parsed.data.ticketId,
@@ -37,7 +37,7 @@ export async function replySupportAsStaff(formData: FormData): Promise<void> {
     body: parsed.data.body,
   });
 
-  if (messageError) return;
+  if (messageError) return { error: "Não foi possível registar a resposta." };
 
   const { error: updateError } = await supabase
     .from("support_tickets")
@@ -45,9 +45,9 @@ export async function replySupportAsStaff(formData: FormData): Promise<void> {
     .eq("id", parsed.data.ticketId);
 
   if (updateError) {
-    return;
+    return { error: "A resposta foi registada, mas não foi possível actualizar o estado do atendimento. Confirme o histórico antes de repetir." };
   }
 
   revalidatePath("/dashboard/admin/suporte");
-  return;
+  return { success: true };
 }
