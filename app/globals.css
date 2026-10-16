@@ -3055,11 +3055,11 @@ body:has(.partner-shell) > footer {
 .admin-workspace .support-reply input{min-width:0;min-height:var(--control-height);border:1px solid var(--line-strong);border-radius:9px;padding:10px 12px}
 .admin-workspace :is(a,button,input,select,textarea):focus-visible{outline:0;box-shadow:var(--focus-ring)}
 @media(max-width:900px){
- .admin-workspace .dashboard-main{padding:24px 20px 44px}
+ .admin-workspace{padding:24px 20px 44px}
  .admin-workspace .commerce-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:620px){
- .admin-workspace .dashboard-main{padding:20px 14px 36px}
+ .admin-workspace{padding:20px 14px 36px}
  .admin-workspace .dashboard-topbar{display:block}
  .admin-workspace .dashboard-topbar h1{font-size:29px}
  .admin-workspace .dashboard-section{padding:15px}
