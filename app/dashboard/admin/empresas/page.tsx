@@ -34,9 +34,9 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
   const { data: businesses, count, error } = await query;
 
   return (
-    <main className="dashboard-main">
+    <main className="dashboard-main admin-workspace">
       <div className="dashboard-content">
-        <header className="page-header">
+        <header className="dashboard-topbar">
           <span className="eyebrow">Administração global</span>
           <h1>Empresas</h1>
           <p className="muted">Directório operacional de empresas registadas, com controlo de visibilidade e consulta do estado de arquivo.</p>
