@@ -14,18 +14,21 @@ const statuses = [
   ["COMPLETED", "Concluído"],
 ] as const;
 
-type SearchParams = Promise<{ result?: string; action?: string }>;
+type SearchParams = Promise<{ result?: string; action?: string; alerta?: string }>;
 
 export default async function AdminPage({ searchParams }: { searchParams?: SearchParams }) {
   const params = await searchParams;
   const result = params?.result === "success" || params?.result === "error" ? params.result : "";
   const action = ["business", "listing", "service"].includes(params?.action ?? "") ? params?.action ?? "" : "";
+  const staleOnly = params?.alerta === "sem-actualizacao";
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
 
   const now = new Date();
   const nowIso = now.toISOString();
   const staleCutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  let serviceRequestsQuery = supabase.from("service_requests").select("id,status,requested_price,currency,notes,created_at,updated_at,requester_user_id,requester_business_id,platform_services(name),businesses:requester_business_id(name)").order("created_at", { ascending: false }).limit(30);
+  if (staleOnly) serviceRequestsQuery = serviceRequestsQuery.in("status", ["REQUESTED", "UNDER_REVIEW", "QUOTED", "ACCEPTED", "IN_PROGRESS"]).lt("updated_at", staleCutoff);
   const [
     { count: businesses },
     { count: users },
@@ -49,7 +52,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     supabase.from("profiles").select("id", { count: "exact", head: true }),
     supabase.from("listings").select("id", { count: "exact", head: true }),
     supabase.from("opportunities").select("id", { count: "exact", head: true }),
-    supabase.from("service_requests").select("id,status,requested_price,currency,notes,created_at,updated_at,requester_user_id,requester_business_id,platform_services(name),businesses:requester_business_id(name)").order("created_at", { ascending: false }).limit(30),
+    serviceRequestsQuery,
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "REQUESTED"),
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "UNDER_REVIEW"),
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "ACCEPTED"),
@@ -121,7 +124,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
           <span className="admin-alert-topline"><span>Campanhas activas fora do prazo</span><span className="admin-alert-mark">Prazo</span></span>
           <strong>{(expiredBusinessCampaigns ?? 0) + (expiredPartnerCampaigns ?? 0)}</strong><span>Campanhas ainda marcadas como activas, mas com data final ultrapassada.</span><b>Ver campanhas <span aria-hidden="true">→</span></b>
         </a>
-        <a className="admin-alert-card" href="#pedidos-servico">
+        <a className="admin-alert-card" href="/dashboard/admin?alerta=sem-actualizacao#pedidos-servico">
           <span className="admin-alert-topline"><span>Pedidos sem actualização</span><span className="admin-alert-mark">7+ dias</span></span>
           <strong>{staleServiceRequests ?? 0}</strong><span>Pedidos não concluídos nem cancelados, sem actualização há mais de 7 dias.</span><b>Rever pedidos <span aria-hidden="true">→</span></b>
         </a>
@@ -145,6 +148,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     </section>
 
     <section className="dashboard-section" id="pedidos-servico" style={{marginTop:18}}>
+      {staleOnly ? <p className="notice" style={{marginBottom:14}}>Filtro activo: pedidos não concluídos nem cancelados, sem actualização há mais de 7 dias. <a href="/dashboard/admin#pedidos-servico">Ver todos os pedidos</a></p> : null}
       <div className="dashboard-section-head">
         <div><span className="dashboard-kicker">Operação prioritária</span><h2>Pedidos de serviços MozEmpresas</h2><p>Acompanhe os pedidos recebidos e actualize o estado operacional.</p></div>
         <span className="directory-results-summary"><strong>{requests?.length ?? 0}</strong><span>pedidos recentes</span></span>
