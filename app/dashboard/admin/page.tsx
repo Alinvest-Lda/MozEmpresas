@@ -23,6 +23,9 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
 
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const staleCutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const [
     { count: businesses },
     { count: users },
@@ -35,6 +38,12 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     { count: inProgressRequests },
     { count: privateBusinesses },
     { count: draftListings },
+    { count: expiredOpportunities },
+    { count: pendingBusinessCampaigns },
+    { count: pendingPartnerCampaigns },
+    { count: expiredBusinessCampaigns },
+    { count: expiredPartnerCampaigns },
+    { count: staleServiceRequests },
   ] = await Promise.all([
     supabase.from("businesses").select("id", { count: "exact", head: true }),
     supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -47,6 +56,12 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "IN_PROGRESS"),
     supabase.from("businesses").select("id", { count: "exact", head: true }).eq("is_public", false).is("archived_at", null),
     supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "DRAFT"),
+    supabase.from("opportunities").select("id", { count: "exact", head: true }).eq("status", "PUBLISHED").lt("closes_at", nowIso),
+    supabase.from("business_promotions").select("id", { count: "exact", head: true }).eq("status", "PENDING"),
+    supabase.from("partner_ad_campaigns").select("id", { count: "exact", head: true }).eq("status", "REQUESTED"),
+    supabase.from("business_promotions").select("id", { count: "exact", head: true }).eq("status", "ACTIVE").lt("ends_at", nowIso),
+    supabase.from("partner_ad_campaigns").select("id", { count: "exact", head: true }).eq("status", "ACTIVE").lt("ends_at", nowIso),
+    supabase.from("service_requests").select("id", { count: "exact", head: true }).in("status", ["REQUESTED", "UNDER_REVIEW", "QUOTED", "ACCEPTED", "IN_PROGRESS"]).lt("updated_at", staleCutoff),
   ]);
 
   const statusLabel = new Map(statuses);
@@ -88,6 +103,28 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
         <span><strong>{opportunities ?? 0}</strong> oportunidades registadas</span>
         <span><strong>{acceptedRequests ?? 0}</strong> pedidos aceites</span>
         <span><strong>{inProgressRequests ?? 0}</strong> pedidos em execução</span>
+      </div>
+    </section>
+
+    <section className="dashboard-section admin-alert-center" aria-label="Alertas operacionais">
+      <div className="dashboard-section-head"><div><span className="dashboard-kicker">Atenção preventiva</span><h2>Alertas que exigem acompanhamento</h2><p>Os alertas são calculados a partir dos prazos e estados registados. Pedidos sem actualização há mais de 7 dias são destacados para revisão.</p></div></div>
+      <div className="admin-alert-grid">
+        <a className="admin-alert-card admin-alert-critical" href="/dashboard/admin/oportunidades?prazo=expirado">
+          <span className="admin-alert-topline"><span>Oportunidades expiradas</span><span className="admin-alert-mark">Prazo</span></span>
+          <strong>{expiredOpportunities ?? 0}</strong><span>Publicadas com data de encerramento anterior a hoje.</span><b>Ver oportunidades <span aria-hidden="true">→</span></b>
+        </a>
+        <a className="admin-alert-card" href="/dashboard/admin/publicidade?alerta=pendentes">
+          <span className="admin-alert-topline"><span>Campanhas por analisar</span><span className="admin-alert-mark">Decisão</span></span>
+          <strong>{(pendingBusinessCampaigns ?? 0) + (pendingPartnerCampaigns ?? 0)}</strong><span>{pendingBusinessCampaigns ?? 0} empresariais pendentes · {pendingPartnerCampaigns ?? 0} de parceiros solicitadas.</span><b>Rever campanhas <span aria-hidden="true">→</span></b>
+        </a>
+        <a className="admin-alert-card admin-alert-critical" href="/dashboard/admin/publicidade?alerta=expiradas">
+          <span className="admin-alert-topline"><span>Campanhas activas fora do prazo</span><span className="admin-alert-mark">Prazo</span></span>
+          <strong>{(expiredBusinessCampaigns ?? 0) + (expiredPartnerCampaigns ?? 0)}</strong><span>Campanhas ainda marcadas como activas, mas com data final ultrapassada.</span><b>Ver campanhas <span aria-hidden="true">→</span></b>
+        </a>
+        <a className="admin-alert-card" href="#pedidos-servico">
+          <span className="admin-alert-topline"><span>Pedidos sem actualização</span><span className="admin-alert-mark">7+ dias</span></span>
+          <strong>{staleServiceRequests ?? 0}</strong><span>Pedidos não concluídos nem cancelados, sem actualização há mais de 7 dias.</span><b>Rever pedidos <span aria-hidden="true">→</span></b>
+        </a>
       </div>
     </section>
 
