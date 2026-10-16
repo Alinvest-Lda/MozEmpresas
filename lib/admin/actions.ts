@@ -8,18 +8,30 @@ const listingStatuses = ["DRAFT", "PUBLISHED", "PAUSED", "SOLD_OUT", "ARCHIVED"]
 
 export async function moderateBusiness(formData: FormData) {
   const id = String(formData.get("businessId") || "");
-  const isPublic = String(formData.get("isPublic") || "") === "true";
-  if (!z.string().uuid().safeParse(id).success) return { error: "Empresa inválida." };
+  const rawVisibility = String(formData.get("isPublic") || "");
+  if (!z.string().uuid().safeParse(id).success || !["true", "false"].includes(rawVisibility)) {
+    return { error: "Empresa ou visibilidade inválida." };
+  }
+  const isPublic = rawVisibility === "true";
 
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return { error: "Sem autorização para moderar empresas." };
 
-  const { error } = await supabase.from("businesses").update({
-    is_public: isPublic,
-    updated_at: new Date().toISOString(),
-  }).eq("id", id);
+  // Archived businesses must remain outside the visibility workflow, even if the action is called directly.
+  const { data: updatedBusiness, error } = await supabase
+    .from("businesses")
+    .update({
+      is_public: isPublic,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .is("archived_at", null)
+    .select("id")
+    .maybeSingle();
 
-  if (error) return { error: "Não foi possível actualizar a visibilidade da empresa." };
+  if (error || !updatedBusiness) {
+    return { error: "Não foi possível actualizar a empresa. Confirme se existe e não está arquivada." };
+  }
   revalidatePath("/dashboard/admin");
   revalidatePath("/dashboard/admin/empresas");
   revalidatePath("/empresas");
@@ -36,12 +48,17 @@ export async function moderateListing(formData: FormData) {
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return { error: "Sem autorização para moderar ofertas." };
 
-  const { error } = await supabase.from("listings").update({
-    status,
-    updated_at: new Date().toISOString(),
-  }).eq("id", id);
+  const { data: updatedListing, error } = await supabase
+    .from("listings")
+    .update({
+      status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
 
-  if (error) return { error: "Não foi possível actualizar o estado da oferta." };
+  if (error || !updatedListing) return { error: "Não foi possível actualizar a oferta. Confirme se existe e tente novamente." };
   revalidatePath("/dashboard/admin");
   revalidatePath("/marketplace");
   return { success: true };
