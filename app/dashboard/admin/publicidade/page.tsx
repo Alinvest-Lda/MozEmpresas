@@ -41,7 +41,7 @@ function businessName(campaign: Campaign) {
 
 export default async function AdminAdvertisingPage() {
   const { supabase, authorized } = await getSuperAdminContext();
-  if (!authorized) return <main className="dashboard-main"><div className="dashboard-content"><div className="notice">Acesso reservado ao Super Admin.</div></div></main>;
+  if (!authorized) return <main className="dashboard-main admin-workspace"><div className="dashboard-content"><div className="notice">Acesso reservado ao Super Admin.</div></div></main>;
 
   const [
     { data: businessCampaigns, error: businessError },
@@ -73,8 +73,8 @@ export default async function AdminAdvertisingPage() {
   const totalImpressions = campaigns.reduce((sum, campaign) => sum + Number(campaign.impressions_count ?? 0), 0);
   const totalClicks = campaigns.reduce((sum, campaign) => sum + Number(campaign.clicks_count ?? 0), 0);
 
-  return <main className="dashboard-main"><div className="dashboard-content">
-    <div className="page-header">
+  return <main className="dashboard-main admin-workspace"><div className="dashboard-content">
+    <div className="dashboard-topbar">
       <span className="eyebrow">Administração global</span>
       <h1>Publicidade e campanhas</h1>
       <p className="muted">Fila de consulta para campanhas empresariais e de parceiros, com desempenho registado e controlo de estado a preparar.</p>
