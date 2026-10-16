@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
-type SearchParams = Promise<{ q?: string; tipo?: string; estado?: string }>;
+type SearchParams = Promise<{ q?: string; tipo?: string; estado?: string; acesso?: string; associacao?: string }>;
 
 const userTypes: Record<string, string> = {
   empresa: "Empresa",
@@ -22,8 +22,20 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
   const q = (params?.q ?? "").trim().slice(0, 120);
   const type = ["empresa", "parceiro", "profissional"].includes(params?.tipo ?? "") ? params?.tipo ?? "" : "";
   const status = ["ACTIVE", "INACTIVE", "SUSPENDED", "DELETED"].includes(params?.estado ?? "") ? params?.estado ?? "" : "";
+  const access = ["admin_activo", "admin_inactivo", "sem_admin"].includes(params?.acesso ?? "") ? params?.acesso ?? "" : "";
+  const association = ["com_empresa", "sem_empresa"].includes(params?.associacao ?? "") ? params?.associacao ?? "" : "";
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
+
+  const [{ data: allPlatformMembers }, { data: allBusinessMembers }] = await Promise.all([
+    supabase.from("platform_members").select("user_id,active"),
+    supabase.from("business_members").select("user_id"),
+  ]);
+  const platformRows = allPlatformMembers ?? [];
+  const businessUserIds = [...new Set((allBusinessMembers ?? []).map((row) => row.user_id))];
+  const platformUserIds = [...new Set(platformRows.map((row) => row.user_id))];
+  const activePlatformIds = [...new Set(platformRows.filter((row) => row.active).map((row) => row.user_id))];
+  const inactivePlatformIds = [...new Set(platformRows.filter((row) => !row.active).map((row) => row.user_id))];
 
   let usersQuery = supabase
     .from("profiles")
@@ -37,6 +49,11 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
   }
   if (type) usersQuery = usersQuery.eq("user_type", type);
   if (status) usersQuery = usersQuery.eq("account_status", status);
+  if (access === "admin_activo") usersQuery = activePlatformIds.length ? usersQuery.in("id", activePlatformIds) : usersQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+  if (access === "admin_inactivo") usersQuery = inactivePlatformIds.length ? usersQuery.in("id", inactivePlatformIds) : usersQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+  if (access === "sem_admin" && platformUserIds.length) usersQuery = usersQuery.not("id", "in", `(${platformUserIds.join(",")})`);
+  if (association === "com_empresa") usersQuery = businessUserIds.length ? usersQuery.in("id", businessUserIds) : usersQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+  if (association === "sem_empresa" && businessUserIds.length) usersQuery = usersQuery.not("id", "in", `(${businessUserIds.join(",")})`);
 
   const { data: users, count, error } = await usersQuery;
   const userIds = (users ?? []).map((profile) => profile.id);
@@ -59,17 +76,19 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
 
         <div className="grid">
           <article className="card"><span className="muted">Perfis encontrados</span><h2>{error ? "—" : (count ?? users?.length ?? 0).toLocaleString("pt-MZ")}</h2><p>Resultado dos filtros aplicados.</p></article>
-          <article className="card"><span className="muted">Activos nesta consulta</span><h2>{error ? "—" : activeCount.toLocaleString("pt-MZ")}</h2><p>Perfis com estado ACTIVE.</p></article>
-          <article className="card"><span className="muted">Pedidos de eliminação</span><h2>{error ? "—" : deletionRequests.toLocaleString("pt-MZ")}</h2><p>Perfis com pedido registado.</p></article>
+          <article className="card"><span className="muted">Perfis activos apresentados</span><h2>{error ? "—" : activeCount.toLocaleString("pt-MZ")}</h2><p>Contagem dentro dos registos carregados.</p></article>
+          <article className="card"><span className="muted">Pedidos de eliminação apresentados</span><h2>{error ? "—" : deletionRequests.toLocaleString("pt-MZ")}</h2><p>Pedidos registados nos perfis carregados.</p></article>
         </div>
 
         <section className="dashboard-section" style={{ marginTop: 18 }}>
-          <div className="dashboard-section-head"><div><span className="dashboard-kicker">Directório interno</span><h2>Perfis da plataforma</h2><p>Máximo de 100 registos por consulta, ordenados pelos mais recentes.</p></div></div>
+          <div className="dashboard-section-head"><div><span className="dashboard-kicker">Directório interno</span><h2>Perfis da plataforma</h2><p>Até 100 perfis por consulta, ordenados pelos mais recentes. Os filtros de acesso consideram as associações globais registadas na plataforma.</p></div></div>
           <form className="commerce-form-grid" method="get">
             <label>Nome do utilizador<input name="q" defaultValue={q} maxLength={120} placeholder="Pesquisar por nome" /></label>
             <label>Tipo de conta<select name="tipo" defaultValue={type}><option value="">Todos os tipos</option><option value="empresa">Empresa</option><option value="parceiro">Parceiro</option><option value="profissional">Profissional</option></select></label>
             <label>Estado da conta<select name="estado" defaultValue={status}><option value="">Todos os estados</option><option value="ACTIVE">Activo</option><option value="INACTIVE">Inactivo</option><option value="SUSPENDED">Suspenso</option><option value="DELETED">Eliminado</option></select></label>
-            <div className="wide" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}><button className="btn primary" type="submit">Aplicar filtros</button>{q || type || status ? <Link className="btn" href="/dashboard/admin/usuarios">Limpar filtros</Link> : null}</div>
+            <label>Acesso global<select name="acesso" defaultValue={access}><option value="">Todos os acessos</option><option value="admin_activo">Acesso administrativo activo</option><option value="admin_inactivo">Acesso administrativo inactivo</option><option value="sem_admin">Sem acesso administrativo</option></select></label>
+            <label>Associação empresarial<select name="associacao" defaultValue={association}><option value="">Todas as associações</option><option value="com_empresa">Com empresa associada</option><option value="sem_empresa">Sem empresa associada</option></select></label>
+            <div className="wide" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}><button className="btn primary" type="submit">Aplicar filtros</button>{q || type || status || access || association ? <Link className="btn" href="/dashboard/admin/usuarios">Limpar filtros</Link> : null}</div>
           </form>
 
           {error ? <div className="notice" role="alert" style={{ marginTop: 16 }}>Não foi possível carregar os perfis. Verifique as permissões da base de dados e tente novamente.</div> : users?.length ? (
