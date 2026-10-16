@@ -3,8 +3,9 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { moderateBusiness } from "@/lib/admin/actions";
+import { redirect } from "next/navigation";
 
-type SearchParams = Promise<{ q?: string; visibilidade?: string }>;
+type SearchParams = Promise<{ q?: string; visibilidade?: string; result?: string }>;
 
 export default async function AdminBusinessesPage({ searchParams }: { searchParams?: SearchParams }) {
   const params = await searchParams;
@@ -12,6 +13,7 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
   const visibility = ["publica", "privada", "arquivada"].includes(params?.visibilidade ?? "")
     ? params?.visibilidade ?? ""
     : "";
+  const result = params?.result === "success" || params?.result === "error" ? params.result : "";
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
 
@@ -39,6 +41,9 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
           <h1>Empresas</h1>
           <p className="muted">Directório operacional de empresas registadas, com controlo de visibilidade e consulta do estado de arquivo.</p>
         </header>
+        {result ? <div className="notice" role={result === "error" ? "alert" : "status"} style={{ marginTop: 16 }}>
+          {result === "success" ? "Visibilidade da empresa actualizada." : "Não foi possível actualizar a empresa. Confirme se existe, não está arquivada e se tem autorização."}
+        </div> : null}
 
         <div className="grid">
           <article className="card"><span className="muted">Empresas encontradas</span><h2>{error ? "—" : (count ?? businesses?.length ?? 0).toLocaleString("pt-MZ")}</h2><p>Resultados da consulta actual.</p></article>
@@ -68,7 +73,7 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
                     {business.phone ? <span>{business.phone}</span> : null}
                     {business.slug ? <span>Slug: {business.slug}</span> : null}
                   </div>
-                  {!archived ? <form action={async (formData) => { "use server"; await moderateBusiness(formData); }} className="admin-request-form" style={{ marginTop: 12 }}>
+                  {!archived ? <form action={async (formData) => { "use server"; const outcome = await moderateBusiness(formData); const next = new URLSearchParams(); if (q) next.set("q", q); if (visibility) next.set("visibilidade", visibility); next.set("result", "error" in outcome ? "error" : "success"); redirect(`/dashboard/admin/empresas?${next.toString()}`); }} className="admin-request-form" style={{ marginTop: 12 }}>
                     <input type="hidden" name="businessId" value={business.id} />
                     <label><span>Visibilidade</span><select name="isPublic" defaultValue={business.is_public ? "true" : "false"}><option value="true">Pública</option><option value="false">Privada</option></select></label>
                     <button className="btn primary" type="submit">Guardar visibilidade</button>
