@@ -12,10 +12,10 @@ function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
-export async function requireSuperAdmin() {
+export async function requireSuperAdmin(nextPath = "/admin/parceiros") {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login?next=/admin/parceiros");
+  if (!user) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
 
   const { data: isSuperAdmin } = await supabase.rpc("is_super_admin");
   if (!isSuperAdmin) redirect("/dashboard");
