@@ -3,13 +3,15 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
-type SearchParams = Promise<{ q?: string; tipo?: string; estado?: string }>;
+type SearchParams = Promise<{ q?: string; tipo?: string; estado?: string; prazo?: string }>;
 
 export default async function AdminOpportunitiesPage({ searchParams }: { searchParams?: SearchParams }) {
   const params = await searchParams;
   const q = (params?.q ?? "").trim().slice(0, 120);
   const type = (params?.tipo ?? "").trim().toUpperCase().slice(0, 40);
   const status = (params?.estado ?? "").trim().toUpperCase().slice(0, 40);
+  const expiredOnly = params?.prazo === "expirado";
+  const nowIso = new Date().toISOString();
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
 
@@ -19,6 +21,7 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
     .order("created_at", { ascending: false })
     .limit(100);
 
+  if (expiredOnly) query = query.eq("status", "PUBLISHED").lt("closes_at", nowIso);
   if (q) {
     const safeQuery = q.replace(/[%,_,()]/g, " ").trim();
     if (safeQuery) query = query.or(`title.ilike.%${safeQuery}%,organization.ilike.%${safeQuery}%,location.ilike.%${safeQuery}%`);
@@ -34,7 +37,7 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
     <header className="dashboard-topbar">
       <span className="eyebrow">Administração global</span>
       <h1>Oportunidades</h1>
-      <p className="muted">Consulta e acompanhamento das oportunidades registadas. A alteração de estados será activada após validar todos os estados permitidos e as regras de publicação do módulo.</p>
+      <p className="muted">{expiredOnly ? "A mostrar oportunidades publicadas cujo prazo de candidatura já terminou." : "Consulta e acompanhamento das oportunidades registadas. A alteração de estados será activada após validar todos os estados permitidos e as regras de publicação do módulo."}</p>
     </header>
     <div className="grid">
       <article className="card"><span className="muted">Oportunidades encontradas</span><h2>{error ? "—" : (count ?? opportunities?.length ?? 0).toLocaleString("pt-MZ")}</h2><p>Resultado dos filtros aplicados.</p></article>
@@ -43,6 +46,7 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
     </div>
     <section className="dashboard-section" style={{ marginTop: 18 }}>
       <div className="dashboard-section-head"><div><span className="dashboard-kicker">Moderação e acompanhamento</span><h2>Directório de oportunidades</h2><p>Pesquisa por título, organização ou localização. Máximo de 100 registos por consulta.</p></div></div>
+      {expiredOnly ? <p className="notice" style={{marginBottom:14}}>Filtro activo: oportunidades publicadas com prazo de candidatura ultrapassado. <a href="/dashboard/admin/oportunidades">Limpar filtro</a></p> : null}
       <form className="commerce-form-grid" method="get">
         <label>Pesquisar<input name="q" defaultValue={q} maxLength={120} placeholder="Título, organização ou local" /></label>
         <label>Tipo (código)<input name="tipo" defaultValue={type} maxLength={40} placeholder="Ex.: FUNDING" /></label>
