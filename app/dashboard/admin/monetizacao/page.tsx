@@ -16,8 +16,8 @@ export default async function AdminMonetizationPage() {
     supabase.from("ad_delivery_events").select("id",{count:"exact",head:true}).eq("event_type","CLICK"),
   ]);
 
-  return <main className="dashboard-main"><div className="dashboard-content">
-    <div className="page-header">
+  return <main className="dashboard-main admin-workspace"><div className="dashboard-content">
+    <div className="dashboard-topbar">
       <span className="eyebrow">Monetização</span>
       <h1>Planos, promoção e publicidade</h1>
       <p className="muted">Fundação operacional para gerir planos empresariais e espaços promocionais.</p>
