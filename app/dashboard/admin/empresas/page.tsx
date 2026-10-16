@@ -59,7 +59,7 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
           </form>
 
           {error ? <div className="notice" role="alert" style={{ marginTop: 16 }}>Não foi possível carregar as empresas. Verifique as permissões da base de dados e tente novamente.</div> : businesses?.length ? (
-            <div className="admin-request-list" style={{ marginTop: 16 }}>
+            <div className="admin-directory-list" style={{ marginTop: 16 }}>
               {businesses.map((business) => {
                 const category = Array.isArray(business.business_categories) ? business.business_categories[0] : business.business_categories;
                 const archived = Boolean(business.archived_at);
