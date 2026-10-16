@@ -37,8 +37,8 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     supabase.from("listings").select("id,title,type,status,business_id,created_at,businesses:business_id(name)").order("created_at", { ascending: false }).limit(20),
   ]);
 
-  return <main className="dashboard-main"><div className="dashboard-content">
-    <div className="page-header">
+  return <main className="dashboard-main admin-workspace"><div className="dashboard-content">
+    <div className="dashboard-topbar">
       <span className="eyebrow">Administração MozEmpresas</span>
       <h1>Painel da plataforma</h1>
       <p className="muted">Gestão central da plataforma, separada dos espaços empresariais.</p>
