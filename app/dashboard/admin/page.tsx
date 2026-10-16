@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { updatePlatformServiceRequest } from "@/lib/services/actions";
 import { moderateBusiness, moderateListing } from "@/lib/admin/actions";
-import { createClient } from "@/lib/supabase/server";
+import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
 const statuses = [
   ["REQUESTED", "Recebido"],
@@ -14,12 +14,8 @@ const statuses = [
 ] as const;
 
 export default async function AdminPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: member } = await supabase.from("platform_members").select("role,active").eq("user_id", user.id).maybeSingle();
-  if (!member?.active) return null;
+  const { supabase, authorized } = await getSuperAdminContext();
+  if (!authorized) return null;
 
   const [{ count: businesses }, { count: users }, { count: listings }, { count: opportunities }, { data: requests }] = await Promise.all([
     supabase.from("businesses").select("id", { count: "exact", head: true }),
