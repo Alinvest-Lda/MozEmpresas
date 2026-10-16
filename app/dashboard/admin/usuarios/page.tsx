@@ -73,7 +73,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
           </form>
 
           {error ? <div className="notice" role="alert" style={{ marginTop: 16 }}>Não foi possível carregar os perfis. Verifique as permissões da base de dados e tente novamente.</div> : users?.length ? (
-            <div className="admin-request-list" style={{ marginTop: 16 }}>
+            <div className="admin-directory-list" style={{ marginTop: 16 }}>
               {users.map((profile) => {
                 const profileMemberships = (memberships ?? []).filter((membership) => membership.user_id === profile.id);
                 const platformRole = (platformMembers ?? []).find((member) => member.user_id === profile.id);
