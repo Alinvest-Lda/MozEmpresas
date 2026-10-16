@@ -3069,3 +3069,84 @@ body:has(.partner-shell) > footer {
  .admin-workspace .support-reply{grid-template-columns:minmax(0,1fr)}
  .admin-workspace .admin-request-meta{display:grid!important;gap:7px!important}
 }
+
+
+/* Super Admin — directórios operacionais mais densos, sem cartões repetitivos */
+.admin-workspace .admin-directory-list{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+  margin-top:16px;
+  min-width:0;
+  border-top:1px solid var(--line);
+}
+.admin-workspace .admin-directory-list>.admin-request-card{
+  display:grid;
+  gap:8px;
+  padding:17px 8px;
+  border:0;
+  border-bottom:1px solid var(--line);
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  transition:background-color .15s ease;
+}
+.admin-workspace .admin-directory-list>.admin-request-card:hover{
+  border-color:var(--line);
+  background:var(--brand-soft);
+}
+.admin-workspace .admin-directory-list .admin-request-head{
+  align-items:center;
+  gap:18px;
+}
+.admin-workspace .admin-directory-list .admin-request-head h3{
+  margin:4px 0;
+  font-size:14px;
+  letter-spacing:-.01em;
+}
+.admin-workspace .admin-directory-list .admin-request-head .dashboard-kicker{
+  line-height:1.45;
+}
+.admin-workspace .admin-directory-list .admin-request-meta{
+  margin-top:2px!important;
+  gap:7px 16px!important;
+  font-size:11px;
+}
+.admin-workspace .admin-directory-list .admin-request-meta>span{
+  overflow-wrap:anywhere;
+}
+.admin-workspace .admin-directory-list .admin-request-card>p{
+  margin:5px 0;
+  max-width:100ch;
+  font-size:12px;
+}
+.admin-workspace .admin-directory-list .admin-request-form{
+  grid-template-columns:minmax(180px,260px) auto;
+  justify-content:start;
+  align-items:end;
+  gap:10px;
+  margin-top:5px;
+  padding-top:10px;
+  border-top:0;
+}
+.admin-workspace .admin-directory-list .admin-request-form .btn{
+  min-width:150px;
+}
+.admin-workspace .admin-directory-list .admin-request-empty{
+  margin:16px 0;
+}
+@media(max-width:700px){
+  .admin-workspace .admin-directory-list>.admin-request-card{
+    padding:15px 2px;
+  }
+  .admin-workspace .admin-directory-list .admin-request-head{
+    align-items:flex-start;
+  }
+  .admin-workspace .admin-directory-list .admin-request-form{
+    grid-template-columns:minmax(0,1fr);
+    width:100%;
+  }
+  .admin-workspace .admin-directory-list .admin-request-form .btn{
+    width:100%;
+  }
+}
