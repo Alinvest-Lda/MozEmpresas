@@ -1,13 +1,10 @@
 export const dynamic = "force-dynamic";
 
-import { createClient } from "@/lib/supabase/server";
+import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
 export default async function AdminMonetizationPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data: member } = await supabase.from("platform_members").select("active").eq("user_id", user.id).maybeSingle();
-  if (!member?.active) return null;
+  const { supabase, authorized } = await getSuperAdminContext();
+  if (!authorized) return null;
 
   const [{ data: plans }, { data: promotions }, { count: subscriptions }, { data: businessAdProducts }, { data: partnerAdProducts }, { count: impressions }, { count: clicks }] = await Promise.all([
     supabase.from("platform_plans").select("id,code,name,description,monthly_price,currency,active").order("monthly_price"),
