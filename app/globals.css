@@ -3150,3 +3150,27 @@ body:has(.partner-shell) > footer {
     width:100%;
   }
 }
+
+
+/* Super Admin task-first dashboard */
+.admin-workspace .admin-control-center{margin:0 0 18px;padding:22px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.admin-workspace .admin-control-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:16px}
+.admin-workspace .admin-control-heading h2{margin:5px 0 0;font-size:22px;letter-spacing:-.035em}
+.admin-workspace .admin-control-heading p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+.admin-workspace .admin-control-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.admin-workspace .admin-control-stat{display:flex;flex-direction:column;align-items:flex-start;min-width:0;min-height:150px;padding:15px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);text-decoration:none;transition:border-color .15s ease,background-color .15s ease}
+.admin-workspace .admin-control-stat:hover{border-color:var(--line-strong);background:var(--brand-soft)}
+.admin-workspace .admin-control-stat-priority{border-color:var(--brand);background:var(--brand-soft)}
+.admin-workspace .admin-control-stat-label{font-size:11px;font-weight:750;line-height:1.4}
+.admin-workspace .admin-control-stat strong{margin:10px 0 4px;font-size:32px;line-height:1;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.admin-workspace .admin-control-stat>span:nth-of-type(2){color:var(--muted);font-size:10px;line-height:1.5}
+.admin-workspace .admin-control-stat b{margin-top:auto;padding-top:12px;font-size:11px;color:var(--brand-dark)}
+.admin-workspace .admin-control-secondary{display:flex;flex-wrap:wrap;gap:8px 22px;padding-top:14px;margin-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:11px}
+.admin-workspace .admin-control-secondary strong{color:var(--ink);font-variant-numeric:tabular-nums}
+.admin-workspace .admin-quick-actions,.admin-workspace .admin-advanced-areas{margin-top:18px}
+.admin-workspace .admin-quick-actions .dashboard-action-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.admin-workspace .admin-advanced-areas .dashboard-action-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.admin-workspace .admin-quick-actions .dashboard-action-card,.admin-workspace .admin-advanced-areas .dashboard-action-card{min-width:0;padding:13px;align-items:center}
+.admin-workspace #pedidos-servico{scroll-margin-top:24px}
+@media(max-width:1000px){.admin-workspace .admin-control-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-workspace .admin-quick-actions .dashboard-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.admin-workspace .admin-control-center{padding:15px}.admin-workspace .admin-control-heading{align-items:flex-start;flex-direction:column}.admin-workspace .admin-control-heading>.btn{width:100%;justify-content:center}.admin-workspace .admin-control-stats{grid-template-columns:minmax(0,1fr)}.admin-workspace .admin-control-stat{min-height:0;padding:14px}.admin-workspace .admin-control-secondary{gap:9px 14px}.admin-workspace .admin-quick-actions .dashboard-action-grid,.admin-workspace .admin-advanced-areas .dashboard-action-grid{grid-template-columns:minmax(0,1fr)}}
