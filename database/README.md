@@ -6,6 +6,9 @@ On 2026-10-25, the active Supabase database was inspected through read-only Post
 
 - `20261025_live_public_schema.sql`: reconstructed schema-only reference snapshot from live catalog definitions.
 - `20261025_live_schema_inventory.json`: machine-readable inventory of columns, constraints, indexes, policies, functions, triggers, views, enum types, RLS state, installed extensions and migration history.
+- `20261025_migration_history_reconciliation.json`: name-based comparison of the live migration ledger and repository migration filenames.
+- `20261025_migration_content_review.md`: first-pass review of legacy/renamed migration contents against live schema evidence.
+- `20261025_validation_report.json`: structural validation report for the reconstructed snapshot.
 
 The captured public schema contains **67 applied migration records**, **59 tables**, **251 constraints**, **159 indexes**, **121 RLS policies**, **31 public functions/procedures**, **7 triggers**, and **1 view**. All 59 public tables have RLS enabled. No production table data was exported.
 
@@ -27,7 +30,9 @@ The source-only variable `SUPABASE_SOURCE_DATABASE_URL` is intentionally distinc
 
 A comparison of the live migration ledger with the current repository listing found **67 applied migration records** and **53 SQL migration files**. Only **32 applied records** have an exact filename/name match. This is a name-based heuristic, not proof that the unmatched SQL changes are absent: some may have been renamed, squashed or combined.
 
-The full comparison is stored in `database/baseline/20261025_migration_history_reconciliation.json`. Reconcile every mismatch by comparing SQL content and the live schema before using `supabase db push` or `supabase migration repair`.
+Review both `20261025_migration_history_reconciliation.json` and `20261025_migration_content_review.md`. The content review identifies legacy bootstrap and contests/commerce files whose models are absent from the current live schema, alongside files with likely overlap in advertising, partner access and business security. Candidate matches remain unconfirmed unless statement-level evidence is recorded.
+
+**Do not run `supabase db push`, `supabase migration repair`, or replay migration history** until every mismatch has been reviewed against live schema, policies, function bodies, grants and SQL contents.
 
 ## Cutover precautions
 
