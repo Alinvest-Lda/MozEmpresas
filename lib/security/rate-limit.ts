@@ -58,16 +58,16 @@ export async function enforceRateLimit(request: Request, options: RateLimitOptio
          values ($1, now(), 1, now())
          on conflict (key_hash) do update set
            request_count = case
-             when public.public_rate_limits.window_started_at <= now() - ($3 * interval '1 second') then 1
+             when public.public_rate_limits.window_started_at <= now() - ($2 * interval '1 second') then 1
              else public.public_rate_limits.request_count + 1
            end,
            window_started_at = case
-             when public.public_rate_limits.window_started_at <= now() - ($3 * interval '1 second') then now()
+             when public.public_rate_limits.window_started_at <= now() - ($2 * interval '1 second') then now()
              else public.public_rate_limits.window_started_at
            end,
            updated_at = now()
          returning request_count`,
-        [keyHash, options.limit, options.windowSeconds],
+        [keyHash, options.windowSeconds],
       );
       const count = Number(rows[0]?.request_count);
       return { allowed: Number.isFinite(count) && count <= options.limit, unavailable: false } as const;
