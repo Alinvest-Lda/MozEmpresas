@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
-import { createAdminClient, enforceRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
+import { createAdminClient, enforceRateLimit, getPostgresClient, rateLimitResponse } from "@/lib/security/rate-limit";
 
 const schema=z.object({
  visitorKey:z.string().min(16).max(120),
@@ -26,12 +26,20 @@ export async function POST(request:Request){
   if(error) return NextResponse.json({error:"Não foi possível seleccionar a publicidade."},{status:500});
   const ad=data?.[0]??null;
   if(ad){
-    const admin = createAdminClient();
-    if (!admin) return rateLimitResponse(true);
-    await admin.from("ad_delivery_events").insert({
-      visitor_key:payload.visitorKey,user_id:user?.id??null,campaign_source:ad.campaign_source,
-      campaign_id:ad.campaign_id,surface:payload.surface,slot:payload.slot,event_type:"IMPRESSION",context
-    });
+    const sql = getPostgresClient();
+    if (sql) {
+      await sql.unsafe(
+        "insert into public.ad_delivery_events (visitor_key, user_id, campaign_source, campaign_id, surface, slot, event_type, context) values ($1, $2, $3, $4, $5, $6, 'IMPRESSION', $7::jsonb)",
+        [payload.visitorKey, user?.id ?? null, ad.campaign_source, ad.campaign_id, payload.surface, payload.slot, JSON.stringify(context)],
+      );
+    } else {
+      const admin = createAdminClient();
+      if (!admin) return rateLimitResponse(true);
+      await admin.from("ad_delivery_events").insert({
+        visitor_key:payload.visitorKey,user_id:user?.id??null,campaign_source:ad.campaign_source,
+        campaign_id:ad.campaign_id,surface:payload.surface,slot:payload.slot,event_type:"IMPRESSION",context
+      });
+    }
   }
   return NextResponse.json({ad});
  }catch{return NextResponse.json({error:"Pedido de publicidade inválido."},{status:400});}
