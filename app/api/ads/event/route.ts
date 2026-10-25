@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
-import { enforceRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
+import { createAdminClient, enforceRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 const schema=z.object({
  visitorKey:z.string().min(16).max(120),
@@ -21,7 +21,9 @@ export async function POST(request:Request){
   const payload=schema.parse(await request.json());
   const supabase=await createClient();
   const {data:{user}}=await supabase.auth.getUser();
-  const {error}=await supabase.from("ad_delivery_events").insert({
+  const admin = createAdminClient();
+  if (!admin) return rateLimitResponse(true);
+  const {error}=await admin.from("ad_delivery_events").insert({
    visitor_key:payload.visitorKey,user_id:user?.id??null,campaign_source:payload.campaignSource,
    campaign_id:payload.campaignId,surface:payload.surface,slot:payload.slot,event_type:payload.eventType,
    context:payload.context||{}
