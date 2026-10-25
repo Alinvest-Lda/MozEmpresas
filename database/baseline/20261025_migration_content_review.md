@@ -21,12 +21,22 @@ This is evidence that some repository SQL describes an earlier or superseded mod
 | `20260930003000_marketplace_offline_commerce.sql` | Replaces commerce order status values and documents the offline marketplace model. | Relevant historical business rule, but the live commerce schema has continued to evolve. Preserve the rule as a product decision, not as proof this file is the exact applied migration. |
 | `20260929233000_commerce_seller_order_actions.sql` | Adds a seller update policy for `commerce_orders`. | Policy intent is relevant, but the current policy set is the authority. Reconcile policy definitions and authorization semantics rather than replaying this file. |
 | `20261001000000_self_service_advertising.sql` | Adds `ad_products`, promotion pricing fields and a credit-purchase function. | Strong semantic overlap with live advertising/credit objects, but the live ledger contains several differently named advertising and checkout entries. Treat as a possible combined/renamed source only after statement-level comparison. |
-| `20261004182900_fix_business_rls_recursion_and_listing_access.sql` | Creates `private.user_managed_business_ids()` and rewrites business/member/listing policies. | Important security history. The captured live function inventory does not list this helper, so this exact function definition is not present as a public routine and must not be presumed to exist in live. Confirm private-schema routines and current policies before deciding whether this was superseded or replaced. |
+| `20261004182900_fix_business_rls_recursion_and_listing_access.sql` | Creates `private.user_managed_business_ids()` and rewrites business/member/listing policies. | The helper exists in the live `private` schema and its live function body matches the file's selection logic. Live ACL grants execution to `authenticated` and `postgres`. This is a confirmed semantic match for the helper, but the full policy set still needs statement-level comparison. |
 | `20261004210000_partner_dedicated_access.sql` | Creates private partner access grants and partner access RPCs. | Live inventory includes the three public RPC names, but this does not prove the whole file is an exact match. Compare function bodies, private table definition and grants. |
 | `20261006180000_harden_account_boundaries.sql` | Constrains profile user types and defines `is_partner_account()`. | Live inventory includes `is_partner_account()`; this is a likely semantic match, but body/grant equality remains unverified. |
 | `20261008170000_standardize_advertising_inventory.sql` | Standardizes advertising slots/creative fields and adds advertising request fields. | Live schema has the corresponding advertising tables and likely overlapping fields. Verify column defaults, constraints, policies and indexes before classifying as equivalent. |
 | `20261008180500_expand_opportunity_taxonomy.sql` | Adds three values to `opportunity_type`. | The live enum inventory must be compared value-by-value; matching the enum name alone is insufficient. |
 | `20261008190000_advertising_audience_engine.sql` | Adds campaign targeting fields and audience/delivery tables. | Live inventory includes audience/delivery objects. This is a strong candidate for content overlap with live advertising changes, but not a verified mapping to any specific migration-ledger row. |
+
+## Additional live-catalog verification
+
+A read-only follow-up query on 2026-10-25 confirmed the following content-level overlaps:
+
+- `private.user_managed_business_ids()` exists in the live database. Its SQL body matches the function in `20261004182900_fix_business_rls_recursion_and_listing_access.sql` semantically; live execution ACL is limited to `authenticated` and `postgres` in the inspected ACL output.
+- `private.partner_access_grants` exists live with the expected grant/token/status/timestamp columns, the status check and unique token hash constraint, plus the email and status indexes described by `20261004210000_partner_dedicated_access.sql`. This is strong object-level evidence of overlap, though all RPC bodies/grants and historical sequencing still require comparison.
+- The live `opportunity_type` enum contains `ENTREPRENEUR_SUPPORT`, `INNOVATION_TECH`, and `EXPORT_INTERNATIONAL`, the three values added by `20261008180500_expand_opportunity_taxonomy.sql`. This confirms those changes are represented in the current state, not which ledger row introduced them.
+
+These checks improve confidence in individual objects but do not yet map every unmatched live ledger entry to a single repository file.
 
 ## What this review establishes
 
