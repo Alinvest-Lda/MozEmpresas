@@ -7,6 +7,15 @@ type RateLimitOptions = {
   scope: string;
 };
 
+export function createAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) return null;
+  return createSupabaseClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
 export async function enforceRateLimit(request: Request, options: RateLimitOptions) {
   const forwarded = request.headers.get("x-vercel-forwarded-for")
     || request.headers.get("x-forwarded-for")
@@ -17,15 +26,8 @@ export async function enforceRateLimit(request: Request, options: RateLimitOptio
     .update(`${options.scope}:${clientAddress}`)
     .digest("hex");
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) {
-    return { allowed: false, unavailable: true } as const;
-  }
-
-  const supabase = createSupabaseClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  const supabase = createAdminClient();
+  if (!supabase) return { allowed: false, unavailable: true } as const;
   const { data, error } = await supabase.rpc("consume_public_rate_limit", {
     p_key_hash: keyHash,
     p_limit: options.limit,
