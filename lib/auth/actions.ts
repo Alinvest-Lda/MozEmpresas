@@ -26,7 +26,7 @@ async function createProfile(userId: string, fullName: string) {
 
 function safeNext(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string") return null;
-  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  if (!/^\/(?![\\/])/.test(value)) return null;
   return value;
 }
 
