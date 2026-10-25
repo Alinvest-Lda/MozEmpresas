@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
-import { enforceRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
+import { createAdminClient, enforceRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 const schema=z.object({
  visitorKey:z.string().min(16).max(120),
@@ -26,7 +26,9 @@ export async function POST(request:Request){
   if(error) return NextResponse.json({error:"Não foi possível seleccionar a publicidade."},{status:500});
   const ad=data?.[0]??null;
   if(ad){
-    await supabase.from("ad_delivery_events").insert({
+    const admin = createAdminClient();
+    if (!admin) return rateLimitResponse(true);
+    await admin.from("ad_delivery_events").insert({
       visitor_key:payload.visitorKey,user_id:user?.id??null,campaign_source:ad.campaign_source,
       campaign_id:ad.campaign_id,surface:payload.surface,slot:payload.slot,event_type:"IMPRESSION",context
     });
