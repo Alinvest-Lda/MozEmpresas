@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { enforceRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
+import { createAdminClient, enforceRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const schema = z.object({
@@ -50,7 +50,9 @@ export async function POST(request: Request) {
       businessId = business?.id ?? null;
     }
 
-    const { error } = await supabase.from("advertising_requests").insert({
+    const admin = createAdminClient();
+    if (!admin) return rateLimitResponse(true);
+    const { error } = await admin.from("advertising_requests").insert({
       business_id: businessId,
       company_name: payload.companyName,
       contact_name: payload.contactName,
