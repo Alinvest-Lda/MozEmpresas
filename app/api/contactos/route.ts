@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminClient, enforceRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
-import { createClient } from "@/lib/supabase/server";
 
 const schema = z.object({
   name: z.string().trim().min(2).max(120),
