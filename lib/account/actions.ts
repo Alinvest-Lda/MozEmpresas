@@ -60,7 +60,7 @@ export async function updatePassword(_state: AccountState, formData: FormData): 
 
 export async function updateAccountStatus(_state: AccountState, formData: FormData): Promise<AccountState> {
   const status = String(formData.get("status") || "");
-  if (!["ACTIVE", "INACTIVE", "DELETED"].includes(status)) return { error: "Estado de conta inválido." };
+  if (!["INACTIVE", "DELETED"].includes(status)) return { error: "A reactivação de contas exige revisão do suporte." };
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -75,5 +75,5 @@ export async function updateAccountStatus(_state: AccountState, formData: FormDa
   revalidatePath("/dashboard/conta");
   revalidatePath("/conta/estado");
   revalidatePath("/dashboard");
-  return { success: status === "ACTIVE" ? "Conta activada. Já pode voltar ao painel." : status === "INACTIVE" ? "Conta desactivada." : "Conta marcada para eliminação." };
+  return { success: status === "INACTIVE" ? "Conta desactivada." : "Conta marcada para eliminação." };
 }
