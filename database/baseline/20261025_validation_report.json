@@ -1,0 +1,58 @@
+{
+  "captured_at": "2026-10-25",
+  "source": "database/baseline/20261025_live_public_schema.sql",
+  "method": "structural comparison of generated SQL against the live catalog inventory; not a PostgreSQL parser or clean-room restore",
+  "checks": {
+    "tables": {
+      "expected": 59,
+      "found": 59,
+      "passed": true
+    },
+    "allColumnNames": {
+      "tablesChecked": 59,
+      "missingCount": 0,
+      "passed": true
+    },
+    "constraints": {
+      "expected": 251,
+      "found": 251,
+      "passed": true
+    },
+    "enumTypes": {
+      "expected": 4,
+      "found": 4,
+      "passed": true
+    },
+    "functions": {
+      "expected": 31,
+      "found": 31,
+      "passed": true
+    },
+    "policies": {
+      "expected": 121,
+      "found": 121,
+      "passed": true
+    },
+    "triggers": {
+      "expected": 7,
+      "found": 7,
+      "passed": true
+    },
+    "views": {
+      "expected": 1,
+      "found": 1,
+      "passed": true
+    },
+    "migrationHistory": {
+      "liveRecords": 67,
+      "repoFiles": 53,
+      "exactNameMatches": 32,
+      "requiresReconciliation": true
+    }
+  },
+  "limitations": [
+    "Not validated by parsing/replaying SQL in PostgreSQL.",
+    "Does not include production data, ownership/grants as executable SQL, Supabase-managed auth/storage schema internals, sequence current values, publication settings, or extension internals.",
+    "Do not apply directly to source or treat as standalone PostgreSQL cutover migration."
+  ]
+}
