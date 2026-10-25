@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-: "${SUPABASE_SOURCE_DATABASE_URL:?Set SUPABASE_SOURCE_DATABASE_URL to the live source PostgreSQL connection string}"
+: "${SUPABASE_SOURCE_DATABASE_URL:?Set SUPABASE_SOURCE_DATABASE_URL to the source PostgreSQL connection string}"
 
-mkdir -p database
-output="${1:-database/schema-baseline.sql}"
+output="${1:-database/baseline/pg_dump_live_public_schema.sql}"
+mkdir -p "$(dirname "$output")"
 
-# Capture the actual live schema instead of reconstructing it from incomplete migrations.
-# This is a source snapshot for review, not a migration to run blindly on a new provider.
-npx --yes supabase db dump \
-  --db-url "$SUPABASE_SOURCE_DATABASE_URL" \
-  --schema public,auth,storage \
-  --file "$output"
+# Native PostgreSQL schema-only export. Does not include production table data,
+# ownership, or grants. It is a canonical source dump for review, not a cutover
+# migration: auth/storage schemas and provider-specific objects require separate planning.
+pg_dump \
+  --schema-only \
+  --no-owner \
+  --no-privileges \
+  --schema=public \
+  --file="$output" \
+  "$SUPABASE_SOURCE_DATABASE_URL"
 
-printf 'Schema snapshot written to %s\n' "$output"
+printf 'Native schema snapshot written to %s\n' "$output"
