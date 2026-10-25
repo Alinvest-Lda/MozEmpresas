@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-type SearchType = "all" | "business" | "listing" | "opportunity" | "contest";
+type SearchType = "all" | "business" | "listing" | "opportunity";
 
 type Result = {
   id: string;
@@ -23,7 +23,6 @@ function resultLabel(type: SearchType) {
     business: "Empresas",
     listing: "Produtos e serviços",
     opportunity: "Oportunidades",
-    contest: "Concursos",
   }[type];
 }
 
@@ -35,7 +34,7 @@ export default async function SearchPage({
   const params = await searchParams;
   const q = cleanQuery(params.q || "");
   const requestedType = params.tipo as SearchType | undefined;
-  const type: SearchType = requestedType && ["all", "business", "listing", "opportunity", "contest"].includes(requestedType)
+  const type: SearchType = requestedType && ["all", "business", "listing", "opportunity"].includes(requestedType)
     ? requestedType
     : "all";
 
@@ -115,36 +114,15 @@ export default async function SearchPage({
         }
       };
 
-      const searchContests = async () => {
-        if (type !== "all" && type !== "contest") return;
-        const { data, error: queryError } = await supabase
-          .from("contests")
-          .select("id,title,slug,description,category")
-          .eq("status", "OPEN")
-          .or(`title.ilike.%${q}%,description.ilike.%${q}%,category.ilike.%${q}%`)
-          .order("closes_at", { ascending: true, nullsFirst: false })
-          .limit(12);
-        if (queryError) error = true;
-        for (const item of data ?? []) {
-          results.push({
-            id: item.id,
-            type: "contest",
-            title: item.title,
-            description: item.description,
-            meta: item.category,
-            href: "/concursos/" + item.slug,
-            badge: "Concurso aberto",
-          });
-        }
-      };
 
-      await Promise.all([searchBusinesses(), searchListings(), searchOpportunities(), searchContests()]);
+
+      await Promise.all([searchBusinesses(), searchListings(), searchOpportunities()]);
     } catch {
       error = true;
     }
   }
 
-  const grouped = (["business", "listing", "opportunity", "contest"] as const)
+  const grouped = (["business", "listing", "opportunity"] as const)
     .map((itemType) => ({
       type: itemType,
       label: resultLabel(itemType),
@@ -158,7 +136,7 @@ export default async function SearchPage({
         <section className="global-search-hero">
           <span className="eyebrow">Pesquisa transversal</span>
           <h1>Encontre o que procura em todo o MozEmpresas.</h1>
-          <p>Uma única pesquisa para descobrir empresas, produtos, serviços, oportunidades e concursos abertos.</p>
+          <p>Uma única pesquisa para descobrir empresas, produtos, serviços e oportunidades.</p>
           <form className="global-search-form" action="/pesquisa">
             <label className="global-search-query">
               <span>O que procura?</span>
@@ -176,7 +154,6 @@ export default async function SearchPage({
                   <option value="business">Empresas</option>
                   <option value="listing">Produtos e serviços</option>
                   <option value="opportunity">Oportunidades</option>
-                  <option value="contest">Concursos</option>
                 </select>
               </label>
               <button className="btn primary" type="submit">Pesquisar →</button>
@@ -215,12 +192,12 @@ export default async function SearchPage({
                   <section className="global-search-group" key={group.type}>
                     <div className="global-search-group-head">
                       <div><span className="eyebrow">{group.label}</span><strong>{group.items.length} resultado{group.items.length === 1 ? "" : "s"}</strong></div>
-                      <Link href={"/" + (group.type === "business" ? "empresas" : group.type === "listing" ? "marketplace" : group.type === "opportunity" ? "oportunidades" : "concursos")}>Explorar todos →</Link>
+                      <Link href={"/" + (group.type === "business" ? "empresas" : group.type === "listing" ? "marketplace" : group.type === "opportunity" ? "oportunidades" : "empresas")}>Explorar todos →</Link>
                     </div>
                     <div className="global-search-list">
                       {group.items.map((item) => (
                         <Link href={item.href} className="global-search-result" key={item.type + item.id}>
-                          <div className="global-search-result-icon">{item.type === "business" ? "E" : item.type === "listing" ? "◇" : item.type === "opportunity" ? "↗" : "▣"}</div>
+                          <div className="global-search-result-icon">{item.type === "business" ? "E" : item.type === "listing" ? "◇" : "↗"}</div>
                           <div className="global-search-result-body">
                             <div className="global-search-result-top"><span>{item.badge}</span>{item.meta && <small>{item.meta}</small>}</div>
                             <h3>{item.title}</h3>
@@ -242,7 +219,6 @@ export default async function SearchPage({
                   <Link href="/empresas">Explorar empresas</Link>
                   <Link href="/marketplace">Explorar ofertas</Link>
                   <Link href="/oportunidades">Ver oportunidades</Link>
-                  <Link href="/concursos">Ver concursos</Link>
                 </div>
               </div>
             )}
