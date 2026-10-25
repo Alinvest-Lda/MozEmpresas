@@ -57,7 +57,7 @@ export function AuthForm({ action, mode, next }: Props) {
         <div className="notice" style={{ marginBottom: 16 }}>
           <strong>Uma conta, várias possibilidades.</strong>
           <br />
-          Depois do registo poderá criar ou associar a sua empresa e comprar, vender, publicar ou participar em oportunidades e concursos.
+          Depois do registo poderá criar ou associar a sua empresa e comprar, vender, publicar ofertas e participar em oportunidades.
         </div>
       )}
 
