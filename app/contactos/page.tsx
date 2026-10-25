@@ -38,7 +38,6 @@ export default function ContactosPage() {
               <div className="contact-links">
                 <Link href="/empresas">Empresas <span>→</span></Link>
                 <Link href="/marketplace">Produtos e serviços <span>→</span></Link>
-                <Link href="/concursos">Concursos <span>→</span></Link>
                 <Link href="/oportunidades">Oportunidades <span>→</span></Link>
               </div>
             </div>
