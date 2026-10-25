@@ -50,14 +50,16 @@ export async function POST(request: Request) {
       businessId = business?.id ?? null;
     }
 
+    const targetInterests = (payload.targetInterests || "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
+    const targetLocations = (payload.targetLocations || "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
     const values = [
       businessId, payload.companyName, payload.contactName, payload.email, payload.phone || null,
       payload.surface, payload.slot, payload.creativeType, payload.packageName, payload.headline || null,
       payload.body || null, payload.imageUrl || null, payload.targetUrl || null, payload.ctaLabel || null,
       payload.altText || null, payload.startsAt || null, payload.endsAt || null, payload.message || null,
       payload.audienceMode, payload.budget ?? null, payload.bidCpm ?? null, payload.frequencyCap,
-      (payload.targetInterests || "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean),
-      (payload.targetLocations || "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean),
+      targetInterests,
+      targetLocations,
     ];
     const sql = getPostgresClient();
     if (sql) {
@@ -98,8 +100,8 @@ export async function POST(request: Request) {
         budget: payload.budget ?? null,
         bid_cpm: payload.bidCpm ?? null,
         frequency_cap: payload.frequencyCap,
-        target_interests: values[22],
-        target_locations: values[23],
+        target_interests: targetInterests,
+        target_locations: targetLocations,
       });
       if (error) return NextResponse.json({ error: "Não foi possível registar o pedido." }, { status: 500 });
     }
