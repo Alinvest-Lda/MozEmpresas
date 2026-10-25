@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { enforceRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
+import { createAdminClient, enforceRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const schema = z.object({
@@ -17,7 +17,8 @@ export async function POST(request: Request) {
 
   try {
     const payload = schema.parse(await request.json());
-    const supabase = await createClient();
+    const supabase = createAdminClient();
+    if (!supabase) return rateLimitResponse(true);
     const { error } = await supabase.from("contact_messages").insert(payload);
     if (error) return NextResponse.json({ error: "Não foi possível enviar a mensagem." }, { status: 500 });
     return NextResponse.json({ ok: true });
