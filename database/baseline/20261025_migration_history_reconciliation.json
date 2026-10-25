@@ -1,0 +1,257 @@
+{
+  "captured_at": "2026-10-25",
+  "source_project_ref": "zikjvjzbbfzrelbkaaci",
+  "live_applied_migration_count": 67,
+  "repository_migration_file_count": 53,
+  "exact_name_matches": 32,
+  "applied_records_without_exact_filename_match": [
+    {
+      "version": "20260927144528",
+      "name": "align_account_types_with_marketplace"
+    },
+    {
+      "version": "20260927152352",
+      "name": "implement_business_access_architecture"
+    },
+    {
+      "version": "20260927152458",
+      "name": "secure_business_invitation_acceptance"
+    },
+    {
+      "version": "20260927153313",
+      "name": "add_commerce_purchase_foundation"
+    },
+    {
+      "version": "20260927153406",
+      "name": "create_platform_services_catalog"
+    },
+    {
+      "version": "20260928185738",
+      "name": "access_audit_insert_policy"
+    },
+    {
+      "version": "20261001185928",
+      "name": "listing_business_manager_access"
+    },
+    {
+      "version": "20261001185941",
+      "name": "cleanup_duplicate_listing_policy"
+    },
+    {
+      "version": "20261001200119",
+      "name": "service_request_platform_operations"
+    },
+    {
+      "version": "20261001203155",
+      "name": "platform_staff_moderation_access"
+    },
+    {
+      "version": "20261001203954",
+      "name": "monetization_foundation"
+    },
+    {
+      "version": "20261001204936",
+      "name": "platform_credit_wallets_and_packages"
+    },
+    {
+      "version": "20261001210147",
+      "name": "self_service_advertising_catalog"
+    },
+    {
+      "version": "20261001210351",
+      "name": "secure_advertising_rpc_execute"
+    },
+    {
+      "version": "20261001225429",
+      "name": "platform_service_self_service_checkout"
+    },
+    {
+      "version": "20261001225827",
+      "name": "financial_account_and_simulated_service_prices"
+    },
+    {
+      "version": "20261001225918",
+      "name": "secure_service_credit_checkout"
+    },
+    {
+      "version": "20261001225952",
+      "name": "credit_purchase_payment_proofs"
+    },
+    {
+      "version": "20261002081514",
+      "name": "advertising_mpesa_payment_method"
+    },
+    {
+      "version": "20261004153340",
+      "name": "alignment_phase_test"
+    },
+    {
+      "version": "20261004153606",
+      "name": "align_business_context_commerce_atomicity_and_realtime"
+    },
+    {
+      "version": "20261004163049",
+      "name": "fix_business_rls_recursion_with_definer_helper"
+    },
+    {
+      "version": "20261004163440",
+      "name": "fix_business_rls_recursion_and_listing_access_live"
+    },
+    {
+      "version": "20261004181103",
+      "name": "finalize_security_rls_hardening"
+    },
+    {
+      "version": "20261004181125",
+      "name": "harden_atomic_purchase_rpc_access"
+    },
+    {
+      "version": "20261004182837",
+      "name": "add_partner_user_type_and_activate_partner_account"
+    },
+    {
+      "version": "20261006064838",
+      "name": "partner_access_grants_runtime"
+    },
+    {
+      "version": "20261006064849",
+      "name": "partner_access_functions_runtime"
+    },
+    {
+      "version": "20261006144010",
+      "name": "partner_account_and_managers"
+    },
+    {
+      "version": "20261006144042",
+      "name": "partner_account_security_and_claim"
+    },
+    {
+      "version": "20261006150108",
+      "name": "partner_profile_and_entitlements"
+    },
+    {
+      "version": "20261006151423",
+      "name": "partner_premium_advertising"
+    },
+    {
+      "version": "20261008140229",
+      "name": "add_youth_initiative_opportunity_type"
+    },
+    {
+      "version": "20261010094341",
+      "name": "add_scoped_campaign_performance_metrics"
+    },
+    {
+      "version": "20261015082020",
+      "name": "restrict_global_admin_actions_to_super_admin"
+    }
+  ],
+  "repository_files_without_exact_applied_name_match": [
+    {
+      "file": "0001_mozempresas_core.sql",
+      "base": "mozempresas_core",
+      "timestamp": null
+    },
+    {
+      "file": "0002_commerce_contests_repository_monetization.sql",
+      "base": "commerce_contests_repository_monetization",
+      "timestamp": null
+    },
+    {
+      "file": "0003_auth_profile_trigger.sql",
+      "base": "auth_profile_trigger",
+      "timestamp": null
+    },
+    {
+      "file": "0004_contact_messages.sql",
+      "base": "contact_messages",
+      "timestamp": null
+    },
+    {
+      "file": "0005_business_promotions.sql",
+      "base": "business_promotions",
+      "timestamp": null
+    },
+    {
+      "file": "0006_advertising_requests.sql",
+      "base": "advertising_requests",
+      "timestamp": null
+    },
+    {
+      "file": "0007_public_access_hardening.sql",
+      "base": "public_access_hardening",
+      "timestamp": null
+    },
+    {
+      "file": "20260929233000_commerce_seller_order_actions.sql",
+      "base": "commerce_seller_order_actions",
+      "timestamp": "20260929233000"
+    },
+    {
+      "file": "20260930003000_marketplace_offline_commerce.sql",
+      "base": "marketplace_offline_commerce",
+      "timestamp": "20260930003000"
+    },
+    {
+      "file": "20260930010000_p0_contests_opportunities.sql",
+      "base": "p0_contests_opportunities",
+      "timestamp": "20260930010000"
+    },
+    {
+      "file": "20261001000000_self_service_advertising.sql",
+      "base": "self_service_advertising",
+      "timestamp": "20261001000000"
+    },
+    {
+      "file": "20261004161000_align_listing_rls_with_archived_businesses.sql",
+      "base": "align_listing_rls_with_archived_businesses",
+      "timestamp": "20261004161000"
+    },
+    {
+      "file": "20261004173000_commerce_participant_access_and_order_progress.sql",
+      "base": "commerce_participant_access_and_order_progress",
+      "timestamp": "20261004173000"
+    },
+    {
+      "file": "20261004182900_fix_business_rls_recursion_and_listing_access.sql",
+      "base": "fix_business_rls_recursion_and_listing_access",
+      "timestamp": "20261004182900"
+    },
+    {
+      "file": "20261004210000_partner_dedicated_access.sql",
+      "base": "partner_dedicated_access",
+      "timestamp": "20261004210000"
+    },
+    {
+      "file": "20261004211000_partner_super_admin_guard.sql",
+      "base": "partner_super_admin_guard",
+      "timestamp": "20261004211000"
+    },
+    {
+      "file": "20261006090000_allow_super_admin_platform_role.sql",
+      "base": "allow_super_admin_platform_role",
+      "timestamp": "20261006090000"
+    },
+    {
+      "file": "20261006180000_harden_account_boundaries.sql",
+      "base": "harden_account_boundaries",
+      "timestamp": "20261006180000"
+    },
+    {
+      "file": "20261008170000_standardize_advertising_inventory.sql",
+      "base": "standardize_advertising_inventory",
+      "timestamp": "20261008170000"
+    },
+    {
+      "file": "20261008180500_expand_opportunity_taxonomy.sql",
+      "base": "expand_opportunity_taxonomy",
+      "timestamp": "20261008180500"
+    },
+    {
+      "file": "20261008190000_advertising_audience_engine.sql",
+      "base": "advertising_audience_engine",
+      "timestamp": "20261008190000"
+    }
+  ],
+  "warning": "Name matching is only a heuristic. Some unmatched records may be represented by renamed, squashed, or combined migration files. Do not run supabase db push, migration repair, or replay this history until each mismatch has been reviewed against live schema and SQL contents."
+}
