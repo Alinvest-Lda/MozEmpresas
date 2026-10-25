@@ -1,7 +1,7 @@
 -- LIVE SCHEMA BASELINE SNAPSHOT — generated from Supabase production catalog
 -- Project ref: zikjvjzbbfzrelbkaaci
--- Generated at (database clock): 2026-10-25T08:06:37.554077+00:00
--- Objects are scoped to schema public. This is a reference snapshot for reconciliation,
+-- Generated at (database clock): 2026-10-25T08:06:58.581523+00:00
+-- Objects are scoped to schema public. Reference snapshot for reconciliation,
 -- NOT a ready-to-apply standalone PostgreSQL migration: policies/functions may reference
 -- Supabase-managed auth/storage/extensions/roles. Review provider dependencies first.
 -- Do not apply this file directly to the live source database.
@@ -18,324 +18,666 @@ CREATE TYPE public.opportunity_status AS ENUM ('DRAFT', 'PUBLISHED', 'CLOSED', '
 
 CREATE TYPE public.opportunity_type AS ENUM ('CONTEST', 'CALL', 'TENDER', 'FUNDING', 'PARTNERSHIP', 'TRAINING', 'EVENT', 'BUSINESS', 'OTHER', 'PROGRAM', 'AWARD_SCHOLARSHIP', 'EXPRESSION_OF_INTEREST', 'YOUTH_INITIATIVE', 'ENTREPRENEUR_SUPPORT', 'INNOVATION_TECH', 'EXPORT_INTERNATIONAL');
 
-CREATE TABLE public.access_audit_log (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  metadata jsonb GENERATED ALWAYS AS ('{}'::jsonb) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.access_audit_log (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid,
+  actor_user_id uuid NOT NULL,
+  target_user_id uuid,
+  action text NOT NULL,
+  role_from text,
+  role_to text,
+  metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.ad_delivery_events (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  context jsonb GENERATED ALWAYS AS ('{}'::jsonb) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.ad_delivery_events (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  visitor_key text NOT NULL,
+  user_id uuid,
+  campaign_source text NOT NULL,
+  campaign_id uuid NOT NULL,
+  surface text NOT NULL,
+  slot text NOT NULL,
+  event_type text NOT NULL,
+  context jsonb DEFAULT '{}'::jsonb NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.ad_impressions (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  interests text[] GENERATED ALWAYS AS ('{}'::text[]) STORED NOT NULL,
-  score numeric(12,4) GENERATED ALWAYS AS (0) STORED NOT NULL,
-  served_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.ad_impressions (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  source text NOT NULL,
+  ad_id uuid NOT NULL,
+  visitor_id text,
+  user_id uuid,
+  surface text NOT NULL,
+  slot text NOT NULL,
+  context text,
+  interests text[] DEFAULT '{}'::text[] NOT NULL,
+  score numeric(12,4) DEFAULT 0 NOT NULL,
+  served_at timestamp with time zone DEFAULT now() NOT NULL,
+  clicked_at timestamp with time zone);
 
-CREATE TABLE public.ad_interest_events (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  weight numeric(8,3) GENERATED ALWAYS AS (1) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.ad_interest_events (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  visitor_id text,
+  user_id uuid,
+  interest text NOT NULL,
+  weight numeric(8,3) DEFAULT 1 NOT NULL,
+  surface text,
+  context text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.ad_product_target_options (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  extra_price_mzn numeric(12,2) GENERATED ALWAYS AS (0) STORED NOT NULL,
-  extra_credits integer GENERATED ALWAYS AS (0) STORED NOT NULL,
-  active boolean GENERATED ALWAYS AS (true) STORED NOT NULL);
+CREATE TABLE public.ad_product_target_options (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  ad_product_id uuid NOT NULL,
+  target_type text NOT NULL,
+  target_value text NOT NULL,
+  extra_price_mzn numeric(12,2) DEFAULT 0 NOT NULL,
+  extra_credits integer DEFAULT 0 NOT NULL,
+  active boolean DEFAULT true NOT NULL);
 
-CREATE TABLE public.ad_products (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  capacity integer GENERATED ALWAYS AS (1) STORED NOT NULL,
-  active boolean GENERATED ALWAYS AS (true) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  access_type text GENERATED ALWAYS AS ('PAID'::text) STORED NOT NULL,
-  audience_level text GENERATED ALWAYS AS ('GENERAL'::text) STORED NOT NULL);
+CREATE TABLE public.ad_products (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  code text NOT NULL,
+  name text NOT NULL,
+  placement text NOT NULL,
+  description text,
+  duration_days integer NOT NULL,
+  direct_price_mzn numeric(12,2) NOT NULL,
+  credit_price integer NOT NULL,
+  capacity integer DEFAULT 1 NOT NULL,
+  active boolean DEFAULT true NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  access_type text DEFAULT 'PAID'::text NOT NULL,
+  audience_level text DEFAULT 'GENERAL'::text NOT NULL,
+  slot text);
 
-CREATE TABLE public.ad_visitor_profiles (  interests jsonb GENERATED ALWAYS AS ('{}'::jsonb) STORED NOT NULL,
-  last_context jsonb GENERATED ALWAYS AS ('{}'::jsonb) STORED NOT NULL,
-  first_seen_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  last_seen_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.ad_visitor_profiles (  visitor_key text NOT NULL,
+  user_id uuid,
+  interests jsonb DEFAULT '{}'::jsonb NOT NULL,
+  last_context jsonb DEFAULT '{}'::jsonb NOT NULL,
+  first_seen_at timestamp with time zone DEFAULT now() NOT NULL,
+  last_seen_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.advertising_requests (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  surface text GENERATED ALWAYS AS ('DIRECTORY'::text) STORED NOT NULL,
-  slot text GENERATED ALWAYS AS ('BILLBOARD'::text) STORED NOT NULL,
-  creative_type text GENERATED ALWAYS AS ('BANNER'::text) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('REQUESTED'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  audience_mode text GENERATED ALWAYS AS ('CONTEXTUAL'::text) STORED NOT NULL,
-  frequency_cap integer GENERATED ALWAYS AS (2) STORED NOT NULL,
-  target_interests text[] GENERATED ALWAYS AS ('{}'::text[]) STORED NOT NULL,
-  target_locations text[] GENERATED ALWAYS AS ('{}'::text[]) STORED NOT NULL);
+CREATE TABLE public.advertising_requests (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid,
+  company_name text NOT NULL,
+  contact_name text NOT NULL,
+  email text NOT NULL,
+  phone text,
+  surface text DEFAULT 'DIRECTORY'::text NOT NULL,
+  slot text DEFAULT 'BILLBOARD'::text NOT NULL,
+  creative_type text DEFAULT 'BANNER'::text NOT NULL,
+  package_name text,
+  headline text,
+  body text,
+  image_url text,
+  target_url text,
+  cta_label text,
+  alt_text text,
+  starts_at timestamp with time zone,
+  ends_at timestamp with time zone,
+  message text,
+  status text DEFAULT 'REQUESTED'::text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  audience_mode text DEFAULT 'CONTEXTUAL'::text NOT NULL,
+  budget numeric,
+  bid_cpm numeric,
+  frequency_cap integer DEFAULT 2 NOT NULL,
+  target_interests text[] DEFAULT '{}'::text[] NOT NULL,
+  target_locations text[] DEFAULT '{}'::text[] NOT NULL);
 
 CREATE TABLE public.audit_logs (  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+  actor_id uuid,
+  action text NOT NULL,
+  resource_type text NOT NULL,
+  resource_id uuid,
+  before_data jsonb,
+  after_data jsonb,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.business_buyer_interests (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.business_buyer_interests (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid NOT NULL,
+  category_id uuid,
+  location text,
+  listing_type text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.business_categories (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.business_categories (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  name text NOT NULL,
+  slug text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.business_credit_wallets (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  balance_credits integer GENERATED ALWAYS AS (0) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.business_credit_wallets (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid NOT NULL,
+  balance_credits integer DEFAULT 0 NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.business_invitations (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  role text GENERATED ALWAYS AS ('member'::text) STORED NOT NULL,
-  expires_at timestamp with time zone GENERATED ALWAYS AS ((now() + '7 days'::interval)) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.business_invitations (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid NOT NULL,
+  email text NOT NULL,
+  role text DEFAULT 'member'::text NOT NULL,
+  invited_by uuid NOT NULL,
+  token_hash text NOT NULL,
+  expires_at timestamp with time zone DEFAULT (now() + '7 days'::interval) NOT NULL,
+  accepted_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.business_members (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  role text GENERATED ALWAYS AS ('member'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.business_members (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  role text DEFAULT 'member'::text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.business_partner_relationships (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('ACTIVE'::text) STORED NOT NULL,
-  relationship_type text GENERATED ALWAYS AS ('PARTNERSHIP'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.business_partner_relationships (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid NOT NULL,
+  partner_business_id uuid NOT NULL,
+  status text DEFAULT 'ACTIVE'::text NOT NULL,
+  relationship_type text DEFAULT 'PARTNERSHIP'::text NOT NULL,
+  notes text,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.business_plan_subscriptions (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('ACTIVE'::text) STORED NOT NULL,
-  starts_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.business_plan_subscriptions (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid NOT NULL,
+  plan_id uuid NOT NULL,
+  status text DEFAULT 'ACTIVE'::text NOT NULL,
+  starts_at timestamp with time zone DEFAULT now() NOT NULL,
+  ends_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.business_portfolio_media (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  sort_order integer GENERATED ALWAYS AS (0) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.business_portfolio_media (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid NOT NULL,
+  image_url text NOT NULL,
+  title text,
+  sort_order integer DEFAULT 0 NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.business_promotion_targets (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.business_promotion_targets (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  promotion_id uuid NOT NULL,
+  target_type text NOT NULL,
+  target_value text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.business_promotions (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('DRAFT'::text) STORED NOT NULL,
-  currency text GENERATED ALWAYS AS ('MZN'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  audience_mode text GENERATED ALWAYS AS ('GENERAL'::text) STORED NOT NULL,
-  creative_type text GENERATED ALWAYS AS ('TEXT'::text) STORED,
-  campaign_mode text GENERATED ALWAYS AS ('GUARANTEED'::text) STORED NOT NULL,
-  priority integer GENERATED ALWAYS AS (50) STORED NOT NULL,
-  bid_mzn numeric(12,2) GENERATED ALWAYS AS (0) STORED NOT NULL,
-  frequency_cap integer GENERATED ALWAYS AS (2) STORED NOT NULL,
-  targeting jsonb GENERATED ALWAYS AS ('{}'::jsonb) STORED NOT NULL,
-  impressions_count bigint GENERATED ALWAYS AS (0) STORED NOT NULL,
-  clicks_count bigint GENERATED ALWAYS AS (0) STORED NOT NULL,
-  campaign_kind text GENERATED ALWAYS AS ('AUCTION'::text) STORED NOT NULL,
-  bid_cpm numeric GENERATED ALWAYS AS (0) STORED NOT NULL,
-  target_interests text[] GENERATED ALWAYS AS ('{}'::text[]) STORED NOT NULL,
-  target_locations text[] GENERATED ALWAYS AS ('{}'::text[]) STORED NOT NULL);
+CREATE TABLE public.business_promotions (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid NOT NULL,
+  listing_id uuid,
+  title text NOT NULL,
+  placement text NOT NULL,
+  status text DEFAULT 'DRAFT'::text NOT NULL,
+  starts_at timestamp with time zone,
+  ends_at timestamp with time zone,
+  budget numeric(12,2),
+  currency text DEFAULT 'MZN'::text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  ad_product_id uuid,
+  payment_method text,
+  price_mzn numeric(12,2),
+  credits_charged integer,
+  audience_mode text DEFAULT 'GENERAL'::text NOT NULL,
+  slot text,
+  creative_type text DEFAULT 'TEXT'::text,
+  headline text,
+  body text,
+  image_url text,
+  target_url text,
+  cta_label text,
+  alt_text text,
+  campaign_mode text DEFAULT 'GUARANTEED'::text NOT NULL,
+  priority integer DEFAULT 50 NOT NULL,
+  bid_mzn numeric(12,2) DEFAULT 0 NOT NULL,
+  frequency_cap integer DEFAULT 2 NOT NULL,
+  targeting jsonb DEFAULT '{}'::jsonb NOT NULL,
+  impression_goal integer,
+  impressions_count bigint DEFAULT 0 NOT NULL,
+  clicks_count bigint DEFAULT 0 NOT NULL,
+  campaign_kind text DEFAULT 'AUCTION'::text NOT NULL,
+  bid_cpm numeric DEFAULT 0 NOT NULL,
+  target_interests text[] DEFAULT '{}'::text[] NOT NULL,
+  target_locations text[] DEFAULT '{}'::text[] NOT NULL);
 
-CREATE TABLE public.business_role_permissions ();
+CREATE TABLE public.business_role_permissions (  role text NOT NULL,
+  permission text NOT NULL);
 
-CREATE TABLE public.businesses (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  is_public boolean GENERATED ALWAYS AS (true) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.businesses (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  name text NOT NULL,
+  slug text NOT NULL,
+  description text,
+  category_id uuid,
+  location text,
+  phone text,
+  email text,
+  website text,
+  logo_url text,
+  is_public boolean DEFAULT true NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  cover_url text,
+  archived_at timestamp with time zone);
 
-CREATE TABLE public.commerce_order_events (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  event_type text GENERATED ALWAYS AS ('STATUS_CHANGED'::text) STORED NOT NULL,
-  metadata jsonb GENERATED ALWAYS AS ('{}'::jsonb) STORED NOT NULL);
+CREATE TABLE public.commerce_order_events (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  order_id uuid NOT NULL,
+  actor_user_id uuid,
+  from_status text,
+  to_status text NOT NULL,
+  note text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  event_type text DEFAULT 'STATUS_CHANGED'::text NOT NULL,
+  metadata jsonb DEFAULT '{}'::jsonb NOT NULL);
 
-CREATE TABLE public.commerce_order_items (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  quantity numeric(12,2) GENERATED ALWAYS AS (1) STORED NOT NULL,
-  unit_price numeric(14,2) GENERATED ALWAYS AS (0) STORED NOT NULL,
-  currency text GENERATED ALWAYS AS ('MZN'::text) STORED NOT NULL,
-  line_total numeric(14,2) GENERATED ALWAYS AS (0) STORED NOT NULL,
-  metadata jsonb GENERATED ALWAYS AS ('{}'::jsonb) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.commerce_order_items (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  order_id uuid NOT NULL,
+  listing_id uuid,
+  seller_business_id uuid,
+  title text NOT NULL,
+  type text NOT NULL,
+  quantity numeric(12,2) DEFAULT 1 NOT NULL,
+  unit_price numeric(14,2) DEFAULT 0 NOT NULL,
+  currency text DEFAULT 'MZN'::text NOT NULL,
+  line_total numeric(14,2) DEFAULT 0 NOT NULL,
+  metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.commerce_orders (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('PENDING'::text) STORED NOT NULL,
-  currency text GENERATED ALWAYS AS ('MZN'::text) STORED NOT NULL,
-  subtotal numeric(14,2) GENERATED ALWAYS AS (0) STORED NOT NULL,
-  total numeric(14,2) GENERATED ALWAYS AS (0) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  payment_status text GENERATED ALWAYS AS ('NOT_REQUIRED'::text) STORED NOT NULL,
-  fulfillment_status text GENERATED ALWAYS AS ('NOT_STARTED'::text) STORED NOT NULL);
+CREATE TABLE public.commerce_orders (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  buyer_user_id uuid NOT NULL,
+  buyer_business_id uuid,
+  status text DEFAULT 'PENDING'::text NOT NULL,
+  currency text DEFAULT 'MZN'::text NOT NULL,
+  subtotal numeric(14,2) DEFAULT 0 NOT NULL,
+  total numeric(14,2) DEFAULT 0 NOT NULL,
+  notes text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  payment_status text DEFAULT 'NOT_REQUIRED'::text NOT NULL,
+  payment_reference text,
+  paid_at timestamp with time zone,
+  fulfillment_status text DEFAULT 'NOT_STARTED'::text NOT NULL,
+  service_started_at timestamp with time zone,
+  completed_at timestamp with time zone);
 
-CREATE TABLE public.commerce_transactions (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('PENDING'::text) STORED NOT NULL,
-  amount numeric(14,2) GENERATED ALWAYS AS (0) STORED NOT NULL,
-  currency text GENERATED ALWAYS AS ('MZN'::text) STORED NOT NULL,
-  metadata jsonb GENERATED ALWAYS AS ('{}'::jsonb) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.commerce_transactions (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  order_id uuid NOT NULL,
+  provider text,
+  provider_reference text,
+  status text DEFAULT 'PENDING'::text NOT NULL,
+  amount numeric(14,2) DEFAULT 0 NOT NULL,
+  currency text DEFAULT 'MZN'::text NOT NULL,
+  paid_at timestamp with time zone,
+  metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.contact_messages (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.contact_messages (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  name text NOT NULL,
+  email text NOT NULL,
+  phone text,
+  subject text NOT NULL,
+  message text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.credit_packages (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  active boolean GENERATED ALWAYS AS (true) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.credit_packages (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  code text NOT NULL,
+  name text NOT NULL,
+  credit_volume integer NOT NULL,
+  price_mzn numeric(12,2) NOT NULL,
+  active boolean DEFAULT true NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.credit_purchase_requests (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('REQUESTED'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.credit_purchase_requests (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid NOT NULL,
+  package_id uuid NOT NULL,
+  requester_user_id uuid NOT NULL,
+  status text DEFAULT 'REQUESTED'::text NOT NULL,
+  amount_mzn numeric(12,2) NOT NULL,
+  credits integer NOT NULL,
+  payment_method text,
+  notes text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  proof_path text);
 
-CREATE TABLE public.credit_transactions (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.credit_transactions (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  wallet_id uuid NOT NULL,
+  package_id uuid,
+  type text NOT NULL,
+  credits integer NOT NULL,
+  amount_mzn numeric(12,2),
+  reference_type text,
+  reference_id uuid,
+  description text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.financial_documents (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('ISSUED'::text) STORED NOT NULL,
-  amount_mzn numeric(14,2) GENERATED ALWAYS AS (0) STORED NOT NULL,
-  currency text GENERATED ALWAYS AS ('MZN'::text) STORED NOT NULL,
-  issued_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  metadata jsonb GENERATED ALWAYS AS ('{}'::jsonb) STORED NOT NULL);
+CREATE TABLE public.financial_documents (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  document_type text NOT NULL,
+  document_number text NOT NULL,
+  status text DEFAULT 'ISSUED'::text NOT NULL,
+  amount_mzn numeric(14,2) DEFAULT 0 NOT NULL,
+  currency text DEFAULT 'MZN'::text NOT NULL,
+  reference_type text,
+  reference_id uuid,
+  issued_at timestamp with time zone DEFAULT now() NOT NULL,
+  due_at timestamp with time zone,
+  metadata jsonb DEFAULT '{}'::jsonb NOT NULL);
 
-CREATE TABLE public.financial_payments (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  currency text GENERATED ALWAYS AS ('MZN'::text) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('PENDING'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.financial_payments (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  amount_mzn numeric(14,2) NOT NULL,
+  currency text DEFAULT 'MZN'::text NOT NULL,
+  method text NOT NULL,
+  status text DEFAULT 'PENDING'::text NOT NULL,
+  reference text,
+  proof_url text,
+  document_id uuid,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  confirmed_at timestamp with time zone);
 
-CREATE TABLE public.listing_attachments (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  size_bytes bigint GENERATED ALWAYS AS (0) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.listing_attachments (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  listing_id uuid NOT NULL,
+  storage_path text NOT NULL,
+  file_name text NOT NULL,
+  mime_type text NOT NULL,
+  size_bytes bigint DEFAULT 0 NOT NULL,
+  kind text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.listing_categories (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.listing_categories (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  name text NOT NULL,
+  slug text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.listing_media (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  sort_order integer GENERATED ALWAYS AS (0) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.listing_media (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  listing_id uuid NOT NULL,
+  storage_path text NOT NULL,
+  sort_order integer DEFAULT 0 NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.listings (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  currency character(3) GENERATED ALWAYS AS ('MZN'::bpchar) STORED NOT NULL,
-  status listing_status GENERATED ALWAYS AS ('DRAFT'::listing_status) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.listings (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  title text NOT NULL,
+  slug text NOT NULL,
+  description text NOT NULL,
+  category_id uuid,
+  type listing_type NOT NULL,
+  price numeric(14,2),
+  currency character(3) DEFAULT 'MZN'::bpchar NOT NULL,
+  status listing_status DEFAULT 'DRAFT'::listing_status NOT NULL,
+  location text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.notifications (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.notifications (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid NOT NULL,
+  type text NOT NULL,
+  title text NOT NULL,
+  body text,
+  resource_type text,
+  resource_id uuid,
+  read_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.opportunities (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status opportunity_status GENERATED ALWAYS AS ('DRAFT'::opportunity_status) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.opportunities (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  title text NOT NULL,
+  slug text NOT NULL,
+  type opportunity_type NOT NULL,
+  status opportunity_status DEFAULT 'DRAFT'::opportunity_status NOT NULL,
+  description text NOT NULL,
+  organization text,
+  location text,
+  opens_at timestamp with time zone,
+  closes_at timestamp with time zone,
+  requirements text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  partner_account_id uuid);
 
-CREATE TABLE public.opportunity_applications (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('SUBMITTED'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.opportunity_applications (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  opportunity_id uuid NOT NULL,
+  applicant_user_id uuid NOT NULL,
+  applicant_business_id uuid,
+  cover_note text,
+  status text DEFAULT 'SUBMITTED'::text NOT NULL,
+  submitted_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.partner_account_members (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  role text GENERATED ALWAYS AS ('manager'::text) STORED NOT NULL,
-  active boolean GENERATED ALWAYS AS (true) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.partner_account_members (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  account_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  role text DEFAULT 'manager'::text NOT NULL,
+  active boolean DEFAULT true NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.partner_accounts (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('ACTIVE'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.partner_accounts (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  name text NOT NULL,
+  status text DEFAULT 'ACTIVE'::text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  partner_code text,
+  description text,
+  website text,
+  contact_email text,
+  contact_phone text);
 
-CREATE TABLE public.partner_ad_campaigns (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('REQUESTED'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  creative_type text GENERATED ALWAYS AS ('TEXT'::text) STORED,
-  campaign_mode text GENERATED ALWAYS AS ('GUARANTEED'::text) STORED NOT NULL,
-  priority integer GENERATED ALWAYS AS (70) STORED NOT NULL,
-  bid_mzn numeric(12,2) GENERATED ALWAYS AS (0) STORED NOT NULL,
-  frequency_cap integer GENERATED ALWAYS AS (2) STORED NOT NULL,
-  targeting jsonb GENERATED ALWAYS AS ('{}'::jsonb) STORED NOT NULL,
-  impressions_count bigint GENERATED ALWAYS AS (0) STORED NOT NULL,
-  clicks_count bigint GENERATED ALWAYS AS (0) STORED NOT NULL,
-  campaign_kind text GENERATED ALWAYS AS ('GUARANTEED'::text) STORED NOT NULL,
-  bid_cpm numeric GENERATED ALWAYS AS (0) STORED NOT NULL,
-  target_interests text[] GENERATED ALWAYS AS ('{}'::text[]) STORED NOT NULL,
-  target_locations text[] GENERATED ALWAYS AS ('{}'::text[]) STORED NOT NULL);
+CREATE TABLE public.partner_ad_campaigns (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  account_id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  title text NOT NULL,
+  objective text,
+  creative_url text,
+  status text DEFAULT 'REQUESTED'::text NOT NULL,
+  starts_at timestamp with time zone,
+  ends_at timestamp with time zone,
+  price_mzn numeric,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  surface text,
+  slot text,
+  creative_type text DEFAULT 'TEXT'::text,
+  headline text,
+  body text,
+  image_url text,
+  target_url text,
+  cta_label text,
+  alt_text text,
+  campaign_mode text DEFAULT 'GUARANTEED'::text NOT NULL,
+  priority integer DEFAULT 70 NOT NULL,
+  bid_mzn numeric(12,2) DEFAULT 0 NOT NULL,
+  frequency_cap integer DEFAULT 2 NOT NULL,
+  targeting jsonb DEFAULT '{}'::jsonb NOT NULL,
+  impression_goal integer,
+  impressions_count bigint DEFAULT 0 NOT NULL,
+  clicks_count bigint DEFAULT 0 NOT NULL,
+  campaign_kind text DEFAULT 'GUARANTEED'::text NOT NULL,
+  bid_cpm numeric DEFAULT 0 NOT NULL,
+  target_interests text[] DEFAULT '{}'::text[] NOT NULL,
+  target_locations text[] DEFAULT '{}'::text[] NOT NULL);
 
-CREATE TABLE public.partner_ad_products (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  capacity integer GENERATED ALWAYS AS (1) STORED NOT NULL,
-  active boolean GENERATED ALWAYS AS (true) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.partner_ad_products (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  code text NOT NULL,
+  name text NOT NULL,
+  description text NOT NULL,
+  placement text NOT NULL,
+  duration_days integer NOT NULL,
+  price_mzn numeric,
+  capacity integer DEFAULT 1 NOT NULL,
+  active boolean DEFAULT true NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  surface text,
+  slot text);
 
-CREATE TABLE public.partner_ad_targets (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.partner_ad_targets (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  campaign_id uuid NOT NULL,
+  target_type text NOT NULL,
+  target_value text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.partner_entitlements (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('ACTIVE'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.partner_entitlements (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  account_id uuid NOT NULL,
+  entitlement_type text NOT NULL,
+  name text NOT NULL,
+  description text,
+  scope text,
+  starts_at timestamp with time zone,
+  ends_at timestamp with time zone,
+  status text DEFAULT 'ACTIVE'::text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.platform_conversion_events (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  metadata jsonb GENERATED ALWAYS AS ('{}'::jsonb) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.platform_conversion_events (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid,
+  visitor_key text NOT NULL,
+  event_type text NOT NULL,
+  entity_type text,
+  entity_id uuid,
+  source text,
+  metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.platform_members (  active boolean GENERATED ALWAYS AS (true) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.platform_members (  user_id uuid NOT NULL,
+  role text NOT NULL,
+  active boolean DEFAULT true NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.platform_plans (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  monthly_price numeric(12,2) GENERATED ALWAYS AS (0) STORED NOT NULL,
-  currency text GENERATED ALWAYS AS ('MZN'::text) STORED NOT NULL,
-  active boolean GENERATED ALWAYS AS (true) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.platform_plans (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  code text NOT NULL,
+  name text NOT NULL,
+  description text,
+  monthly_price numeric(12,2) DEFAULT 0 NOT NULL,
+  currency text DEFAULT 'MZN'::text NOT NULL,
+  active boolean DEFAULT true NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.platform_service_orders (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  currency text GENERATED ALWAYS AS ('MZN'::text) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('PENDING_PAYMENT'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  auto_renew boolean GENERATED ALWAYS AS (false) STORED NOT NULL,
-  renewal_status text GENERATED ALWAYS AS ('NONE'::text) STORED NOT NULL);
+CREATE TABLE public.platform_service_orders (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  service_id uuid NOT NULL,
+  business_id uuid NOT NULL,
+  requester_user_id uuid NOT NULL,
+  amount_mzn numeric(12,2) NOT NULL,
+  currency text DEFAULT 'MZN'::text NOT NULL,
+  payment_method text NOT NULL,
+  credits_charged integer,
+  status text DEFAULT 'PENDING_PAYMENT'::text NOT NULL,
+  mpesa_reference text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  starts_at timestamp with time zone,
+  ends_at timestamp with time zone,
+  renewal_period text,
+  auto_renew boolean DEFAULT false NOT NULL,
+  renewal_status text DEFAULT 'NONE'::text NOT NULL,
+  renewed_from_order_id uuid);
 
-CREATE TABLE public.platform_service_subscriptions (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('ACTIVE'::text) STORED NOT NULL,
-  auto_renew boolean GENERATED ALWAYS AS (false) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.platform_service_subscriptions (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  service_id uuid NOT NULL,
+  business_id uuid NOT NULL,
+  current_order_id uuid,
+  status text DEFAULT 'ACTIVE'::text NOT NULL,
+  starts_at timestamp with time zone NOT NULL,
+  ends_at timestamp with time zone NOT NULL,
+  renewal_period text NOT NULL,
+  auto_renew boolean DEFAULT false NOT NULL,
+  next_renewal_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.platform_services (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  currency text GENERATED ALWAYS AS ('MZN'::text) STORED NOT NULL,
-  billing text GENERATED ALWAYS AS ('ONE_TIME'::text) STORED NOT NULL,
-  active boolean GENERATED ALWAYS AS (true) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.platform_services (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  slug text NOT NULL,
+  name text NOT NULL,
+  description text NOT NULL,
+  category text NOT NULL,
+  price numeric(14,2),
+  currency text DEFAULT 'MZN'::text NOT NULL,
+  billing text DEFAULT 'ONE_TIME'::text NOT NULL,
+  active boolean DEFAULT true NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  default_term_days integer,
+  renewal_period text);
 
-CREATE TABLE public.profiles (  full_name text GENERATED ALWAYS AS (''::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  user_type text GENERATED ALWAYS AS ('empresa'::text) STORED NOT NULL,
-  account_status text GENERATED ALWAYS AS ('ACTIVE'::text) STORED NOT NULL);
+CREATE TABLE public.profiles (  id uuid NOT NULL,
+  full_name text DEFAULT ''::text NOT NULL,
+  location text,
+  website text,
+  bio text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  user_type text DEFAULT 'empresa'::text NOT NULL,
+  account_status text DEFAULT 'ACTIVE'::text NOT NULL,
+  deactivated_at timestamp with time zone,
+  deletion_requested_at timestamp with time zone);
 
-CREATE TABLE public.public_rate_limits (  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.public_rate_limits (  key_hash text NOT NULL,
+  window_started_at timestamp with time zone NOT NULL,
+  request_count integer NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.publication_attachments (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  size_bytes bigint GENERATED ALWAYS AS (0) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.publication_attachments (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  resource_type text NOT NULL,
+  resource_id uuid NOT NULL,
+  storage_path text NOT NULL,
+  file_name text NOT NULL,
+  mime_type text NOT NULL,
+  size_bytes bigint DEFAULT 0 NOT NULL,
+  kind text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.recommendation_events (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  metadata jsonb GENERATED ALWAYS AS ('{}'::jsonb) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.recommendation_events (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid NOT NULL,
+  business_id uuid,
+  listing_id uuid,
+  event_type text NOT NULL,
+  metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.service_requests (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('REQUESTED'::text) STORED NOT NULL,
-  currency text GENERATED ALWAYS AS ('MZN'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.service_requests (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  service_id uuid NOT NULL,
+  requester_user_id uuid NOT NULL,
+  requester_business_id uuid,
+  status text DEFAULT 'REQUESTED'::text NOT NULL,
+  requested_price numeric(14,2),
+  currency text DEFAULT 'MZN'::text NOT NULL,
+  notes text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.support_messages (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  sender_role text GENERATED ALWAYS AS ('USER'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.support_messages (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  ticket_id uuid NOT NULL,
+  sender_user_id uuid,
+  sender_role text DEFAULT 'USER'::text NOT NULL,
+  body text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.support_tickets (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  status text GENERATED ALWAYS AS ('OPEN'::text) STORED NOT NULL,
-  priority text GENERATED ALWAYS AS ('NORMAL'::text) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.support_tickets (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid NOT NULL,
+  business_id uuid,
+  area text NOT NULL,
+  subject text NOT NULL,
+  status text DEFAULT 'OPEN'::text NOT NULL,
+  priority text DEFAULT 'NORMAL'::text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  closed_at timestamp with time zone);
 
-CREATE TABLE public.user_favorites (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.user_favorites (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid NOT NULL,
+  entity_type text NOT NULL,
+  entity_id uuid NOT NULL,
+  title text NOT NULL,
+  href text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL);
 
-CREATE TABLE public.user_saved_searches (  id uuid GENERATED ALWAYS AS (gen_random_uuid()) STORED NOT NULL,
-  filters jsonb GENERATED ALWAYS AS ('{}'::jsonb) STORED NOT NULL,
-  alert_enabled boolean GENERATED ALWAYS AS (true) STORED NOT NULL,
-  created_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL,
-  updated_at timestamp with time zone GENERATED ALWAYS AS (now()) STORED NOT NULL);
+CREATE TABLE public.user_saved_searches (  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid NOT NULL,
+  title text NOT NULL,
+  entity_type text NOT NULL,
+  filters jsonb DEFAULT '{}'::jsonb NOT NULL,
+  alert_enabled boolean DEFAULT true NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL);
 
 CREATE OR REPLACE FUNCTION public.business_ad_campaign_metrics()
  RETURNS TABLE(campaign_id uuid, impressions bigint, clicks bigint)
