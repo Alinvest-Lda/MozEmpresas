@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 const schema=z.object({
  visitorKey:z.string().min(16).max(120),
@@ -13,6 +14,9 @@ const schema=z.object({
 });
 
 export async function POST(request:Request){
+ const rate = await enforceRateLimit(request, { scope: "ads-event", limit: 60, windowSeconds: 60 });
+ if (!rate.allowed) return rateLimitResponse(rate.unavailable);
+
  try{
   const payload=schema.parse(await request.json());
   const supabase=await createClient();
