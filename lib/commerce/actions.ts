@@ -69,7 +69,7 @@ export async function createListing(formData: FormData) {
     type,
     price,
     currency: "MZN",
-    status: "PUBLISHED",
+    status: "DRAFT",
     category_id: categoryId,
     location,
   }).select("id").single();
@@ -84,8 +84,18 @@ export async function createListing(formData: FormData) {
     const { error: uploadError } = await supabase.storage.from("listing-media").upload(storagePath, file, { contentType: file.type, upsert: false });
     if (uploadError) redirect("/dashboard/marketplace?publish=error");
     const { error: attachmentError } = await supabase.from("listing_attachments").insert({ listing_id: listingIdPlaceholder, storage_path: storagePath, file_name: file.name, mime_type: file.type, size_bytes: file.size, kind });
-    if (attachmentError) redirect("/dashboard/marketplace?publish=error");
+    if (attachmentError) {
+      await supabase.storage.from("listing-media").remove([storagePath]);
+      redirect("/dashboard/marketplace?publish=error");
+    }
   }
+
+  const { error: publishError } = await supabase
+    .from("listings")
+    .update({ status: "PUBLISHED", updated_at: new Date().toISOString() })
+    .eq("id", listingIdPlaceholder)
+    .eq("status", "DRAFT");
+  if (publishError) redirect("/dashboard/marketplace?publish=error");
 
   redirect("/dashboard/marketplace?publish=success");
 }
