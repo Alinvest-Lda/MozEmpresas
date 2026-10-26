@@ -76,16 +76,23 @@ export async function createListing(formData: FormData) {
 
   if (error || !createdListing) redirect("/dashboard/marketplace?publish=error");
   const listingIdPlaceholder = createdListing.id;
+  const uploadedStoragePaths: string[] = [];
 
   for (const file of attachments) {
     const kind = file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT";
     const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").slice(-120);
     const storagePath = `${userId}/${listingIdPlaceholder}/${crypto.randomUUID()}-${safeName}`;
     const { error: uploadError } = await supabase.storage.from("listing-media").upload(storagePath, file, { contentType: file.type, upsert: false });
-    if (uploadError) redirect("/dashboard/marketplace?publish=error");
+    if (uploadError) {
+      if (uploadedStoragePaths.length) await supabase.storage.from("listing-media").remove(uploadedStoragePaths);
+      await supabase.from("listings").delete().eq("id", listingIdPlaceholder).eq("status", "DRAFT");
+      redirect("/dashboard/marketplace?publish=error");
+    }
+    uploadedStoragePaths.push(storagePath);
     const { error: attachmentError } = await supabase.from("listing_attachments").insert({ listing_id: listingIdPlaceholder, storage_path: storagePath, file_name: file.name, mime_type: file.type, size_bytes: file.size, kind });
     if (attachmentError) {
-      await supabase.storage.from("listing-media").remove([storagePath]);
+      await supabase.storage.from("listing-media").remove(uploadedStoragePaths);
+      await supabase.from("listings").delete().eq("id", listingIdPlaceholder).eq("status", "DRAFT");
       redirect("/dashboard/marketplace?publish=error");
     }
   }
@@ -95,7 +102,11 @@ export async function createListing(formData: FormData) {
     .update({ status: "PUBLISHED", updated_at: new Date().toISOString() })
     .eq("id", listingIdPlaceholder)
     .eq("status", "DRAFT");
-  if (publishError) redirect("/dashboard/marketplace?publish=error");
+  if (publishError) {
+    if (uploadedStoragePaths.length) await supabase.storage.from("listing-media").remove(uploadedStoragePaths);
+    await supabase.from("listings").delete().eq("id", listingIdPlaceholder).eq("status", "DRAFT");
+    redirect("/dashboard/marketplace?publish=error");
+  }
 
   redirect("/dashboard/marketplace?publish=success");
 }
