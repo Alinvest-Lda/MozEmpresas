@@ -22,6 +22,21 @@ export default async function ListingPage({params}:{params:Promise<{id:string}>}
   const {id}=await params; const supabase=await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   const userId = typeof claimsData?.claims?.sub === "string" ? claimsData.claims.sub : null;
+  let buyerBusinesses: { id: string; name: string }[] = [];
+  if (userId) {
+    const [{ data: ownedBusinesses }, { data: memberships }] = await Promise.all([
+      supabase.from("businesses").select("id,name").eq("owner_id", userId).is("archived_at", null).order("name"),
+      supabase.from("business_members").select("business_id,role").eq("user_id", userId).in("role", ["owner", "admin", "operator"]),
+    ]);
+    const memberIds = [...new Set((memberships ?? []).map((membership) => membership.business_id))];
+    const { data: memberBusinesses } = memberIds.length
+      ? await supabase.from("businesses").select("id,name").in("id", memberIds).is("archived_at", null).order("name")
+      : { data: [] as { id: string; name: string }[] };
+    buyerBusinesses = [
+      ...(ownedBusinesses ?? []),
+      ...(memberBusinesses ?? []).filter((business) => !(ownedBusinesses ?? []).some((owned) => owned.id === business.id)),
+    ];
+  }
   const {data:item}=await supabase.from("listings").select("id,title,slug,description,type,status,price,currency,location,business_id,created_at").eq("id",id).eq("status","PUBLISHED").maybeSingle();
   if(!item) notFound();
   const { data: attachments } = await supabase.from("listing_attachments").select("id,file_name,mime_type,size_bytes,kind,storage_path,created_at").eq("listing_id", id).order("created_at", { ascending: true });
@@ -50,6 +65,7 @@ export default async function ListingPage({params}:{params:Promise<{id:string}>}
         <p className="muted">O seu pedido cria um contacto comercial. Não há pagamento dentro do MozEmpresas; a empresa fornecedora responderá para dar seguimento à negociação.</p>
         {userId ? <form action={createOrder} className="detail-action-form">
           <input type="hidden" name="listing_id" value={item.id} />
+          {buyerBusinesses.length > 0 && <label className="field-label">Empresa compradora<select name="buyer_business_id" defaultValue=""><option value="">Pedido em nome individual</option>{buyerBusinesses.map((business) => <option value={business.id} key={business.id}>{business.name}</option>)}</select></label>}
           <label className="field-label">Quantidade<input type="number" name="quantity" min="1" step="1" defaultValue="1" /></label>
           <label className="field-label">Mensagem<textarea name="notes" rows={5} placeholder="Ex.: Temos interesse nesta solução para 20 colaboradores. Gostaríamos de receber disponibilidade, prazo e condições comerciais." required /></label>
           <button className="btn primary full" type="submit">Enviar pedido de contacto →</button>
