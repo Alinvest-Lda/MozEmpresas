@@ -18,7 +18,7 @@ type Listing = {
   image_url?: string | null;
   status?: string | null;
 };
-type Order = { id: string; status: string; notes: string | null; created_at: string; payment_status?: string | null; fulfillment_status?: string | null };
+type Order = { id: string; status: string; notes: string | null; created_at: string; buyer_user_id?: string; buyer_business_id?: string | null; payment_status?: string | null; fulfillment_status?: string | null };
 type OrderEvent = { id: string; order_id: string; from_status: string | null; to_status: string; note: string | null; created_at: string };
 type OrderItem = {
   id: string;
@@ -82,10 +82,9 @@ export default async function MarketplaceWorkspace({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: owned }, { data: memberships }, { data: buyerOrders }, { data: buyerCategories }] = await Promise.all([
+  const [{ data: owned }, { data: memberships }, { data: buyerCategories }] = await Promise.all([
     supabase.from("businesses").select("id,name").eq("owner_id", user.id).is("archived_at", null).order("name"),
     supabase.from("business_members").select("business_id,role").eq("user_id", user.id).in("role", ["owner", "admin", "operator"]),
-    supabase.from("commerce_orders").select("id,status,notes,created_at,payment_status,fulfillment_status,buyer_business_id").eq("buyer_user_id", user.id).order("created_at", { ascending: false }).limit(12),
     supabase.from("business_categories").select("id,name,slug").order("name").limit(100),
   ]);
 
@@ -100,6 +99,14 @@ export default async function MarketplaceWorkspace({
   ];
   const businessIds = businesses.map((b) => b.id);
   const buyerBusinessIds = businesses.map((b) => b.id);
+  const buyerOrderQuery = supabase
+    .from("commerce_orders")
+    .select("id,status,notes,created_at,buyer_user_id,payment_status,fulfillment_status,buyer_business_id");
+  const { data: buyerOrders } = await (buyerBusinessIds.length
+    ? buyerOrderQuery.or(`buyer_user_id.eq.${user.id},buyer_business_id.in.(${buyerBusinessIds.join(",")})`)
+    : buyerOrderQuery.eq("buyer_user_id", user.id))
+    .order("created_at", { ascending: false })
+    .limit(20);
   const { data: buyerInterests } = buyerBusinessIds.length ? await supabase.from("business_buyer_interests").select("id,business_id,category_id,location,listing_type").in("business_id", buyerBusinessIds).order("created_at", { ascending: false }).limit(40) : { data: [] };
 
   const [{ data: myListings }, { data: sellerItems }, { data: recentListings }] = await Promise.all([
@@ -319,7 +326,7 @@ export default async function MarketplaceWorkspace({
                 {interests.length > 0 && <div className="buyer-interest-list">{interests.map((interest) => <div className="buyer-interest-item" key={interest.id}><span>{interest.category_id ? categoryNames.get(interest.category_id) : "Qualquer categoria"}{interest.listing_type ? " · " + (interest.listing_type === "PRODUCT" ? "Produto" : "Serviço") : ""}{interest.location ? " · " + interest.location : ""}</span><form action={removeBuyerInterest}><input type="hidden" name="id" value={interest.id}/><button className="text-link" type="submit">Remover</button></form></div>)}</div>}
               </section>
 
-              {orders.length ? <div className="commerce-list">{orders.slice(0, 5).map((order) => <div className="commerce-list-row" key={order.id}><div className="commerce-list-main"><strong>Solicitação #{order.id.slice(0, 8)}</strong><span>{new Date(order.created_at).toLocaleDateString("pt-MZ")}</span></div><span className={"commerce-status " + statusClass(order.status)}>{statusLabels[order.status] || order.status}</span>{["INTERESTED","CONTACTED","NEGOTIATING"].includes(order.status) && <form action={cancelOrder}><input type="hidden" name="order_id" value={order.id}/><button className="btn" type="submit">Encerrar</button></form>}</div>)}</div> : <div className="commerce-empty"><strong>Nenhum interesse iniciado.</strong><p>Abra uma oferta e manifeste o seu interesse para começar uma relação comercial.</p><Link href="/marketplace" className="btn primary">Encontrar ofertas</Link></div>}
+              {orders.length ? <div className="commerce-list">{orders.slice(0, 5).map((order) => <div className="commerce-list-row" key={order.id}><div className="commerce-list-main"><strong>Solicitação #{order.id.slice(0, 8)}</strong><span>{new Date(order.created_at).toLocaleDateString("pt-MZ")}</span></div><span className={"commerce-status " + statusClass(order.status)}>{statusLabels[order.status] || order.status}</span>{order.buyer_user_id === user.id && ["INTERESTED","CONTACTED","NEGOTIATING"].includes(order.status) && <form action={cancelOrder}><input type="hidden" name="order_id" value={order.id}/><button className="btn" type="submit">Encerrar</button></form>}</div>)}</div> : <div className="commerce-empty"><strong>Nenhum interesse iniciado.</strong><p>Abra uma oferta e manifeste o seu interesse para começar uma relação comercial.</p><Link href="/marketplace" className="btn primary">Encontrar ofertas</Link></div>}
             </div>
           </section>
         )}
