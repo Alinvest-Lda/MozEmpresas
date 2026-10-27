@@ -4,13 +4,14 @@
 **Repositório:** `Alinvest-Lda/MozEmpresas`  
 **Branch de trabalho:** `main`  
 **Commit de aplicação de referência:** `5c7d953317bc2285fab9a95591bcbb0781c0559b`  
-**Melhoria de segurança adicionada ao repositório:** `acd9ac6aa8f0900bee7d4a4fbf874662c6ae3025`
+**Migração de hardening (versão actual):** `7b6bd1287dcd462a8c0ce0ff3bedfbe0ee5ef243`  
+**Teste PostgreSQL isolado adicionado ao CI:** `.github/workflows/ci.yml`
 
 ## Resultado executivo
 
 A etapa de qualidade automatizada passou no commit de aplicação de referência e o respectivo deployment Vercel ficou em estado `READY`. Isto comprova que a pipeline terminou e que o artefacto foi publicado; **não comprova que todos os fluxos estejam funcionalmente validados em produção**.
 
-Foi acrescentada a migração `supabase/migrations/20261027100000_harden_security_definer_search_path.sql` para colocar `pg_temp` explicitamente no fim do `search_path` das funções `SECURITY DEFINER` do esquema `public`, preservando os caminhos existentes (incluindo `public, private`). A migração está **apenas no repositório** e ainda não foi aplicada à base de dados activa. Precisa de validação numa base isolada.
+Foi acrescentada a migração `supabase/migrations/20261027100000_harden_security_definer_search_path.sql` para colocar `pg_temp` explicitamente no fim do `search_path` das funções `SECURITY DEFINER` do esquema `public`, preservando os caminhos existentes (incluindo `public, private`). A migração está **apenas no repositório** e ainda não foi aplicada à base de dados activa. Foi adicionado ao CI um teste que cria funções de exemplo num PostgreSQL isolado, executa a migração e verifica os caminhos `public`, `public, private` e o caso já endurecido.
 
 **Não declarar o P2 nem o fecho global do MozEmpresas concluídos** enquanto os testes de integração, a reconciliação da base de dados e a revisão de segurança não forem executados e registados.
 
