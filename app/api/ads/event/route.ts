@@ -72,6 +72,41 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A campanha não está activa para este espaço e período." }, { status: 409 });
     }
 
+    if (payload.eventType === "CLICK") {
+      const since = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+      let hasImpression = false;
+      let recentClick = false;
+      if (sql) {
+        const impressions = await sql.unsafe(
+          "select id from public.ad_delivery_events where visitor_key = $1 and campaign_source = $2 and campaign_id = $3 and surface = $4 and slot = $5 and event_type = 'IMPRESSION' and created_at >= $6 limit 1",
+          [payload.visitorKey, payload.campaignSource, payload.campaignId, payload.surface, payload.slot, since],
+        );
+        hasImpression = impressions.length > 0;
+        const clicks = await sql.unsafe(
+          "select id from public.ad_delivery_events where visitor_key = $1 and campaign_source = $2 and campaign_id = $3 and surface = $4 and slot = $5 and event_type = 'CLICK' and created_at >= $6 limit 1",
+          [payload.visitorKey, payload.campaignSource, payload.campaignId, payload.surface, payload.slot, new Date(now.getTime() - 30 * 1000).toISOString()],
+        );
+        recentClick = clicks.length > 0;
+      } else if (admin) {
+        const { data: impressions, error: impressionError } = await admin.from("ad_delivery_events")
+          .select("id").eq("visitor_key", payload.visitorKey).eq("campaign_source", payload.campaignSource)
+          .eq("campaign_id", payload.campaignId).eq("surface", payload.surface).eq("slot", payload.slot)
+          .eq("event_type", "IMPRESSION").gte("created_at", since).limit(1);
+        if (impressionError) return NextResponse.json({ error: "Não foi possível validar o clique." }, { status: 500 });
+        hasImpression = Boolean(impressions?.length);
+        const { data: clicks, error: clickError } = await admin.from("ad_delivery_events")
+          .select("id").eq("visitor_key", payload.visitorKey).eq("campaign_source", payload.campaignSource)
+          .eq("campaign_id", payload.campaignId).eq("surface", payload.surface).eq("slot", payload.slot)
+          .eq("event_type", "CLICK").gte("created_at", new Date(now.getTime() - 30 * 1000).toISOString()).limit(1);
+        if (clickError) return NextResponse.json({ error: "Não foi possível validar o clique." }, { status: 500 });
+        recentClick = Boolean(clicks?.length);
+      }
+      if (!hasImpression) {
+        return NextResponse.json({ error: "O clique não corresponde a uma impressão recente da campanha." }, { status: 409 });
+      }
+      if (recentClick) return NextResponse.json({ ok: true, deduplicated: true });
+    }
+
     const event = {
       visitor_key: payload.visitorKey,
       user_id: user?.id ?? null,
