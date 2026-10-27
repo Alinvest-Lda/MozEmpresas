@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
-import { canManageBusiness, getManagedBusinessIds } from "@/lib/businesses/permissions";
+import { canManageBusiness } from "@/lib/businesses/permissions";
 
 const schema = z.object({
   serviceId: z.string().uuid(),
