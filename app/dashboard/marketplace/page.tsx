@@ -56,7 +56,9 @@ export default async function MarketplaceWorkspace({
   const activeTab = ["comprar", "vender", "negociacoes"].includes(params.tab || "") ? params.tab! : "comprar";
   const flash = params.publish === "success"
     ? "Oferta publicada com sucesso."
-    : params.publish === "forbidden"
+    : params.publish === "cleanup-error"
+      ? "A operação encontrou uma falha e a limpeza automática não foi concluída. A oferta pode ter ficado em rascunho; contacte o suporte antes de repetir."
+      : params.publish === "forbidden"
       ? "Não tem permissão para publicar ofertas por esta empresa."
       : params.publish === "error"
         ? "Não foi possível publicar a oferta. Verifique os campos e os anexos."
