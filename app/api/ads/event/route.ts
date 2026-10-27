@@ -1,44 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { z } from "zod";
 import { createAdminClient, enforceRateLimit, getPostgresClient, rateLimitResponse } from "@/lib/security/rate-limit";
-
-const schema = z.object({
-  visitorKey: z.string().min(16).max(120),
-  campaignSource: z.enum(["business", "partner"]),
-  campaignId: z.string().uuid(),
-  surface: z.enum(["HOME", "DIRECTORY", "MARKETPLACE", "OPPORTUNITIES"]),
-  slot: z.enum(["HERO", "BILLBOARD", "EXCLUSIVE", "FEATURED", "INFEED", "CONTEXT"]),
-  eventType: z.enum(["IMPRESSION", "CLICK"]),
-  context: z.record(z.string(), z.string()).optional(),
-});
-
-type CampaignEligibility = {
-  status: string;
-  starts_at: string | Date | null;
-  ends_at: string | Date | null;
-  slot: string | null;
-  surface?: string | null;
-};
-
-function isEligible(campaign: CampaignEligibility | null | undefined, payload: z.infer<typeof schema>, now: Date) {
-  if (!campaign || campaign.status !== "ACTIVE" || !campaign.starts_at || !campaign.ends_at) return false;
-  const startsAt = new Date(campaign.starts_at);
-  const endsAt = new Date(campaign.ends_at);
-  if (!Number.isFinite(startsAt.getTime()) || !Number.isFinite(endsAt.getTime())) return false;
-  if (startsAt.getTime() > now.getTime() || endsAt.getTime() <= now.getTime()) return false;
-  if (campaign.slot && campaign.slot !== payload.slot) return false;
-  if (campaign.surface && campaign.surface !== payload.surface) return false;
-  return true;
-}
+import { adEventSchema, isEligibleCampaign, type CampaignEligibility } from "@/lib/advertising/event-validation";
 
 export async function POST(request: Request) {
   const rate = await enforceRateLimit(request, { scope: "ads-event", limit: 60, windowSeconds: 60 });
   if (!rate.allowed) return rateLimitResponse(rate.unavailable);
 
-  let payload: z.infer<typeof schema>;
+  let payload;
   try {
-    payload = schema.parse(await request.json());
+    payload = adEventSchema.parse(await request.json());
   } catch {
     return NextResponse.json({ error: "Evento de publicidade inválido." }, { status: 400 });
   }
@@ -68,7 +39,7 @@ export async function POST(request: Request) {
       campaign = data as CampaignEligibility | null;
     }
 
-    if (!isEligible(campaign, payload, now)) {
+    if (!isEligibleCampaign(campaign, payload, now)) {
       return NextResponse.json({ error: "A campanha não está activa para este espaço e período." }, { status: 409 });
     }
 
