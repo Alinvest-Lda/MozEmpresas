@@ -98,6 +98,6 @@ jobs:
             ) then
               raise exception 'already-hardened search_path was not preserved';
             end if;
-          end
+          end;
           $verify$;
           SQL
