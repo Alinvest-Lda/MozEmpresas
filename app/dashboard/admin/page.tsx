@@ -172,7 +172,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
               <input type="hidden" name="requestId" value={request.id} />
               <label><span>Estado</span><select name="status" defaultValue={request.status}>{statuses.map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label>
               <label><span>Valor proposto</span><input name="requestedPrice" type="number" min="0" step="0.01" defaultValue={request.requested_price ?? ""} placeholder="Sob consulta" /></label>
-              <label className="wide"><span>Nota operacional</span><textarea name="notes" rows={2} defaultValue={request.notes ?? ""} /></label>
+              <p className="muted wide">A descrição enviada pelo solicitante é preservada durante as actualizações de estado e orçamento.</p>
               <button className="btn primary" type="submit">Actualizar pedido</button>
             </form>
           </article>;
