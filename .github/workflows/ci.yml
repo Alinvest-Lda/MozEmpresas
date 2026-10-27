@@ -32,3 +32,72 @@ jobs:
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-key
           SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key
           DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+
+  migration-hardening:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Verify SECURITY DEFINER search_path migration on isolated PostgreSQL
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          create schema private;
+          create function public.test_public_path()
+          returns integer language sql security definer
+          set search_path = public
+          as $$ select 1 $$;
+          create function public.test_private_path()
+          returns integer language sql security definer
+          set search_path = public, private
+          as $$ select 2 $$;
+          create function public.test_already_hardened_path()
+          returns integer language sql security definer
+          set search_path = public, pg_temp
+          as $$ select 3 $$;
+          SQL
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261027100000_harden_security_definer_search_path.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          do $verify$
+          begin
+            if not exists (
+              select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+              where n.nspname = 'public' and p.proname = 'test_public_path'
+                and p.proconfig @> array['search_path=public, pg_temp']
+            ) then
+              raise exception 'public search_path was not hardened';
+            end if;
+            if not exists (
+              select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+              where n.nspname = 'public' and p.proname = 'test_private_path'
+                and p.proconfig @> array['search_path=public, private, pg_temp']
+            ) then
+              raise exception 'private schema path was not preserved and hardened';
+            end if;
+            if not exists (
+              select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+              where n.nspname = 'public' and p.proname = 'test_already_hardened_path'
+                and p.proconfig @> array['search_path=public, pg_temp']
+            ) then
+              raise exception 'already-hardened search_path was not preserved';
+            end if;
+          end
+          $verify$;
+          SQL
