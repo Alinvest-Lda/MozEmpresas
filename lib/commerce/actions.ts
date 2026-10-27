@@ -42,7 +42,7 @@ export async function createListing(formData: FormData) {
   const priceRaw = text(formData.get("price"));
   const price = priceRaw ? number(priceRaw, NaN) : null;
 
-  if (!title || !description || !businessId || !["PRODUCT", "SERVICE"].includes(type)) {
+  if (!title || title.length > 180 || !description || description.length > 8000 || !businessId || !["PRODUCT", "SERVICE"].includes(type)) {
     redirect("/dashboard/marketplace?publish=error");
   }
   if (price !== null && (!Number.isFinite(price) || price < 0)) {
@@ -78,22 +78,33 @@ export async function createListing(formData: FormData) {
   const listingIdPlaceholder = createdListing.id;
   const uploadedStoragePaths: string[] = [];
 
+  async function cleanupDraftListing(): Promise<boolean> {
+    if (uploadedStoragePaths.length) {
+      const { error: storageCleanupError } = await supabase.storage.from("listing-media").remove(uploadedStoragePaths);
+      if (storageCleanupError) return false;
+    }
+    const { error: listingCleanupError } = await supabase
+      .from("listings")
+      .delete()
+      .eq("id", listingIdPlaceholder)
+      .eq("status", "DRAFT");
+    return !listingCleanupError;
+  }
+
   for (const file of attachments) {
     const kind = file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT";
     const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").slice(-120);
     const storagePath = `${userId}/${listingIdPlaceholder}/${crypto.randomUUID()}-${safeName}`;
     const { error: uploadError } = await supabase.storage.from("listing-media").upload(storagePath, file, { contentType: file.type, upsert: false });
     if (uploadError) {
-      if (uploadedStoragePaths.length) await supabase.storage.from("listing-media").remove(uploadedStoragePaths);
-      await supabase.from("listings").delete().eq("id", listingIdPlaceholder).eq("status", "DRAFT");
-      redirect("/dashboard/marketplace?publish=error");
+      const cleaned = await cleanupDraftListing();
+      redirect(cleaned ? "/dashboard/marketplace?publish=error" : "/dashboard/marketplace?publish=cleanup-error");
     }
     uploadedStoragePaths.push(storagePath);
     const { error: attachmentError } = await supabase.from("listing_attachments").insert({ listing_id: listingIdPlaceholder, storage_path: storagePath, file_name: file.name, mime_type: file.type, size_bytes: file.size, kind });
     if (attachmentError) {
-      await supabase.storage.from("listing-media").remove(uploadedStoragePaths);
-      await supabase.from("listings").delete().eq("id", listingIdPlaceholder).eq("status", "DRAFT");
-      redirect("/dashboard/marketplace?publish=error");
+      const cleaned = await cleanupDraftListing();
+      redirect(cleaned ? "/dashboard/marketplace?publish=error" : "/dashboard/marketplace?publish=cleanup-error");
     }
   }
 
@@ -103,9 +114,8 @@ export async function createListing(formData: FormData) {
     .eq("id", listingIdPlaceholder)
     .eq("status", "DRAFT");
   if (publishError) {
-    if (uploadedStoragePaths.length) await supabase.storage.from("listing-media").remove(uploadedStoragePaths);
-    await supabase.from("listings").delete().eq("id", listingIdPlaceholder).eq("status", "DRAFT");
-    redirect("/dashboard/marketplace?publish=error");
+    const cleaned = await cleanupDraftListing();
+    redirect(cleaned ? "/dashboard/marketplace?publish=error" : "/dashboard/marketplace?publish=cleanup-error");
   }
 
   redirect("/dashboard/marketplace?publish=success");
@@ -115,10 +125,13 @@ export async function createOrder(formData: FormData) {
   const { supabase, userId } = await currentUser();
   const listingId = text(formData.get("listing_id"));
   const buyerBusinessId = text(formData.get("buyer_business_id")) || null;
-  const quantity = number(formData.get("quantity"), 1);
+  const quantityRaw = text(formData.get("quantity"));
+  const quantity = quantityRaw ? number(quantityRaw, NaN) : 1;
   const notes = text(formData.get("notes")) || null;
 
-  if (!listingId || quantity <= 0) redirect("/dashboard/marketplace?request=error");
+  if (!listingId || !Number.isFinite(quantity) || quantity <= 0 || quantity > 1_000_000 || (notes && notes.length > 2000)) {
+    redirect("/dashboard/marketplace?request=error");
+  }
 
   const { data: listing } = await supabase
     .from("listings")
@@ -304,10 +317,16 @@ export async function updateListing(_state: { error?: string; success?: string }
   const slug = `${base}-${crypto.randomUUID().slice(0, 8)}`;
 
   const uploadedStoragePaths: string[] = [];
-  async function cleanupNewAttachments() {
-    if (!uploadedStoragePaths.length) return;
-    await supabase.from("listing_attachments").delete().eq("listing_id", listingId).in("storage_path", uploadedStoragePaths);
-    await supabase.storage.from("listing-media").remove(uploadedStoragePaths);
+  async function cleanupNewAttachments(): Promise<boolean> {
+    if (!uploadedStoragePaths.length) return true;
+    const { error: metadataError } = await supabase
+      .from("listing_attachments")
+      .delete()
+      .eq("listing_id", listingId)
+      .in("storage_path", uploadedStoragePaths);
+    if (metadataError) return false;
+    const { error: storageError } = await supabase.storage.from("listing-media").remove(uploadedStoragePaths);
+    return !storageError;
   }
 
   for (const file of attachments) {
@@ -333,8 +352,8 @@ export async function updateListing(_state: { error?: string; success?: string }
   }).eq("id", listingId);
 
   if (listingUpdateError) {
-    await cleanupNewAttachments();
-    redirect("/dashboard/marketplace?status=error");
+    const cleaned = await cleanupNewAttachments();
+    redirect(cleaned ? "/dashboard/marketplace?status=error" : "/dashboard/marketplace/" + listingId + "?status=attachments-error");
   }
 
 
