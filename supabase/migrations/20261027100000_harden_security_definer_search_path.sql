@@ -14,15 +14,15 @@ begin
     select
       p.oid::regprocedure as signature,
       (
-        select substring(setting from length('search_path=') + 1)
-        from unnest(coalesce(p.proconfig, array[]::text[])) as setting
-        where setting like 'search_path=%'
+        select substring(settings.setting from length('search_path=') + 1)
+        from unnest(coalesce(p.proconfig, array[]::text[])) as settings(setting)
+        where settings.setting like 'search_path=%'
         limit 1
       ) as configured_path,
       exists (
         select 1
-        from unnest(coalesce(p.proconfig, array[]::text[])) as setting
-        where setting like 'search_path=%pg_temp%'
+        from unnest(coalesce(p.proconfig, array[]::text[])) as settings(setting)
+        where settings.setting like 'search_path=%pg_temp%'
       ) as has_pg_temp
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
