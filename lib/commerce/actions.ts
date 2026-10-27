@@ -108,12 +108,14 @@ export async function createListing(formData: FormData) {
     }
   }
 
-  const { error: publishError } = await supabase
+  const { data: publishedListing, error: publishError } = await supabase
     .from("listings")
     .update({ status: "PUBLISHED", updated_at: new Date().toISOString() })
     .eq("id", listingIdPlaceholder)
-    .eq("status", "DRAFT");
-  if (publishError) {
+    .eq("status", "DRAFT")
+    .select("id")
+    .maybeSingle();
+  if (publishError || !publishedListing) {
     const cleaned = await cleanupDraftListing();
     redirect(cleaned ? "/dashboard/marketplace?publish=error" : "/dashboard/marketplace?publish=cleanup-error");
   }
@@ -346,12 +348,12 @@ export async function updateListing(_state: { error?: string; success?: string }
     }
   }
 
-  const { error: listingUpdateError } = await supabase.from("listings").update({
+  const { data: updatedListing, error: listingUpdateError } = await supabase.from("listings").update({
     title, description, type, business_id: businessId, category_id: categoryId, location, price, currency: "MZN", status, slug,
     updated_at: new Date().toISOString(),
-  }).eq("id", listingId);
+  }).eq("id", listingId).select("id").maybeSingle();
 
-  if (listingUpdateError) {
+  if (listingUpdateError || !updatedListing) {
     const cleaned = await cleanupNewAttachments();
     redirect(cleaned ? "/dashboard/marketplace?status=error" : "/dashboard/marketplace/" + listingId + "?status=attachments-error");
   }
@@ -377,8 +379,8 @@ export async function updateListingStatus(formData: FormData) {
     redirect("/dashboard/marketplace?status=forbidden");
   }
 
-  const { error } = await supabase.from("listings").update({status, updated_at:new Date().toISOString()}).eq("id",listingId);
-  if (error) redirect("/dashboard/marketplace?status=error");
+  const { data: updatedListing, error } = await supabase.from("listings").update({status, updated_at:new Date().toISOString()}).eq("id",listingId).select("id").maybeSingle();
+  if (error || !updatedListing) redirect("/dashboard/marketplace?status=error");
 
   revalidatePath("/dashboard/marketplace");
   revalidatePath("/marketplace/" + listingId);
@@ -409,8 +411,8 @@ export async function deleteListingAttachment(formData: FormData) {
   const { error: storageError } = await supabase.storage.from("listing-media").remove([attachment.storage_path]);
   if (storageError) redirect("/dashboard/marketplace/" + attachment.listing_id + "?status=attachments-error");
 
-  const { error } = await supabase.from("listing_attachments").delete().eq("id", attachmentId);
-  if (error) redirect("/dashboard/marketplace/" + attachment.listing_id + "?status=attachments-error");
+  const { data: deletedAttachment, error } = await supabase.from("listing_attachments").delete().eq("id", attachmentId).select("id").maybeSingle();
+  if (error || !deletedAttachment) redirect("/dashboard/marketplace/" + attachment.listing_id + "?status=attachments-error");
 
   revalidatePath("/dashboard/marketplace/" + attachment.listing_id);
   revalidatePath("/marketplace/" + attachment.listing_id);
@@ -433,8 +435,8 @@ export async function deleteListing(formData: FormData) {
     const { error: storageError } = await supabase.storage.from("listing-media").remove(attachments.map(a=>a.storage_path));
     if (storageError) redirect("/dashboard/marketplace/" + listingId + "?status=attachments-error");
   }
-  const { error } = await supabase.from("listings").delete().eq("id",listingId);
-  if (error) redirect("/dashboard/marketplace?status=error");
+  const { data: deletedListing, error } = await supabase.from("listings").delete().eq("id",listingId).select("id").maybeSingle();
+  if (error || !deletedListing) redirect("/dashboard/marketplace/" + listingId + "?status=error");
 
   revalidatePath("/dashboard/marketplace");
   redirect("/dashboard/marketplace?status=updated");
