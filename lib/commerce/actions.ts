@@ -95,12 +95,13 @@ export async function createListing(formData: FormData) {
     const kind = file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT";
     const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").slice(-120);
     const storagePath = `${userId}/${listingIdPlaceholder}/${crypto.randomUUID()}-${safeName}`;
+    // Track the attempted path before upload so an ambiguous upload failure can also be cleaned up.
+    uploadedStoragePaths.push(storagePath);
     const { error: uploadError } = await supabase.storage.from("listing-media").upload(storagePath, file, { contentType: file.type, upsert: false });
     if (uploadError) {
       const cleaned = await cleanupDraftListing();
       redirect(cleaned ? "/dashboard/marketplace?publish=error" : "/dashboard/marketplace?publish=cleanup-error");
     }
-    uploadedStoragePaths.push(storagePath);
     const { error: attachmentError } = await supabase.from("listing_attachments").insert({ listing_id: listingIdPlaceholder, storage_path: storagePath, file_name: file.name, mime_type: file.type, size_bytes: file.size, kind });
     if (attachmentError) {
       const cleaned = await cleanupDraftListing();
@@ -335,12 +336,13 @@ export async function updateListing(_state: { error?: string; success?: string }
     const kind = file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT";
     const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").slice(-120);
     const storagePath = `${userId}/${listingId}/${crypto.randomUUID()}-${safeName}`;
+    // Track the attempted path before upload so an ambiguous upload failure can also be cleaned up.
+    uploadedStoragePaths.push(storagePath);
     const { error: uploadError } = await supabase.storage.from("listing-media").upload(storagePath, file, { contentType: file.type, upsert: false });
     if (uploadError) {
       await cleanupNewAttachments();
       redirect("/dashboard/marketplace/" + listingId + "?status=attachments-error");
     }
-    uploadedStoragePaths.push(storagePath);
     const { error: attachmentError } = await supabase.from("listing_attachments").insert({ listing_id: listingId, storage_path: storagePath, file_name: file.name, mime_type: file.type, size_bytes: file.size, kind });
     if (attachmentError) {
       await cleanupNewAttachments();
