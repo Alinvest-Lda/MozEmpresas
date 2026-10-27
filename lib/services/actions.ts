@@ -55,7 +55,6 @@ export async function updatePlatformServiceRequest(formData: FormData) {
   const requestId = String(formData.get("requestId") || "");
   const status = String(formData.get("status") || "").toUpperCase();
   const requestedPriceRaw = String(formData.get("requestedPrice") || "").trim();
-  const notes = String(formData.get("notes") || "").trim();
 
   if (!z.string().uuid().safeParse(requestId).success || !requestStatuses.includes(status as typeof requestStatuses[number])) {
     return { error: "Pedido ou estado inválido." };
@@ -84,7 +83,6 @@ export async function updatePlatformServiceRequest(formData: FormData) {
     .update({
       status,
       requested_price: requestedPrice,
-      notes: notes || null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", requestId)
