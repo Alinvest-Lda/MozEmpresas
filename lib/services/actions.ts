@@ -30,6 +30,14 @@ export async function requestPlatformService(formData: FormData) {
     return { error: "Não tem autorização para solicitar o serviço em nome desta empresa." };
   }
 
+  const { data: service, error: serviceError } = await supabase
+    .from("platform_services")
+    .select("id")
+    .eq("id", parsed.data.serviceId)
+    .eq("active", true)
+    .maybeSingle();
+  if (serviceError || !service) return { error: "Este serviço já não está disponível para pedidos." };
+
   const { error } = await supabase.from("service_requests").insert({
     service_id: parsed.data.serviceId,
     requester_user_id: user.id,
