@@ -25,7 +25,7 @@ export function PlatformServiceRequestForm({
     async (_, formData) => {
       if (price == null) {
         const result = await requestPlatformService(formData);
-        return { ...result, requested: Boolean(result.success) };
+        return { ...result, requested: "success" in result && result.success === true };
       }
       return await purchasePlatformService(formData);
     },
