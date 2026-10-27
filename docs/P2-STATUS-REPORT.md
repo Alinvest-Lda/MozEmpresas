@@ -9,7 +9,9 @@
 
 A etapa de qualidade automatizada avançou e o commit de aplicação indicado passou no CI. O deploy Vercel associado a esse commit está em estado `READY`. Isto comprova que a pipeline terminou e que o artefacto foi publicado; **não comprova que os fluxos estejam funcionalmente validados em produção**.
 
-Não declarar o P2 nem o fecho global do MozEmpresas concluídos enquanto os testes de integração, a reconciliação da base de dados e a revisão de segurança não forem executados e registados.
+A consulta de leitura aos Supabase Advisors da base de dados MozEmpresas também identificou pontos que exigem revisão de segurança e desempenho. Os avisos não são, isoladamente, prova de exploração ou vulnerabilidade confirmada: as funções e tabelas devem ser revistas à luz do modelo de acesso esperado antes de alterar permissões.
+
+**Não declarar o P2 nem o fecho global do MozEmpresas concluídos** enquanto os testes de integração, a reconciliação da base de dados e a revisão de segurança não forem executados e registados.
 
 ## Verificações confirmadas
 
@@ -22,9 +24,26 @@ Não declarar o P2 nem o fecho global do MozEmpresas concluídos enquanto os tes
 | Lint | Sucesso no CI acima | Job `validate`, passo `Lint` |
 | Build de produção | Sucesso no CI acima | Job `validate`, passo `Production build` |
 | Deploy Vercel do commit `5c7d953` | `READY` | [Inspecção do deploy](https://vercel.com/alinvest-lda-s-projects/moz-empresas/GEdnghKdoFdzV8LZhnZy6LaQCFSa) |
+| Estado Supabase | Projecto `ACTIVE_HEALTHY`; 59 tabelas públicas observadas, todas com RLS activo | Consulta de leitura ao projecto |
 | Migrações ou alterações à base de dados de produção nesta fase | Nenhuma executada | Registo desta entrega |
 
 A cobertura automatizada acrescentada nesta fase inclui testes unitários para validação/elegibilidade de eventos publicitários e regras de transição de estados das encomendas. Estes testes não substituem testes de integração com PostgreSQL, Storage, RLS ou autenticação real.
+
+## Resultados preliminares dos Advisors Supabase
+
+Consulta apenas de leitura, em 27/10/2026:
+
+- **4 tabelas com RLS activo e sem políticas:** `public.contact_messages`, `public.partner_account_members`, `public.partner_accounts` e `public.public_rate_limits`. Confirmar que o acesso pretendido é exclusivamente por operações privilegiadas/rotas controladas e que não há necessidade de políticas directas. Não criar políticas genéricas para silenciar o aviso.
+- **4 funções SECURITY DEFINER executáveis por `anon`** e **22 funções SECURITY DEFINER executáveis por `authenticated`**, segundo o linter. Cada função tem de ser analisada quanto à intenção de exposição, validação de identidade/autorização, privilégios do proprietário, `search_path` e dados devolvidos. Não revogar em massa: algumas funções podem ser deliberadamente públicas ou ser usadas pelo fluxo de autenticação.
+- **Protecção de palavras-passe comprometidas desactivada**, segundo o Advisor de Auth. Rever e activar na configuração do projecto se for compatível com a política de autenticação adoptada.
+- **36 chaves estrangeiras sem índice de cobertura** assinaladas pelo Advisor de desempenho. Priorizar com base em consultas, cardinalidade e plano de execução antes de criar índices em produção.
+
+Referências de remediação indicadas pelo Supabase:
+- [RLS activo sem políticas](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy)
+- [Funções SECURITY DEFINER executáveis por anon](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable)
+- [Funções SECURITY DEFINER executáveis por utilizadores autenticados](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable)
+
+Estes resultados foram consultados directamente no projecto activo, mas não constituem uma auditoria manual completa nem justificam alterações imediatas de permissões em produção.
 
 ## Pendências que bloqueiam o fecho global
 
@@ -45,11 +64,13 @@ A cobertura automatizada acrescentada nesta fase inclui testes unitários para v
 Os ficheiros de baseline existentes são referências reconstruídas e inventário; não devem ser tratados como substituto de uma exportação nativa. Diferenças entre o ledger e os nomes dos ficheiros de migração precisam de análise individual e não provam, por si só, que falte SQL.
 
 ### 3. Segurança e operação
+- [ ] Rever manualmente as 26 exposições de funções SECURITY DEFINER sinalizadas pelo Advisor, incluindo o corpo, permissões, `search_path` e intenção de exposição.
+- [ ] Confirmar o modelo de acesso das quatro tabelas RLS sem políticas.
 - [ ] Rever transversalmente todas as políticas RLS e todas as acções administrativas.
 - [ ] Verificar autorização no servidor em cada operação crítica e testar casos negativos.
 - [ ] Testar rate limiting, falhas de Storage, erros de notificação, concorrência e consistência dos registos de histórico.
 - [ ] Rever logs/observabilidade para garantir que não expõem tokens, segredos ou dados pessoais desnecessários.
-- [ ] Confirmar sinais operacionais e procedimentos de recuperação.
+- [ ] Rever a activação da protecção de palavras-passe comprometidas e priorizar os índices em falta.
 
 ### 4. Validação final
 - [ ] Executar o guião de smoke tests no ambiente de teste e guardar resultados.
@@ -65,4 +86,4 @@ Os ficheiros de baseline existentes são referências reconstruídas e inventár
 
 ## Decisão
 
-**Estado actual: CI e deploy confirmados; fecho técnico global ainda bloqueado por validações de integração, reconciliação nativa do esquema e auditoria de segurança.** O próximo passo seguro é executar os testes isolados e obter a exportação nativa do esquema; não modificar a base de dados de produção como atalho para fechar o processo.
+**Estado actual: CI e deploy confirmados; fecho técnico global ainda bloqueado por testes de integração, reconciliação nativa do esquema e revisão manual dos alertas de segurança.** O próximo passo seguro é executar os testes isolados e obter a exportação nativa do esquema; não modificar a base de dados de produção como atalho para fechar o processo.
