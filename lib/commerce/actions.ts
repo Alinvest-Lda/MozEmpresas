@@ -295,13 +295,6 @@ export async function updateListing(_state: { error?: string; success?: string }
   const base = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "oferta";
   const slug = `${base}-${crypto.randomUUID().slice(0, 8)}`;
 
-  const { error } = await supabase.from("listings").update({
-    title, description, type, business_id: businessId, category_id: categoryId, location, price, currency: "MZN", status, slug,
-    updated_at: new Date().toISOString(),
-  }).eq("id", listingId);
-
-  if (error) redirect("/dashboard/marketplace?status=error");
-
   const uploadedStoragePaths: string[] = [];
   async function cleanupNewAttachments() {
     if (!uploadedStoragePaths.length) return;
@@ -325,6 +318,17 @@ export async function updateListing(_state: { error?: string; success?: string }
       redirect("/dashboard/marketplace/" + listingId + "?status=attachments-error");
     }
   }
+
+  const { error: listingUpdateError } = await supabase.from("listings").update({
+    title, description, type, business_id: businessId, category_id: categoryId, location, price, currency: "MZN", status, slug,
+    updated_at: new Date().toISOString(),
+  }).eq("id", listingId);
+
+  if (listingUpdateError) {
+    await cleanupNewAttachments();
+    redirect("/dashboard/marketplace?status=error");
+  }
+
 
   revalidatePath("/dashboard/marketplace");
   revalidatePath("/dashboard/marketplace/" + listingId);
