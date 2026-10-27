@@ -264,7 +264,7 @@ export async function updateListing(_state: { error?: string; success?: string }
   const price = priceRaw ? number(priceRaw, NaN) : null;
   const status = text(formData.get("status")).toUpperCase();
 
-  if (!listingId || !title || !description || !businessId || !["PRODUCT","SERVICE"].includes(type)) {
+  if (!listingId || !title || title.length > 180 || !description || description.length > 8000 || !businessId || !["PRODUCT","SERVICE"].includes(type)) {
     redirect("/dashboard/marketplace?status=error");
   }
   if (price !== null && (!Number.isFinite(price) || price < 0)) {
