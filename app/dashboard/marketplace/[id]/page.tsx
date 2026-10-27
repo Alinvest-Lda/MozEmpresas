@@ -6,8 +6,14 @@ import { createClient } from "@/lib/supabase/server";
 import { deleteListingAttachment, updateListing, updateListingStatus } from "@/lib/commerce/actions";
 import { ListingEditForm } from "@/components/listing-edit-form";
 
-export default async function ManageListingPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ManageListingPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ status?: string }> }) {
   const { id } = await params;
+  const { status } = await searchParams;
+  const attachmentMessage = status === "attachments-error"
+    ? "Não foi possível concluir a operação dos anexos. Verifique o armazenamento e tente novamente."
+    : status === "attachment-deleted"
+      ? "Anexo removido com sucesso."
+      : "";
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -69,6 +75,7 @@ export default async function ManageListingPage({ params }: { params: Promise<{ 
             {listing.status === "PUBLISHED" && <Link className="text-link" href={"/marketplace/" + listing.id}>Abrir oferta pública →</Link>}
           </aside>
         </header>
+        {attachmentMessage && <div role="status" aria-live="polite" style={{margin:"18px 0",padding:"12px 16px",border:"1px solid #dfe3e7",borderRadius:12,background:status === "attachments-error" ? "#fff7ed" : "#f0fdf4",color:status === "attachments-error" ? "#9a3412" : "#166534"}}>{attachmentMessage}</div>}
         <div className="business-form-card">
           <div className="business-form-heading" style={{marginTop:0}}>
             <span className="dashboard-kicker">Oferta comercial</span>
