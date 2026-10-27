@@ -408,9 +408,11 @@ export async function deleteListing(formData: FormData) {
     redirect("/dashboard/marketplace?status=forbidden");
   }
 
-  const { data: attachments } = await supabase.from("listing_attachments").select("storage_path").eq("listing_id",listingId);
+  const { data: attachments, error: attachmentsError } = await supabase.from("listing_attachments").select("storage_path").eq("listing_id",listingId);
+  if (attachmentsError) redirect("/dashboard/marketplace/" + listingId + "?status=attachments-error");
   if (attachments?.length) {
-    await supabase.storage.from("listing-media").remove(attachments.map(a=>a.storage_path));
+    const { error: storageError } = await supabase.storage.from("listing-media").remove(attachments.map(a=>a.storage_path));
+    if (storageError) redirect("/dashboard/marketplace/" + listingId + "?status=attachments-error");
   }
   const { error } = await supabase.from("listings").delete().eq("id",listingId);
   if (error) redirect("/dashboard/marketplace?status=error");
