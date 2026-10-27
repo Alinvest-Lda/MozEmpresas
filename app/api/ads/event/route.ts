@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, enforceRateLimit, getPostgresClient, rateLimitResponse } from "@/lib/security/rate-limit";
-import { adEventSchema, isEligibleCampaign, type CampaignEligibility } from "@/lib/advertising/event-validation";
+import { adEventSchema, isEligibleCampaign, type AdEventPayload, type CampaignEligibility } from "@/lib/advertising/event-validation";
 
 export async function POST(request: Request) {
   const rate = await enforceRateLimit(request, { scope: "ads-event", limit: 60, windowSeconds: 60 });
   if (!rate.allowed) return rateLimitResponse(rate.unavailable);
 
-  let payload;
+  let payload: AdEventPayload;
   try {
     payload = adEventSchema.parse(await request.json());
   } catch {
