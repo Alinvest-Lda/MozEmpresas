@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PlatformServiceRequestForm } from "@/components/platform-service-request-form";
+import { getManagedBusinessIds } from "@/lib/businesses/permissions";
 
 type Service = {
   id: string;
@@ -85,6 +86,7 @@ export default async function ServiceDetail({
 
   if (!user) redirect("/login");
 
+  const managedBusinessIds = await getManagedBusinessIds(supabase, user.id);
   const [{ data: service }, { data: businesses }] = await Promise.all([
     supabase
       .from("platform_services")
@@ -92,11 +94,9 @@ export default async function ServiceDetail({
       .eq("slug", slug)
       .eq("active", true)
       .maybeSingle(),
-    supabase
-      .from("businesses")
-      .select("id,name")
-      .eq("owner_id", user.id)
-      .order("name"),
+    managedBusinessIds.length
+      ? supabase.from("businesses").select("id,name").in("id", managedBusinessIds).is("archived_at", null).order("name")
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
   ]);
 
   if (!service) notFound();
