@@ -170,13 +170,23 @@ export async function updateOrderStatus(formData: FormData) {
   const { data: current } = await supabase.from("commerce_orders").select("status").eq("id", orderId).maybeSingle();
   if (!current || !transitions[current.status]?.includes(status)) redirect("/dashboard/marketplace?status=invalid-transition");
 
-  const { error } = await supabase.from("commerce_orders").update({ status }).eq("id", orderId);
+  // Compare-and-set prevents concurrent requests from overwriting a newer state.
+  const { data: updatedOrder, error } = await supabase
+    .from("commerce_orders")
+    .update({ status })
+    .eq("id", orderId)
+    .eq("status", current.status)
+    .select("id")
+    .maybeSingle();
   if (error) redirect("/dashboard/marketplace?status=error");
+  if (!updatedOrder) redirect("/dashboard/marketplace?status=invalid-transition");
 
-  await supabase.from("commerce_order_events").insert({
+  const { error: eventError } = await supabase.from("commerce_order_events").insert({
     order_id: orderId, actor_user_id: userId, from_status: current.status, to_status: status,
     note: "Estado actualizado pela empresa vendedora. Qualquer negociação ou pagamento decorre fora do MozEmpresas.",
   });
+  // The status is already saved; report a history failure rather than silently hiding it.
+  if (eventError) redirect("/dashboard/marketplace?status=history-error");
 
   redirect("/dashboard/marketplace?status=updated");
 }
@@ -189,13 +199,23 @@ export async function cancelOrder(formData: FormData) {
   const { data: order } = await supabase.from("commerce_orders").select("id,status").eq("id", orderId).eq("buyer_user_id", userId).maybeSingle();
   if (!order || !["INTERESTED","CONTACTED","NEGOTIATING"].includes(order.status)) redirect("/dashboard/marketplace?status=error");
 
-  const { error } = await supabase.from("commerce_orders").update({status:"CANCELLED"}).eq("id",orderId).eq("buyer_user_id",userId);
+  const { data: cancelledOrder, error } = await supabase
+    .from("commerce_orders")
+    .update({ status: "CANCELLED" })
+    .eq("id", orderId)
+    .eq("buyer_user_id", userId)
+    .eq("status", order.status)
+    .select("id")
+    .maybeSingle();
   if (error) redirect("/dashboard/marketplace?status=error");
+  if (!cancelledOrder) redirect("/dashboard/marketplace?status=invalid-transition");
 
-  await supabase.from("commerce_order_events").insert({
+  const { error: eventError } = await supabase.from("commerce_order_events").insert({
     order_id: orderId, actor_user_id: userId, from_status: order.status,
     to_status: "CANCELLED", note: "Interesse comercial cancelado pelo utilizador."
   });
+  if (eventError) redirect("/dashboard/marketplace?status=history-error");
+
   redirect("/dashboard/marketplace?status=cancelled");
 }
 
