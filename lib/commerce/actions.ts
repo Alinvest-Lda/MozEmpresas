@@ -277,13 +277,21 @@ export async function updateListing(_state: { error?: string; success?: string }
     redirect("/dashboard/marketplace?status=forbidden");
   }
 
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from("listings")
     .select("id,owner_id,business_id")
     .eq("id", listingId)
     .maybeSingle();
 
-  if (!existing || !(await canManageBusiness(supabase, userId, existing.business_id || businessId))) {
+  if (existingError || !existing) redirect("/dashboard/marketplace?status=forbidden");
+  // Require access to the listing's current business, not merely the destination
+  // business supplied in the form. Legacy listings without a business are editable
+  // only by their recorded owner.
+  if (existing.business_id) {
+    if (!(await canManageBusiness(supabase, userId, existing.business_id))) {
+      redirect("/dashboard/marketplace?status=forbidden");
+    }
+  } else if (existing.owner_id !== userId) {
     redirect("/dashboard/marketplace?status=forbidden");
   }
 
