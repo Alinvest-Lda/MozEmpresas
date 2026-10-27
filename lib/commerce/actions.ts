@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { canManageBusiness } from "@/lib/businesses/permissions";
+import { canTransitionCommerceOrder, commerceOrderTransitions } from "@/lib/commerce/state-machine";
 
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -169,13 +170,7 @@ export async function updateOrderStatus(formData: FormData) {
   const { supabase, userId } = await currentUser();
   const orderId = text(formData.get("order_id"));
   const status = text(formData.get("status")).toUpperCase();
-  const transitions: Record<string, string[]> = {
-    INTERESTED: ["CONTACTED", "CANCELLED"],
-    CONTACTED: ["NEGOTIATING", "CANCELLED"],
-    NEGOTIATING: ["AGREED", "CANCELLED"],
-    AGREED: ["COMPLETED", "CANCELLED"],
-  };
-  if (!orderId || !Object.values(transitions).flat().includes(status)) redirect("/dashboard/marketplace?status=error");
+  if (!orderId || !Object.values(commerceOrderTransitions).flat().includes(status)) redirect("/dashboard/marketplace?status=error");
 
   const { data: items } = await supabase.from("commerce_order_items").select("seller_business_id").eq("order_id", orderId);
   const sellerIds = [...new Set((items ?? []).map(item => item.seller_business_id).filter(Boolean))];
@@ -184,7 +179,7 @@ export async function updateOrderStatus(formData: FormData) {
   if (!authorized) redirect("/dashboard/marketplace?status=forbidden");
 
   const { data: current } = await supabase.from("commerce_orders").select("status").eq("id", orderId).maybeSingle();
-  if (!current || !transitions[current.status]?.includes(status)) redirect("/dashboard/marketplace?status=invalid-transition");
+  if (!current || !canTransitionCommerceOrder(current.status, status)) redirect("/dashboard/marketplace?status=invalid-transition");
 
   // Compare-and-set prevents concurrent requests from overwriting a newer state.
   const { data: updatedOrder, error } = await supabase
