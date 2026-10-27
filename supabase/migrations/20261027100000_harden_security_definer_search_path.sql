@@ -22,21 +22,38 @@ begin
       exists (
         select 1
         from unnest(coalesce(p.proconfig, array[]::text[])) as settings(setting)
-        where settings.setting like 'search_path=%pg_temp%'
-      ) as has_pg_temp
+        where settings.setting ~ '(^|,)[[:space:]]*pg_temp$'
+      ) as has_pg_temp_last
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
       and p.prosecdef = true
   loop
-    if not routine.has_pg_temp then
+    if not routine.has_pg_temp_last then
       current_path := coalesce(nullif(trim(routine.configured_path), ''), 'public');
+      current_path := regexp_replace(current_path, '(^|,)[[:space:]]*pg_temp[[:space:]]*(,|$)', '\1', 'gi');
+      current_path := trim(both ', ' from current_path);
       execute format(
         'alter function %s set search_path = %s, pg_temp',
         routine.signature,
-        current_path
+        coalesce(nullif(current_path, ''), 'public')
       );
     end if;
   end loop;
+
+  if exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.prosecdef = true
+      and not exists (
+        select 1
+        from unnest(coalesce(p.proconfig, array[]::text[])) as settings(setting)
+        where settings.setting ~ '(^|,)[[:space:]]*pg_temp$'
+      )
+  ) then
+    raise exception 'SECURITY DEFINER search_path hardening verification failed';
+  end if;
 end;
 $migration$;
