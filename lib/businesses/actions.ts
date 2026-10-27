@@ -28,12 +28,26 @@ export async function updateBusiness(_state:BusinessState,formData:FormData):Pro
  if(business.archived_at)return{error:"Esta empresa está arquivada."};
  const canManage = await canManageBusiness(supabase, user.id, id);
  if(!canManage)return{error:"Não tem permissão para alterar esta empresa."};
+ const portfolio=Array.from({length:5},(_,index)=>({url:String(formData.get("portfolioImage"+index)||"").trim(),title:String(formData.get("portfolioTitle"+index)||"").trim()})).filter((item)=>item.url);
+ if(portfolio.some((item)=>!z.string().url().safeParse(item.url).success))return{error:"Verifique os endereços das imagens do portfólio."};
+ const {data:previousMedia,error:mediaLoadError}=await supabase.from("business_portfolio_media").select("id").eq("business_id",id);
+ if(mediaLoadError)return{error:"Não foi possível carregar o portfólio actual."};
  const {error}=await supabase.from("businesses").update({name:parsed.data.name,description:parsed.data.description||null,category_id:parsed.data.categoryId||null,location:parsed.data.location||null,phone:parsed.data.phone||null,email:parsed.data.email||null,website:parsed.data.website||null,logo_url:parsed.data.logoUrl||null,cover_url:parsed.data.coverUrl||null,is_public:parsed.data.isPublic==="true",updated_at:new Date().toISOString()}).eq("id",id);
  if(error)return{error:"Não foi possível guardar as alterações."};
- const portfolio=Array.from({length:5},(_,index)=>({url:String(formData.get("portfolioImage"+index)||"").trim(),title:String(formData.get("portfolioTitle"+index)||"").trim()})).filter((item)=>item.url);
- const {error:portfolioDeleteError}=await supabase.from("business_portfolio_media").delete().eq("business_id",id);
- if(portfolioDeleteError)return{error:"Os dados foram guardados, mas não foi possível actualizar o portfólio."};
- if(portfolio.length){const {error:portfolioInsertError}=await supabase.from("business_portfolio_media").insert(portfolio.map((item,index)=>({business_id:id,image_url:item.url,title:item.title||null,sort_order:index}))); if(portfolioInsertError)return{error:"Os dados foram guardados, mas não foi possível guardar as imagens do portfólio."};}
+ let insertedMediaIds:string[]=[];
+ if(portfolio.length){
+  const {data:newMedia,error:portfolioInsertError}=await supabase.from("business_portfolio_media").insert(portfolio.map((item,index)=>({business_id:id,image_url:item.url,title:item.title||null,sort_order:index}))).select("id");
+  if(portfolioInsertError||!newMedia)return{error:"Os dados da empresa foram guardados, mas não foi possível guardar o novo portfólio."};
+  insertedMediaIds=newMedia.map((item)=>item.id);
+ }
+ const previousMediaIds=(previousMedia??[]).map((item)=>item.id);
+ if(previousMediaIds.length){
+  const {error:portfolioDeleteError}=await supabase.from("business_portfolio_media").delete().in("id",previousMediaIds).eq("business_id",id);
+  if(portfolioDeleteError){
+   if(insertedMediaIds.length)await supabase.from("business_portfolio_media").delete().in("id",insertedMediaIds).eq("business_id",id);
+   return{error:"Os dados da empresa foram guardados, mas não foi possível substituir o portfólio."};
+  }
+ }
  revalidatePath("/dashboard/empresas"); revalidatePath("/dashboard/empresas/"+id); revalidatePath("/empresas/"+business.slug); redirect("/dashboard/empresas");
 }
 export async function deleteBusinessAction(formData:FormData):Promise<void>{ await deleteBusiness({},formData); }
