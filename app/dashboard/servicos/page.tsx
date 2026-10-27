@@ -31,7 +31,7 @@ export default async function ServicesPage() {
   if (!user) redirect("/login");
 
   const managedBusinessIds = await getManagedBusinessIds(supabase, user.id);
-  const [{ data: serviceRows }, { data: orders }] = await Promise.all([
+  const [{ data: serviceRows }, { data: orders }, { data: serviceRequests }] = await Promise.all([
     supabase
       .from("platform_services")
       .select("id,slug,name,description,category,price,currency,billing,default_term_days")
@@ -46,11 +46,32 @@ export default async function ServicesPage() {
           .order("created_at", { ascending: false })
           .limit(8)
       : Promise.resolve({ data: [] as { id: string; service_id: string; business_id: string; status: string; amount_mzn: number; currency: string; starts_at: string | null; ends_at: string | null; renewal_period: string | null; auto_renew: boolean; created_at: string }[] }),
+    managedBusinessIds.length
+      ? supabase
+          .from("service_requests")
+          .select("id,service_id,requester_business_id,status,requested_price,currency,notes,created_at,updated_at")
+          .or(`requester_user_id.eq.${user.id},requester_business_id.in.(${managedBusinessIds.join(",")})`)
+          .order("created_at", { ascending: false })
+          .limit(20)
+      : supabase
+          .from("service_requests")
+          .select("id,service_id,requester_business_id,status,requested_price,currency,notes,created_at,updated_at")
+          .eq("requester_user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(20),
   ]);
 
   const services = serviceRows ?? [];
   const serviceNames = new Map(services.map((service) => [service.id, service.name]));
   const categories = [...new Set(services.map((service) => service.category))];
+  const requestStatusLabels: Record<string, string> = {
+    REQUESTED: "Pedido recebido",
+    UNDER_REVIEW: "Em análise",
+    QUOTED: "Proposta enviada",
+    ACCEPTED: "Aceite",
+    IN_PROGRESS: "Em execução",
+    COMPLETED: "Concluído",
+  };
 
   return (
     <main className="dashboard-main">
@@ -71,6 +92,36 @@ export default async function ServicesPage() {
         </header>
 
         <div className="services-catalog-surface"><div className="responsive-next-step"><span className="dashboard-kicker">Próxima acção</span><strong>Escolha o apoio que precisa de executar agora.</strong><span>O acompanhamento das contratações fica logo abaixo.</span></div><PlatformServicesCatalog services={services} /></div>
+
+        <section className="dashboard-section service-orders">
+          <div className="dashboard-section-head">
+            <div>
+              <span className="dashboard-kicker">Pedidos personalizados</span>
+              <h2>Pedidos em análise</h2>
+              <p>Acompanhe os serviços que exigem avaliação de escopo ou proposta antes da contratação.</p>
+            </div>
+          </div>
+          {serviceRequests?.length ? (
+            <div className="service-order-list">
+              {serviceRequests.map((request) => (
+                <article className="service-order-row" key={request.id}>
+                  <div>
+                    <strong>{serviceNames.get(request.service_id) || "Serviço MozEmpresas"}</strong>
+                    <small>Pedido de {new Date(request.created_at).toLocaleDateString("pt-MZ")}</small>
+                    {request.notes ? <p>{request.notes}</p> : null}
+                    {request.requested_price != null ? <small>Proposta: {Number(request.requested_price).toLocaleString("pt-MZ")} {request.currency || "MZN"}</small> : null}
+                  </div>
+                  <div className="service-order-meta">
+                    <span className={request.status === "COMPLETED" ? "active" : ""}>{requestStatusLabels[request.status] || request.status}</span>
+                    <small>Actualizado: {new Date(request.updated_at || request.created_at).toLocaleDateString("pt-MZ")}</small>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="muted">Ainda não submeteu pedidos personalizados de serviço.</p>
+          )}
+        </section>
 
         <section className="dashboard-section service-orders">
           <div className="dashboard-section-head">
