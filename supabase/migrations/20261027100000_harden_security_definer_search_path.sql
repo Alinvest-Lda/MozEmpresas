@@ -34,7 +34,7 @@ begin
   loop
     if not routine.has_pg_temp_last then
       current_path := coalesce(nullif(trim(routine.configured_path), ''), 'public');
-      current_path := regexp_replace(current_path, '(^|,)[[:space:]]*pg_temp[[:space:]]*(,|$)', '\\1', 'gi');
+      current_path := regexp_replace(current_path, '(^|,)[[:space:]]*pg_temp[[:space:]]*(,|$)', '\1', 'gi');
       current_path := trim(both ', ' from current_path);
       alter_kind := case when routine.routine_kind = 'p' then 'procedure' else 'function' end;
       execute format(
