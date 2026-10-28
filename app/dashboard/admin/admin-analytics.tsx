@@ -13,7 +13,7 @@ export default async function AdminAnalytics() {
   if (!authorized) return null;
 
   const now = new Date();
-  const since = new Date(now.getTime() - 29 * DAY_MS);
+  const since = new Date(now.getTime() - 13 * DAY_MS);
   const sinceIso = since.toISOString();
   const [
     { count: totalBusinesses },
@@ -76,7 +76,7 @@ export default async function AdminAnalytics() {
           <h1>Visão geral da plataforma</h1>
           <p>Indicadores para acompanhar crescimento, actividade e pontos que exigem decisão.</p>
         </div>
-        <div className={styles.period}><span className={styles.liveDot} /> Últimos 30 dias <small>Dados do último carregamento</small></div>
+        <div className={styles.period}><span className={styles.liveDot} /> Tendência de 14 dias <small>Dados do último carregamento</small></div>
       </header>
 
       <div className={styles.metrics}>
