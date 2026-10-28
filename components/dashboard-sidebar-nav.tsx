@@ -40,7 +40,7 @@ export function DashboardSidebarNav({ platformAccess, unreadNotifications = 0 }:
       ["/dashboard/admin/publicidade", "Publicidade e campanhas"],
       ["/dashboard/admin/suporte", "Central de suporte"],
       ["/dashboard/admin/monetizacao", "Monetização"],
-      ["/admin/parceiros", "Acessos de parceiros"],
+      ["/dashboard/admin/parceiros", "Acessos de parceiros"],
       ["/dashboard/notificacoes", "Notificações"],
       ["/dashboard/conta", "Conta e segurança"],
     ];
