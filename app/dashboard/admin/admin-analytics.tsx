@@ -20,10 +20,6 @@ export default async function AdminAnalytics() {
     { count: totalUsers },
     { count: totalListings },
     { count: totalRequests },
-    { count: newBusinesses },
-    { count: newUsers },
-    { count: newListings },
-    { count: newRequests },
     { data: businessActivity },
     { data: userActivity },
     { data: listingActivity },
@@ -35,10 +31,6 @@ export default async function AdminAnalytics() {
     supabase.from("profiles").select("id", { count: "exact", head: true }),
     supabase.from("listings").select("id", { count: "exact", head: true }),
     supabase.from("service_requests").select("id", { count: "exact", head: true }),
-    supabase.from("businesses").select("id", { count: "exact", head: true }).gte("created_at", sinceIso),
-    supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", sinceIso),
-    supabase.from("listings").select("id", { count: "exact", head: true }).gte("created_at", sinceIso),
-    supabase.from("service_requests").select("id", { count: "exact", head: true }).gte("created_at", sinceIso),
     supabase.from("businesses").select("created_at").gte("created_at", sinceIso).order("created_at", { ascending: true }).limit(1500),
     supabase.from("profiles").select("created_at").gte("created_at", sinceIso).order("created_at", { ascending: true }).limit(1500),
     supabase.from("listings").select("created_at").gte("created_at", sinceIso).order("created_at", { ascending: true }).limit(1500),
@@ -70,10 +62,10 @@ export default async function AdminAnalytics() {
   const requestCompletionRate = totalRequests ? Math.round(((completedRequests ?? 0) / totalRequests) * 100) : 0;
 
   const metrics = [
-    { label: "Empresas registadas", total: totalBusinesses ?? 0, period: newBusinesses ?? 0, hint: "novas nos últimos 30 dias", symbol: "EM", tone: "teal", href: "/dashboard/admin/empresas" },
-    { label: "Utilizadores", total: totalUsers ?? 0, period: newUsers ?? 0, hint: "novos nos últimos 30 dias", symbol: "US", tone: "blue", href: "/dashboard/admin/usuarios" },
-    { label: "Ofertas no marketplace", total: totalListings ?? 0, period: newListings ?? 0, hint: "criadas nos últimos 30 dias", symbol: "OF", tone: "violet", href: "#ofertas" },
-    { label: "Pedidos de serviço", total: totalRequests ?? 0, period: newRequests ?? 0, hint: "recebidos nos últimos 30 dias", symbol: "PS", tone: "orange", href: "#pedidos-servico" },
+    { label: "Empresas registadas", total: totalBusinesses ?? 0, hint: "total na plataforma", symbol: "EM", tone: "teal", href: "/dashboard/admin/empresas" },
+    { label: "Utilizadores", total: totalUsers ?? 0, hint: "total na plataforma", symbol: "US", tone: "blue", href: "/dashboard/admin/usuarios" },
+    { label: "Ofertas no marketplace", total: totalListings ?? 0, hint: "total no inventário", symbol: "OF", tone: "violet", href: "#ofertas" },
+    { label: "Pedidos de serviço", total: totalRequests ?? 0, hint: "total registado", symbol: "PS", tone: "orange", href: "#pedidos-servico" },
   ] as const;
 
   return (
@@ -92,7 +84,7 @@ export default async function AdminAnalytics() {
           <a className={styles.metric} href={metric.href} key={metric.label}>
             <div className={styles.metricTop}><span>{metric.label}</span><span className={`${styles.metricIcon} ${styles[metric.tone]}`}>{metric.symbol}</span></div>
             <strong>{formatNumber(metric.total)}</strong>
-            <div className={styles.metricBottom}><b>+{formatNumber(metric.period)}</b><span>{metric.hint}</span></div>
+            <div className={styles.metricBottom}><span>{metric.hint}</span></div>
           </a>
         ))}
       </div>
@@ -137,12 +129,12 @@ export default async function AdminAnalytics() {
           <div className={styles.rateBlock}>
             <div className={styles.rateHead}><span><strong>Publicação do marketplace</strong><small>Percentagem das ofertas que estão publicadas</small></span><b>{formatNumber(listingPublicationRate)}%</b></div>
             <div className={styles.progress}><span className={styles.progressPublished} style={{ width: `${listingPublicationRate}%` }} /></div>
-            <small className={styles.rateContext}>{formatNumber(publishedListings ?? 0)} publicadas de {formatNumber(totalListings ?? 0)} ofertas registadas</small>
+            <small className={styles.rateContext}>Indicador calculado sobre o inventário total registado</small>
           </div>
           <div className={styles.rateBlock}>
             <div className={styles.rateHead}><span><strong>Conclusão de pedidos</strong><small>Percentagem dos pedidos marcados como concluídos</small></span><b>{formatNumber(requestCompletionRate)}%</b></div>
             <div className={styles.progress}><span className={styles.progressCompleted} style={{ width: `${requestCompletionRate}%` }} /></div>
-            <small className={styles.rateContext}>{formatNumber(completedRequests ?? 0)} concluídos de {formatNumber(totalRequests ?? 0)} pedidos registados</small>
+            <small className={styles.rateContext}>Indicador calculado sobre todos os pedidos registados</small>
           </div>
           <div className={styles.rateInsight}><span className={styles.noteIcon}>i</span><span><strong>Como interpretar</strong><small>Estes rácios usam os totais actualmente registados. Não representam uma taxa de conversão comercial nem uma avaliação de qualidade do serviço.</small></span></div>
           <a className={styles.viewAll} href="/dashboard/admin/monetizacao">Explorar monetização e inventário <span aria-hidden="true">→</span></a>
