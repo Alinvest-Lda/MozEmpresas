@@ -72,6 +72,10 @@ jobs:
           returns integer language sql security definer
           set search_path = public, pg_temp
           as $$ select 3 $$;
+          create procedure public.test_procedure_path()
+          language plpgsql security definer
+          set search_path = public
+          as $$ begin null; end $$;
           SQL
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261027100000_harden_security_definer_search_path.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
@@ -97,6 +101,14 @@ jobs:
                 and p.proconfig @> array['search_path=public, pg_temp']
             ) then
               raise exception 'already-hardened search_path was not preserved';
+            end if;
+            if not exists (
+              select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+              where n.nspname = 'public' and p.proname = 'test_procedure_path'
+                and p.prokind = 'p'
+                and p.proconfig @> array['search_path=public, pg_temp']
+            ) then
+              raise exception 'SECURITY DEFINER procedure search_path was not hardened';
             end if;
           end;
           $verify$;
