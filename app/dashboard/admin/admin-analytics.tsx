@@ -24,8 +24,6 @@ export default async function AdminAnalytics() {
     { data: userActivity },
     { data: listingActivity },
     { data: requestActivity },
-    { count: publishedListings },
-    { count: completedRequests },
   ] = await Promise.all([
     supabase.from("businesses").select("id", { count: "exact", head: true }),
     supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -35,8 +33,6 @@ export default async function AdminAnalytics() {
     supabase.from("profiles").select("created_at").gte("created_at", sinceIso).order("created_at", { ascending: true }).limit(1500),
     supabase.from("listings").select("created_at").gte("created_at", sinceIso).order("created_at", { ascending: true }).limit(1500),
     supabase.from("service_requests").select("created_at").gte("created_at", sinceIso).order("created_at", { ascending: true }).limit(1500),
-    supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "PUBLISHED"),
-    supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "COMPLETED"),
   ]);
 
   const days = Array.from({ length: 14 }, (_, index) => {
@@ -57,23 +53,7 @@ export default async function AdminAnalytics() {
   addActivity(listingActivity, "listings");
   addActivity(requestActivity, "requests");
 
-  const previousWeek = days.slice(0, 7);
-  const currentWeek = days.slice(7);
-  const sumActivity = (period: typeof days) => period.reduce((sum, day) => ({
-    businesses: sum.businesses + day.businesses,
-    users: sum.users + day.users,
-    listings: sum.listings + day.listings,
-    requests: sum.requests + day.requests,
-  }), { businesses: 0, users: 0, listings: 0, requests: 0 });
-  const previousTotals = sumActivity(previousWeek);
-  const currentTotals = sumActivity(currentWeek);
-  const currentTotal = Object.values(currentTotals).reduce((sum, value) => sum + value, 0);
-  const previousTotal = Object.values(previousTotals).reduce((sum, value) => sum + value, 0);
-  const activityDelta = currentTotal - previousTotal;
-
   const maxActivity = Math.max(1, ...days.map((day) => day.businesses + day.users + day.listings + day.requests));
-  const listingPublicationRate = totalListings ? Math.round(((publishedListings ?? 0) / totalListings) * 100) : 0;
-  const requestCompletionRate = totalRequests ? Math.round(((completedRequests ?? 0) / totalRequests) * 100) : 0;
 
   const metrics = [
     { label: "Empresas registadas", total: totalBusinesses ?? 0, hint: "total na plataforma", symbol: "EM", tone: "teal", href: "/dashboard/admin/empresas" },
@@ -136,10 +116,7 @@ export default async function AdminAnalytics() {
           <p className={styles.chartFootnote}>O gráfico mostra novos registos por dia; não representa utilizadores activos nem visitas.</p>
         </section>
 
-        <section className={styles.panel}>
-          <div className={styles.panelHead}>
-            <div><span className={styles.eyebrow}>COMPARAÇÃO DE ACTIVIDADE</span><h2>Últimos 7 dias vs. semana anterior</h2><p>Compara o volume de novos registos entre dois períodos de igual duração.</p></div>
-          </div>
+
           <div className={styles.comparisonSummary}>
             <span className={styles.comparisonLabel}>Variação total de registos</span>
             <strong className={activityDelta > 0 ? styles.deltaPositive : activityDelta < 0 ? styles.deltaNegative : styles.deltaNeutral}>{activityDelta > 0 ? "+" : ""}{formatNumber(activityDelta)}</strong>
@@ -163,10 +140,6 @@ export default async function AdminAnalytics() {
         </section>
       </div>
 
-      <div className={styles.bottomNote}>
-        <div><span className={styles.noteIcon}>i</span><span><strong>Leitura de gestão</strong><small>Os indicadores são agregados a partir dos registos existentes. A comparação semanal mede volume de novos registos, não visitas nem utilizadores activos.</small></span></div>
-        <a href="/dashboard/admin/empresas">Abrir directório completo <span aria-hidden="true">→</span></a>
-      </div>
     </section>
   );
 }
