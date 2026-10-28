@@ -115,31 +115,7 @@ export default async function AdminAnalytics() {
           </div>
           <p className={styles.chartFootnote}>O gráfico mostra novos registos por dia; não representa utilizadores activos nem visitas.</p>
         </section>
-
-
-          <div className={styles.comparisonSummary}>
-            <span className={styles.comparisonLabel}>Variação total de registos</span>
-            <strong className={activityDelta > 0 ? styles.deltaPositive : activityDelta < 0 ? styles.deltaNegative : styles.deltaNeutral}>{activityDelta > 0 ? "+" : ""}{formatNumber(activityDelta)}</strong>
-            <small>{formatNumber(currentTotal)} registos nos últimos 7 dias · {formatNumber(previousTotal)} na semana anterior</small>
-          </div>
-          <div className={styles.comparisonRows}>
-            {([
-              ["Utilizadores", currentTotals.users, previousTotals.users],
-              ["Empresas", currentTotals.businesses, previousTotals.businesses],
-              ["Ofertas", currentTotals.listings, previousTotals.listings],
-              ["Pedidos de serviço", currentTotals.requests, previousTotals.requests],
-            ] as const).map(([label, current, previous]) => {
-              const delta = current - previous;
-              return <div className={styles.comparisonRow} key={label}>
-                <span>{label}</span><strong>{formatNumber(current)}</strong><small>anterior: {formatNumber(previous)}</small>
-                <b className={delta > 0 ? styles.deltaPositive : delta < 0 ? styles.deltaNegative : styles.deltaNeutral}>{delta > 0 ? "+" : ""}{formatNumber(delta)}</b>
-              </div>;
-            })}
-          </div>
-          <p className={styles.chartFootnote}>A variação é absoluta, não percentual. Um valor negativo significa menos registos do que na semana anterior; não significa necessariamente perda de utilizadores activos.</p>
-        </section>
       </div>
-
     </section>
   );
 }
