@@ -57,6 +57,20 @@ export default async function AdminAnalytics() {
   addActivity(listingActivity, "listings");
   addActivity(requestActivity, "requests");
 
+  const previousWeek = days.slice(0, 7);
+  const currentWeek = days.slice(7);
+  const sumActivity = (period: typeof days) => period.reduce((sum, day) => ({
+    businesses: sum.businesses + day.businesses,
+    users: sum.users + day.users,
+    listings: sum.listings + day.listings,
+    requests: sum.requests + day.requests,
+  }), { businesses: 0, users: 0, listings: 0, requests: 0 });
+  const previousTotals = sumActivity(previousWeek);
+  const currentTotals = sumActivity(currentWeek);
+  const currentTotal = Object.values(currentTotals).reduce((sum, value) => sum + value, 0);
+  const previousTotal = Object.values(previousTotals).reduce((sum, value) => sum + value, 0);
+  const activityDelta = currentTotal - previousTotal;
+
   const maxActivity = Math.max(1, ...days.map((day) => day.businesses + day.users + day.listings + day.requests));
   const listingPublicationRate = totalListings ? Math.round(((publishedListings ?? 0) / totalListings) * 100) : 0;
   const requestCompletionRate = totalRequests ? Math.round(((completedRequests ?? 0) / totalRequests) * 100) : 0;
@@ -124,26 +138,34 @@ export default async function AdminAnalytics() {
 
         <section className={styles.panel}>
           <div className={styles.panelHead}>
-            <div><span className={styles.eyebrow}>QUALIDADE DA PLATAFORMA</span><h2>Indicadores de desempenho</h2><p>Proporções que ajudam a avaliar a qualidade do inventário e o ciclo de serviço.</p></div>
+            <div><span className={styles.eyebrow}>COMPARAÇÃO DE ACTIVIDADE</span><h2>Últimos 7 dias vs. semana anterior</h2><p>Compara o volume de novos registos entre dois períodos de igual duração.</p></div>
           </div>
-          <div className={styles.rateBlock}>
-            <div className={styles.rateHead}><span><strong>Publicação do marketplace</strong><small>Percentagem das ofertas que estão publicadas</small></span><b>{formatNumber(listingPublicationRate)}%</b></div>
-            <div className={styles.progress}><span className={styles.progressPublished} style={{ width: `${listingPublicationRate}%` }} /></div>
-            <small className={styles.rateContext}>Indicador calculado sobre o inventário total registado</small>
+          <div className={styles.comparisonSummary}>
+            <span className={styles.comparisonLabel}>Variação total de registos</span>
+            <strong className={activityDelta > 0 ? styles.deltaPositive : activityDelta < 0 ? styles.deltaNegative : styles.deltaNeutral}>{activityDelta > 0 ? "+" : ""}{formatNumber(activityDelta)}</strong>
+            <small>{formatNumber(currentTotal)} registos nos últimos 7 dias · {formatNumber(previousTotal)} na semana anterior</small>
           </div>
-          <div className={styles.rateBlock}>
-            <div className={styles.rateHead}><span><strong>Conclusão de pedidos</strong><small>Percentagem dos pedidos marcados como concluídos</small></span><b>{formatNumber(requestCompletionRate)}%</b></div>
-            <div className={styles.progress}><span className={styles.progressCompleted} style={{ width: `${requestCompletionRate}%` }} /></div>
-            <small className={styles.rateContext}>Indicador calculado sobre todos os pedidos registados</small>
+          <div className={styles.comparisonRows}>
+            {([
+              ["Utilizadores", currentTotals.users, previousTotals.users],
+              ["Empresas", currentTotals.businesses, previousTotals.businesses],
+              ["Ofertas", currentTotals.listings, previousTotals.listings],
+              ["Pedidos de serviço", currentTotals.requests, previousTotals.requests],
+            ] as const).map(([label, current, previous]) => {
+              const delta = current - previous;
+              return <div className={styles.comparisonRow} key={label}>
+                <span>{label}</span><strong>{formatNumber(current)}</strong><small>anterior: {formatNumber(previous)}</small>
+                <b className={delta > 0 ? styles.deltaPositive : delta < 0 ? styles.deltaNegative : styles.deltaNeutral}>{delta > 0 ? "+" : ""}{formatNumber(delta)}</b>
+              </div>;
+            })}
           </div>
-          <div className={styles.rateInsight}><span className={styles.noteIcon}>i</span><span><strong>Como interpretar</strong><small>Estes rácios usam os totais actualmente registados. Não representam uma taxa de conversão comercial nem uma avaliação de qualidade do serviço.</small></span></div>
-          <a className={styles.viewAll} href="/dashboard/admin/monetizacao">Explorar monetização e inventário <span aria-hidden="true">→</span></a>
+          <p className={styles.chartFootnote}>A variação é absoluta, não percentual. Um valor negativo significa menos registos do que na semana anterior; não significa necessariamente perda de utilizadores activos.</p>
         </section>
       </div>
 
       <div className={styles.bottomNote}>
-        <div><span className={styles.noteIcon}>i</span><span><strong>Leitura de gestão</strong><small>Os números apresentados são agregados directamente da base de dados. A variação de 30 dias indica novos registos, não crescimento percentual.</small></span></div>
-        <a href="/dashboard/admin/publicidade">Ver publicidade e campanhas <span aria-hidden="true">→</span></a>
+        <div><span className={styles.noteIcon}>i</span><span><strong>Leitura de gestão</strong><small>Os indicadores são agregados a partir dos registos existentes. A comparação semanal mede volume de novos registos, não visitas nem utilizadores activos.</small></span></div>
+        <a href="/dashboard/admin/empresas">Abrir directório completo <span aria-hidden="true">→</span></a>
       </div>
     </section>
   );
