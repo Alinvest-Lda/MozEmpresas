@@ -1,34 +1,172 @@
-export const dynamic="force-dynamic";
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
-import {createClient} from "@/lib/supabase/server";
-import {markNotificationRead,markAllNotificationsRead} from "@/lib/notifications/actions";
+import { createClient } from "@/lib/supabase/server";
+import { markNotificationRead, markAllNotificationsRead } from "@/lib/notifications/actions";
+import styles from "./notificacoes.module.css";
 
-function dateLabel(value:string){return new Intl.DateTimeFormat("pt-MZ",{dateStyle:"medium",timeStyle:"short"}).format(new Date(value));}
-const typeLabels:Record<string,string>={SERVICE_REQUEST:"Serviços",ORDER:"Comprar e vender",OPPORTUNITY_APPLICATION:"Oportunidades",PAYMENT:"Pagamentos",ADVERTISING:"Publicidade",ACCOUNT:"Conta",SYSTEM:"Sistema",SAVED_SEARCH_MATCH:"Pesquisa guardada"};
+function dateLabel(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? "Data indisponível"
+    : new Intl.DateTimeFormat("pt-MZ", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Maputo" }).format(date);
+}
 
-export default async function NotificationsPage({searchParams}:{searchParams?:Promise<{filter?:string}>}){
- const params=await searchParams; const filter=params?.filter||"all"; const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user)return null;
- const {data:notifications}=await supabase.from("notifications").select("id,type,title,body,resource_type,resource_id,read_at,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(100);
- const rawNotifications=notifications??[];
- const businessIds=[...new Set(rawNotifications.filter(n=>n.resource_type==="BUSINESS"&&n.resource_id).map(n=>n.resource_id as string))];
- const listingIds=[...new Set(rawNotifications.filter(n=>n.resource_type==="LISTING"&&n.resource_id).map(n=>n.resource_id as string))];
- const opportunityIds=[...new Set(rawNotifications.filter(n=>n.resource_type==="OPPORTUNITY"&&n.resource_id).map(n=>n.resource_id as string))];
- const [businessRows,listingRows,opportunityRows]=await Promise.all([
-  businessIds.length?supabase.from("businesses").select("id,slug").in("id",businessIds):Promise.resolve({data:[]}),
-  listingIds.length?supabase.from("listings").select("id").in("id",listingIds):Promise.resolve({data:[]}),
-  opportunityIds.length?supabase.from("opportunities").select("id,slug").in("id",opportunityIds):Promise.resolve({data:[]}),
- ]);
- const resourceLinks=new Map<string,string>();
- (businessRows.data??[]).forEach((x:any)=>resourceLinks.set("BUSINESS:"+x.id,"/empresas/"+x.slug));
- (listingRows.data??[]).forEach((x:any)=>resourceLinks.set("LISTING:"+x.id,"/marketplace/"+x.id));
- (opportunityRows.data??[]).forEach((x:any)=>resourceLinks.set("OPPORTUNITY:"+x.id,"/oportunidades/"+x.slug));
- const items=rawNotifications.filter(n=>filter==="unread"?!n.read_at:filter==="read"?Boolean(n.read_at):filter==="all"||n.type===filter); const unread=rawNotifications.filter(n=>!n.read_at).length;
- const types=[...new Set((notifications??[]).map(n=>n.type).filter(Boolean))];
- return <main className="dashboard-main"><div className="dashboard-content">
-  <header className="dashboard-topbar"><div className="dashboard-welcome"><span className="dashboard-kicker">Conta · Centro de actividade</span><h1>Notificações</h1><p>Organize alertas por área e trate primeiro o que exige uma acção.</p></div>{unread>0&&<form action={markAllNotificationsRead}><button className="btn secondary" type="submit">Marcar todas como lidas</button></form>}</header>
-  <nav className="commerce-nav" aria-label="Filtros de notificações"><Link href="/dashboard/notificacoes?filter=all" className={filter==="all"?"active":""}>Todas</Link><Link href="/dashboard/notificacoes?filter=unread" className={filter==="unread"?"active":""}>Por ler ({unread})</Link><Link href="/dashboard/notificacoes?filter=read" className={filter==="read"?"active":""}>Lidas</Link>{types.map(t=><Link key={t} href={"/dashboard/notificacoes?filter="+encodeURIComponent(t)} className={filter===t?"active":""}>{typeLabels[t]||t}</Link>)}</nav>
-  <section className="dashboard-section"><div className="dashboard-section-head"><div><span className="dashboard-kicker">{unread?unread+" por ler":"Tudo em dia"}</span><h2>{filter==="unread"?"Notificações por ler":filter==="read"?"Notificações lidas":filter!=="all"?(typeLabels[filter]||filter):"Todas as notificações"}</h2><p>As notificações permanecem no histórico até deixarem de ser relevantes.</p></div></div>
-   {items.length?<div className="dashboard-list">{items.map(item=><div key={item.id} className={"notification-item"+(item.read_at?"":" unread")}><div><span className="notification-type">{typeLabels[item.type]||item.type}</span><strong>{item.title}</strong>{item.body&&<span>{item.body}</span>}<small>{dateLabel(item.created_at)}</small></div><div className="notification-actions">{!item.read_at&&<form action={markNotificationRead}><input type="hidden" name="notificationId" value={item.id}/><button className="text-link" type="submit">Marcar como lida</button></form>}{item.resource_type==="SERVICE_REQUEST"&&<Link className="text-link" href="/dashboard/servicos">Abrir serviço →</Link>}{item.resource_type==="ORDER"&&<Link className="text-link" href="/dashboard/marketplace?tab=negociacoes">Abrir negociação →</Link>}{item.resource_type&&item.resource_id&&resourceLinks.has(String(item.resource_type).toUpperCase()+":"+item.resource_id)&&<Link className="text-link" href={resourceLinks.get(String(item.resource_type).toUpperCase()+":"+item.resource_id)!}>Abrir publicação →</Link>}</div></div>)}</div>:<div className="empty"><div className="empty-icon">✓</div><p>Não existem notificações neste filtro.</p></div>}
-  </section>
- </div></main>;
+const typeLabels: Record<string, string> = {
+  SERVICE_REQUEST: "Serviços",
+  ORDER: "Comprar e vender",
+  OPPORTUNITY_APPLICATION: "Oportunidades",
+  PAYMENT: "Pagamentos",
+  ADVERTISING: "Publicidade",
+  ACCOUNT: "Conta",
+  SYSTEM: "Sistema",
+  SAVED_SEARCH_MATCH: "Pesquisa guardada",
+};
+
+type Notification = {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  resource_type: string | null;
+  resource_id: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
+export default async function NotificationsPage({ searchParams }: { searchParams?: Promise<{ filter?: string }> }) {
+  const params = await searchParams;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const [{ data: notifications }, { data: platformMember }] = await Promise.all([
+    supabase.from("notifications")
+      .select("id,type,title,body,resource_type,resource_id,read_at,created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase.from("platform_members").select("role,active").eq("user_id", user.id).maybeSingle(),
+  ]);
+
+  const rawNotifications = (notifications ?? []) as Notification[];
+  const availableFilters = new Set(["all", "unread", "read", ...rawNotifications.map((item) => item.type)]);
+  const filter = availableFilters.has(params?.filter || "all") ? params?.filter || "all" : "all";
+  const businessIds = [...new Set(rawNotifications.filter((n) => n.resource_type === "BUSINESS" && n.resource_id).map((n) => n.resource_id as string))];
+  const listingIds = [...new Set(rawNotifications.filter((n) => n.resource_type === "LISTING" && n.resource_id).map((n) => n.resource_id as string))];
+  const opportunityIds = [...new Set(rawNotifications.filter((n) => n.resource_type === "OPPORTUNITY" && n.resource_id).map((n) => n.resource_id as string))];
+
+  const [businessRows, listingRows, opportunityRows] = await Promise.all([
+    businessIds.length ? supabase.from("businesses").select("id,slug").in("id", businessIds) : Promise.resolve({ data: [] }),
+    listingIds.length ? supabase.from("listings").select("id").in("id", listingIds) : Promise.resolve({ data: [] }),
+    opportunityIds.length ? supabase.from("opportunities").select("id,slug").in("id", opportunityIds) : Promise.resolve({ data: [] }),
+  ]);
+
+  const resourceLinks = new Map<string, string>();
+  (businessRows.data ?? []).forEach((item: { id: string; slug: string }) => resourceLinks.set("BUSINESS:" + item.id, "/empresas/" + item.slug));
+  (listingRows.data ?? []).forEach((item: { id: string }) => resourceLinks.set("LISTING:" + item.id, "/marketplace/" + item.id));
+  (opportunityRows.data ?? []).forEach((item: { id: string; slug: string }) => resourceLinks.set("OPPORTUNITY:" + item.id, "/oportunidades/" + item.slug));
+
+  const items = rawNotifications.filter((item) =>
+    filter === "unread" ? !item.read_at
+      : filter === "read" ? Boolean(item.read_at)
+      : filter === "all" || item.type === filter
+  );
+  const unread = rawNotifications.filter((item) => !item.read_at).length;
+  const types = [...new Set(rawNotifications.map((item) => item.type).filter(Boolean))];
+  const isSuperAdmin = Boolean(platformMember?.active && platformMember.role === "super_admin");
+  const heading = filter === "unread" ? "Por ler"
+    : filter === "read" ? "Lidas"
+    : filter !== "all" ? (typeLabels[filter] || filter)
+    : "Todas as notificações";
+
+  return (
+    <main className={`dashboard-main ${styles.page}`}>
+      <div className={`dashboard-content ${styles.content}`}>
+        <header className={styles.hero}>
+          <div className={styles.heroCopy}>
+            <span className={styles.eyebrow}>{isSuperAdmin ? "Administração global · Actividade" : "Conta · Centro de actividade"}</span>
+            <h1>Notificações</h1>
+            <p>Consulte alertas, acompanhe actualizações e abra directamente o registo relacionado quando existir uma acção a tratar.</p>
+          </div>
+          <div className={styles.heroBadge}>
+            <span className={styles.badgeIcon} aria-hidden="true">◎</span>
+            <strong>{unread.toLocaleString("pt-MZ")} por ler</strong>
+            <small>{rawNotifications.length.toLocaleString("pt-MZ")} notificações recentes</small>
+          </div>
+        </header>
+
+        {unread > 0 ? (
+          <div className={styles.toolbar}>
+            <p>As notificações por ler ficam destacadas até serem marcadas como lidas.</p>
+            <form action={markAllNotificationsRead}>
+              <button className="btn secondary" type="submit">Marcar todas como lidas</button>
+            </form>
+          </div>
+        ) : null}
+
+        <section className={styles.panel} aria-labelledby="notifications-heading">
+          <div className={styles.panelHeader}>
+            <div>
+              <span className={styles.kicker}>{unread > 0 ? `${unread} por ler` : "Tudo em dia"}</span>
+              <h2 id="notifications-heading">{heading}</h2>
+              <p>O histórico apresenta até 100 notificações recentes.</p>
+            </div>
+          </div>
+
+          <nav className={styles.filters} aria-label="Filtros de notificações">
+            <Link href="/dashboard/notificacoes?filter=all" className={filter === "all" ? styles.activeFilter : ""}>Todas</Link>
+            <Link href="/dashboard/notificacoes?filter=unread" className={filter === "unread" ? styles.activeFilter : ""}>Por ler <span>{unread}</span></Link>
+            <Link href="/dashboard/notificacoes?filter=read" className={filter === "read" ? styles.activeFilter : ""}>Lidas</Link>
+            {types.map((type) => (
+              <Link key={type} href={"/dashboard/notificacoes?filter=" + encodeURIComponent(type)} className={filter === type ? styles.activeFilter : ""}>
+                {typeLabels[type] || type}
+              </Link>
+            ))}
+          </nav>
+
+          {items.length ? (
+            <div className={styles.list}>
+              {items.map((item) => {
+                const resourceKey = item.resource_type && item.resource_id
+                  ? String(item.resource_type).toUpperCase() + ":" + item.resource_id
+                  : "";
+                const resourceLink = resourceLinks.get(resourceKey);
+                return (
+                  <article key={item.id} className={`${styles.notification} ${item.read_at ? "" : styles.unread}`}>
+                    <div className={styles.notificationBody}>
+                      <div className={styles.itemMeta}>
+                        <span className={styles.typePill}>{typeLabels[item.type] || item.type}</span>
+                        {!item.read_at ? <span className={styles.unreadMark}>Por ler</span> : null}
+                      </div>
+                      <h3>{item.title}</h3>
+                      {item.body ? <p>{item.body}</p> : null}
+                      <time dateTime={item.created_at}>{dateLabel(item.created_at)}</time>
+                    </div>
+                    <div className={styles.actions}>
+                      {!item.read_at ? (
+                        <form action={markNotificationRead}>
+                          <input type="hidden" name="notificationId" value={item.id} />
+                          <button className={styles.textAction} type="submit">Marcar como lida</button>
+                        </form>
+                      ) : null}
+                      {item.resource_type === "SERVICE_REQUEST" ? <Link className={styles.textAction} href="/dashboard/servicos">Abrir serviço <span aria-hidden="true">→</span></Link> : null}
+                      {item.resource_type === "ORDER" ? <Link className={styles.textAction} href="/dashboard/marketplace?tab=negociacoes">Abrir negociação <span aria-hidden="true">→</span></Link> : null}
+                      {resourceLink ? <Link className={styles.textAction} href={resourceLink}>Abrir registo <span aria-hidden="true">→</span></Link> : null}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className={styles.emptyState}>
+              <span aria-hidden="true">✓</span>
+              <strong>Não existem notificações neste filtro.</strong>
+              <p>Quando houver uma actualização relevante, ela aparecerá aqui.</p>
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
+  );
 }
