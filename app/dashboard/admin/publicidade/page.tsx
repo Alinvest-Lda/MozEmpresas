@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
+import styles from "./publicidade.module.css";
 
 type Campaign = {
   id: string;
@@ -46,7 +47,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const alertFilter = params?.alerta === "pendentes" || params?.alerta === "expiradas" ? params.alerta : "";
   const nowIso = new Date().toISOString();
   const { supabase, authorized } = await getSuperAdminContext();
-  if (!authorized) return <main className="dashboard-main admin-workspace"><div className="dashboard-content"><div className="notice">Acesso reservado ao Super Admin.</div></div></main>;
+  if (!authorized) return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}><div className="notice">Acesso reservado ao Super Admin.</div></div></main>;
 
   const [
     { data: businessCampaigns, error: businessError },
@@ -87,34 +88,43 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const totalClicks = campaigns.reduce((sum, campaign) => sum + Number(campaign.clicks_count ?? 0), 0);
 
   return <main className="dashboard-main admin-workspace"><div className="dashboard-content">
-    <div className="dashboard-topbar">
-      <span className="eyebrow">Administração global</span>
-      <h1>Publicidade e campanhas</h1>
-      <p className="muted">{alertFilter === "pendentes" ? "A mostrar campanhas que aguardam análise: PENDING nas empresariais e REQUESTED nas de parceiros." : alertFilter === "expiradas" ? "A mostrar campanhas ainda ACTIVE cujo prazo final já passou." : "Fila de consulta para campanhas empresariais e de parceiros, com desempenho registado e controlo de estado a preparar."}</p>
-      {alertFilter ? <p className="notice" style={{marginTop:12}}>Filtro de alerta activo. <a href="/dashboard/admin/publicidade">Ver todas as campanhas</a></p> : null}
-    </div>
+    <header className={styles.hero}>
+      <div className={styles.heroCopy}>
+        <span className={styles.eyebrow}>Administração global</span>
+        <h1>Publicidade e campanhas</h1>
+        <p>{alertFilter === "pendentes" ? "A mostrar campanhas que aguardam análise: PENDING nas empresariais e REQUESTED nas de parceiros." : alertFilter === "expiradas" ? "A mostrar campanhas ainda ACTIVE cujo prazo final já passou." : "Acompanhe campanhas empresariais e de parceiros, valide prazos e consulte o desempenho registado."}</p>
+        {alertFilter ? <p className={styles.heroNotice}>Filtro de alerta activo. <a href="/dashboard/admin/publicidade">Ver todas as campanhas</a></p> : null}
+      </div>
+      <div className={styles.heroSummary}>
+        <span className={styles.summaryLabel}>Campanhas consultadas</span>
+        <strong>{campaigns.length}</strong>
+        <span className={styles.summaryCaption}>Até 100 por origem</span>
+        <div className={styles.summaryRule} />
+        <span className={styles.summaryFoot}>Empresariais e parceiros no mesmo painel de acompanhamento.</span>
+      </div>
+      <span className={styles.heroDecoration} aria-hidden="true">↗</span>
+    </header>
 
-    <div className="grid">
-      <div className="card"><span className="muted">Campanhas empresariais</span><h2>{businessRows.length}</h2><p>Promoções ligadas às empresas.</p></div>
-      <div className="card"><span className="muted">Campanhas de parceiros</span><h2>{partnerRows.length}</h2><p>Campanhas geridas no espaço de parceiros.</p></div>
-      <div className="card"><span className="muted">Impressões nas campanhas</span><h2>{fmtNumber(totalImpressions)}</h2><p>Contadores agregados nas campanhas carregadas.</p></div>
-      <div className="card"><span className="muted">Cliques nas campanhas</span><h2>{fmtNumber(totalClicks)}</h2><p>CTR agregado: {ctr(totalClicks, totalImpressions)}.</p></div>
-      <div className="card"><span className="muted">Eventos de impressão</span><h2>{fmtNumber(impressionEvents)}</h2><p>Eventos de entrega registados na plataforma.</p></div>
-      <div className="card"><span className="muted">Eventos de clique</span><h2>{fmtNumber(clickEvents)}</h2><p>Eventos de clique registados na plataforma.</p></div>
+    <div className={styles.metrics}>
+      <article className={styles.metric}><span>Campanhas empresariais</span><strong>{businessRows.length}</strong><small>Promoções ligadas às empresas</small></article>
+      <article className={styles.metric}><span>Campanhas de parceiros</span><strong>{partnerRows.length}</strong><small>Campanhas geridas no espaço de parceiros</small></article>
+      <article className={styles.metric}><span>Impressões registadas</span><strong>{fmtNumber(totalImpressions)}</strong><small>Contadores agregados nas campanhas carregadas</small></article>
+      <article className={styles.metric}><span>Cliques registados</span><strong>{fmtNumber(totalClicks)}</strong><small>CTR agregado: {ctr(totalClicks, totalImpressions)}</small></article>
     </div>
+    <p className={styles.dataNote}>Eventos na plataforma: {fmtNumber(impressionEvents)} impressões e {fmtNumber(clickEvents)} cliques. Estes totais são eventos registados e não são somados aos contadores das campanhas, para evitar duplicar métricas.</p>
 
     {businessError || partnerError ? <div className="notice" style={{marginTop:16}}>Não foi possível carregar uma ou mais listas de campanhas. Verifique as permissões e as relações configuradas na base de dados antes de activar operações de moderação.</div> : null}
 
-    <section className="dashboard-section" style={{marginTop:18}}>
-      <div className="dashboard-section-head"><div><span className="dashboard-kicker">Monitorização</span><h2>Estados existentes</h2><p>Os estados são apresentados tal como estão gravados; não foram inferidas transições nem alterados registos.</p></div></div>
+    <section className={styles.section} style={{marginTop:18}}>
+      <div className={styles.sectionHead}><div><span className={styles.sectionKicker}>Monitorização</span><h2>Estados existentes</h2><p>Os estados são apresentados tal como estão gravados; não foram inferidas transições nem alterados registos.</p></div></div>
       <div className="grid">
         {Object.entries(statusCounts).sort(([a],[b])=>a.localeCompare(b)).map(([status,count])=><article className="card" key={status}><span className="muted">{status}</span><h2>{count}</h2><p>Campanhas neste estado.</p></article>)}
         {!Object.keys(statusCounts).length ? <div className="admin-request-empty"><strong>Sem campanhas registadas.</strong><span>Quando existirem campanhas, os estados serão apresentados aqui.</span></div> : null}
       </div>
     </section>
 
-    <section className="dashboard-section" style={{marginTop:18}}>
-      <div className="dashboard-section-head"><div><span className="dashboard-kicker">Fila de campanhas</span><h2>Campanhas recentes</h2><p>Até 100 campanhas por origem, ordenadas pelas mais recentes. Esta primeira fase é de consulta, sem mutações de estado.</p></div><span className="directory-results-summary"><strong>{campaigns.length}</strong><span>registos carregados</span></span></div>
+    <section className={styles.section} style={{marginTop:18}}>
+      <div className={styles.sectionHead}><div><span className={styles.sectionKicker}>Fila de campanhas</span><h2>Campanhas recentes</h2><p>Até 100 campanhas por origem, ordenadas pelas mais recentes. A moderação será activada depois de validar os estados e regras operacionais.</p></div><span className={styles.resultsSummary}><strong>{campaigns.length}</strong><span>registos carregados</span></span></div>
       <div className="admin-directory-list">
         {campaigns.map((campaign) => <article className="admin-request-card" key={campaign.origin + "-" + campaign.id}>
           <div className="admin-request-head"><div><span className="dashboard-kicker">{campaign.origin} · {campaign.position}{campaign.slot ? " · " + campaign.slot : ""}</span><h3>{campaign.headline || campaign.title || "Campanha sem título"}</h3><small>{campaign.advertiser} · criada em {fmtDate(campaign.created_at)}</small></div><span className="tag">{campaign.status || "Sem estado"}</span></div>
@@ -125,6 +135,6 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
       </div>
     </section>
 
-    <div className="notice" style={{marginTop:18}}><strong>Moderação transaccional ainda não activada.</strong><p style={{marginBottom:0}}>As tabelas consultadas não devolveram campanhas para confirmar o conjunto de estados e as regras operacionais. Para evitar publicar ou suspender campanhas de forma incorrecta, esta versão disponibiliza consulta e métricas; os controlos de decisão serão ligados após validar os estados permitidos e o fluxo comercial.</p></div>
+    <div className={styles.moderationNote}><strong>Moderação transaccional ainda não activada.</strong><p>Os estados permitidos diferem entre campanhas empresariais e de parceiros. Antes de ligar acções de publicar, rejeitar ou suspender, é necessário confirmar os fluxos e as regras de cada origem. Nenhum registo é alterado nesta página.</p></div>
   </div></main>;
 }
