@@ -30,15 +30,12 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
   let serviceRequestsQuery = supabase.from("service_requests").select("id,status,requested_price,currency,notes,created_at,updated_at,requester_user_id,requester_business_id,platform_services(name),businesses:requester_business_id(name)").order("created_at", { ascending: false }).limit(30);
   if (staleOnly) serviceRequestsQuery = serviceRequestsQuery.in("status", ["REQUESTED", "UNDER_REVIEW", "QUOTED", "ACCEPTED", "IN_PROGRESS"]).lt("updated_at", staleCutoff);
   const [
-    { count: businesses },
-    { count: users },
-    { count: listings },
-    { count: opportunities },
     { data: requests },
     { count: newRequests },
     { count: reviewRequests },
     { count: acceptedRequests },
     { count: inProgressRequests },
+    { count: draftListings },
     { count: expiredOpportunities },
     { count: pendingBusinessCampaigns },
     { count: pendingPartnerCampaigns },
@@ -46,15 +43,12 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     { count: expiredPartnerCampaigns },
     { count: staleServiceRequests },
   ] = await Promise.all([
-    supabase.from("businesses").select("id", { count: "exact", head: true }),
-    supabase.from("profiles").select("id", { count: "exact", head: true }),
-    supabase.from("listings").select("id", { count: "exact", head: true }),
-    supabase.from("opportunities").select("id", { count: "exact", head: true }),
     serviceRequestsQuery,
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "REQUESTED"),
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "UNDER_REVIEW"),
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "ACCEPTED"),
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "IN_PROGRESS"),
+    supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "DRAFT"),
     supabase.from("opportunities").select("id", { count: "exact", head: true }).eq("status", "PUBLISHED").lt("closes_at", nowIso),
     supabase.from("business_promotions").select("id", { count: "exact", head: true }).eq("status", "PENDING"),
     supabase.from("partner_ad_campaigns").select("id", { count: "exact", head: true }).eq("status", "REQUESTED"),
@@ -85,7 +79,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
           <span className="admin-control-stat-label">Pedidos aceites</span><strong>{acceptedRequests ?? 0}</strong><span>Pedidos aceites e ainda não concluídos</span><b>Acompanhar pedidos <span aria-hidden="true">→</span></b>
         </a>
         <a className="admin-control-stat" href="#ofertas">
-          <span className="admin-control-stat-label">Oportunidades expiradas</span><strong>{expiredOpportunities ?? 0}</strong><span>Publicações com prazo de encerramento ultrapassado</span><b>Rever prazos <span aria-hidden="true">→</span></b>
+          <span className="admin-control-stat-label">Ofertas em rascunho</span><strong>{draftListings ?? 0}</strong><span>Ofertas que ainda precisam de revisão antes da publicação</span><b>Rever ofertas <span aria-hidden="true">→</span></b>
         </a>
         <a className="admin-control-stat" href="#pedidos-servico">
           <span className="admin-control-stat-label">Pedidos em execução</span><strong>{inProgressRequests ?? 0}</strong><span>Pedidos com trabalho operacional iniciado</span><b>Acompanhar pedidos <span aria-hidden="true">→</span></b>
