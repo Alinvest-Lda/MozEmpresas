@@ -1,5 +1,6 @@
 import { createPartnerAccess, requireSuperAdmin } from "@/lib/auth/partner-access";
 import { PartnerAccessLink } from "@/components/partner-access-link";
+import { PartnerAccessSubmitButton } from "@/components/partner-access-submit-button";
 import styles from "./parceiros.module.css";
 
 export const dynamic = "force-dynamic";
@@ -90,7 +91,7 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
                   <option value="30">30 dias</option>
                 </select>
               </label>
-              <button className={`btn primary ${styles.submit}`} type="submit">Criar acesso de parceiro <span aria-hidden="true">→</span></button>
+              <PartnerAccessSubmitButton />
             </form>
           </section>
 
