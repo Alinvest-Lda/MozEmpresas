@@ -29,9 +29,7 @@ export default async function AdminAnalytics() {
     { data: listingActivity },
     { data: requestActivity },
     { count: publishedListings },
-    { count: draftListings },
-    { count: requestedServices },
-    { count: activeServices },
+    { count: completedRequests },
   ] = await Promise.all([
     supabase.from("businesses").select("id", { count: "exact", head: true }),
     supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -46,9 +44,7 @@ export default async function AdminAnalytics() {
     supabase.from("listings").select("created_at").gte("created_at", sinceIso).order("created_at", { ascending: true }).limit(1500),
     supabase.from("service_requests").select("created_at").gte("created_at", sinceIso).order("created_at", { ascending: true }).limit(1500),
     supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "PUBLISHED"),
-    supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "DRAFT"),
-    supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "REQUESTED"),
-    supabase.from("service_requests").select("id", { count: "exact", head: true }).in("status", ["ACCEPTED", "IN_PROGRESS"]),
+    supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "COMPLETED"),
   ]);
 
   const days = Array.from({ length: 14 }, (_, index) => {
@@ -70,9 +66,8 @@ export default async function AdminAnalytics() {
   addActivity(requestActivity, "requests");
 
   const maxActivity = Math.max(1, ...days.map((day) => day.businesses + day.users + day.listings + day.requests));
-  const maxTotal = Math.max(1, totalListings ?? 0);
-  const publishedWidth = ((publishedListings ?? 0) / maxTotal) * 100;
-  const draftWidth = ((draftListings ?? 0) / maxTotal) * 100;
+  const listingPublicationRate = totalListings ? Math.round(((publishedListings ?? 0) / totalListings) * 100) : 0;
+  const requestCompletionRate = totalRequests ? Math.round(((completedRequests ?? 0) / totalRequests) * 100) : 0;
 
   const metrics = [
     { label: "Empresas registadas", total: totalBusinesses ?? 0, period: newBusinesses ?? 0, hint: "novas nos últimos 30 dias", symbol: "EM", tone: "teal", href: "/dashboard/admin/empresas" },
@@ -89,7 +84,7 @@ export default async function AdminAnalytics() {
           <h1>Visão geral da plataforma</h1>
           <p>Indicadores para acompanhar crescimento, actividade e pontos que exigem decisão.</p>
         </div>
-        <div className={styles.period}><span className={styles.liveDot} /> Últimos 30 dias <small>Actualizado agora</small></div>
+        <div className={styles.period}><span className={styles.liveDot} /> Últimos 30 dias <small>Dados do último carregamento</small></div>
       </header>
 
       <div className={styles.metrics}>
@@ -137,19 +132,19 @@ export default async function AdminAnalytics() {
 
         <section className={styles.panel}>
           <div className={styles.panelHead}>
-            <div><span className={styles.eyebrow}>ESTADO OPERACIONAL</span><h2>Ofertas e serviços</h2><p>Distribuição dos itens que exigem acompanhamento.</p></div>
+            <div><span className={styles.eyebrow}>QUALIDADE DA PLATAFORMA</span><h2>Indicadores de desempenho</h2><p>Proporções que ajudam a avaliar a qualidade do inventário e o ciclo de serviço.</p></div>
           </div>
-          <div className={styles.statusBlock}>
-            <div className={styles.statusTitle}><span>Ofertas publicadas</span><strong>{formatNumber(publishedListings ?? 0)}</strong></div>
-            <div className={styles.progress}><span className={styles.progressPublished} style={{ width: `${publishedWidth}%` }} /></div>
+          <div className={styles.rateBlock}>
+            <div className={styles.rateHead}><span><strong>Publicação do marketplace</strong><small>Percentagem das ofertas que estão publicadas</small></span><b>{formatNumber(listingPublicationRate)}%</b></div>
+            <div className={styles.progress}><span className={styles.progressPublished} style={{ width: `${listingPublicationRate}%` }} /></div>
+            <small className={styles.rateContext}>{formatNumber(publishedListings ?? 0)} publicadas de {formatNumber(totalListings ?? 0)} ofertas registadas</small>
           </div>
-          <div className={styles.statusBlock}>
-            <div className={styles.statusTitle}><span>Ofertas em rascunho</span><strong>{formatNumber(draftListings ?? 0)}</strong></div>
-            <div className={styles.progress}><span className={styles.progressDraft} style={{ width: `${draftWidth}%` }} /></div>
+          <div className={styles.rateBlock}>
+            <div className={styles.rateHead}><span><strong>Conclusão de pedidos</strong><small>Percentagem dos pedidos marcados como concluídos</small></span><b>{formatNumber(requestCompletionRate)}%</b></div>
+            <div className={styles.progress}><span className={styles.progressCompleted} style={{ width: `${requestCompletionRate}%` }} /></div>
+            <small className={styles.rateContext}>{formatNumber(completedRequests ?? 0)} concluídos de {formatNumber(totalRequests ?? 0)} pedidos registados</small>
           </div>
-          <div className={styles.statusDivider} />
-          <a className={styles.queueRow} href="#pedidos-servico"><span className={styles.queueIcon}>!</span><span><strong>Pedidos por analisar</strong><small>Pedidos no estado “Recebido”</small></span><b>{formatNumber(requestedServices ?? 0)} <span aria-hidden="true">↗</span></b></a>
-          <a className={styles.queueRow} href="#pedidos-servico"><span className={styles.queueIcon}>↗</span><span><strong>Pedidos em curso</strong><small>Aceites ou em execução</small></span><b>{formatNumber(activeServices ?? 0)} <span aria-hidden="true">↗</span></b></a>
+          <div className={styles.rateInsight}><span className={styles.noteIcon}>i</span><span><strong>Como interpretar</strong><small>Estes rácios usam os totais actualmente registados. Não representam uma taxa de conversão comercial nem uma avaliação de qualidade do serviço.</small></span></div>
           <a className={styles.viewAll} href="/dashboard/admin/monetizacao">Explorar monetização e inventário <span aria-hidden="true">→</span></a>
         </section>
       </div>
