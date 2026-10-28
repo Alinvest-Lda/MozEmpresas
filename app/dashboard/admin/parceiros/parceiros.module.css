@@ -34,7 +34,7 @@
 @media(max-width:420px){.statusFilter{display:grid;grid-template-columns:1fr 1fr}.statusFilter label{grid-column:1/-1}.statusFilter select{min-width:0;width:100%}.statusFilter button{width:100%}}
 
 /* Inline pending state: never creates a page-covering loader. */
-:global(.partner-access-submit){display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;width:100%;margin-top:2px;white-space:nowrap}
-:global(.partner-access-submit:disabled){opacity:.78;cursor:wait}
-:global(.partner-access-submit-spinner){display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.42);border-top-color:#fff;border-radius:50%;animation:partnerAccessSpin .7s linear infinite}
+.form :global(.partner-access-submit){display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;width:100%;margin-top:2px;white-space:nowrap}
+.form :global(.partner-access-submit:disabled){opacity:.78;cursor:wait}
+.form :global(.partner-access-submit-spinner){display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.42);border-top-color:#fff;border-radius:50%;animation:partnerAccessSpin .7s linear infinite}
 @keyframes partnerAccessSpin{to{transform:rotate(360deg)}}
