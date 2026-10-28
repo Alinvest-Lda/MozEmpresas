@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import styles from "./usuarios.module.css";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
 type SearchParams = Promise<{ q?: string; tipo?: string; estado?: string; acesso?: string; associacao?: string }>;
@@ -66,55 +67,127 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
   const deletionRequests = (users ?? []).filter((profile) => Boolean(profile.deletion_requested_at)).length;
 
   return (
-    <main className="dashboard-main admin-workspace">
-      <div className="dashboard-content">
-        <header className="dashboard-topbar">
-          <span className="eyebrow">Administração global</span>
-          <h1>Utilizadores e acessos</h1>
-          <p className="muted">Consulte o tipo de conta, estado, associação empresarial e privilégios da plataforma. Esta fase é de consulta; não altera contas nem permissões.</p>
+    <main className={`dashboard-main admin-workspace ${styles.page}`}>
+      <div className={`dashboard-content ${styles.content}`}>
+        <header className={styles.header}>
+          <div>
+            <span className={styles.eyebrow}>Administração global</span>
+            <h1>Utilizadores e acessos</h1>
+            <p>Pesquise perfis e consulte o estado das contas, funções administrativas e associações empresariais.</p>
+          </div>
+          <div className={styles.resultCount}>
+            <strong>{error ? "—" : (count ?? users?.length ?? 0).toLocaleString("pt-MZ")}</strong>
+            <span>perfis encontrados</span>
+          </div>
         </header>
 
-        <div className="grid">
-          <article className="card"><span className="muted">Perfis encontrados</span><h2>{error ? "—" : (count ?? users?.length ?? 0).toLocaleString("pt-MZ")}</h2><p>Resultado dos filtros aplicados.</p></article>
-          <article className="card"><span className="muted">Perfis activos apresentados</span><h2>{error ? "—" : activeCount.toLocaleString("pt-MZ")}</h2><p>Contagem dentro dos registos carregados.</p></article>
-          <article className="card"><span className="muted">Pedidos de eliminação apresentados</span><h2>{error ? "—" : deletionRequests.toLocaleString("pt-MZ")}</h2><p>Pedidos registados nos perfis carregados.</p></article>
-        </div>
+        <section className={styles.directory} aria-labelledby="users-directory-title">
+          <div className={styles.sectionHead}>
+            <div>
+              <h2 id="users-directory-title">Directório de utilizadores</h2>
+              <p>Consulta até 100 registos por pesquisa, dos mais recentes para os mais antigos. Não altera contas nem permissões.</p>
+            </div>
+          </div>
 
-        <section className="dashboard-section" style={{ marginTop: 18 }}>
-          <div className="dashboard-section-head"><div><span className="dashboard-kicker">Directório interno</span><h2>Perfis da plataforma</h2><p>Até 100 perfis por consulta, ordenados pelos mais recentes. Os filtros de acesso consideram as associações globais registadas na plataforma.</p></div></div>
-          <form className="commerce-form-grid" method="get">
-            <label>Nome do utilizador<input name="q" defaultValue={q} maxLength={120} placeholder="Pesquisar por nome" /></label>
-            <label>Tipo de conta<select name="tipo" defaultValue={type}><option value="">Todos os tipos</option><option value="empresa">Empresa</option><option value="parceiro">Parceiro</option><option value="profissional">Profissional</option></select></label>
-            <label>Estado da conta<select name="estado" defaultValue={status}><option value="">Todos os estados</option><option value="ACTIVE">Activo</option><option value="INACTIVE">Inactivo</option><option value="SUSPENDED">Suspenso</option><option value="DELETED">Eliminado</option></select></label>
-            <label>Acesso global<select name="acesso" defaultValue={access}><option value="">Todos os acessos</option><option value="admin_activo">Acesso administrativo activo</option><option value="admin_inactivo">Acesso administrativo inactivo</option><option value="sem_admin">Sem acesso administrativo</option></select></label>
-            <label>Associação empresarial<select name="associacao" defaultValue={association}><option value="">Todas as associações</option><option value="com_empresa">Com empresa associada</option><option value="sem_empresa">Sem empresa associada</option></select></label>
-            <div className="wide" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}><button className="btn primary" type="submit">Aplicar filtros</button>{q || type || status || access || association ? <Link className="btn" href="/dashboard/admin/usuarios">Limpar filtros</Link> : null}</div>
+          <form className={styles.filters} method="get">
+            <label className={styles.searchField}>
+              <span>Pesquisar utilizador</span>
+              <input name="q" defaultValue={q} maxLength={120} placeholder="Nome do utilizador" />
+            </label>
+            <label>
+              <span>Tipo de conta</span>
+              <select name="tipo" defaultValue={type}>
+                <option value="">Todos os tipos</option>
+                <option value="empresa">Empresa</option>
+                <option value="parceiro">Parceiro</option>
+                <option value="profissional">Profissional</option>
+              </select>
+            </label>
+            <label>
+              <span>Estado da conta</span>
+              <select name="estado" defaultValue={status}>
+                <option value="">Todos os estados</option>
+                <option value="ACTIVE">Activo</option>
+                <option value="INACTIVE">Inactivo</option>
+                <option value="SUSPENDED">Suspenso</option>
+                <option value="DELETED">Eliminado</option>
+              </select>
+            </label>
+            <label>
+              <span>Acesso administrativo</span>
+              <select name="acesso" defaultValue={access}>
+                <option value="">Todos os acessos</option>
+                <option value="admin_activo">Activo</option>
+                <option value="admin_inactivo">Inactivo</option>
+                <option value="sem_admin">Sem acesso global</option>
+              </select>
+            </label>
+            <label>
+              <span>Associação empresarial</span>
+              <select name="associacao" defaultValue={association}>
+                <option value="">Todas</option>
+                <option value="com_empresa">Com empresa</option>
+                <option value="sem_empresa">Sem empresa</option>
+              </select>
+            </label>
+            <div className={styles.filterActions}>
+              <button className="btn primary" type="submit">Pesquisar</button>
+              {q || type || status || access || association ? <Link className="btn" href="/dashboard/admin/usuarios">Limpar filtros</Link> : null}
+            </div>
           </form>
 
-          {error ? <div className="notice" role="alert" style={{ marginTop: 16 }}>Não foi possível carregar os perfis. Verifique as permissões da base de dados e tente novamente.</div> : users?.length ? (
-            <div className="admin-directory-list" style={{ marginTop: 16 }}>
-              {users.map((profile) => {
-                const profileMemberships = (memberships ?? []).filter((membership) => membership.user_id === profile.id);
-                const platformRole = (platformMembers ?? []).find((member) => member.user_id === profile.id);
-                const businesses = profileMemberships.map((membership) => {
-                  const business = Array.isArray(membership.businesses) ? membership.businesses[0] : membership.businesses;
-                  return business?.name ? `${business.name} (${membership.role})` : membership.role;
-                });
-                return <article className="admin-request-card" key={profile.id}>
-                  <div className="admin-request-head">
-                    <div><span className="dashboard-kicker">{userTypes[profile.user_type] || profile.user_type || "Tipo não indicado"}</span><h3>{profile.full_name?.trim() || "Nome não indicado"}</h3><small>Registado em {new Date(profile.created_at).toLocaleDateString("pt-MZ")} · ID: {profile.id}</small></div>
-                    <span className="tag">{accountStatuses[profile.account_status] || profile.account_status || "Estado não indicado"}</span>
-                  </div>
-                  <div className="admin-request-meta" style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 8 }}>
-                    <span>{platformRole ? `Acesso de plataforma: ${platformRole.role}${platformRole.active ? " (activo)" : " (inactivo)"}` : "Sem função administrativa global"}</span>
-                    {businesses.length ? <span>Empresas: {businesses.join(", ")}</span> : <span>Sem associação empresarial identificada</span>}
-                    {profile.deactivated_at ? <span>Desactivado em {new Date(profile.deactivated_at).toLocaleDateString("pt-MZ")}</span> : null}
-                    {profile.deletion_requested_at ? <strong>Pedido de eliminação registado em {new Date(profile.deletion_requested_at).toLocaleDateString("pt-MZ")}</strong> : null}
-                  </div>
-                </article>;
-              })}
-            </div>
-          ) : <div className="admin-request-empty" style={{ marginTop: 16 }}><strong>{q || type || status ? "Nenhum perfil corresponde aos filtros." : "Não existem perfis para apresentar."}</strong><span>Altere os filtros para consultar outros registos.</span></div>}
+          {error ? <div className="notice" role="alert">Não foi possível carregar os perfis. Verifique as permissões da base de dados e tente novamente.</div> : users?.length ? (
+            <>
+              <div className={styles.tableMeta}>
+                <span>A mostrar <strong>{users.length}</strong> de <strong>{(count ?? users.length).toLocaleString("pt-MZ")}</strong> perfis correspondentes</span>
+                <span>Máximo de 100 por consulta</span>
+              </div>
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead><tr>
+                    <th>Utilizador</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Acesso global</th>
+                    <th>Empresas associadas</th>
+                    <th>Registo</th>
+                  </tr></thead>
+                  <tbody>
+                    {users.map((profile) => {
+                      const profileMemberships = (memberships ?? []).filter((membership) => membership.user_id === profile.id);
+                      const platformRole = (platformMembers ?? []).find((member) => member.user_id === profile.id);
+                      const businesses = profileMemberships.map((membership) => {
+                        const business = Array.isArray(membership.businesses) ? membership.businesses[0] : membership.businesses;
+                        return business?.name ? { name: business.name, role: membership.role } : { name: membership.role, role: "" };
+                      });
+                      const statusClass = profile.account_status === "ACTIVE" ? styles.statusActive : profile.account_status === "SUSPENDED" || profile.account_status === "DELETED" ? styles.statusCritical : styles.statusNeutral;
+                      return <tr key={profile.id}>
+                        <td>
+                          <div className={styles.userCell}>
+                            <span className={styles.avatar}>{(profile.full_name?.trim() || "?").slice(0, 1).toLocaleUpperCase("pt-MZ")}</span>
+                            <span className={styles.userInfo}>
+                              <strong>{profile.full_name?.trim() || "Nome não indicado"}</strong>
+                              <small>{profile.id}</small>
+                              {profile.deletion_requested_at ? <em>Pedido de eliminação registado</em> : null}
+                            </span>
+                          </div>
+                        </td>
+                        <td><span className={styles.typeLabel}>{userTypes[profile.user_type] || profile.user_type || "Não indicado"}</span></td>
+                        <td><span className={`${styles.status} ${statusClass}`}>{accountStatuses[profile.account_status] || profile.account_status || "Não indicado"}</span></td>
+                        <td>
+                          {platformRole ? <div className={styles.accessCell}><strong>{platformRole.role}</strong><span className={`${styles.status} ${platformRole.active ? styles.statusActive : styles.statusNeutral}`}>{platformRole.active ? "Activo" : "Inactivo"}</span></div> : <span className={styles.secondary}>Sem acesso global</span>}
+                        </td>
+                        <td>
+                          {businesses.length ? <div className={styles.businessList}>{businesses.slice(0, 2).map((business, index) => <span key={`${profile.id}-${index}`}>{business.name}{business.role ? <small> · {business.role}</small> : null}</span>)}{businesses.length > 2 ? <small>+{businesses.length - 2} outras</small> : null}</div> : <span className={styles.secondary}>Sem associação</span>}
+                        </td>
+                        <td><span className={styles.date}>{new Date(profile.created_at).toLocaleDateString("pt-MZ")}</span>{profile.deactivated_at ? <small className={styles.subDate}>Desactivado: {new Date(profile.deactivated_at).toLocaleDateString("pt-MZ")}</small> : null}</td>
+                      </tr>;
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : <div className={styles.emptyState}><strong>{q || type || status || access || association ? "Nenhum perfil corresponde aos filtros." : "Não existem perfis para apresentar."}</strong><span>Experimente alterar ou limpar os filtros de pesquisa.</span></div>}
         </section>
       </div>
     </main>
