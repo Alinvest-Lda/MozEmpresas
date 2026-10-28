@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { updatePlatformServiceRequest } from "@/lib/services/actions";
+import AdminAnalytics from "./admin-analytics";
 import { moderateBusiness, moderateListing } from "@/lib/admin/actions";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { redirect } from "next/navigation";
@@ -80,6 +81,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
   ]);
 
   return <main className="dashboard-main admin-workspace"><div className="dashboard-content">
+    <AdminAnalytics />
     <section className="admin-control-center" aria-label="Resumo operacional">
       <div className="admin-control-heading">
         <div><span className="dashboard-kicker">Centro de controlo</span><h2>O que precisa de atenção</h2><p>Indicadores operacionais para orientar a próxima acção.</p></div>
