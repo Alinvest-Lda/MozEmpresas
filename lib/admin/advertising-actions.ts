@@ -18,13 +18,24 @@ async function updateStatus(table: string, idValue: FormDataEntryValue | null, s
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) redirect("/login?next=/dashboard/admin/publicidade");
 
-  const { data, error } = await supabase.from(table)
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .select("id")
-    .maybeSingle();
+  const patch = { status, updated_at: new Date().toISOString() };
+  let error: { message: string } | null = null;
+  let updatedId: string | null = null;
+  if (table === "business_promotions") {
+    const result = await supabase.from("business_promotions").update(patch).eq("id", id).select("id").maybeSingle();
+    error = result.error;
+    updatedId = result.data?.id ?? null;
+  } else if (table === "partner_ad_campaigns") {
+    const result = await supabase.from("partner_ad_campaigns").update(patch).eq("id", id).select("id").maybeSingle();
+    error = result.error;
+    updatedId = result.data?.id ?? null;
+  } else {
+    const result = await supabase.from("advertising_requests").update(patch).eq("id", id).select("id").maybeSingle();
+    error = result.error;
+    updatedId = result.data?.id ?? null;
+  }
 
-  if (error || !data) redirect("/dashboard/admin/publicidade?result=error");
+  if (error || !updatedId) redirect("/dashboard/admin/publicidade?result=error");
   revalidatePath("/dashboard/admin");
   revalidatePath("/dashboard/admin/publicidade");
   revalidatePath("/dashboard/admin/monetizacao");
