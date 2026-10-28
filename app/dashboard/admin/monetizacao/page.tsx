@@ -55,7 +55,7 @@ export default async function AdminMonetizationPage() {
           <span className={styles.heroMark} aria-hidden="true">M</span>
         </header>
 
-        {queryErrors > 0 ? <div className={styles.dataNotice} role="status}><strong>Alguns indicadores podem estar incompletos.</strong> Não foi possível carregar {queryErrors} consulta(s). Os valores apresentados reflectem apenas os dados disponíveis.</div> : null}
+        {queryErrors > 0 ? <div className={styles.dataNotice} role="status"><strong>Alguns indicadores podem estar incompletos.</strong> Não foi possível carregar {queryErrors} consulta(s). Os valores apresentados reflectem apenas os dados disponíveis.</div> : null}
 
         <section className={styles.metrics} aria-label="Indicadores de monetização">
           <article><span>Planos activos</span><strong>{activePlans}</strong><small>{planRows.length} planos no catálogo</small></article>
