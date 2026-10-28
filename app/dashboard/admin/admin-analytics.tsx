@@ -64,7 +64,7 @@ export default async function AdminAnalytics() {
   const metrics = [
     { label: "Empresas registadas", total: totalBusinesses ?? 0, hint: "total na plataforma", symbol: "EM", tone: "teal", href: "/dashboard/admin/empresas" },
     { label: "Utilizadores", total: totalUsers ?? 0, hint: "total na plataforma", symbol: "US", tone: "blue", href: "/dashboard/admin/usuarios" },
-    { label: "Ofertas no marketplace", total: totalListings ?? 0, hint: "total no inventário", symbol: "OF", tone: "violet", href: "#ofertas" },
+    { label: "Ofertas no marketplace", total: totalListings ?? 0, hint: "total no inventário", symbol: "OF", tone: "violet", href: "/dashboard/admin/ofertas" },
     { label: "Pedidos de serviço", total: totalRequests ?? 0, hint: "total registado", symbol: "PS", tone: "orange", href: "#pedidos-servico" },
   ] as const;
 
