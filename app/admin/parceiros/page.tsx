@@ -1,57 +1,93 @@
 import Link from "next/link";
 import { createPartnerAccess, requireSuperAdmin } from "@/lib/auth/partner-access";
+import { PartnerAccessLink } from "@/components/partner-access-link";
+import styles from "./parceiros.module.css";
 
 export const dynamic = "force-dynamic";
+
+const errorMessages: Record<string, string> = {
+  validation: "O email ou o prazo indicado não é válido. Reveja os campos e tente novamente.",
+  forbidden: "Apenas o Super Admin pode criar acessos dedicados de parceiros.",
+  create: "Não foi possível criar o acesso. Verifique as permissões e tente novamente.",
+};
 
 export default async function PartnerAccessAdmin({ searchParams }: { searchParams: Promise<{ created?: string; access?: string; error?: string }> }) {
   await requireSuperAdmin();
   const params = await searchParams;
+  const inviteUrl = params.created === "1" && params.access ? params.access : "";
+
   return (
-    <main className="dashboard-main">
-      <div className="dashboard-content">
-        <header className="dashboard-topbar">
-          <div className="dashboard-welcome">
-            <span className="dashboard-kicker">Administração da plataforma</span>
+    <main className={`dashboard-main admin-workspace ${styles.page}`}>
+      <div className={`dashboard-content ${styles.content}`}>
+        <header className={styles.hero}>
+          <div className={styles.heroCopy}>
+            <span className={styles.eyebrow}>Administração global · Parceiros</span>
             <h1>Acessos de parceiros</h1>
-            <p>Crie acessos dedicados para parceiros. O parceiro não escolhe esse tipo de conta no registo público.</p>
+            <p>Crie acessos dedicados para organizações parceiras e partilhe um convite seguro com prazo definido.</p>
           </div>
+          <div className={styles.heroBadge}><span className={styles.badgeIcon} aria-hidden="true">↗</span><strong>Acesso controlado</strong><small>Convite individual por email</small></div>
+          <span className={styles.heroMark} aria-hidden="true">P</span>
         </header>
-        {params.created === "1" && params.access && (
-          <section className="dashboard-section">
-            <span className="dashboard-kicker">Acesso criado</span>
-            <h2>Envie este link ao parceiro</h2>
-            <p className="muted">O link é apresentado apenas nesta operação. Guarde-o ou copie-o antes de sair desta página.</p>
-            <div className="notice" style={{ wordBreak: "break-all" }}>{params.access}</div>
-          </section>
-        )}
-        {params.error && (
-          <section className="dashboard-section">
-            <div className="notice">
-              {params.error === "forbidden" ? "Apenas o Super Admin pode criar acessos de parceiros." : "Não foi possível criar o acesso. Verifique os dados e tente novamente."}
+
+        <div className={styles.noticeInfo}>
+          <span className={styles.noticeIcon} aria-hidden="true">i</span>
+          <p><strong>Como funciona</strong> O acesso é criado pelo Super Admin. O parceiro activa a conta através do link e do email autorizado; não pode escolher este perfil no registo público.</p>
+        </div>
+
+        {inviteUrl ? (
+          <section className={styles.resultPanel} aria-labelledby="created-title">
+            <div className={styles.resultIcon} aria-hidden="true">✓</div>
+            <div className={styles.resultBody}>
+              <span className={styles.kicker}>Convite criado</span>
+              <h2 id="created-title">Partilhe o link com o parceiro</h2>
+              <p>Copie o endereço e envie-o directamente ao contacto indicado. O link é apresentado apenas nesta confirmação; guarde-o antes de sair.</p>
+              <PartnerAccessLink url={inviteUrl} />
+              <small className={styles.securityNote}>Por segurança, trate este link como um convite privado. Qualquer pessoa que o receba ainda terá de usar o email autorizado.</small>
             </div>
           </section>
-        )}
-        <section className="dashboard-section">
-          <span className="dashboard-kicker">Novo acesso</span>
-          <h2>Criar acesso dedicado</h2>
-          <form action={createPartnerAccess} style={{ maxWidth: 620, marginTop: 24 }}>
-            <div className="field">
-              <label htmlFor="email">Email do parceiro</label>
-              <input id="email" name="email" type="email" required />
+        ) : null}
+
+        {params.error ? <div className={styles.errorNotice} role="alert">{errorMessages[params.error] || "Não foi possível concluir a operação. Tente novamente."}</div> : null}
+
+        <div className={styles.mainGrid}>
+          <section className={styles.formPanel} aria-labelledby="new-access-title">
+            <div className={styles.sectionHead}>
+              <span className={styles.kicker}>Novo convite</span>
+              <h2 id="new-access-title">Criar acesso dedicado</h2>
+              <p>Defina o email do parceiro e o prazo para activar a conta.</p>
             </div>
-            <div className="field">
-              <label htmlFor="expiresInDays">Validade</label>
-              <select id="expiresInDays" name="expiresInDays" defaultValue="7">
-                <option value="1">1 dia</option>
-                <option value="7">7 dias</option>
-                <option value="14">14 dias</option>
-                <option value="30">30 dias</option>
-              </select>
-            </div>
-            <button className="btn primary">Criar acesso de parceiro</button>
-          </form>
-        </section>
-        <p style={{ marginTop: 20 }}><Link href="/dashboard">Voltar ao dashboard</Link></p>
+            <form action={createPartnerAccess} className={styles.form}>
+              <label className={styles.field} htmlFor="partner-email">
+                <span>Email do parceiro</span>
+                <input id="partner-email" name="email" type="email" placeholder="nome@organizacao.co.mz" autoComplete="email" required />
+                <small>O convite só pode ser aceite com este endereço de email.</small>
+              </label>
+              <label className={styles.field} htmlFor="partner-expiry">
+                <span>Validade do convite</span>
+                <select id="partner-expiry" name="expiresInDays" defaultValue="7">
+                  <option value="1">1 dia</option>
+                  <option value="7">7 dias</option>
+                  <option value="14">14 dias</option>
+                  <option value="30">30 dias</option>
+                </select>
+              </label>
+              <button className={`btn primary ${styles.submit}`} type="submit">Criar acesso de parceiro <span aria-hidden="true">→</span></button>
+            </form>
+          </section>
+
+          <aside className={styles.stepsPanel} aria-label="Etapas do acesso">
+            <span className={styles.kicker}>Processo de activação</span>
+            <h2>Do convite ao acesso</h2>
+            <ol className={styles.steps}>
+              <li><span>01</span><div><strong>Criar convite</strong><p>Indique o email e escolha a validade.</p></div></li>
+              <li><span>02</span><div><strong>Partilhar o link</strong><p>Envie o link gerado ao contacto autorizado.</p></div></li>
+              <li><span>03</span><div><strong>Activar a conta</strong><p>O parceiro define o nome e a palavra-passe para concluir o registo.</p></div></li>
+            </ol>
+            <div className={styles.securityCallout}><strong>Nota de segurança</strong><p>O link expira automaticamente. Se o prazo terminar, será necessário criar um novo convite.</p></div>
+          </aside>
+        </div>
+
+        <footer className={styles.pageFooter}><Link href="/dashboard/admin">← Voltar à administração da plataforma</Link><span>Gestão de acessos · MozEmpresas</span></footer>
       </div>
     </main>
   );
