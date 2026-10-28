@@ -101,14 +101,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
           <span className="admin-control-stat-label">Pedidos em execução</span><strong>{inProgressRequests ?? 0}</strong><span>Pedidos com trabalho operacional iniciado</span><b>Acompanhar pedidos <span aria-hidden="true">→</span></b>
         </a>
       </div>
-      <div className="admin-control-secondary">
-        <span><strong>{users ?? 0}</strong> utilizadores registados</span>
-        <span><strong>{businesses ?? 0}</strong> empresas registadas</span>
-        <span><strong>{listings ?? 0}</strong> ofertas no total</span>
-        <span><strong>{opportunities ?? 0}</strong> oportunidades registadas</span>
-        <span><strong>{acceptedRequests ?? 0}</strong> pedidos aceites</span>
-        <span><strong>{inProgressRequests ?? 0}</strong> pedidos em execução</span>
-      </div>
+
     </section>
 
     <section className="dashboard-section admin-alert-center" aria-label="Alertas operacionais">
