@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { updatePlatformServiceRequest } from "@/lib/services/actions";
 import AdminAnalytics from "./admin-analytics";
-import { moderateBusiness, moderateListing } from "@/lib/admin/actions";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { redirect } from "next/navigation";
 
@@ -40,8 +39,6 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     { count: reviewRequests },
     { count: acceptedRequests },
     { count: inProgressRequests },
-    { count: privateBusinesses },
-    { count: draftListings },
     { count: expiredOpportunities },
     { count: pendingBusinessCampaigns },
     { count: pendingPartnerCampaigns },
@@ -58,8 +55,6 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "UNDER_REVIEW"),
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "ACCEPTED"),
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "IN_PROGRESS"),
-    supabase.from("businesses").select("id", { count: "exact", head: true }).eq("is_public", false).is("archived_at", null),
-    supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "DRAFT"),
     supabase.from("opportunities").select("id", { count: "exact", head: true }).eq("status", "PUBLISHED").lt("closes_at", nowIso),
     supabase.from("business_promotions").select("id", { count: "exact", head: true }).eq("status", "PENDING"),
     supabase.from("partner_ad_campaigns").select("id", { count: "exact", head: true }).eq("status", "REQUESTED"),
@@ -75,11 +70,6 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     (requestPriority.get(b.status as typeof statuses[number][0]) ?? 99) ||
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
-  const [{ data: adminBusinesses }, { data: adminListings }] = await Promise.all([
-    supabase.from("businesses").select("id,name,is_public,location,created_at").order("created_at", { ascending: false }).limit(20),
-    supabase.from("listings").select("id,title,type,status,business_id,created_at,businesses:business_id(name)").order("created_at", { ascending: false }).limit(20),
-  ]);
-
   return <main className="dashboard-main admin-workspace"><div className="dashboard-content">
     <AdminAnalytics />
     <section className="admin-control-center" aria-label="Resumo operacional">
@@ -92,10 +82,10 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
           <span className="admin-control-stat-label">Pedidos por tratar</span><strong>{(newRequests ?? 0) + (reviewRequests ?? 0)}</strong><span>{newRequests ?? 0} recebidos · {reviewRequests ?? 0} em análise</span><b>Rever pedidos <span aria-hidden="true">→</span></b>
         </a>
         <a className="admin-control-stat" href="/dashboard/admin/empresas">
-          <span className="admin-control-stat-label">Empresas privadas</span><strong>{privateBusinesses ?? 0}</strong><span>Registos não arquivados sem publicação pública</span><b>Consultar empresas <span aria-hidden="true">→</span></b>
+          <span className="admin-control-stat-label">Pedidos aceites</span><strong>{acceptedRequests ?? 0}</strong><span>Pedidos aceites e ainda não concluídos</span><b>Acompanhar pedidos <span aria-hidden="true">→</span></b>
         </a>
         <a className="admin-control-stat" href="#ofertas">
-          <span className="admin-control-stat-label">Ofertas em rascunho</span><strong>{draftListings ?? 0}</strong><span>Produtos e serviços ainda em DRAFT</span><b>Rever ofertas <span aria-hidden="true">→</span></b>
+          <span className="admin-control-stat-label">Oportunidades expiradas</span><strong>{expiredOpportunities ?? 0}</strong><span>Publicações com prazo de encerramento ultrapassado</span><b>Rever prazos <span aria-hidden="true">→</span></b>
         </a>
         <a className="admin-control-stat" href="#pedidos-servico">
           <span className="admin-control-stat-label">Pedidos em execução</span><strong>{inProgressRequests ?? 0}</strong><span>Pedidos com trabalho operacional iniciado</span><b>Acompanhar pedidos <span aria-hidden="true">→</span></b>
@@ -175,34 +165,13 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
       </div>
     </section>
 
-    <section className="dashboard-section" style={{marginTop:18}}>
-      <div className="dashboard-section-head"><div><span className="dashboard-kicker">Moderação</span><h2>Empresas recentes</h2><p>Controlo de publicação da presença empresarial.</p></div></div>
-      <div className="admin-request-list">
-        {adminBusinesses?.length ? adminBusinesses.map((business) => <article className="admin-request-card" key={business.id}>
-          <div className="admin-request-head"><div><span className="dashboard-kicker">{business.location || "Localização não indicada"}</span><h3>{business.name}</h3><small>{new Date(business.created_at).toLocaleString("pt-MZ")}</small></div><span className="tag">{business.is_public ? "Pública" : "Privada"}</span></div>
-          <form action={async (formData) => { "use server"; const outcome = await moderateBusiness(formData); redirect(`/dashboard/admin?result=${"error" in outcome ? "error" : "success"}&action=business`); }} className="admin-request-form">
-            <input type="hidden" name="businessId" value={business.id} />
-            <label><span>Visibilidade</span><select name="isPublic" defaultValue={business.is_public ? "true" : "false"}><option value="true">Publicada</option><option value="false">Privada</option></select></label>
-            <button className="btn primary" type="submit">Actualizar</button>
-          </form>
-        </article>) : <div className="admin-request-empty"><strong>Nenhuma empresa encontrada.</strong></div>}
-      </div>
-    </section>
-
-    <section className="dashboard-section" id="ofertas" style={{marginTop:18}}>
-      <div className="dashboard-section-head"><div><span className="dashboard-kicker">Moderação</span><h2>Ofertas recentes</h2><p>Controlo do estado de produtos e serviços publicados.</p></div></div>
-      <div className="admin-request-list">
-        {adminListings?.length ? adminListings.map((listing) => {
-          const business = Array.isArray(listing.businesses) ? listing.businesses[0] : listing.businesses;
-          return <article className="admin-request-card" key={listing.id}>
-            <div className="admin-request-head"><div><span className="dashboard-kicker">{listing.type === "PRODUCT" ? "Produto" : "Serviço"} · {business?.name || "Sem empresa"}</span><h3>{listing.title}</h3><small>{new Date(listing.created_at).toLocaleString("pt-MZ")}</small></div><span className="tag">{listing.status}</span></div>
-            <form action={async (formData) => { "use server"; const outcome = await moderateListing(formData); redirect(`/dashboard/admin?result=${"error" in outcome ? "error" : "success"}&action=listing`); }} className="admin-request-form">
-              <input type="hidden" name="listingId" value={listing.id} />
-              <label><span>Estado</span><select name="status" defaultValue={listing.status}>{["DRAFT","PUBLISHED","PAUSED","SOLD_OUT","ARCHIVED"].map((value)=><option value={value} key={value}>{value}</option>)}</select></label>
-              <button className="btn primary" type="submit">Actualizar</button>
-            </form>
-          </article>;
-        }) : <div className="admin-request-empty"><strong>Nenhuma oferta encontrada.</strong></div>}
+    <section className="dashboard-section admin-inventory-hub">
+      <div className="dashboard-section-head"><div><span className="dashboard-kicker">Gestão sem limites de amostra</span><h2>Gerir o ecossistema completo</h2><p>Aceda aos módulos completos para pesquisar e gerir registos, sem depender de uma lista dos mais recentes.</p></div></div>
+      <div className="dashboard-action-grid">
+        <a className="dashboard-action-card" href="/dashboard/admin/empresas"><span className="dashboard-action-icon">EM</span><span><strong>Directório empresarial</strong><small>Consultar e gerir empresas registadas no directório completo.</small></span></a>
+        <a className="dashboard-action-card" href="/dashboard/admin/ofertas"><span className="dashboard-action-icon">OF</span><span><strong>Gestão de ofertas</strong><small>Pesquisar ofertas e actualizar o estado de publicação.</small></span></a>
+        <a className="dashboard-action-card" href="/dashboard/admin/oportunidades"><span className="dashboard-action-icon">OP</span><span><strong>Oportunidades</strong><small>Gerir publicações e acompanhar prazos.</small></span></a>
+        <a className="dashboard-action-card" href="/dashboard/admin/monetizacao"><span className="dashboard-action-icon">MO</span><span><strong>Monetização</strong><small>Consultar planos, assinaturas e inventário publicitário.</small></span></a>
       </div>
     </section>
 
