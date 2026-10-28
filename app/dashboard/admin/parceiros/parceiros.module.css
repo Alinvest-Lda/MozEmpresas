@@ -32,3 +32,9 @@
 .tableNote{margin:12px 0 0;color:#92a099;font-size:10px;line-height:1.6}
 @media(max-width:760px){.invitesPanel{padding:17px}.invitesHeader{align-items:stretch;flex-direction:column}.statusFilter{flex-wrap:wrap}.inviteStats{grid-template-columns:repeat(2,minmax(0,1fr))}.tableWrap{overflow:visible;border:0}.invitesTable,.invitesTable tbody,.invitesTable tr,.invitesTable td{display:block;width:100%}.invitesTable thead{display:none}.invitesTable tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-bottom:10px;padding:12px;border:1px solid #e7eeea;border-radius:10px}.invitesTable td{display:flex;flex-direction:column;gap:5px;padding:0;border:0;white-space:normal}.invitesTable td::before{content:attr(data-label);color:#89988f;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}.invitesTable td:first-child{grid-column:1/-1}.invitesTable td strong{overflow-wrap:anywhere}}
 @media(max-width:420px){.statusFilter{display:grid;grid-template-columns:1fr 1fr}.statusFilter label{grid-column:1/-1}.statusFilter select{min-width:0;width:100%}.statusFilter button{width:100%}}
+
+/* Inline pending state: never creates a page-covering loader. */
+:global(.partner-access-submit){display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;width:100%;margin-top:2px;white-space:nowrap}
+:global(.partner-access-submit:disabled){opacity:.78;cursor:wait}
+:global(.partner-access-submit-spinner){display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.42);border-top-color:#fff;border-radius:50%;animation:partnerAccessSpin .7s linear infinite}
+@keyframes partnerAccessSpin{to{transform:rotate(360deg)}}
