@@ -51,7 +51,7 @@ export default async function AdminMonetizationPage() {
             <h1>Central de monetização</h1>
             <p>Visão consolidada dos planos empresariais, assinaturas, inventário publicitário e actividade comercial da plataforma.</p>
           </div>
-          <div className={styles.heroSummary}><span>Formatos activos</span><strong>{activeProducts}</strong><small>{products.length} formatos registados no catálogo</small></div>
+          <div className={styles.heroSummary}><span>Catálogo comercial</span><strong>{products.length}</strong><small>Formatos publicitários registados</small><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Consulta de planos, inventário e actividade.</span></div>
           <span className={styles.heroMark} aria-hidden="true">M</span>
         </header>
 
@@ -75,12 +75,7 @@ export default async function AdminMonetizationPage() {
         </section>
 
         <section className={styles.panel} aria-labelledby="inventory-title">
-          <div className={styles.panelHead}><div><span className={styles.kicker}>02 · Inventário comercial</span><h2 id="inventory-title">Catálogo de espaços publicitários</h2><p>Produtos apresentados separadamente por experiência empresarial e de parceiros.</p></div><span className={styles.counter}>{products.length} formatos</span></div>
-          <div className={styles.inventorySummary}>
-            <article><span>Área empresarial</span><strong>{businessProducts.length}</strong><small>Produtos e espaços promocionais</small></article>
-            <article><span>Área de parceiros</span><strong>{partnerProducts.length}</strong><small>Formatos contratáveis por parceiros</small></article>
-            <article><span>Disponíveis</span><strong>{activeProducts}</strong><small>Produtos marcados como activos</small></article>
-          </div>
+          <div className={styles.panelHead}><div><span className={styles.kicker}>02 · Inventário comercial</span><h2 id="inventory-title">Catálogo de espaços publicitários</h2><p>Produtos separados por experiência empresarial e de parceiros.</p></div><span className={styles.counter}>{products.length} formatos</span></div>
           {products.length ? <div className={styles.productList}>{products.map(product => <article className={styles.product} key={product.experience + product.id}>
             <div className={styles.productMain}><div className={styles.productTags}><span>{product.experience}</span><span>{product.surface || "Área empresarial"}</span></div><h3>{product.name}</h3><p>{product.description || "Sem descrição."}</p><small>{product.code} · {product.placement || "Sem placement"} · {product.slot || "Slot não definido"}</small></div>
             <div className={styles.productDetails}><strong>{product.price}</strong><span>{product.duration ? `${product.duration} dias` : "Duração personalizada"}</span><span>Capacidade: {product.capacity ?? "Não definida"}</span><span className={`${styles.state} ${product.active ? styles.stateActive : styles.stateInactive}`}>{product.active ? "Activo" : "Inactivo"}</span></div>
@@ -98,7 +93,6 @@ export default async function AdminMonetizationPage() {
             </article>;
           })}</div> : <div className={styles.empty}><strong>Nenhuma promoção registada.</strong><p>{promotionsError ? "Não foi possível carregar as promoções." : "Quando existirem campanhas empresariais, serão listadas aqui."}</p></div>}
         </section>
-        <p className={styles.footerNote}>Esta página é de consulta. A edição de preços, planos e produtos deve ser implementada com validação das regras comerciais e permissões correspondentes.</p>
       </div>
     </main>
   );
