@@ -8,6 +8,7 @@ Plataforma digital para descoberta de empresas, produtos e serviços em Moçambi
 
 A matriz de fecho funcional e regras de negócio é a referência de trabalho para esta etapa:
 - [Matriz de fecho funcional](docs/functional-closure-matrix.md)
+- [Inventário de estados e transições](docs/business-state-transition-inventory.md)
 - [Estado de implementação](docs/architecture/implementation-status.md)
 - [Contrato do módulo de Parceiros](docs/architecture/partner-module.md)
 - [Roadmap P1](docs/P1-ROADMAP.md)
