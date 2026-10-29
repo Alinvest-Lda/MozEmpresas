@@ -61,6 +61,10 @@ Consultas read-only ao projecto Supabase activo confirmaram que `partner_account
 
 A verificação read-only e o Security Advisor de 2026-10-29 identificaram tabelas de parceiro com RLS activo mas sem políticas, funções `SECURITY DEFINER` expostas por RPC e a protecção contra palavras-passe comprometidas desactivada. Estes pontos foram registados com detalhe, impacto e critérios de aceitação em [`docs/functional-closure-live-findings-2026-10-29.md`](./functional-closure-live-findings-2026-10-29.md). Não foram feitas alterações ao banco de dados; não revogar funções nem adicionar políticas em massa sem análise por fluxo.
 
+## 3.3. Testes de regressão do módulo de Parceiros
+
+Foi acrescentado um plano inicial de testes para contexto da conta, estado de perfil/conta/membership, isolamento entre contas, papéis, convites e operações com créditos: [`docs/architecture/partner-module.md`, secção 8](./architecture/partner-module.md). Os casos devem ser executados em staging antes de qualquer migration; não foram executados em produção.
+
 ## 4. Regras transversais obrigatórias
 
 ### 4.1 Estados
