@@ -1,7 +1,7 @@
 # MozEmpresas — Inventário de estados e transições
 
-**Estado:** inventário inicial baseado no código e nas migrações do repositório.  
-**Base:** `main`, após a criação da matriz de fecho funcional.  
+**Estado:** inventário baseado no código/migrações, com verificação read-only selectiva do esquema Supabase activo em 2026-10-29.  
+**Base:** `main` e projecto Supabase `zikjvjzbbfzrelbkaaci`.  
 **Nota:** os estados abaixo são os encontrados no código/schema ou declarados na documentação. Onde não há evidência de uma máquina de estados completa, as transições são marcadas como pendentes; não devem ser presumidas.
 
 ## 1. Decisão de domínio confirmada
@@ -49,6 +49,12 @@ Esta regra é distinta dos pagamentos próprios da plataforma, como compra de cr
 - [ ] Criar testes para transições permitidas/proibidas e concorrência.
 - [ ] Actualizar a matriz funcional quando cada lacuna for confirmada ou resolvida.
 
-## 5. Limitações
+## 5. Evidência read-only do esquema activo (2026-10-29)
+
+Foram confirmadas no esquema activo as tabelas `partner_accounts`, `partner_account_members`, `credit_purchase_requests`, `platform_service_orders`, `financial_payments`, `business_promotions`, `partner_ad_campaigns`, `advertising_requests`, `support_tickets` e `platform_members`. Os checks de estado de `credit_purchase_requests`, `platform_service_orders` e `partner_ad_campaigns` correspondem aos valores listados acima. As tabelas públicas verificadas têm RLS activo. A função `current_partner_account_id()` não verifica o estado da conta/perfil, embora `current_partner_opportunity_role()` o faça; incluir esse desvio no fecho de autorização multi-tenant.
+
+O projecto activo apresenta 67 registos de migração, enquanto o inventário do repositório documenta 53 ficheiros SQL e várias diferenças de nome. A existência de tabelas em produção não comprova que a migração correspondente esteja versionada ou seja reproduzível. Não executar `db push`, reparação do ledger ou alterações RLS até reconciliar cada diferença.
+
+## 6. Limitações
 
 Este documento é um inventário inicial do repositório. Não comprova que o esquema activo seja idêntico às migrações, que as migrações tenham sido aplicadas ou que todos os estados sejam utilizados no ambiente publicado. Não aplicar migrações como parte desta auditoria sem reconciliação e aprovação.
