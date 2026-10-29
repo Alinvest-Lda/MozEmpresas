@@ -125,7 +125,7 @@ Para fluxos que atravessam base de dados, Storage, notificações ou fornecedor 
 ## 8. Limitações conhecidas desta revisão
 
 - Não foram executados testes de browser ou end-to-end nesta etapa.
-- Não foi consultado o esquema actual da base de dados; as conclusões sobre migrações são limitadas ao repositório e aos relatórios existentes.
+- Não foi consultado o esquema actual da base de dados nesta execução. Existe no repositório um inventário de esquema capturado em 25/10/2026 (59 tabelas) e uma reconciliação de histórico, mas a documentação declara que o inventário não é um `pg_dump` nativo; é necessário confirmar o estado actual por leitura e obter exportação nativa.
 - Não foi confirmada uma integração real de pagamento.
 - Não foi confirmada a aplicação de migrações pendentes.
 - O estado “parcial” significa falta de prova de fecho, não necessariamente que toda a funcionalidade esteja avariada.
