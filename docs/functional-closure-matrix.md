@@ -32,7 +32,7 @@ Esta revisão é documental e estática. A presença de uma página, acção de 
 | F02 | Empresa e gestores | Cada operação empresarial verifica associação e papel no servidor/base de dados. | Existem `businesses`, `business_members`, helpers de permissões e políticas RLS. | Parcial / validar | Matriz de permissões por papel; testes cruzados com duas empresas e utilizadores não associados; verificar convites, remoção, suspensão e arquivo. |
 | F03 | Directório público | Apenas perfis e ofertas publicáveis são expostos; os dados públicos não revelam informação privada. | Directório e perfis públicos existem; há migrações de hardening de perfis e políticas. | Parcial / validar | Testes anónimos/autenticados; campos públicos explicitamente allowlisted; contas e ofertas suspensas não aparecem. |
 | F04 | Marketplace — publicações | Oferta passa por rascunho, publicação, edição permitida, arquivo/remoção, respeitando propriedade e validação. | `lib/commerce/actions.ts` cria ofertas em `DRAFT`, valida campos, empresa, anexos e autorização. | Parcial | Testar CRUD com anexos reais em ambiente isolado, estados, limpeza de ficheiros, falhas parciais e visibilidade pública. |
-| F05 | Marketplace — pedido comercial | Comprador e vendedor têm acesso correcto; transições são permitidas e ficam registadas. | `lib/commerce/state-machine.ts` define `INTERESTED → CONTACTED → NEGOTIATING → AGREED → COMPLETED`, com cancelamento nos estados intermédios previstos; há eventos de encomenda. | Parcial / validar | Testes de transições válidas/inválidas, papéis dos participantes, concorrência, histórico, cancelamento e isolamento. Esclarecer se a plataforma apenas facilita contacto ou processa pagamento. |
+| F05 | Marketplace — pedido comercial | Comprador e vendedor têm acesso correcto; transições são permitidas e ficam registadas. | `lib/commerce/state-machine.ts` define `INTERESTED → CONTACTED → NEGOTIATING → AGREED → COMPLETED`, com cancelamento nos estados intermédios previstos; a migração `20260930003000_marketplace_offline_commerce.sql` define que pagamentos/liquidação ocorrem fora da plataforma. | Parcial / validar | Testes de transições válidas/inválidas, papéis dos participantes, concorrência, histórico, cancelamento e isolamento. Preservar a regra: marketplace regista intenção comercial, não processa pagamento entre comprador e vendedor. |
 | F06 | Serviços MozEmpresas | Serviço activo pode ser solicitado/contratado; estados, preço, vigência e cancelamento são coerentes. | Existem catálogo, pedidos e acção de checkout; contratação com créditos usa RPC; M-Pesa cria ordem e pagamento pendentes. | Parcial | Definir estados finais, aprovação/cotação, pagamento, activação, expiração, renovação, cancelamento, reembolso e notificações. |
 | F07 | Créditos e carteira | Créditos só são creditados após confirmação de pagamento; consumo é atómico e rastreável. | Existe pedido de compra de créditos com comprovativo opcional/obrigatório conforme método; há carteiras e transacções. | Parcial / risco financeiro | Confirmar fluxo de aprovação/recusa, idempotência, crédito uma única vez, reconciliação, histórico e tratamento de comprovativos; testar concorrência. |
 | F08 | Publicidade para empresas | Produto, preço, capacidade, datas, alvo, pagamento e entrega são consistentes. | Catálogo de produtos e RPC de compra com créditos; pedidos/campanhas M-Pesa; validação de eventos publicitários. | Parcial / risco comercial | Testar capacidade concorrente, períodos sobrepostos, elegibilidade, moderação, pagamento confirmado, activação, expiração e métricas. |
@@ -110,7 +110,7 @@ Para fluxos que atravessam base de dados, Storage, notificações ou fornecedor 
 12. Smoke tests em ambiente de teste.
 13. Actualizar o estado de implementação apenas com evidência reproduzível.
 
-## 6. Próximas acções desta roadmap
+## 6. Documentos de execução relacionados\n\n- [Inventário de estados e transições](business-state-transition-inventory.md) — estados encontrados, transições conhecidas e lacunas por processo.\n\n## 7. Próximas acções desta roadmap
 
 | Acção | Entrega | Estado |
 |---|---|---|
@@ -122,7 +122,7 @@ Para fluxos que atravessam base de dados, Storage, notificações ou fornecedor 
 | R1.6 | Mapear eventos de auditoria e notificações | Pendente |
 | R1.7 | Converter lacunas prioritárias em plano de implementação testável | Pendente |
 
-## 7. Limitações conhecidas desta revisão
+## 8. Limitações conhecidas desta revisão
 
 - Não foram executados testes de browser ou end-to-end nesta etapa.
 - Não foi consultado o esquema actual da base de dados; as conclusões sobre migrações são limitadas ao repositório e aos relatórios existentes.
