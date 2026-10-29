@@ -351,3 +351,8 @@ Antes de desenvolver novas funcionalidades, a implementação deve:
 - criar o modelo de dados próprio apenas onde as estruturas existentes não representam correctamente a entidade.
 
 Esta especificação fecha o fluxo funcional e serve como contrato para a fase de desenvolvimento.
+
+
+## 8. Plano de testes de regressão
+
+Antes de qualquer alteração ao esquema, validar em ambiente de teste: conta activa/inactiva; perfil activo/inactivo; membership activa/inactiva; utilizador com zero, uma ou várias memberships; tentativa de alterar oportunidades e candidaturas de outra conta; permissões por papel; convite usado por email diferente; convite expirado ou usado duas vezes; e criação de convites apenas por Super Admin. Para cada caso, confirmar que a operação não autorizada deixa os dados inalterados. Estes testes ainda não foram executados nesta fase.
