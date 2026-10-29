@@ -262,6 +262,12 @@ Uma empresa pode aparecer como contexto de uma oportunidade ou de um dado de mer
 
 ## 7. Modelo de dados actual vs. necessário
 
+### Evidência do esquema activo (consulta read-only em 2026-10-29)
+
+O projecto Supabase activo `zikjvjzbbfzrelbkaaci` contém `public.partner_accounts`, `public.partner_account_members` e `private.partner_access_grants`. As duas tabelas públicas têm RLS activado; `partner_accounts` contém identidade/contactos/estado da entidade e `partner_account_members` liga utilizadores à conta com papel e flag `active`. A função activa `partner_access_claim` valida que o utilizador autenticado corresponde ao convite, cria a conta quando o utilizador ainda não está associado a uma, e insere o membro com papel `owner`. Portanto, a estrutura base de conta **já existe no esquema activo**; a lacuna não é simplesmente “criar as tabelas”, mas confirmar constraints, papéis, gestão de gestores, ciclo de vida e coerência entre migrations, UI e acções.
+
+A função activa `current_partner_account_id()` selecciona uma conta de membership activa sem validar `partner_accounts.status` nem `profiles.account_status` e sem ordenação explícita. Já `current_partner_opportunity_role()` valida estado da conta e do perfil. Este comportamento desigual é um ponto de auditoria prioritário: não alterar RLS nem funções em produção antes de reproduzir o caso e preparar testes/migração controlada.
+
 Estruturas existentes que podem ser reutilizadas:
 - `profiles` para identidade/autenticação;
 - `opportunities` para publicação;
@@ -275,7 +281,7 @@ Estruturas que não devem ser forçadas a representar o novo conceito:
 - `businesses` como entidade do parceiro;
 - `business_members` para modelar gestores de parceiro.
 
-Antes da implementação funcional, deve ser definida uma entidade própria de conta de parceiro e uma relação clara entre conta, gestores, oportunidades, publicidade, serviços, entitlements e inteligência.
+A entidade própria de conta e a relação base com gestores já existem no esquema activo. Antes de avançar, reconciliar o histórico de migrações (67 registos activos versus 53 ficheiros SQL no repositório no snapshot de 2026-10-25), confirmar constraints e papéis de membership, e validar as relações com oportunidades, campanhas, serviços, entitlements e inteligência. Não recriar as tabelas nem executar `db push`/repair como tentativa de resolver o desfasamento.
 
 ---
 
