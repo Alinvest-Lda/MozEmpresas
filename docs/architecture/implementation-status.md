@@ -1,7 +1,20 @@
 # MozEmpresas — estado de implementação
 
+## Estado de fecho funcional
+
+A experiência da plataforma está publicada, mas o fecho funcional global **não está comprovado**. A matriz [Matriz de fecho funcional e regras de negócio](../functional-closure-matrix.md) é a referência para a auditoria actual e prevalece sobre descrições genéricas de módulos como “concluídos”.
+
+Esta documentação distingue:
+- presença de uma funcionalidade no código;
+- implementação parcial de um fluxo;
+- validação por testes automatizados;
+- validação de integração com base de dados/serviços;
+- confirmação funcional no ambiente publicado.
+
+Não declarar pagamentos reais, fluxo completo de parceiros, auditoria transversal, notificações ou segurança integral como concluídos sem evidência específica. A revisão actual é estática e não substitui testes end-to-end nem reconciliação do esquema activo.
+
 ## Estado actual
-O produto encontra-se em produção com a experiência final-user separada de funcionalidades reservadas a serviços pagos e do módulo independente de Parceiros em definição funcional.
+A experiência final-user está publicada e separada de funcionalidades reservadas a serviços pagos e do módulo independente de Parceiros. A publicação não comprova o fecho de todos os ciclos de negócio; consultar a matriz de fecho funcional.
 
 ## Concluído nesta fase
 - Landing page orientada ao directório empresarial e descoberta de mercado.
