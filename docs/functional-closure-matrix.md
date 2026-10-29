@@ -57,6 +57,10 @@ Consultas read-only ao projecto Supabase activo confirmaram que `partner_account
 
 **Risco confirmado:** `current_partner_account_id()` usa membership activa e perfil `user_type='parceiro'`, mas não verifica `partner_accounts.status` nem `profiles.account_status`; o helper `current_partner_opportunity_role()` já verifica esses estados. Esta diferença deve ser tratada com teste de regressão e migração revista, não com alteração directa em produção.
 
+## 3.2. Achados activos de segurança
+
+A verificação read-only e o Security Advisor de 2026-10-29 identificaram tabelas de parceiro com RLS activo mas sem políticas, funções `SECURITY DEFINER` expostas por RPC e a protecção contra palavras-passe comprometidas desactivada. Estes pontos foram registados com detalhe, impacto e critérios de aceitação em [`docs/functional-closure-live-findings-2026-10-29.md`](./functional-closure-live-findings-2026-10-29.md). Não foram feitas alterações ao banco de dados; não revogar funções nem adicionar políticas em massa sem análise por fluxo.
+
 ## 4. Regras transversais obrigatórias
 
 ### 4.1 Estados
