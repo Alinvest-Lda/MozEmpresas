@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { canManageBusiness } from "@/lib/businesses/permissions";
-import { canTransitionCommerceOrder, commerceOrderTransitions } from "@/lib/commerce/state-machine";
+import { canTransitionCommerceOrder, canTransitionListing, commerceOrderTransitions } from "@/lib/commerce/state-machine";
 
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -290,11 +290,14 @@ export async function updateListing(_state: { error?: string; success?: string }
 
   const { data: existing, error: existingError } = await supabase
     .from("listings")
-    .select("id,owner_id,business_id")
+    .select("id,owner_id,business_id,status")
     .eq("id", listingId)
     .maybeSingle();
 
   if (existingError || !existing) redirect("/dashboard/marketplace?status=forbidden");
+  if (status !== existing.status && !canTransitionListing(existing.status, status)) {
+    redirect("/dashboard/marketplace?status=invalid-transition");
+  }
   // Require access to the listing's current business, not merely the destination
   // business supplied in the form. Legacy listings without a business are editable
   // only by their recorded owner.
@@ -348,7 +351,7 @@ export async function updateListing(_state: { error?: string; success?: string }
   const { data: updatedListing, error: listingUpdateError } = await supabase.from("listings").update({
     title, description, type, business_id: businessId, category_id: categoryId, location, price, currency: "MZN", status, slug,
     updated_at: new Date().toISOString(),
-  }).eq("id", listingId).select("id").maybeSingle();
+  }).eq("id", listingId).eq("status", existing.status).select("id").maybeSingle();
 
   if (listingUpdateError || !updatedListing) {
     const cleaned = await cleanupNewAttachments();
@@ -371,13 +374,22 @@ export async function updateListingStatus(formData: FormData) {
     redirect("/dashboard/marketplace?status=error");
   }
 
-  const { data: listing } = await supabase.from("listings").select("id,business_id").eq("id", listingId).maybeSingle();
+  const { data: listing } = await supabase.from("listings").select("id,business_id,status").eq("id", listingId).maybeSingle();
   if (!listing || !listing.business_id || !(await canManageBusiness(supabase, userId, listing.business_id))) {
     redirect("/dashboard/marketplace?status=forbidden");
   }
+  if (!canTransitionListing(listing.status, status)) {
+    redirect("/dashboard/marketplace?status=invalid-transition");
+  }
 
-  const { data: updatedListing, error } = await supabase.from("listings").update({status, updated_at:new Date().toISOString()}).eq("id",listingId).select("id").maybeSingle();
-  if (error || !updatedListing) redirect("/dashboard/marketplace?status=error");
+  const { data: updatedListing, error } = await supabase
+    .from("listings")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", listingId)
+    .eq("status", listing.status)
+    .select("id")
+    .maybeSingle();
+  if (error || !updatedListing) redirect("/dashboard/marketplace?status=invalid-transition");
 
   revalidatePath("/dashboard/marketplace");
   revalidatePath("/marketplace/" + listingId);
