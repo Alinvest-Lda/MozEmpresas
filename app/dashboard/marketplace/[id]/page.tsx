@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { deleteListingAttachment, updateListing, updateListingStatus } from "@/lib/commerce/actions";
 import { ListingEditForm } from "@/components/listing-edit-form";
+import { listingTransitions } from "@/lib/commerce/state-machine";
 
 export default async function ManageListingPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ status?: string }> }) {
   const { id } = await params;
@@ -89,10 +90,11 @@ export default async function ManageListingPage({ params, searchParams }: { para
             <p className="muted">Altere rapidamente o estado desta oferta sem apagar o histórico comercial.</p>
             <input type="hidden" name="listing_id" value={listing.id} />
             <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
-              <select name="status" defaultValue={listing.status} style={{border:"1px solid #dfe3e7",borderRadius:10,padding:"10px 12px"}}>
-                <option value="DRAFT">Rascunho</option><option value="PUBLISHED">Publicado</option><option value="PAUSED">Pausado</option><option value="SOLD_OUT">Esgotado</option><option value="ARCHIVED">Arquivado</option>
+              <select name="status" defaultValue={listingTransitions[listing.status]?.[0] || listing.status} style={{border:"1px solid #dfe3e7",borderRadius:10,padding:"10px 12px"}}>
+                {(listingTransitions[listing.status] || []).map((nextStatus) => <option key={nextStatus} value={nextStatus}>{({DRAFT:"Rascunho",PUBLISHED:"Publicado",PAUSED:"Pausado",SOLD_OUT:"Esgotado",ARCHIVED:"Arquivado"} as Record<string,string>)[nextStatus] || nextStatus}</option>)}
+                {!listingTransitions[listing.status]?.length && <option value={listing.status}>{({DRAFT:"Rascunho",PUBLISHED:"Publicado",PAUSED:"Pausado",SOLD_OUT:"Esgotado",ARCHIVED:"Arquivado"} as Record<string,string>)[listing.status] || listing.status}</option>}
               </select>
-              <button className="btn" type="submit">Actualizar estado</button>
+              <button className="btn" type="submit" disabled={!listingTransitions[listing.status]?.length}>Actualizar estado</button>
             </div>
           </form>
           <section className="business-form-card" style={{marginTop:18}}>
