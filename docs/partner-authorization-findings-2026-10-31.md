@@ -53,3 +53,8 @@ A função `current_partner_opportunity_role()` foi posteriormente alterada para
 - `supabase/migrations/20261011085442_scope_partner_opportunity_role_to_current_account.sql`
 - `supabase/migrations/20261011092703_require_invitee_identity_for_partner_access_claim.sql`
 - `lib/opportunities/partner-actions.ts`
+
+
+## Actualização posterior — fecho parcial de transições
+
+Depois desta revisão, foram adicionadas regras explícitas de transição de estado para oportunidades e candidaturas de parceiros em `lib/opportunities/state-machine.ts`, aplicadas nas acções de servidor e apresentadas na UI. Também foi criado `tests/opportunity-state-machine.test.ts`. Esta alteração reduz transições inválidas na camada de aplicação, mas não resolve a associação de gestores a uma conta existente, a ambiguidade do helper SQL, a ausência de políticas RLS nem o RLS desactivado em `private.partner_access_grants`. O CI deve ser consultado antes de considerar as novas regras validadas.
