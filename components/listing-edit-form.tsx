@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { listingTransitions } from "@/lib/commerce/state-machine";
 
 type Business = { id: string; name: string };
 type Listing = {
@@ -10,6 +11,10 @@ type Listing = {
 };
 
 type ListingActionState = { error?: string; success?: string };
+
+const listingStatusLabels: Record<string, string> = {
+  DRAFT: "Rascunho", PUBLISHED: "Publicado", PAUSED: "Pausado", SOLD_OUT: "Esgotado", ARCHIVED: "Arquivado",
+};
 
 export function ListingEditForm({
   action, listing, businesses, categories,
@@ -35,7 +40,7 @@ export function ListingEditForm({
       <div className="field"><label htmlFor="listing-location">Localização</label><input id="listing-location" name="location" defaultValue={listing.location || ""} maxLength={160} placeholder="Maputo, Moçambique" /></div>
       <div className="field"><label htmlFor="listing-attachments">Novos anexos</label><input id="listing-attachments" name="attachments" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.doc,.docx,.xls,.xlsx" multiple /><small className="muted">Até 10 ficheiros adicionais, no máximo 10 MB cada.</small></div>
       <div className="field"><label htmlFor="listing-description">Descrição</label><textarea id="listing-description" name="description" rows={8} required maxLength={8000} defaultValue={listing.description} /></div>
-      <div className="field"><label htmlFor="listing-status">Estado</label><select id="listing-status" name="status" defaultValue={listing.status}><option value="DRAFT">Rascunho</option><option value="PUBLISHED">Publicado</option><option value="PAUSED">Pausado</option><option value="SOLD_OUT">Esgotado</option><option value="ARCHIVED">Arquivado</option></select></div>
+      <div className="field"><label htmlFor="listing-status">Estado</label><select id="listing-status" name="status" defaultValue={listing.status}>{[listing.status, ...(listingTransitions[listing.status] || [])].filter((value, index, all) => all.indexOf(value) === index).map((value) => <option key={value} value={value}>{listingStatusLabels[value] || value}</option>)}</select><small className="muted">As opções disponíveis respeitam as transições permitidas para o estado actual.</small></div>
       {state.error && <p role="alert" className="notice">{state.error}</p>}
       <div className="business-edit-actions"><button className="btn primary" disabled={pending}>{pending ? "A guardar..." : "Guardar oferta"}</button></div>
     </form>
