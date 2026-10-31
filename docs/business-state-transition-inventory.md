@@ -58,3 +58,14 @@ O projecto activo apresenta 67 registos de migração, enquanto o inventário do
 ## 6. Limitações
 
 Este documento é um inventário inicial do repositório. Não comprova que o esquema activo seja idêntico às migrações, que as migrações tenham sido aplicadas ou que todos os estados sejam utilizados no ambiente publicado. Não aplicar migrações como parte desta auditoria sem reconciliação e aprovação.
+
+
+## 7. Implementação das transições do workspace de Parceiros (2026-10-31)
+
+Foi adicionado `lib/opportunities/state-machine.ts` com transições explícitas para oportunidades e candidaturas, acompanhado de `tests/opportunity-state-machine.test.ts`.
+
+- **Oportunidades:** `DRAFT → PUBLISHED`; `PUBLISHED → CLOSED/ARCHIVED`; `CLOSED → PUBLISHED/ARCHIVED`; `ARCHIVED → DRAFT` (esta última transição corresponde à acção actualmente apresentada na UI como “Repor em rascunho”).
+- **Candidaturas — acções do parceiro:** `SUBMITTED → UNDER_REVIEW/SHORTLISTED/ACCEPTED/REJECTED`; `UNDER_REVIEW → SHORTLISTED/ACCEPTED/REJECTED`; `SHORTLISTED → ACCEPTED/REJECTED`. A retirada (`WITHDRAWN`) não é uma decisão que o parceiro possa impor; os estados finais não podem ser reescritos através desta acção.
+- As acções de servidor verificam o estado actual, validam a transição e fazem update condicional ao estado lido, rejeitando concorrência em que outro pedido altere o registo primeiro.
+
+**Limite da correcção:** a validação está na camada de aplicação; ainda não existe prova de que todas as vias SQL/RPC imponham a mesma máquina de estados. Os testes unitários foram adicionados, mas a sua execução e o CI deste commit ainda precisam de ser confirmados. Não declarar a máquina de estados global fechada até validar políticas RLS, actualizações directas e migrações no ambiente isolado.
