@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canTransitionCommerceOrder, commerceOrderTransitions, isCommerceOrderStatus } from "../lib/commerce/state-machine";
+import { canTransitionCommerceOrder, canTransitionListing, commerceOrderTransitions, isCommerceOrderStatus, listingTransitions } from "../lib/commerce/state-machine";
 
 describe("commerce order state machine", () => {
   it("allows only the defined forward transitions", () => {
@@ -35,6 +35,34 @@ describe("commerce order state machine", () => {
   it("does not allow self-transitions", () => {
     for (const status of Object.keys(commerceOrderTransitions)) {
       expect(canTransitionCommerceOrder(status, status)).toBe(false);
+    }
+  });
+});
+
+
+describe("marketplace listing state machine", () => {
+  it("allows only the configured listing transitions", () => {
+    expect(canTransitionListing("DRAFT", "PUBLISHED")).toBe(true);
+    expect(canTransitionListing("DRAFT", "ARCHIVED")).toBe(true);
+    expect(canTransitionListing("PUBLISHED", "PAUSED")).toBe(true);
+    expect(canTransitionListing("PUBLISHED", "SOLD_OUT")).toBe(true);
+    expect(canTransitionListing("PAUSED", "PUBLISHED")).toBe(true);
+    expect(canTransitionListing("SOLD_OUT", "PUBLISHED")).toBe(true);
+    expect(canTransitionListing("SOLD_OUT", "ARCHIVED")).toBe(true);
+  });
+
+  it("keeps archived listings terminal and rejects invalid transitions", () => {
+    expect(canTransitionListing("ARCHIVED", "DRAFT")).toBe(false);
+    expect(canTransitionListing("ARCHIVED", "PUBLISHED")).toBe(false);
+    expect(canTransitionListing("PUBLISHED", "DRAFT")).toBe(false);
+    expect(canTransitionListing("DRAFT", "SOLD_OUT")).toBe(false);
+    expect(canTransitionListing("PUBLISHED", "PUBLISHED")).toBe(false);
+    expect(canTransitionListing("UNKNOWN", "PUBLISHED")).toBe(false);
+  });
+
+  it("does not define self-transitions", () => {
+    for (const [from, targets] of Object.entries(listingTransitions)) {
+      expect(targets).not.toContain(from);
     }
   });
 });
