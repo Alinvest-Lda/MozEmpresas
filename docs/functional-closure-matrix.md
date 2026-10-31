@@ -148,3 +148,10 @@ Para fluxos que atravessam base de dados, Storage, notificações ou fornecedor 
 ## 3.4. Achados de autorização e convites do módulo de Parceiros
 
 A revisão estática das migrações de convite, helpers de contexto e acções de oportunidades identificou que o convite não guarda uma conta-alvo e que a resolução da conta actual pode ser ambígua se houver várias memberships elegíveis. A análise, evidência e plano de correcção sem alterações à produção estão em [`docs/partner-authorization-findings-2026-10-31.md`](partner-authorization-findings-2026-10-31.md). Tratar a gestão de gestores como lacuna até o convite para uma conta existente e os testes de isolamento serem implementados e validados.
+
+
+## 3.5. Actualização de segurança e transições (2026-10-31)
+
+A consulta read-only actualizada confirmou que `private.partner_access_grants` está com RLS desactivado e que o Security Advisor assinala quatro tabelas sem políticas RLS e funções `SECURITY DEFINER` expostas a papéis autenticados/anónimos. Os detalhes e a sequência segura estão em [`docs/functional-closure-live-findings-2026-10-29.md`](functional-closure-live-findings-2026-10-29.md), secção 6. Nenhuma alteração de base de dados ou de Auth foi aplicada.
+
+No código, foram introduzidas máquinas de transição explícitas para oportunidades e candidaturas de parceiros. As acções agora validam estado actual → destino e usam o estado actual como condição da actualização, para rejeitar transições inválidas e actualizações concorrentes obsoletas. A UI de candidaturas apresenta apenas transições permitidas e já não permite ao parceiro marcar uma candidatura como retirada. Foram acrescentados testes unitários para as regras. **A execução desses testes, typecheck, lint e build ainda precisa de confirmação do CI.** O fecho end-to-end continua bloqueado pela reconciliação das migrações e validação de autorização/RLS em ambiente isolado.
