@@ -92,3 +92,37 @@ A estrutura base existe; o módulo não deve recriar estas tabelas. Continuam po
 - Não foi executado um build local nesta sessão.
 - O estado Vercel do commit documental mais recente estava `pending`; portanto, não declarar deploy/build concluído.
 - A revisão de advisors é um sinal de triagem; cada finding precisa de validação contra a intenção de produto e os fluxos reais.
+
+
+## 6. Actualização read-only de 2026-10-31
+
+Nova consulta read-only ao projecto activo confirmou os seguintes pontos. Esta secção complementa, sem apagar, o snapshot de 29/10.
+
+### S0 — RLS desactivado em `private.partner_access_grants`
+
+O inventário actual reporta `private.partner_access_grants` com RLS **desactivado**. A tabela tem privilégios directos revogados para `anon` e `authenticated` na migração de referência, e as funções de acesso usam `SECURITY DEFINER`; ainda assim, o advisor do Supabase classifica a ausência de RLS como crítica.
+
+**Não aplicar isoladamente** `ALTER TABLE private.partner_access_grants ENABLE ROW LEVEL SECURITY` em produção antes de testar as RPCs privilegiadas e confirmar o owner/bypass RLS e o fluxo de claim. A correcção deve ser versionada e verificada num ambiente isolado; não criar políticas de acesso directo à tabela para utilizadores normais.
+
+### S0 — Tabelas de parceiro sem políticas RLS
+
+O advisor actualizado a 2026-10-31 19:54 UTC voltou a assinalar RLS activo sem políticas em `public.partner_accounts` e `public.partner_account_members`, além de `public.contact_messages` e `public.public_rate_limits`. Isto pode ser intencional se todo o acesso for feito por RPC controlada, mas essa hipótese deve ser provada por rota/RPC. Não adicionar políticas genéricas para eliminar o alerta.
+
+### S1 — Funções SECURITY DEFINER executáveis via API
+
+O advisor reportou 4 funções privilegiadas acessíveis a `anon` e 22 acessíveis a `authenticated`. A lista inclui `partner_access_validate`, `partner_access_claim`, `partner_access_create`, `partner_account_add_manager`, `current_partner_account_id`, `partner_account_context`, `partner_account_members_list` e `partner_account_profile`, além de funções de publicidade. A presença do alerta não prova exploração; cada função precisa de revisão de propósito, grants, autenticação, validação de actor/tenant, search_path e testes negativos. `partner_access_validate` é chamado antes do registo, pelo que a execução anónima pode ser intencional e deve ser avaliada pelo token de alta entropia e pelos dados devolvidos.
+
+### Estado actual de memberships e constraints
+
+A consulta read-only encontrou uma conta parceira activa e uma membership activa; não encontrou utilizadores com múltiplas memberships no estado actual. `partner_account_members` tem chave única `(account_id, user_id)`, mas não tem unicidade global em `user_id`, pelo que o modelo permite tecnicamente um utilizador pertencer a mais de uma conta. A função `current_partner_account_id()` usa `limit 1` sem ordenação e não valida o estado da conta nem `profiles.account_status`. A resolução deve falhar em segurança quando houver zero ou múltiplos contextos elegíveis, e validar perfil, membership e conta activa.
+
+### Estado do ledger de migrações
+
+A lista read-only activa termina em versões até `20261025080200` e inclui versões/nomes diferentes dos ficheiros existentes no repositório, incluindo migrações de acesso de parceiro e conta/gestores que não correspondem um-para-um aos nomes da pasta `supabase/migrations`. Não aplicar/reparar o ledger até uma reconciliação detalhada entre definições activas, migrações históricas e repositório.
+
+### Alterações efectuadas nesta revisão
+
+- Nenhuma alteração ao banco de dados.
+- Nenhuma alteração às definições de Auth.
+- Nenhuma migration aplicada.
+- Os estados de convite, permissões e isolamento continuam a exigir teste num ambiente isolado antes do fecho.
