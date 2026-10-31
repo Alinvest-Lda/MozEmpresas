@@ -143,3 +143,8 @@ Para fluxos que atravessam base de dados, Storage, notificações ou fornecedor 
 - Não foi confirmada uma integração real de pagamento.
 - Não foi confirmada a aplicação de migrações pendentes.
 - O estado “parcial” significa falta de prova de fecho, não necessariamente que toda a funcionalidade esteja avariada.
+
+
+## 3.4. Achados de autorização e convites do módulo de Parceiros
+
+A revisão estática das migrações de convite, helpers de contexto e acções de oportunidades identificou que o convite não guarda uma conta-alvo e que a resolução da conta actual pode ser ambígua se houver várias memberships elegíveis. A análise, evidência e plano de correcção sem alterações à produção estão em [`docs/partner-authorization-findings-2026-10-31.md`](partner-authorization-findings-2026-10-31.md). Tratar a gestão de gestores como lacuna até o convite para uma conta existente e os testes de isolamento serem implementados e validados.
