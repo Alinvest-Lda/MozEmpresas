@@ -69,3 +69,12 @@ Foi adicionado `lib/opportunities/state-machine.ts` com transições explícitas
 - As acções de servidor verificam o estado actual, validam a transição e fazem update condicional ao estado lido, rejeitando concorrência em que outro pedido altere o registo primeiro.
 
 **Limite da correcção:** a validação está na camada de aplicação; ainda não existe prova de que todas as vias SQL/RPC imponham a mesma máquina de estados. Os testes unitários foram adicionados, mas a sua execução e o CI deste commit ainda precisam de ser confirmados. Não declarar a máquina de estados global fechada até validar políticas RLS, actualizações directas e migrações no ambiente isolado.
+
+
+## 8. Implementação das transições de publicações do marketplace (2026-10-31)
+
+A máquina de estados de `listings` foi adicionada a `lib/commerce/state-machine.ts` e é agora usada pelas acções `updateListing` e `updateListingStatus`. As alterações de estado verificam o estado actual e usam actualização condicional para evitar que um pedido obsoleto sobrescreva uma mudança concorrente. A UI de edição e o controlo rápido apresentam apenas destinos permitidos.
+
+Transições configuradas: `DRAFT → PUBLISHED/ARCHIVED`; `PUBLISHED → PAUSED/SOLD_OUT/ARCHIVED`; `PAUSED → PUBLISHED/SOLD_OUT/ARCHIVED`; `SOLD_OUT → PUBLISHED/ARCHIVED`; `ARCHIVED` é terminal. A edição de conteúdo sem alteração do estado actual continua permitida, sujeita às verificações de propriedade existentes.
+
+Foram acrescentados testes unitários em `tests/commerce-state-machine.test.ts`. A validação CI de uma versão anterior já confirmou os testes existentes e a tarefa isolada de hardening SQL, mas os últimos commits com as transições de publicações ainda precisam de terminar o CI. A máquina de estados é aplicada nas acções da aplicação; a validação de todas as vias SQL/RLS continua pendente.
