@@ -57,3 +57,22 @@ Não existe actualmente uma branch de desenvolvimento Supabase para validar DDL.
 - O advisor de segurança voltou a reportar 4 tabelas com RLS sem políticas, 4 funções `SECURITY DEFINER` executáveis por `anon` e 22 executáveis por `authenticated`. Estes avisos exigem análise por função e por contrato de acesso; não justificam revogações em lote.
 - O advisor de performance reporta políticas permissivas múltiplas em 26 tabelas e 2 pares de índices duplicados. Não foram removidos índices nem alteradas políticas, pois isso requer validação de utilização e impacto.
 - Não foram executadas alterações à base de dados de produção. A revisão do repositório e os testes de CI/deploy podem prosseguir sem branch pago.
+
+
+## Actualização de execução directa na main — 2026-11-01
+
+Foi aplicada à base Supabase activa a migração `20261101111659_harden_partner_account_memberships` e o respectivo ficheiro foi registado em `supabase/migrations/20261101111659_harden_partner_account_memberships.sql`.
+
+Alterações:
+- Índice único parcial em `partner_account_members(user_id)` para impedir duas associações activas do mesmo utilizador.
+- `current_partner_account_id()` e `partner_account_context()` passam a exigir exactamente uma associação elegível, conta ACTIVE, perfil ACTIVE e tipo de utilizador parceiro; contexto ambíguo ou inelegível falha fechado.
+- `partner_account_add_manager()` passa a devolver erro explícito `PARTNER_MANAGER_INVITES_REQUIRED`; a execução foi revogada para `PUBLIC`, `anon` e `authenticated`.
+
+Verificações após aplicação:
+- A consulta de permissões confirmou que nem `anon` nem `authenticated` podem executar a antiga função de associação directa.
+- O Security Advisor passou de 22 para 21 funções SECURITY DEFINER executáveis por authenticated; as restantes exigem revisão individual.
+- Permanecem 4 tabelas com RLS sem políticas, 4 funções SECURITY DEFINER acessíveis a anon e o aviso de protecção contra passwords comprometidas desactivada.
+- O fluxo de convites multi-gestor vinculado a `account_id` ainda não foi implementado. O actual `partner_access_claim()` não satisfaz esse contrato e não deve ser usado como substituto.
+- A migração foi aplicada directamente na produção por decisão de execução na main; não houve branch de staging.
+
+Esta intervenção fecha o bypass de associação directa e a ambiguidade do contexto da conta, mas **não encerra todo o P0 de parceiros nem autoriza lançamento comercial amplo**.
