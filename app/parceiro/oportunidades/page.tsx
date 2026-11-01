@@ -34,13 +34,18 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: accountId } = await supabase.rpc("current_partner_account_id");
-  const { data } = accountId ? await supabase
+  const [{ data: accountId, error: accountError }, { data: contextRows, error: contextError }] = await Promise.all([
+    supabase.rpc("current_partner_account_id"),
+    supabase.rpc("partner_account_context"),
+  ]);
+  const context = Array.isArray(contextRows) ? contextRows[0] : null;
+  const canManage = context?.member_role === "owner" || context?.member_role === "manager";
+  const { data, error: opportunitiesError } = accountId ? await supabase
     .from("opportunities")
     .select("id,title,slug,type,organization,location,closes_at,status,created_at")
     .eq("partner_account_id", accountId)
     .order("created_at", { ascending: false })
-    .limit(50) : { data: [] };
+    .limit(50) : { data: null, error: accountError || new Error("PARTNER_ACCOUNT_REQUIRED") };
 
   const rows = data ?? [];
   const published = rows.filter((row: any) => row.status === "PUBLISHED").length;
@@ -52,8 +57,11 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
       eyebrow="Publicar · Oportunidades"
       title="As suas publicações"
       description="Um espaço de gestão: publique, acompanhe prazos e consulte o histórico das oportunidades abertas pela sua organização."
-      action={{ href: "/parceiro/oportunidades/nova", label: "Nova oportunidade" }}
+      action={canManage ? { href: "/parceiro/oportunidades/nova", label: "Nova oportunidade" } : undefined}
     >
+      {(contextError || accountError) && <div className="notice" role="alert">Não foi possível confirmar o contexto de acesso da sua conta. As operações de publicação ficam indisponíveis até a validação ser concluída.</div>}
+      {opportunitiesError && <div className="notice" role="alert">Não foi possível carregar as publicações. Não interprete a lista indisponível como ausência de registos.</div>}
+      {!canManage && !contextError && <div className="notice">O seu papel permite consultar as publicações, mas a criação, edição e alteração de estado estão reservadas ao administrador e ao gestor da conta.</div>}
       {params.saved && <div className="notice" role="status">A oportunidade foi guardada com sucesso.</div>}
       {params.updated && <div className="notice" role="status">O estado da publicação foi actualizado.</div>}
       {params.error && <div className="notice" role="alert">Não foi possível actualizar a publicação. Confirme as permissões e tente novamente.</div>}
@@ -73,7 +81,7 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
         title="Todas as publicações"
         description="Consulte o que está no ar, o que precisa de trabalho e o que já terminou."
       >
-        {rows.length > 0 ? (
+        {opportunitiesError ? null : rows.length > 0 ? (
           <>
             <div className="partner-pub-toolbar">
               <div className="partner-pub-filter">
@@ -117,8 +125,8 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
                   </div>
 
                   <div className="partner-pub-row-actions">
-                    <Link className="partner-pub-action" href={"/parceiro/oportunidades/nova?editar=" + row.id}>Editar →</Link>
-                    <form action={changeOpportunityStatus}>
+                    {canManage && <Link className="partner-pub-action" href={"/parceiro/oportunidades/nova?editar=" + row.id}>Editar →</Link>}
+                    {canManage && <form action={changeOpportunityStatus}>
                       <input type="hidden" name="opportunity_id" value={row.id} />
                       {row.status === "PUBLISHED" ? (
                         <>
@@ -135,7 +143,7 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
                       ) : (
                         <button className="partner-pub-action" name="status" value="DRAFT" type="submit">Repor em rascunho</button>
                       )}
-                    </form>
+                    </form>}
                   </div>
                 </div>
               ))}
