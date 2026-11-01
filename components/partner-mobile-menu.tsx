@@ -8,7 +8,7 @@ export const partnerNavGroups=[
   {label:"Workspace",links:[["/parceiro","Visão geral"]]},
   {label:"Publicar",links:[["/parceiro/oportunidades","Oportunidades publicadas"],["/parceiro/oportunidades/nova","Nova publicação"]]},
   {label:"Posicionar",links:[["/parceiro/publicidade","Publicidade e campanhas"]]},
-  {label:"Compreender",links:[["/parceiro/inteligencia","Inteligência e mercado"],["/parceiro/resultados","Actividade e histórico"]]},
+  {label:"Compreender",links:[["/parceiro/inteligencia","Indicadores da actividade"],["/parceiro/resultados","Actividade e histórico"]]},
   {label:"Contratar",links:[["/parceiro/servicos","Serviços e estudos"]]},
   {label:"Organização",links:[["/parceiro/conta","Conta, gestores e segurança"]]}
 ] as const;
