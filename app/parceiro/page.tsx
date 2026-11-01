@@ -30,17 +30,19 @@ export default async function PartnerHome() {
     : { data: null, error: accountError || new Error("PARTNER_ACCOUNT_REQUIRED") };
 
   const name = account?.account_name || user.email?.split("@")[0] || "Parceiro";
-  const published = (opportunities ?? []).filter((x) => x.status === "PUBLISHED").length;
-  const drafts = (opportunities ?? []).filter((x) => x.status === "DRAFT").length;
+  const published = opportunitiesError ? null : (opportunities ?? []).filter((x) => x.status === "PUBLISHED").length;
+  const drafts = opportunitiesError ? null : (opportunities ?? []).filter((x) => x.status === "DRAFT").length;
   const pending = (requests ?? []).filter((x) => ["REQUESTED", "UNDER_REVIEW", "QUOTED"].includes(x.status)).length;
   const activeCampaigns = (campaigns ?? []).filter((x: any) => ["ACTIVE", "RUNNING", "PUBLISHED"].includes(x.status)).length;
   const benefits = (entitlements ?? []).filter((x: any) => x.status === "ACTIVE").length;
   const date = (v: string) => new Date(v).toLocaleDateString("pt-MZ", { day: "2-digit", month: "short" });
-  const next = drafts
-    ? { label: "Rever e publicar rascunhos", href: "/parceiro/oportunidades", kind: "ACTIVIDADE" }
-    : !published
-      ? { label: "Publicar a primeira oportunidade", href: "/parceiro/oportunidades/nova", kind: "ACTIVIDADE" }
-      : !activeCampaigns
+  const next = opportunitiesError
+    ? { label: "Tentar carregar as publicações", href: "/parceiro", kind: "DADOS" }
+    : drafts
+      ? { label: "Rever e publicar rascunhos", href: "/parceiro/oportunidades", kind: "ACTIVIDADE" }
+      : !published
+        ? { label: "Publicar a primeira oportunidade", href: "/parceiro/oportunidades/nova", kind: "ACTIVIDADE" }
+        : !activeCampaigns
         ? { label: "Escolher um formato de exposição", href: "/parceiro/publicidade", kind: "EXPOSIÇÃO" }
         : { label: "Consultar indicadores da actividade", href: "/parceiro/inteligencia", kind: "INDICADORES" };
 
@@ -59,12 +61,12 @@ export default async function PartnerHome() {
       <div className="partner-topbar">
         <div className="partner-topbar-left"><span>MOZEMPRESAS</span><b>/</b><strong>ÁREA DE PARCEIROS</strong><b>/</b><span>VISÃO GERAL</span></div>
         <div className="partner-topbar-center"><strong>MOZEMPRESAS</strong><span>ÁREA DE PARCEIROS</span></div>
-        <div className="partner-topbar-right"><span className="partner-topbar-account"><i/> Conta activa</span><Link href="/parceiro/conta" className="partner-topbar-link">Conta →</Link></div>
+        <div className="partner-topbar-right"><span className="partner-topbar-account"><i/> {contextError || !account ? "Estado da conta indisponível" : account.account_status === "ACTIVE" ? "Conta activa" : account.account_status === "SUSPENDED" ? "Conta suspensa" : "Conta " + (account.account_status || "por validar").toLowerCase()}</span><Link href="/parceiro/conta" className="partner-topbar-link">Conta →</Link></div>
       </div>
       <div className="partner-content partner-home">
         <header className="partner-home-top">
           <div><span className="partner-kicker">ÁREA DE PARCEIROS</span><h1>{name}</h1><p>Gerir publicações, acompanhar pedidos e consultar os indicadores disponíveis da conta.</p></div>
-          <div className="partner-home-top-meta"><span>CONTA</span><strong>{account?.account_status === "ACTIVE" ? "Activa" : "A validar"}</strong><small>{members?.length ?? 0} gestor(es) autorizado(s)</small><Link href="/parceiro/conta">Gerir conta →</Link></div>
+          <div className="partner-home-top-meta"><span>CONTA</span><strong>{account?.account_status === "ACTIVE" ? "Activa" : "A validar"}</strong><small>{membersError ? "Gestores indisponíveis" : (members?.length ?? 0) + " gestor(es) autorizado(s)"}</small><Link href="/parceiro/conta">Gerir conta →</Link></div>
         </header>
 
         {loadErrors.length > 0 && <div className="notice" role="alert">Alguns dados não puderam ser carregados ({loadErrors.join(", ")}). Actualize a página ou tente novamente. Não interprete estes dados como ausência de actividade.</div>}
