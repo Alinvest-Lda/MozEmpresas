@@ -26,7 +26,7 @@ Commit: `9d1ced727223c89038af546a226492b5d3848903`.
 
 ## Bloqueio para a intervenção de base de dados
 
-O ledger activo do Supabase contém 67 migrações, enquanto o repositório contém 56 ficheiros SQL na pasta `supabase/migrations` (contagem a confirmar após reconciliação completa). O baseline anterior documenta divergências de nomes/versões e adverte contra `db push`, repair ou replay sem revisão individual.
+O ledger activo do Supabase contém 67 migrações (última versão observada: `20261025080200`). O baseline de 2026-10-25 registou 53 ficheiros SQL no repositório; uma nota anterior indicou 56, mas essa contagem não foi novamente apurada. A divergência de nomes/versões permanece por reconciliar e não deve ser resolvida por correspondência aproximada.
 
 Não existe actualmente uma branch de desenvolvimento Supabase para validar DDL. A criação de uma branch pode gerar custos de compute; não foi criada nenhuma branch nem aplicada qualquer alteração DDL à produção.
 
@@ -48,3 +48,12 @@ Não existe actualmente uma branch de desenvolvimento Supabase para validar DDL.
 - DDL Supabase: não aplicado.
 - Deploy Vercel: não confirmado.
 - Produção: ainda não aprovada.
+
+## Actualização de verificação — 2026-11-01
+
+- O estado do projecto Supabase continua `ACTIVE_HEALTHY`.
+- A consulta actual ao ledger confirma 67 migrações aplicadas, com última versão `20261025080200`.
+- Os estados Vercel associados aos commits `9d1ced7` (correcção da associação directa) e `a7f365e` (documentação) passaram a `success`.
+- O advisor de segurança voltou a reportar 4 tabelas com RLS sem políticas, 4 funções `SECURITY DEFINER` executáveis por `anon` e 22 executáveis por `authenticated`. Estes avisos exigem análise por função e por contrato de acesso; não justificam revogações em lote.
+- O advisor de performance reporta políticas permissivas múltiplas em 26 tabelas e 2 pares de índices duplicados. Não foram removidos índices nem alteradas políticas, pois isso requer validação de utilização e impacto.
+- Não foram executadas alterações à base de dados de produção. A revisão do repositório e os testes de CI/deploy podem prosseguir sem branch pago.
