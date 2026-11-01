@@ -11,44 +11,56 @@ export async function getCurrentAccountContext() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return { supabase, user: null, accountType: null as AccountType | null, accountStatus: null as string | null };
+    return {
+      supabase,
+      user: null,
+      accountType: null as AccountType | null,
+      accountStatus: null as string | null,
+      contextError: false,
+    };
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("user_type,account_status")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: profile, error: profileError }, { data: isPartner, error: partnerError }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("user_type,account_status")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase.rpc("is_partner_account"),
+  ]);
 
-  let isPartner = false;
-  try {
-    const { data } = await supabase.rpc("is_partner_account");
-    isPartner = data === true;
-  } catch {
-    isPartner = false;
-  }
+  // Account classification is an authorization boundary. A failed partner lookup
+  // must never silently downgrade a partner to a normal business account.
+  const contextError = !!profileError || !profile || !!partnerError || typeof isPartner !== "boolean";
 
   return {
     supabase,
     user,
-    accountType: isPartner ? "parceiro" as const : normalizeAccountType(profile?.user_type),
-    accountStatus: profileError || !profile ? "UNKNOWN" : profile.account_status ?? "ACTIVE",
+    accountType: contextError
+      ? null
+      : isPartner
+        ? "parceiro" as const
+        : normalizeAccountType(profile.user_type),
+    accountStatus: contextError ? "UNKNOWN" : profile.account_status ?? "ACTIVE",
+    contextError,
   };
 }
 
 export async function requireNormalAccount() {
   const context = await getCurrentAccountContext();
   if (!context.user) redirect("/login");
+  if (context.contextError) redirect("/login?error=account_context");
   if (context.accountType === "parceiro") redirect("/parceiro");
-  if (context.accountStatus && context.accountStatus !== "ACTIVE") redirect("/login?inactive=1");
+  if (context.accountStatus !== "ACTIVE") redirect("/login?inactive=1");
   return context;
 }
 
 export async function requirePartnerAccount() {
   const context = await getCurrentAccountContext();
   if (!context.user) redirect("/login?next=/parceiro");
+  if (context.contextError) redirect("/login?error=account_context");
   if (context.accountType !== "parceiro") redirect("/dashboard");
-  if (context.accountStatus && context.accountStatus !== "ACTIVE") redirect("/login?inactive=1");
+  if (context.accountStatus !== "ACTIVE") redirect("/login?inactive=1");
 
   const { data: partnerContext, error } = await context.supabase.rpc("partner_account_context");
   const account = Array.isArray(partnerContext) ? partnerContext[0] : null;
