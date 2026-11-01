@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PartnerPage, PartnerSection, PartnerMetric, PartnerEmpty } from "@/components/partner-workspace";
-import { PartnerManagerForm } from "@/components/partner-actions";
 
 export default async function PartnerAccountPage() {
   const supabase = await createClient();
@@ -51,8 +50,8 @@ export default async function PartnerAccountPage() {
         {membersError ? <PartnerEmpty title="Não foi possível carregar os gestores" text="A lista de acessos está temporariamente indisponível. Tente novamente." /> : rows.length ? <div className="partner-record-list">{rows.map((member: any) => <div key={member.member_id}><div><strong>{member.full_name || member.email || "Gestor"}</strong><span>{member.email || "—"} · {member.active === true ? "Acesso activo" : "Acesso suspenso"}</span></div><b>{member.member_role === "owner" ? "Administrador" : member.member_role === "manager" ? "Gestor" : member.member_role === "analyst" ? "Analista" : "Visualizador"}</b></div>)}</div> : <PartnerEmpty title="Não existem gestores registados" text="Contacte o suporte se considerar que falta um acesso à organização." />}
       </PartnerSection>
 
-      <PartnerSection eyebrow="Equipa" title="Acessos à organização" description="Neste momento, esta operação associa utilizadores que já tenham uma conta de parceiro activa. Ainda não envia convites para novos utilizadores.">
-        {contextError ? <PartnerEmpty title="Não foi possível confirmar o seu papel" text="Por segurança, a gestão de acessos fica indisponível até ser possível validar as permissões da sua conta." /> : isOwner ? <PartnerManagerForm /> : <PartnerEmpty title="Gestão reservada ao administrador da parceria" text="O seu papel permite consultar os acessos, mas não adicionar ou alterar gestores." />}
+      <PartnerSection eyebrow="Equipa" title="Acessos à organização" description="A associação de novos gestores está temporariamente suspensa enquanto é concluído o fluxo seguro de convites por organização.">
+        {contextError ? <PartnerEmpty title="Não foi possível confirmar o seu papel" text="Por segurança, a gestão de acessos fica indisponível até ser possível validar as permissões da sua conta." /> : isOwner ? <PartnerEmpty title="Convites em preparação" text="Estamos a substituir a associação directa de utilizadores já registados por convites vinculados a esta organização. Assim, cada utilizador ficará associado a uma única organização parceira. Até à conclusão desta protecção, não é possível adicionar gestores nesta página." /> : <PartnerEmpty title="Gestão reservada ao administrador da parceria" text="O seu papel permite consultar os acessos, mas não adicionar ou alterar gestores." />}
       </PartnerSection>
     </PartnerPage>
   );
