@@ -254,3 +254,14 @@ Foi acrescentada cobertura de validação de anexos (marketplace e publicações
 A sequência de commits é: `fc6bd51`, `6c8c6be`, `a904bb7`, `f148057`, `8c44798`, `62c908e`, `7e3a78b`. CI associado: `41494982052`, `41494990423`, `41495141211`, `41495151081`, `41495158198`; aguarda-se a confirmação dos resultados finais.
 
 Não foi alterado o Supabase activo. Permanecem pendentes os testes de integração RLS comprador/vendedor, compensação de Storage sob falhas, concorrência de capacidade de campanhas pagas, ciclo financeiro, transições de serviços ainda sem contrato canónico confirmado e validação visual autenticada. Não retomar a Fase 0/P0–P5 suspensa nem declarar o produto validado em produção com base apenas no CI.
+
+
+### P2.2 — smoke/integration tests para marketplace, serviços e notificações (02/11/2026)
+
+- Adicionados fixtures PostgreSQL descartáveis em `scripts/ci/setup-marketplace-integration.sql` e asserções em `scripts/ci/verify-marketplace-integration.sql`.
+- O job `migration-hardening` aplica as migrações versionadas de pedidos/serviços/eventos e notificações e verifica os fluxos de comprador, vendedor, administrador da empresa vendedora e utilizador externo.
+- Cobertura: comprador cria pedido e evento; vendedor actualiza o estado; participantes consultam eventos; vendedor/admin consultam item comercial; utilizador externo não acede a itens, eventos, pedidos de serviço ou notificações; pedido de serviço não pode ser criado em nome de outro utilizador; notificações de criação e actualização são isoladas por destinatário.
+- As migrações testadas são `20260928120000`, `20260929233000`, `20261004173000`, `20261012170000` e `20261026100000`. O mesmo job continua a executar os testes de hardening SECURITY DEFINER e membership de parceiro.
+- Workflow `41498073765`: os três passos PostgreSQL passaram. No momento do registo, auditoria, testes unitários, typecheck e lint também passaram; build de produção ainda em execução.
+- Limitação: como a sequência versionada não contém a origem completa de `commerce_orders` nem a política SELECT inicial do vendedor, o fixture inclui as políticas-base de leitura de comprador/vendedor necessárias para simular a operação. É necessária uma comparação read-only com o schema activo para fechar a paridade RLS. Os testes de anexos continuam unitários/mockados; Storage real e entrega externa de notificações não foram simulados.
+- Não houve ligação a credenciais de produção, migração, DDL, grant, alteração de RLS ou mutação de dados no Supabase activo.
