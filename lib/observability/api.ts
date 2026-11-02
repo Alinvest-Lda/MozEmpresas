@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/observability/logger";
 
@@ -10,7 +11,7 @@ type ApiHandler = (request: Request, context: ApiRequestContext) => Promise<Resp
 
 function requestIdFrom(request: Request) {
   const supplied = request.headers.get("x-request-id")?.trim() ?? "";
-  return /^[a-zA-Z0-9._:-]{8,128}$/.test(supplied) ? supplied : crypto.randomUUID();
+  return /^[a-zA-Z0-9._:-]{8,128}$/.test(supplied) ? supplied : randomUUID();
 }
 
 export function withApiObservability(route: string, handler: ApiHandler) {
