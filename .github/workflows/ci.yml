@@ -124,6 +124,13 @@ jobs:
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261012170000_marketplace_order_notifications.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261026100000_align_commerce_order_update_policy.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/ci/verify-marketplace-integration.sql
+      - name: Verify atomic advertising purchases and inventory on isolated PostgreSQL
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/ci/setup-ad-purchase.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261102190000_atomic_direct_ad_purchase.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/ci/verify-ad-purchase.sql
       - name: Verify partner account membership and context on isolated PostgreSQL
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
