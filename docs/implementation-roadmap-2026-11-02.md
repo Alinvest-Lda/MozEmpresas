@@ -119,3 +119,13 @@ Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 
 - Concha própria do Super Admin, sem alterar o modelo de autenticação nem as rotas funcionais existentes.
 - Página interna de referência em `/dashboard/admin/design-system`.
 - A migração integral dos shells público, empresarial e parceiro continuará gradual, depois de validar a nova fundação.
+
+
+### Continuação da Fase 1 — consolidação visual (02/11/2026)
+
+- Centralizada a paleta actualmente usada pelo Super Admin em tokens CSS, preservando os valores visuais existentes para evitar alterações de aparência não intencionais.
+- Migrados os estilos das páginas de empresas e utilizadores, bem como do painel analítico, para consumir os tokens partilhados em vez de declarar cores hexadecimais localmente.
+- Os ficheiros de módulos CSS migrados já não contêm cores hexadecimais; os estilos globais da fundação também foram convertidos para notação RGB para cumprir `color-no-hex`.
+- A lógica de consultas, filtros, moderação e permissões destas páginas não foi alterada. Nenhuma alteração foi feita ao Supabase.
+- Commits desta tranche: `b309017`, `17fecb6`, `52d497a`, `d4cb36f`.
+- Validação pendente: confirmar o resultado dos deployments Vercel gerados por estes commits e executar lint/build automatizados; não marcar a Fase 1 como concluída antes dessa verificação.
