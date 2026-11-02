@@ -77,6 +77,7 @@ grant execute on function auth.uid() to authenticated, anon;
 grant select, insert, update on public.commerce_orders to authenticated;
 grant select, insert on public.commerce_order_items to authenticated;
 grant select on public.notifications to authenticated;
+create policy "users read own notifications" on public.notifications for select to authenticated using (user_id=(select auth.uid()));
 grant select, insert, update on public.business_buyer_interests to authenticated;
 
 insert into auth.users(id) values
