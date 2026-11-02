@@ -15,25 +15,26 @@ export default async function AdminCreditsPage() {
     { data: packages, error: packagesError },
     { data: requests, error: requestsError },
     { data: wallets, error: walletsError },
-    { data: transactions, error: transactionsError },
   ] = await Promise.all([
     supabase.from("credit_packages").select("id,code,name,credit_volume,price_mzn,active").order("credit_volume"),
     supabase.from("credit_purchase_requests").select("id,business_id,credits,amount_mzn,payment_method,status,created_at").order("created_at", { ascending: false }).limit(50),
     supabase.from("business_credit_wallets").select("id,business_id,balance_credits").order("balance_credits", { ascending: false }).limit(100),
-    supabase.from("credit_transactions").select("id,wallet_id,type,credits,amount_mzn,description,created_at").order("created_at", { ascending: false }).limit(30),
   ]);
 
   const packageRows = packages ?? [];
   const requestRows = requests ?? [];
   const walletRows = wallets ?? [];
+  const walletIds = walletRows.map((wallet) => wallet.id);
+  const { data: transactions, error: transactionsError } = walletIds.length
+    ? await supabase.from("credit_transactions").select("id,wallet_id,type,credits,amount_mzn,description,created_at").in("wallet_id", walletIds).order("created_at", { ascending: false }).limit(20)
+    : { data: [], error: null };
   const transactionRows = transactions ?? [];
   const businessIds = [...new Set([...requestRows.map((item) => item.business_id), ...walletRows.map((item) => item.business_id)])];
   const { data: businesses, error: businessesError } = businessIds.length
     ? await supabase.from("businesses").select("id,name").in("id", businessIds)
     : { data: [], error: null };
   const businessNames = new Map((businesses ?? []).map((item) => [item.id, item.name]));
-  const walletIds = new Set(walletRows.map((wallet) => wallet.id));
-  const recentTransactions = transactionRows.filter((item) => walletIds.has(item.wallet_id)).slice(0, 20);
+  const recentTransactions = transactionRows;
   const pendingCount = requestRows.filter((item) => ["REQUESTED", "PENDING"].includes(String(item.status).toUpperCase())).length;
   const totalBalance = walletRows.reduce((sum, wallet) => sum + Number(wallet.balance_credits || 0), 0);
   const queryErrors = [packagesError, requestsError, walletsError, transactionsError, businessesError].filter(Boolean).length;
@@ -86,7 +87,7 @@ export default async function AdminCreditsPage() {
         </section>
 
         <section className={styles.panel} aria-labelledby="transactions-title">
-          <div className={styles.panelHeading}><div><span className={styles.kicker}>04 · Rastreabilidade</span><h2 id="transactions-title">Movimentos recentes</h2><p>Últimos movimentos registados no livro de créditos.</p></div><span className={styles.counter}>{recentTransactions.length} movimentos · máximo 20</span></div>
+          <div className={styles.panelHeading}><div><span className={styles.kicker}>04 · Rastreabilidade</span><h2 id="transactions-title">Movimentos recentes</h2><p>Últimos movimentos das carteiras empresariais listadas.</p></div><span className={styles.counter}>{recentTransactions.length} movimentos · máximo 20</span></div>
           {recentTransactions.length ? <div className={styles.list}>{recentTransactions.map((item) => {
             const wallet = walletRows.find((candidate) => candidate.id === item.wallet_id);
             const credits = Number(item.credits || 0);
