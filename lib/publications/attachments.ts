@@ -1,5 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { PUBLICATION_ATTACHMENT_TYPES, validateAttachmentSelection } from "./attachment-validation";
+import { PUBLICATION_ATTACHMENT_TYPES, validateAttachmentContentSelection, validateAttachmentSelection } from "./attachment-validation";
 
 export async function savePublicationAttachments(
   supabase: SupabaseClient,
@@ -16,6 +16,7 @@ export async function savePublicationAttachments(
   if (!validation.files) throw new Error(validation.error);
   const selected = validation.files;
   if (!selected.length) return;
+  if (!(await validateAttachmentContentSelection(selected))) throw new Error("UNSUPPORTED_ATTACHMENT_CONTENT");
 
   const rows: Array<Record<string, string | number>> = [];
   const uploadedPaths: string[] = [];
