@@ -154,3 +154,13 @@ Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 
 - Não foram alteradas consultas de totais, tabelas, políticas, permissões ou dados. Nenhuma alteração foi feita ao Supabase.
 - Commit: `8d39df6`.
 - Validação de produção e build pendentes; não marcar a correcção como concluída antes da confirmação do deployment.
+
+
+### Consolidação da fila de pedidos no painel principal — 02/11/2026
+
+- A fila de pedidos de serviços passou a utilizar os componentes partilhados `Field`, `Select`, `Input` e `Button` no formulário de actualização de estado e orçamento.
+- Foram removidos estilos inline de apresentação da secção, do aviso de resultado, do filtro de pedidos sem actualização e dos metadados do pedido; os estilos passaram para regras CSS consistentes no workspace do Super Admin.
+- Mantidos a Server Action `updatePlatformServiceRequest`, os campos enviados, o redirect de sucesso/erro, os estados disponíveis e as consultas existentes.
+- Não foram alterados dados, tabelas, policies, permissões ou configuração do Supabase.
+- Commits: `6b002c9` e `71aea61`.
+- Validação de build/deployment pendente.
