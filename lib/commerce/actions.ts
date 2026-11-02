@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireNormalAccount } from "@/lib/auth/access";
 import { canManageBusiness } from "@/lib/businesses/permissions";
 import { canTransitionCommerceOrder, canTransitionListing, commerceOrderTransitions } from "@/lib/commerce/state-machine";
 import { MARKETPLACE_ATTACHMENT_TYPES, validateAttachmentContentSelection, validateAttachmentSelection } from "@/lib/publications/attachment-validation";
@@ -17,22 +17,10 @@ function number(value: FormDataEntryValue | null, fallback = 0) {
 }
 
 async function currentUser() {
-  const supabase = await createClient();
-  const { data: claims } = await supabase.auth.getClaims();
-  const userId = claims?.claims?.sub;
-  if (!userId) redirect("/login?next=/dashboard/marketplace");
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("account_status")
-    .eq("id", userId)
-    .maybeSingle();
-  if (profileError || !profile || (profile.account_status && profile.account_status !== "ACTIVE")) {
-    redirect("/login?inactive=1");
-  }
-  return { supabase, userId };
+  const context = await requireNormalAccount();
+  if (!context.user) redirect("/login?next=/dashboard/marketplace");
+  return { supabase: context.supabase, userId: context.user.id };
 }
-
 export async function createListing(formData: FormData) {
   const { supabase, userId } = await currentUser();
   const title = text(formData.get("title"));
