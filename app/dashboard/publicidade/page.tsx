@@ -40,7 +40,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
   const campaignInvestment=(promotions??[]).reduce((sum,p)=>sum+Number(p.price_mzn??0),0);
   const campaignCtr=campaignImpressions>0?campaignClicks/campaignImpressions*100:0;
 
-  const flash=params.success==="credits"?"Publicidade activada e créditos debitados.":params.success==="mpesa"?"Pedido M-Pesa criado e aguarda confirmação.":params.error==="credits"?"Créditos insuficientes.":params.error==="availability"?"O espaço está ocupado nesse período.":params.error?"Não foi possível concluir a operação.":"";
+  const flash=params.success==="credits"?"Publicidade activada e créditos debitados.":params.success==="mpesa"?"Pedido M-Pesa criado e aguarda confirmação.":params.error==="credits"?"Créditos insuficientes.":params.error==="availability"?"O espaço está ocupado nesse período.":params.error==="setup"?"O pedido M-Pesa ainda não está disponível: a reserva segura aguarda activação da migração necessária. Pode usar créditos ou tentar mais tarde.":params.error?"Não foi possível concluir a operação.":"";
 
   return <main className="dashboard-main"><div className="dashboard-content">
     {flash && <div className="card" style={{marginBottom:18}}><strong>{flash}</strong></div>}
