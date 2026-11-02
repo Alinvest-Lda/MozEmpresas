@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { Input, Select } from "@/components/ui";
 import styles from "./empresas.module.css";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { moderateBusiness } from "@/lib/admin/actions";
@@ -68,16 +69,16 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
           <form className={styles.filters} method="get">
             <label className={styles.searchField}>
               <span>Pesquisar empresa</span>
-              <input name="q" defaultValue={q} maxLength={120} placeholder="Nome da empresa" />
+              <Input name="q" defaultValue={q} maxLength={120} placeholder="Nome da empresa" />
             </label>
             <label>
               <span>Estado no directório</span>
-              <select name="visibilidade" defaultValue={visibility}>
+              <Select name="visibilidade" defaultValue={visibility}>
                 <option value="">Todas as empresas</option>
                 <option value="publica">Públicas</option>
                 <option value="privada">Privadas</option>
                 <option value="arquivada">Arquivadas</option>
-              </select>
+              </Select>
             </label>
             <div className={styles.filterActions}>
               <button className="btn primary" type="submit">Pesquisar</button>
@@ -128,10 +129,10 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
                         <td>
                           {archived ? <span className={styles.secondary}>Consulta apenas</span> : <form action={async (formData) => { "use server"; const outcome = await moderateBusiness(formData); const next = new URLSearchParams(); if (q) next.set("q", q); if (visibility) next.set("visibilidade", visibility); next.set("result", "error" in outcome ? "error" : "success"); redirect(`/dashboard/admin/empresas?${next.toString()}`); }} className={styles.visibilityForm}>
                             <input type="hidden" name="businessId" value={business.id} />
-                            <select name="isPublic" defaultValue={business.is_public ? "true" : "false"} aria-label={`Visibilidade de ${business.name}`}>
+                            <Select name="isPublic" defaultValue={business.is_public ? "true" : "false"} aria-label={`Visibilidade de ${business.name}`}>
                               <option value="true">Pública</option>
                               <option value="false">Privada</option>
-                            </select>
+                            </Select>
                             <button className="btn primary" type="submit">Guardar</button>
                           </form>}
                         </td>
