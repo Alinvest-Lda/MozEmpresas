@@ -212,3 +212,13 @@ Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 
 - O sistema de estilos partilhado `app/styles/components.css` e `app/styles/tokens.css` foi verificado sem declarações `!important` e sem cores hexadecimais, conforme as regras Stylelint aplicadas a estes ficheiros.
 - A navegação do Super Admin foi comparada com as rotas existentes no repositório; não foi adicionada uma ligação de Notificações inexistente.
 - A Fase 1 continua aberta até confirmação do build/deployment e verificação visual final em desktop e mobile. A Fase 2 não será iniciada nesta entrega.
+
+
+### Revisão de acessibilidade e correcção final da monetização (02/11/2026)
+
+- Corrigido um separador literal escapado que podia surgir entre os indicadores da Central de monetização.
+- A navegação lateral móvel fechada passa a usar `visibility: hidden` após a transição, deixando de expor ligações fora do ecrã à navegação por teclado.
+- O token global de foco foi alterado de verde claro para verde escuro, aumentando a visibilidade do contorno de foco em fundos claros.
+- Commits: `2127a98`, `46ea0e5`, `5af70b7`.
+- A revisão estática confirmou a API dos componentes Skeleton/Button utilizados nos estados de rota e a presença do token de foco.
+- O build anterior passou, mas estes três commits exigem nova confirmação de build. A inspecção visual interactiva com sessão autenticada continua pendente; a ferramenta de navegação gráfica não está disponível nesta execução. Não considerar a Fase 1 formalmente encerrada até concluir essa verificação e executar `npm run lint` e `npm run typecheck` no ambiente do repositório.
