@@ -3176,3 +3176,45 @@ body:has(.admin-shell) .topbar,body:has(.admin-shell) .site-footer,.dashboard-sh
 .dashboard-shell:has(.admin-shell){display:block;min-height:100vh}
 body:has(.admin-shell){background:var(--color-canvas)}
 .admin-shell .dashboard-main{max-width:none;padding:0}
+
+
+/* Super Admin — ofertas: filtros e moderação com controlos partilhados */
+.admin-workspace .admin-offers-filters{
+  display:grid;
+  grid-template-columns:minmax(220px,1fr) minmax(180px,220px) auto auto;
+  align-items:end;
+  gap:12px;
+  margin:18px 0;
+  padding:16px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface);
+}
+.admin-workspace .admin-offers-filters .ui-field{min-width:0}
+.admin-workspace .admin-offers-filters .ui-field label{display:block;color:var(--ink);font-size:12px;font-weight:700}
+.admin-workspace .admin-offers-filters .ui-input{width:100%;min-width:0}
+.admin-workspace .admin-offers-filters .ui-button{min-height:var(--control-height);white-space:nowrap}
+.admin-workspace .admin-offers-summary{margin-bottom:14px}
+.admin-workspace .admin-request-form.admin-offer-moderation{
+  grid-template-columns:minmax(180px,260px) auto;
+  align-items:end;
+}
+.admin-workspace .admin-request-form.admin-offer-moderation .ui-button{grid-column:auto}
+.admin-workspace .admin-offers-pagination{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-top:18px;
+}
+@media(max-width:760px){
+  .admin-workspace .admin-offers-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-workspace .admin-offers-filters .ui-field:first-child{grid-column:1/-1}
+}
+@media(max-width:520px){
+  .admin-workspace .admin-offers-filters{grid-template-columns:minmax(0,1fr)}
+  .admin-workspace .admin-offers-filters .ui-field:first-child{grid-column:auto}
+  .admin-workspace .admin-offers-filters .ui-button,.admin-workspace .admin-offers-filters>a{width:100%}
+  .admin-workspace .admin-request-form.admin-offer-moderation{grid-template-columns:minmax(0,1fr)}
+  .admin-workspace .admin-offers-pagination{flex-wrap:wrap}
+}
