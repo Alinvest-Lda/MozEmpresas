@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { Input, Select } from "@/components/ui";
 import styles from "./usuarios.module.css";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
@@ -92,43 +93,43 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
           <form className={styles.filters} method="get">
             <label className={styles.searchField}>
               <span>Pesquisar utilizador</span>
-              <input name="q" defaultValue={q} maxLength={120} placeholder="Nome do utilizador" />
+              <Input name="q" defaultValue={q} maxLength={120} placeholder="Nome do utilizador" />
             </label>
             <label>
               <span>Tipo de conta</span>
-              <select name="tipo" defaultValue={type}>
+              <Select name="tipo" defaultValue={type}>
                 <option value="">Todos os tipos</option>
                 <option value="empresa">Empresa</option>
                 <option value="parceiro">Parceiro</option>
                 <option value="profissional">Profissional</option>
-              </select>
+              </Select>
             </label>
             <label>
               <span>Estado da conta</span>
-              <select name="estado" defaultValue={status}>
+              <Select name="estado" defaultValue={status}>
                 <option value="">Todos os estados</option>
                 <option value="ACTIVE">Activo</option>
                 <option value="INACTIVE">Inactivo</option>
                 <option value="SUSPENDED">Suspenso</option>
                 <option value="DELETED">Eliminado</option>
-              </select>
+              </Select>
             </label>
             <label>
               <span>Acesso administrativo</span>
-              <select name="acesso" defaultValue={access}>
+              <Select name="acesso" defaultValue={access}>
                 <option value="">Todos os acessos</option>
                 <option value="admin_activo">Activo</option>
                 <option value="admin_inactivo">Inactivo</option>
                 <option value="sem_admin">Sem acesso global</option>
-              </select>
+              </Select>
             </label>
             <label>
               <span>Associação empresarial</span>
-              <select name="associacao" defaultValue={association}>
+              <Select name="associacao" defaultValue={association}>
                 <option value="">Todas</option>
                 <option value="com_empresa">Com empresa</option>
                 <option value="sem_empresa">Sem empresa</option>
-              </select>
+              </Select>
             </label>
             <div className={styles.filterActions}>
               <button className="btn primary" type="submit">Pesquisar</button>
