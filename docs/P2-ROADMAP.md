@@ -53,3 +53,26 @@
 - O teste PostgreSQL passou no workflow CI `41492256029`. A validação geral (auditoria, testes unitários, typecheck, lint e build) ainda estava em execução no momento do registo.
 - Nenhuma migração foi aplicada à base de dados activa; o teste usa exclusivamente o serviço PostgreSQL efémero do GitHub Actions.
 - Próxima cobertura: acrescentar testes de autorização negativa e concorrência para operações comerciais e pedidos de serviços, sem usar dados de produção.
+
+
+### Reavaliação do histórico e expansão da P2.1 — 02/11/2026
+
+A revisão dos commits, testes existentes e relatórios anteriores identificou cobertura já concluída. Estes itens deixam de ser tratados como trabalho pendente e não serão repetidos:
+
+- Runner Vitest no CI, auditoria de dependências, typecheck, lint e build: já fazem parte do job `validate`.
+- Validação de eventos publicitários e elegibilidade de campanhas: coberta por `tests/advertising-event-validation.test.ts`.
+- Transições de pedidos comerciais e publicações do marketplace: cobertas por `tests/commerce-state-machine.test.ts`.
+- Transições de oportunidades e candidaturas: cobertas por `tests/opportunity-state-machine.test.ts`.
+- Permissões de gestão empresarial (proprietário, papéis de gestão, viewer, empresa arquivada e associação cruzada): cobertas por `tests/business-permissions.test.ts`.
+- Hardening do `search_path` de funções/procedures SECURITY DEFINER e contexto/membership de parceiro: já verificados em PostgreSQL descartável pelo job `migration-hardening`.
+
+Implementado nesta tranche:
+- Validador partilhado de anexos para marketplace e publicações, com testes para allowlist MIME, ficheiros vazios, contagem máxima e limite de 10 MiB.
+- Validação extraída e testável dos pedidos de serviços, incluindo UUIDs, notas até 2.000 caracteres, estados conhecidos e preço não negativo com vírgula decimal.
+- Actualização administrativa de pedidos de serviços agora usa compare-and-set pelo estado previamente lido; duas actualizações concorrentes não sobrescrevem silenciosamente uma à outra.
+- Testes adicionados em `tests/attachment-validation.test.ts` e `tests/service-validation.test.ts`.
+
+Ficam fora desta tranche, por exigirem ambiente/schema reconciliado ou contrato de negócio ainda não confirmado: testes end-to-end de RLS entre comprador/vendedor, falhas e compensação de Storage para anexos, concorrência de capacidade de campanhas M-Pesa, ciclo financeiro de créditos/pagamentos, transições completas de pedidos de serviços e validação visual autenticada. A suspensão da reconciliação da Fase 0 e da frente P0–P5 mantém-se.
+
+Commits desta tranche: `fc6bd51`, `6c8c6be`, `a904bb7`, `f148057`, `8c44798`, `62c908e`, `7e3a78b`.
+CI gerado para esta sequência: workflows `41494982052`, `41494990423`, `41495141211`, `41495151081` e `41495158198`; resultados finais a confirmar. Nenhuma alteração foi feita ao Supabase activo, RLS, grants ou dados.
