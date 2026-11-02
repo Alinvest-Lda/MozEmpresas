@@ -113,6 +113,17 @@ jobs:
           end;
           $verify$;
           SQL
+      - name: Verify marketplace RLS, service requests and notifications on isolated PostgreSQL
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/ci/setup-marketplace-integration.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20260928120000_commerce_partner_service_audit_foundation.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20260929233000_commerce_seller_order_actions.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261004173000_commerce_participant_access_and_order_progress.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261012170000_marketplace_order_notifications.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261026100000_align_commerce_order_update_policy.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/ci/verify-marketplace-integration.sql
       - name: Verify partner account membership and context on isolated PostgreSQL
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
