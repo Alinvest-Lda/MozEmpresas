@@ -14,13 +14,13 @@ function mockSupabase(fixture: Fixture): SupabaseClient {
       const filters: Record<string, unknown> = {};
       let allowedRoles: string[] | undefined;
       const query = {
-        select() { return query; },
-        eq(column: string, value: unknown) { filters[column] = value; return query; },
-        is(column: string, value: unknown) { filters[column] = value; return query; },
+        select() { return this; },
+        eq(column: string, value: unknown) { filters[column] = value; return this; },
+        is(column: string, value: unknown) { filters[column] = value; return this; },
         in(column: string, values: unknown[]) {
           if (column === "role") allowedRoles = values as string[];
           else filters[column] = values;
-          return query;
+          return this;
         },
         async maybeSingle() {
           if (table === "businesses") {
@@ -42,7 +42,7 @@ function mockSupabase(fixture: Fixture): SupabaseClient {
           return { data: null, error: null };
         },
       };
-      return query;
+      return this;
     },
   } as unknown as SupabaseClient;
 }
