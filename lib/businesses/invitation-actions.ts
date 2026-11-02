@@ -4,7 +4,7 @@ import { createHash, randomBytes } from "crypto";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { requireNormalAccount } from "@/lib/auth/access";
 
 const schema = z.object({
   businessId: z.string().uuid(),
@@ -20,18 +20,10 @@ export async function inviteBusinessMember(_state: { error?: string; success?: b
   });
   if (!parsed.success) return { error: "Dados do convite inválidos." };
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Sessão expirada." };
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("account_status")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (profileError || !profile || (profile.account_status && profile.account_status !== "ACTIVE")) {
-    return { error: "A sua conta não está activa ou não foi possível validar o seu estado." };
-  }
+  const context = await requireNormalAccount();
+  if (!context.user) return { error: "Sessão expirada." };
+  const supabase = context.supabase;
+  const user = context.user;
 
   const { data: ownedBusiness } = await supabase.from("businesses").select("id,name").eq("id", parsed.data.businessId).eq("owner_id", user.id).is("archived_at", null).maybeSingle();
   let business = ownedBusiness;
