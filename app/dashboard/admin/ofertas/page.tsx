@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { moderateListing } from "@/lib/admin/actions";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { redirect } from "next/navigation";
+import { Button, Field, Input, Select } from "@/components/ui";
 
 type SearchParams = Promise<{ q?: string; status?: string; page?: string; result?: string }>;
 
@@ -37,13 +38,17 @@ export default async function AdminOffersPage({ searchParams }: { searchParams?:
         <a className="btn" href="/dashboard/admin">Voltar ao painel</a>
       </div>
       {result ? <div className="notice" role={result === "error" ? "alert" : "status"}>{result === "success" ? "Estado da oferta actualizado." : "Não foi possível actualizar a oferta. Verifique os dados e as permissões."}</div> : null}
-      <form method="get" className="admin-offers-filters" style={{display:"flex",flexWrap:"wrap",alignItems:"end",gap:12,margin:"18px 0",padding:16,border:"1px solid var(--border,#e1e9e6)",borderRadius:12,background:"var(--surface,#fff)"}}>
-        <label style={{display:"grid",gap:6,flex:"1 1 260px"}}><span>Pesquisar pelo título</span><input name="q" value={query} maxLength={100} placeholder="Ex.: material de escritório" /></label>
-        <label style={{display:"grid",gap:6,flex:"0 1 220px"}}><span>Estado</span><select name="status" defaultValue={status}><option value="">Todos os estados</option>{listingStatuses.map((value)=><option value={value} key={value}>{value}</option>)}</select></label>
-        <button className="btn primary" type="submit">Filtrar</button>
-        <a className="btn" href="/dashboard/admin/ofertas">Limpar filtros</a>
+      <form method="get" className="admin-offers-filters">
+        <Field label="Pesquisar pelo título" htmlFor="offers-query">
+          <Input id="offers-query" name="q" value={query} maxLength={100} placeholder="Ex.: material de escritório" />
+        </Field>
+        <Field label="Estado" htmlFor="offers-status">
+          <Select id="offers-status" name="status" defaultValue={status}><option value="">Todos os estados</option>{listingStatuses.map((value)=><option value={value} key={value}>{value}</option>)}</Select>
+        </Field>
+        <Button variant="primary" type="submit">Filtrar</Button>
+        <a className="ui-button ui-button-secondary" href="/dashboard/admin/ofertas">Limpar filtros</a>
       </form>
-      <div className="directory-results-summary" style={{marginBottom:14}}><strong>{total.toLocaleString("pt-MZ")}</strong><span>ofertas encontradas · página {safePage} de {pages}</span></div>
+      <div className="directory-results-summary admin-offers-summary"><strong>{total.toLocaleString("pt-MZ")}</strong><span>ofertas encontradas · página {safePage} de {pages}</span></div>
       {error ? <div className="notice" role="alert">Não foi possível carregar as ofertas. Tente novamente ou verifique as permissões.</div> : null}
       <div className="admin-request-list">
         {listings?.length ? listings.map((listing) => {
@@ -53,15 +58,17 @@ export default async function AdminOffersPage({ searchParams }: { searchParams?:
               <div><span className="dashboard-kicker">{listing.type === "PRODUCT" ? "Produto" : listing.type === "SERVICE" ? "Serviço" : listing.type} · {business?.name || "Sem empresa associada"}</span><h3>{listing.title}</h3><small>Registada em {new Date(listing.created_at).toLocaleString("pt-MZ")}</small></div>
               <span className="tag">{listing.status}</span>
             </div>
-            <form action={async (formData) => { "use server"; const outcome = await moderateListing(formData); redirect(`/dashboard/admin/ofertas?result=${"error" in outcome ? "error" : "success"}&q=${encodeURIComponent(query)}&status=${encodeURIComponent(status)}&page=${safePage}`); }} className="admin-request-form">
+            <form action={async (formData) => { "use server"; const outcome = await moderateListing(formData); redirect(`/dashboard/admin/ofertas?result=${"error" in outcome ? "error" : "success"}&q=${encodeURIComponent(query)}&status=${encodeURIComponent(status)}&page=${safePage}`); }} className="admin-request-form admin-offer-moderation">
               <input type="hidden" name="listingId" value={listing.id} />
-              <label><span>Estado da oferta</span><select name="status" defaultValue={listing.status}>{listingStatuses.map((value)=><option value={value} key={value}>{value}</option>)}</select></label>
-              <button className="btn primary" type="submit">Actualizar estado</button>
+              <Field label="Estado da oferta" htmlFor={`offer-status-${listing.id}`}>
+                <Select id={`offer-status-${listing.id}`} name="status" defaultValue={listing.status}>{listingStatuses.map((value)=><option value={value} key={value}>{value}</option>)}</Select>
+              </Field>
+              <Button variant="primary" type="submit">Actualizar estado</Button>
             </form>
           </article>;
         }) : !error ? <div className="admin-request-empty"><strong>Nenhuma oferta corresponde aos filtros.</strong><span>Altere o termo de pesquisa ou seleccione outro estado.</span></div> : null}
       </div>
-      <nav aria-label="Paginação de ofertas" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginTop:18}}>
+      <nav aria-label="Paginação de ofertas" className="admin-offers-pagination">
         {safePage > 1 ? <a className="btn" href={`/dashboard/admin/ofertas?q=${encodeURIComponent(query)}&status=${encodeURIComponent(status)}&page=${safePage-1}`}>← Anterior</a> : <span />}
         <span className="muted">A mostrar {total ? ((safePage-1)*pageSize)+1 : 0}–{Math.min(safePage*pageSize,total)} de {total.toLocaleString("pt-MZ")}</span>
         {safePage < pages ? <a className="btn" href={`/dashboard/admin/ofertas?q=${encodeURIComponent(query)}&status=${encodeURIComponent(status)}&page=${safePage+1}`}>Seguinte →</a> : <span />}
