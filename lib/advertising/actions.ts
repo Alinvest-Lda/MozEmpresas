@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireNormalAccount } from "@/lib/auth/access";
 import {
   calculateCampaignPrice,
   isUuid,
@@ -13,10 +13,9 @@ import {
 const text = (v: FormDataEntryValue | null) => typeof v === "string" ? v.trim() : "";
 
 async function auth() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login?next=/dashboard/publicidade");
-  return { supabase, userId: user.id };
+  const context = await requireNormalAccount();
+  if (!context.user) redirect("/login?next=/dashboard/publicidade");
+  return { supabase: context.supabase, userId: context.user.id };
 }
 
 async function manages(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, businessId: string) {
