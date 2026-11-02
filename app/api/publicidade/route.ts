@@ -34,8 +34,11 @@ export const POST = withApiObservability("api.advertising_request", async (reque
   const rate = await enforceRateLimit(request, { scope: "public-advertising-request", limit: 5, windowSeconds: 60 });
   if (!rate.allowed) return rateLimitResponse(rate.unavailable);
 
+  const parsed = schema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Verifique os dados preenchidos." }, { status: 400 });
+
   try {
-    const payload = schema.parse(await request.json());
+    const payload = parsed.data;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -108,6 +111,6 @@ export const POST = withApiObservability("api.advertising_request", async (reque
     }
     return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json({ error: "Verifique os dados preenchidos." }, { status: 400 });
+    return NextResponse.json({ error: "Não foi possível registar o pedido." }, { status: 500 });
   }
 });
