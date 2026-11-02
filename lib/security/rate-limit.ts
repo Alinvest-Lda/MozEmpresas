@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { isIP } from "node:net";
 import postgres from "postgres";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
@@ -40,12 +41,21 @@ export function createAdminClient() {
   });
 }
 
+export function resolveTrustedClientAddress(
+  request: Request,
+  trustedHeader = process.env.TRUSTED_CLIENT_IP_HEADER || "x-vercel-forwarded-for",
+): string | null {
+  const forwarded = request.headers.get(trustedHeader);
+  if (!forwarded) return null;
+  const address = forwarded.split(",")[0]?.trim() ?? "";
+  return isIP(address) ? address : null;
+}
+
 export async function enforceRateLimit(request: Request, options: RateLimitOptions) {
   // Trust only the configured reverse-proxy header. Do not trust arbitrary
   // x-forwarded-for values supplied by clients on an unconfigured host.
-  const trustedHeader = process.env.TRUSTED_CLIENT_IP_HEADER || "x-vercel-forwarded-for";
-  const forwarded = request.headers.get(trustedHeader);
-  const clientAddress = forwarded?.split(",")[0]?.trim().slice(0, 128) || "unknown";
+  const clientAddress = resolveTrustedClientAddress(request);
+  if (!clientAddress) return { allowed: false, unavailable: true } as const;
   const keyHash = createHash("sha256")
     .update(`${options.scope}:${clientAddress}`)
     .digest("hex");
