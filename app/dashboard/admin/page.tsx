@@ -4,6 +4,7 @@ import { updatePlatformServiceRequest } from "@/lib/services/actions";
 import AdminAnalytics from "./admin-analytics";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { redirect } from "next/navigation";
+import { Button, Field, Input, Select } from "@/components/ui";
 
 const statuses = [
   ["REQUESTED", "Recebido"],
@@ -109,14 +110,14 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
       </div>
     </section>
 
-    {result ? <div className="notice" role={result === "error" ? "alert" : "status"} style={{ marginBottom: 16 }}>
+    {result ? <div className="notice admin-result-notice" role={result === "error" ? "alert" : "status"}>
       {result === "success"
         ? action === "business" ? "Visibilidade da empresa actualizada." : action === "listing" ? "Estado da oferta actualizado." : "Pedido de serviço actualizado."
         : action === "business" ? "Não foi possível actualizar a empresa. Verifique os dados e as permissões." : action === "listing" ? "Não foi possível actualizar a oferta. Verifique os dados e as permissões." : "Não foi possível actualizar o pedido. Verifique os dados e as permissões."}
     </div> : null}
 
-    <section className="dashboard-section" id="pedidos-servico" style={{marginTop:18}}>
-      {staleOnly ? <p className="notice" style={{marginBottom:14}}>Filtro activo: pedidos não concluídos nem cancelados, sem actualização há mais de 7 dias. <a href="/dashboard/admin#pedidos-servico">Ver todos os pedidos</a></p> : null}
+    <section className="dashboard-section admin-request-section" id="pedidos-servico">
+      {staleOnly ? <p className="notice admin-filter-notice">Filtro activo: pedidos não concluídos nem cancelados, sem actualização há mais de 7 dias. <a href="/dashboard/admin#pedidos-servico">Ver todos os pedidos</a></p> : null}
       <div className="dashboard-section-head">
         <div><span className="dashboard-kicker">Operação prioritária</span><h2>Pedidos de serviços MozEmpresas</h2><p>Acompanhe os pedidos recebidos e actualize o estado operacional.</p></div>
         <span className="directory-results-summary"><strong>{requests?.length ?? 0}</strong><span>pedidos recentes</span></span>
@@ -131,17 +132,21 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
               <div><span className="dashboard-kicker">{service?.name || "Serviço MozEmpresas"}</span><h3>{business?.name || "Pedido individual"}</h3><small>{new Date(request.created_at).toLocaleString("pt-MZ")}</small></div>
               <span className="tag">{statusLabel.get(request.status as typeof statuses[number][0]) || request.status}</span>
             </div>
-            <div className="admin-request-meta" style={{display:"flex",flexWrap:"wrap",gap:"8px 16px",marginTop:10}}>
+            <div className="admin-request-meta">
               <span>Valor proposto: <strong>{request.requested_price != null ? `${request.currency || "MZN"} ${Number(request.requested_price).toLocaleString("pt-MZ")}` : "Por definir"}</strong></span>
               <span>Última actualização: {new Date(request.updated_at || request.created_at).toLocaleDateString("pt-MZ")}</span>
             </div>
             <p>{request.notes || "Sem observações adicionais."}</p>
             <form action={async (formData) => { "use server"; const outcome = await updatePlatformServiceRequest(formData); redirect(`/dashboard/admin?result=${"error" in outcome ? "error" : "success"}&action=service`); }} className="admin-request-form">
               <input type="hidden" name="requestId" value={request.id} />
-              <label><span>Estado</span><select name="status" defaultValue={request.status}>{statuses.map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-              <label><span>Valor proposto</span><input name="requestedPrice" type="number" min="0" step="0.01" defaultValue={request.requested_price ?? ""} placeholder="Sob consulta" /></label>
+              <Field label="Estado" htmlFor={`request-status-${request.id}`}>
+                <Select id={`request-status-${request.id}`} name="status" defaultValue={request.status}>{statuses.map(([value,label]) => <option value={value} key={value}>{label}</option>)}</Select>
+              </Field>
+              <Field label="Valor proposto" htmlFor={`request-price-${request.id}`} hint="Deixe em branco se ainda não houver orçamento.">
+                <Input id={`request-price-${request.id}`} name="requestedPrice" type="number" min="0" step="0.01" defaultValue={request.requested_price ?? ""} placeholder="Por definir" />
+              </Field>
               <p className="muted wide">A descrição enviada pelo solicitante é preservada durante as actualizações de estado e orçamento.</p>
-              <button className="btn primary" type="submit">Actualizar pedido</button>
+              <Button variant="primary" type="submit">Actualizar pedido</Button>
             </form>
           </article>;
         }) : <div className="admin-request-empty"><strong>Nenhum pedido de serviço recebido.</strong><span>Quando uma empresa solicitar um add-on, o pedido aparecerá aqui.</span></div>}
