@@ -43,3 +43,13 @@
 - Não executar migrações históricas nem modificar dados de produção como parte dos testes.
 - Manter compatibilidade com PostgreSQL independente e a camada de adaptação existente.
 - Cada entrega deve indicar commit, verificações efectivamente executadas e limitações remanescentes.
+
+
+## Progresso de execução — 02/11/2026
+
+### P2.1 — isolamento de conta parceira em PostgreSQL
+- Acrescentados fixtures descartáveis em `scripts/ci/setup-partner-account-hardening.sql` e asserções em `scripts/ci/verify-partner-account-hardening.sql`.
+- O job `migration-hardening` aplica a migração `20261101111659_harden_partner_account_memberships.sql` numa instância PostgreSQL efémera e verifica a restrição de uma única associação activa por utilizador, a preservação de associações inactivas e o comportamento fail-closed dos helpers `current_partner_account_id()` e `partner_account_context()`.
+- O teste PostgreSQL passou no workflow CI `41492256029`. A validação geral (auditoria, testes unitários, typecheck, lint e build) ainda estava em execução no momento do registo.
+- Nenhuma migração foi aplicada à base de dados activa; o teste usa exclusivamente o serviço PostgreSQL efémero do GitHub Actions.
+- Próxima cobertura: acrescentar testes de autorização negativa e concorrência para operações comerciais e pedidos de serviços, sem usar dados de produção.
