@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireNormalAccount } from "@/lib/auth/access";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { canManageBusiness } from "@/lib/businesses/permissions";
 import { parseServiceRequestInput, parseServiceRequestUpdateInput } from "@/lib/services/validation";
@@ -14,9 +14,10 @@ export async function requestPlatformService(formData: FormData) {
   });
   if (!parsed.success) return { error: "Verifique os dados do pedido." };
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Inicie sessão para solicitar este serviço." };
+  const context = await requireNormalAccount();
+  if (!context.user) return { error: "Inicie sessão para solicitar este serviço." };
+  const supabase = context.supabase;
+  const user = context.user;
 
   if (parsed.data.businessId && !(await canManageBusiness(supabase, user.id, parsed.data.businessId))) {
     return { error: "Não tem autorização para solicitar o serviço em nome desta empresa." };
