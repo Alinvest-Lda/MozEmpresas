@@ -13,3 +13,16 @@
 @media(max-width:760px){.admin-design-grid{grid-template-columns:1fr}.admin-design-fields{grid-template-columns:1fr}.ui-page-header{align-items:flex-start;flex-direction:column}.ui-pagination{flex-wrap:wrap}}
 
 }
+
+@layer components {
+.admin-skip-link{position:fixed;top:8px;left:8px;z-index:300;transform:translateY(-160%);padding:10px 14px;border:2px solid var(--color-brand);border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-text);font-size:var(--font-size-sm);font-weight:750;text-decoration:none}
+.admin-skip-link:focus{transform:translateY(0);outline:3px solid var(--color-focus);outline-offset:3px}
+.admin-shell :is(a,button,[tabindex="-1"]):focus-visible{outline:3px solid var(--color-focus);outline-offset:3px;box-shadow:none}
+.admin-menu-button{min-width:36px;min-height:36px;align-items:center;justify-content:center;border-radius:8px;cursor:pointer}
+.admin-menu-button:hover{background:var(--color-surface-muted)}
+.admin-nav-link:focus-visible,.admin-nav-active:focus-visible{outline-offset:2px}
+.admin-content:focus{outline:none}
+@media(prefers-reduced-motion:reduce){
+  .admin-shell *, .admin-shell *::before, .admin-shell *::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+}
