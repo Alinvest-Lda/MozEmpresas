@@ -1,8 +1,21 @@
-import { getSuperAdminContext } from "@/lib/auth/super-admin";
+"import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import styles from "./admin-analytics.module.css";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const dateKey = (date: Date) => date.toISOString().slice(0, 10);
+const MAPUTO_TIME_ZONE = "Africa/Maputo";
+const maputoDateParts = new Intl.DateTimeFormat("en-GB", {
+  timeZone: MAPUTO_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+const dateKey = (date: Date) => {
+  const parts = Object.fromEntries(
+    maputoDateParts.formatToParts(date).map(({ type, value }) => [type, value]),
+  );
+  return `${parts.year}-${parts.month}-${parts.day}`;
+};
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("pt-MZ").format(value);
@@ -13,9 +26,18 @@ export default async function AdminAnalytics() {
   if (!authorized) return null;
 
   const now = new Date();
-  const since = new Date(now.getTime() - 13 * DAY_MS);
+  const todayParts = Object.fromEntries(
+    maputoDateParts.formatToParts(now).map(({ type, value }) => [type, value]),
+  );
+  const today = new Date(Date.UTC(
+    Number(todayParts.year),
+    Number(todayParts.month) - 1,
+    Number(todayParts.day),
+  ));
+  // Maputo is UTC+02:00: include the full first calendar day in the 14-day window.
+  const since = new Date(today.getTime() - 13 * DAY_MS - 2 * 60 * 60 * 1000);
   const sinceIso = since.toISOString();
-  const [
+  const [ 
     { count: totalBusinesses },
     { count: totalUsers },
     { count: totalListings },
@@ -36,10 +58,19 @@ export default async function AdminAnalytics() {
   ]);
 
   const days = Array.from({ length: 14 }, (_, index) => {
-    const day = new Date(now);
-    day.setHours(0, 0, 0, 0);
-    day.setDate(day.getDate() - (13 - index));
-    return { key: dateKey(day), label: day.toLocaleDateString("pt-MZ", { day: "2-digit", month: "short" }), businesses: 0, users: 0, listings: 0, requests: 0 };
+    const day = new Date(today.getTime() - (13 - index) * DAY_MS);
+    return {
+      key: dateKey(day),
+      label: day.toLocaleDateString("pt-MZ", {
+        timeZone: MAPUTO_TIME_ZONE,
+        day: "2-digit",
+        month: "short",
+      }),
+      businesses: 0,
+      users: 0,
+      listings: 0,
+      requests: 0,
+    };
   });
   const dayMap = new Map(days.map((day) => [day.key, day]));
   const addActivity = (rows: { created_at: string }[] | null, key: "businesses" | "users" | "listings" | "requests") => {
@@ -113,7 +144,7 @@ export default async function AdminAnalytics() {
               </div>;
             })}
           </div>
-          <p className={styles.chartFootnote}>O gráfico mostra novos registos por dia; não representa utilizadores activos nem visitas.</p>
+          <p className={styles.chartFootnote}>O gráfico mostra novos registos por dia; não representa utilizadores activos nem visitas. As datas seguem o fuso horário de Moçambique.</p>
         </section>
       </div>
     </section>
