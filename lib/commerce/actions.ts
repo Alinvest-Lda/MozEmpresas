@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { canManageBusiness } from "@/lib/businesses/permissions";
 import { canTransitionCommerceOrder, canTransitionListing, commerceOrderTransitions } from "@/lib/commerce/state-machine";
+import { MARKETPLACE_ATTACHMENT_TYPES, validateAttachmentSelection } from "@/lib/publications/attachment-validation";
 
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -56,10 +57,13 @@ export async function createListing(formData: FormData) {
   const base = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "oferta";
   const slug = `${base}-${crypto.randomUUID().slice(0, 8)}`;
 
-  const attachments = formData.getAll("attachments").filter((value): value is File => value instanceof File && value.size > 0);
-  if (attachments.length > 10) redirect("/dashboard/marketplace?publish=error");
-  const allowed = new Set(["image/jpeg","image/png","image/webp","application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]);
-  if (attachments.some((file) => !allowed.has(file.type) || file.size > 10 * 1024 * 1024)) redirect("/dashboard/marketplace?publish=error");
+  const attachmentValidation = validateAttachmentSelection(formData.getAll("attachments"), {
+    maxFiles: 10,
+    maxBytesPerFile: 10 * 1024 * 1024,
+    allowedMimeTypes: MARKETPLACE_ATTACHMENT_TYPES,
+  });
+  if (!attachmentValidation.files) redirect("/dashboard/marketplace?publish=error");
+  const attachments = attachmentValidation.files;
 
   const { data: createdListing, error } = await supabase.from("listings").insert({
     owner_id: userId,
