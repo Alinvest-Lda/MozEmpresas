@@ -144,3 +144,13 @@ Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 
 - Validação de produção pendente para esta tranche; confirmar o deployment da sequência final de commits antes de declarar a migração concluída.
 
 - A página Central de monetização também passou a consumir tokens de cor partilhados; o layout, os indicadores e as consultas existentes foram preservados. Não foram adicionados formulários ou acções novas, nem alterados dados. Commits: `63a0d36`, `d1b0063`.
+
+
+### Visão geral do Super Admin — correcção de datas (02/11/2026)
+
+- A agregação diária do painel analítico passou a usar explicitamente o fuso horário `Africa/Maputo` para gerar as chaves e os rótulos dos 14 dias.
+- O limite inicial da consulta foi ajustado para incluir o dia de calendário completo em Moçambique, em vez de começar exactamente 13 períodos de 24 horas antes do momento do carregamento.
+- O texto de apoio do gráfico esclarece que a série representa novos registos e não utilizadores activos nem visitas.
+- Não foram alteradas consultas de totais, tabelas, políticas, permissões ou dados. Nenhuma alteração foi feita ao Supabase.
+- Commit: `8d39df6`.
+- Validação de produção e build pendentes; não marcar a correcção como concluída antes da confirmação do deployment.
