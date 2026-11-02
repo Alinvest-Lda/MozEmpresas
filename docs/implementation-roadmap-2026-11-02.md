@@ -232,3 +232,14 @@ Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 
 - Commit da limpeza: `961f62d`.
 - A Fase 1 permanece tecnicamente validada por CI e deploy, mas a inspecção visual autenticada em desktop e mobile ainda não foi executada nesta sessão. Não declarar essa verificação como concluída nem avançar para alterações dependentes de esquema na Fase 2 até esse controlo visual.
 - Nenhuma alteração foi feita ao Supabase, schema, grants, RLS ou dados.
+
+
+### Início da P2.1 — testes PostgreSQL para isolamento de parceiros (02/11/2026)
+
+- A pedido do responsável do projecto, o desenvolvimento prosseguiu após confirmação do deployment de produção.
+- O CI passou a executar a migração já existente de hardening de memberships num PostgreSQL descartável, com fixtures e verificações específicas.
+- Cenários cobertos: associação activa única por utilizador, associação histórica inactiva permitida, resolução do contexto e rejeição de perfil inactivo, perfil não parceiro, conta suspensa e utilizador sem membership.
+- O job PostgreSQL do workflow `41492256029` passou. O job geral `validate` ainda estava em execução no momento desta actualização.
+- Ficheiros adicionados: `scripts/ci/setup-partner-account-hardening.sql` e `scripts/ci/verify-partner-account-hardening.sql`; workflow actualizado em `.github/workflows/ci.yml`.
+- Nenhuma alteração ao Supabase activo, DDL de produção, grants, RLS ou dados.
+- A P2.1 continua aberta: esta tranche cobre o isolamento de conta parceira, não substitui os testes restantes de marketplace, anexos, serviços, publicidade e operações administrativas.
