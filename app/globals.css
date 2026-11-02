@@ -3003,6 +3003,15 @@ body:has(.partner-shell) > footer {
 .admin-workspace .admin-request-card>p{font-size:13px;line-height:1.6;color:#4f5e5a;margin:12px 0}
 .admin-workspace .tag{display:inline-flex;align-items:center;justify-content:center;max-width:100%;border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:11px;line-height:1.35;font-weight:700;white-space:normal;text-align:center}
 .admin-workspace .admin-request-meta{font-size:12px;line-height:1.55;color:var(--muted)}
+.admin-workspace .admin-request-meta{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px}
+.admin-workspace .admin-result-notice{margin-bottom:16px}
+.admin-workspace .admin-filter-notice{margin-bottom:14px}
+.admin-workspace .admin-request-section{margin-top:18px}
+.admin-workspace .admin-request-form .ui-field{min-width:0}
+.admin-workspace .admin-request-form .ui-field label{display:block;color:#42514d;font-size:12px;font-weight:700}
+.admin-workspace .admin-request-form .ui-input{width:100%;min-width:0}
+.admin-workspace .admin-request-form .ui-button{grid-column:1/-1;min-height:var(--control-height);border-radius:9px}
+
 .admin-workspace .admin-request-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:end;gap:13px;margin-top:14px;padding-top:14px;border-top:1px solid #edf1ef}
 .admin-workspace .admin-request-form label,.admin-workspace .commerce-form-grid label{display:grid;gap:7px;min-width:0;color:#42514d;font-size:12px;font-weight:700}
 .admin-workspace .admin-request-form input,.admin-workspace .admin-request-form select,.admin-workspace .admin-request-form textarea,.admin-workspace .commerce-form-grid input,.admin-workspace .commerce-form-grid select,.admin-workspace .commerce-form-grid textarea{width:100%;min-width:0;min-height:var(--control-height);border:1px solid var(--line-strong);border-radius:9px;padding:10px 12px;background:#fff;color:var(--ink);font:inherit;font-size:13px}
