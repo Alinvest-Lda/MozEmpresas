@@ -174,3 +174,13 @@ Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 
 - Não foram alterados o modelo de um utilizador por organização parceira, as permissões, a base de dados ou as políticas Supabase.
 - Commits: `5f4857d`, `4906af4`, `9140167`.
 - Validação do deployment desta tranche pendente.
+
+
+### Parceiros — consolidação visual da gestão de acessos — 02/11/2026
+
+- A paleta específica da página de acessos de parceiros foi centralizada em tokens CSS, mantendo os valores RGB equivalentes aos hexadecimais existentes.
+- O formulário de convite e o filtro de estado passaram a utilizar os controlos partilhados `Input` e `Select`.
+- Mantidos o convite por email, validade, RPC de listagem, estados, filtro GET, link privado de activação e botão de submissão especializado.
+- Não foram alterados o fluxo de autenticação, o modelo de um utilizador por organização, as RPCs, a base de dados ou as políticas.
+- Commits adicionais: `f149335`, `abe633e`.
+- Validação do deployment final desta sequência pendente.
