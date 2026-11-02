@@ -1,0 +1,28 @@
+"use client";
+import { useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
+import Link from "next/link";
+
+type ButtonVariant="primary"|"secondary"|"quiet"|"danger";
+export function Button({variant="secondary",className="",...props}:ButtonHTMLAttributes<HTMLButtonElement>&{variant?:ButtonVariant}){return <button className={`ui-button ui-button-${variant} ${className}`.trim()} {...props}/>;}
+export function Input(props:InputHTMLAttributes<HTMLInputElement>){return <input {...props} className={`ui-input ${props.className??""}`.trim()}/>;}
+export function Select(props:SelectHTMLAttributes<HTMLSelectElement>){return <select {...props} className={`ui-input ${props.className??""}`.trim()}/>;}
+export function Field({label,hint,error,children,htmlFor}:{label:string;hint?:string;error?:string;children:ReactNode;htmlFor?:string}){return <div className="ui-field"><label htmlFor={htmlFor}>{label}</label>{children}{error?<span className="ui-field-error" role="alert">{error}</span>:hint?<small>{hint}</small>:null}</div>;}
+export function Card({children,className=""}:{children:ReactNode;className?:string}){return <section className={`ui-card ${className}`.trim()}>{children}</section>;}
+const states:Record<string,{label:string;tone:string}>={active:{label:"Activo",tone:"success"},confirmed:{label:"Confirmado",tone:"success"},pending:{label:"Pendente",tone:"pending"},requested:{label:"Por analisar",tone:"warning"},failed:{label:"Falhado",tone:"danger"},rejected:{label:"Recusado",tone:"danger"},inactive:{label:"Inactivo",tone:"neutral"},draft:{label:"Rascunho",tone:"neutral"}};
+export function StatusPill({status,label}:{status:string;label?:string}){const item=states[status.toLowerCase()]??{label:status,tone:"neutral"};return <span className={`ui-status ui-tone-${item.tone}`}>{label??item.label}</span>;}
+export function Badge({children,tone="neutral"}:{children:ReactNode;tone?:"neutral"|"success"|"warning"|"danger"|"info"}){return <span className={`ui-badge ui-tone-${tone}`}>{children}</span>;}
+export function Table({children,label}:{children:ReactNode;label:string}){return <div className="ui-table-wrap"><table className="ui-table" aria-label={label}>{children}</table></div>;}
+export function TableHead({children}:{children:ReactNode}){return <thead>{children}</thead>;}
+export function TableBody({children}:{children:ReactNode}){return <tbody>{children}</tbody>;}
+export function TableRow({children}:{children:ReactNode}){return <tr>{children}</tr>;}
+export function TableCell({children,header=false}:{children:ReactNode;header?:boolean}){return header?<th scope="col">{children}</th>:<td>{children}</td>;}
+export function Tabs({items,defaultValue}:{items:{value:string;label:string}[];defaultValue:string}){const[active,setActive]=useState(defaultValue);return <div className="ui-tabs" role="tablist" aria-label="Separadores">{items.map(item=><button key={item.value} type="button" role="tab" aria-selected={active===item.value} onClick={()=>setActive(item.value)}>{item.label}</button>)}</div>;}
+export function Dialog({open,title,children,onClose}:{open:boolean;title:string;children:ReactNode;onClose:()=>void}){if(!open)return null;return <div className="ui-overlay" onMouseDown={onClose}><section role="dialog" aria-modal="true" aria-label={title} className="ui-dialog" onMouseDown={e=>e.stopPropagation()}><header><strong>{title}</strong><Button variant="quiet" onClick={onClose}>Fechar</Button></header><div>{children}</div></section></div>;}
+export function Drawer({open,title,children,onClose}:{open:boolean;title:string;children:ReactNode;onClose:()=>void}){if(!open)return null;return <div className="ui-overlay ui-overlay-drawer" onMouseDown={onClose}><aside role="dialog" aria-modal="true" aria-label={title} className="ui-drawer" onMouseDown={e=>e.stopPropagation()}><header><strong>{title}</strong><Button variant="quiet" onClick={onClose}>Fechar</Button></header><div>{children}</div></aside></div>;}
+export function Toast({children,tone="success"}:{children:ReactNode;tone?:"success"|"danger"|"warning"}){return <div className={`ui-toast ui-tone-${tone}`} role={tone==="danger"?"alert":"status"}>{children}</div>;}
+export function EmptyState({title,description,action}:{title:string;description:string;action?:ReactNode}){return <div className="ui-empty"><strong>{title}</strong><p>{description}</p>{action}</div>;}
+export function ErrorState({title="Não foi possível carregar esta informação.",onRetry}:{title?:string;onRetry?:()=>void}){return <div className="ui-error" role="alert"><strong>{title}</strong>{onRetry?<Button onClick={onRetry}>Tentar novamente</Button>:null}</div>;}
+export function Skeleton({width="100%",height=16}:{width?:string;height?:number}){return <span className="ui-skeleton" aria-hidden="true" style={{width,height}}/>;}
+export function PageHeader({eyebrow,title,description,action}:{eyebrow?:string;title:string;description?:string;action?:ReactNode}){return <header className="ui-page-header"><div>{eyebrow?<span>{eyebrow}</span>:null}<h1>{title}</h1>{description?<p>{description}</p>:null}</div>{action}</header>;}
+export function Pagination({page,totalPages,onPageChange}:{page:number;totalPages:number;onPageChange:(page:number)=>void}){return <nav className="ui-pagination" aria-label="Paginação"><Button disabled={page<=1} onClick={()=>onPageChange(page-1)}>Anterior</Button><span>Página {page} de {Math.max(1,totalPages)}</span><Button disabled={page>=totalPages} onClick={()=>onPageChange(page+1)}>Seguinte</Button></nav>;}
+export function TextLink({href,children}:{href:string;children:ReactNode}){return <Link className="ui-text-link" href={href}>{children}</Link>;}

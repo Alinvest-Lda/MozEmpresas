@@ -1,0 +1,13 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "declaration-no-important": true,
+    "color-no-hex": true
+  },
+  "overrides": [
+    {
+      "files": ["app/styles/tokens.css"],
+      "rules": { "color-no-hex": null }
+    }
+  ]
+}

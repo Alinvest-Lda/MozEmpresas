@@ -104,3 +104,18 @@ Estado actual da reconciliação:
 - Não foram feitas alterações DDL ou de grants à produção.
 
 Próximo gate: obter snapshot nativo do esquema activo e concluir comparação por objecto; em paralelo, preparar testes SQL/RLS reproduzíveis num PostgreSQL isolado. O desenvolvimento do Super Admin que dependa de novas tabelas, funções ou policies continua bloqueado até estes gates passarem.
+
+
+## Decisão de execução — continuação em 02/11/2026
+
+Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 fica suspensa temporariamente. A aplicação está operacional e a fundação visual pode avançar sem DDL, alterações de grants ou dependências novas no esquema activo. Os pontos de segurança/migrações permanecem documentados e não são declarados resolvidos.
+
+### Fase 1 — em implementação
+
+- Centralização dos tokens visuais e tipográficos em `app/styles/tokens.css`, mantendo aliases para reduzir risco de regressão.
+- Carregamento da fonte Inter via `next/font`.
+- Camadas CSS declaradas e Stylelint limitado aos novos ficheiros da fundação, sem impor uma migração global abrupta sobre o CSS legado.
+- Biblioteca inicial `components/ui` com controlos, estados, tabela, separadores, diálogos/gavetas e paginação.
+- Concha própria do Super Admin, sem alterar o modelo de autenticação nem as rotas funcionais existentes.
+- Página interna de referência em `/dashboard/admin/design-system`.
+- A migração integral dos shells público, empresarial e parceiro continuará gradual, depois de validar a nova fundação.

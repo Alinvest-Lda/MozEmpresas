@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./styles/tokens.css";
 import "./globals.css";
+import "./styles/components.css";
 import "./dashboard/dashboard-ux.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { getCurrentAccountContext } from "@/lib/auth/access";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="pt-MZ">
-      <body>
+      <body className={inter.variable}>
         <Header initialSignedIn={Boolean(user)} initialAccountType={accountType} />
         {children}
         <Footer />
