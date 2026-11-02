@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { Input, Select } from "@/components/ui";
 import { moderateBusinessPromotion, moderatePartnerCampaign, updateAdvertisingRequest } from "@/lib/admin/advertising-actions";
 import styles from "./publicidade.module.css";
 
@@ -122,10 +123,10 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     <section className={styles.section}>
       <div className={styles.sectionHead}><div><span className={styles.sectionKicker}>Gestão operacional</span><h2>Fila de publicidade</h2><p>Pesquise anunciantes, filtre por origem, estado e prazo e actualize os estados permitidos em cada fluxo.</p></div><span className={styles.resultsSummary}><strong>{filteredCampaigns.length + filteredRequests.length}</strong><span>resultados</span></span></div>
       <form className={styles.filters} method="get">
-        <label className={styles.searchField}><span>Pesquisar</span><input name="q" defaultValue={q} maxLength={100} placeholder="Campanha, empresa ou contacto"/></label>
-        <label><span>Origem</span><select name="origem" defaultValue={origin}><option value="">Todas as origens</option><option value="empresarial">Campanhas empresariais</option><option value="parceiro">Campanhas de parceiros</option><option value="pedido">Pedidos recebidos</option></select></label>
-        <label><span>Estado</span><select name="estado" defaultValue={status}><option value="">Todos os estados</option>{Object.entries(statusLabels).map(([value, text])=><option key={value} value={value}>{text}</option>)}</select></label>
-        <label><span>Prazo</span><select name="prazo" defaultValue={deadline}><option value="">Todos os prazos</option><option value="proximo">Termina nos próximos 7 dias</option><option value="expirado">Prazo ultrapassado</option><option value="futuro">Termina depois de 7 dias</option><option value="sem-prazo">Sem prazo definido</option></select></label>
+        <label className={styles.searchField}><span>Pesquisar</span><Input name="q" defaultValue={q} maxLength={100} placeholder="Campanha, empresa ou contacto"/></label>
+        <label><span>Origem</span><Select name="origem" defaultValue={origin}><option value="">Todas as origens</option><option value="empresarial">Campanhas empresariais</option><option value="parceiro">Campanhas de parceiros</option><option value="pedido">Pedidos recebidos</option></Select></label>
+        <label><span>Estado</span><Select name="estado" defaultValue={status}><option value="">Todos os estados</option>{Object.entries(statusLabels).map(([value, text])=><option key={value} value={value}>{text}</option>)}</Select></label>
+        <label><span>Prazo</span><Select name="prazo" defaultValue={deadline}><option value="">Todos os prazos</option><option value="proximo">Termina nos próximos 7 dias</option><option value="expirado">Prazo ultrapassado</option><option value="futuro">Termina depois de 7 dias</option><option value="sem-prazo">Sem prazo definido</option></Select></label>
         <div className={styles.filterActions}><button className="btn primary" type="submit">Aplicar filtros</button>{q || origin || status || deadline ? <Link className="btn" href="/dashboard/admin/publicidade">Limpar</Link> : null}</div>
       </form>
       <div className={styles.tableMeta}><span>Campanhas: <strong>{filteredCampaigns.length}</strong> · Pedidos: <strong>{filteredRequests.length}</strong></span><span>Máximo de 100 registos por origem</span></div>
@@ -136,7 +137,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
           {c.target_url ? <p className={styles.destination}>Destino: <a href={c.target_url} target="_blank" rel="noreferrer">{c.target_url}</a></p> : null}
           <form action={c.table === "business" ? moderateBusinessPromotion : moderatePartnerCampaign} className={styles.moderationForm}>
             <input type="hidden" name="id" value={c.id}/>
-            <label><span>Actualizar estado</span><select name="status" defaultValue={c.status ?? ""}>{c.allowed.map(s=><option key={s} value={s}>{label(s)}</option>)}</select></label>
+            <label><span>Actualizar estado</span><Select name="status" defaultValue={c.status ?? ""}>{c.allowed.map(s=><option key={s} value={s}>{label(s)}</option>)}</Select></label>
             <button className="btn primary" type="submit">Guardar estado</button>
           </form>
         </article>)}
@@ -145,7 +146,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
           <div className={styles.campaignMeta}><span><small>Pacote</small><strong>{r.package_name || "Não indicado"}</strong></span><span><small>Início solicitado</small><strong>{fmtDate(r.starts_at)}</strong></span><span><small>Fim solicitado</small><strong>{fmtDate(r.ends_at)}</strong></span><span><small>Recebido</small><strong>{fmtDate(r.created_at)}</strong></span></div>
           <form action={updateAdvertisingRequest} className={styles.moderationForm}>
             <input type="hidden" name="id" value={r.id}/>
-            <label><span>Estado comercial</span><select name="status" defaultValue={r.status ?? "NEW"}>{requestStatuses.map(s=><option key={s} value={s}>{label(s)}</option>)}</select></label>
+            <label><span>Estado comercial</span><Select name="status" defaultValue={r.status ?? "NEW"}>{requestStatuses.map(s=><option key={s} value={s}>{label(s)}</option>)}</Select></label>
             <button className="btn primary" type="submit">Actualizar pedido</button>
           </form>
         </article>)}
