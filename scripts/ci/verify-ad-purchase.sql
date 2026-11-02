@@ -97,6 +97,25 @@ begin
 end
 $credit_assertions$;
 
+
+set role authenticated;
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004',false);
+do $unauthorized$
+begin
+  begin
+    perform public.request_promotion_with_mpesa(
+      '20000000-0000-4000-8000-000000000001',
+      '60000000-0000-4000-8000-000000000001',
+      null,'Unauthorized campaign',now() + interval '3 days','{}','{}'
+    );
+    raise exception 'Unrelated user was allowed to reserve business advertising';
+  exception when raise_exception then
+    if sqlerrm <> 'FORBIDDEN' then raise; end if;
+  end;
+end
+$unauthorized$;
+reset role;
+
 do $security$
 declare
   definition text;
