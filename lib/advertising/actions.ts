@@ -65,6 +65,7 @@ function purchaseInput(formData: FormData) {
 }
 
 function purchaseErrorCode(message: string) {
+  if (/PGRST202|could not find the function|schema cache/i.test(message)) return "setup";
   if (message.includes("INSUFFICIENT_CREDITS")) return "credits";
   if (message.includes("NO_AVAILABILITY")) return "availability";
   if (message.includes("FORBIDDEN")) return "forbidden";
