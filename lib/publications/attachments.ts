@@ -1,15 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-
-const IMAGE_TYPES = new Set(["image/jpeg","image/png","image/webp","image/gif"]);
-const DOCUMENT_TYPES = new Set([
-  "application/pdf","application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/vnd.ms-powerpoint",
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-  "text/plain",
-]);
+import { PUBLICATION_ATTACHMENT_TYPES, validateAttachmentSelection } from "@/lib/publications/attachment-validation";
 
 export async function savePublicationAttachments(
   supabase: SupabaseClient,
@@ -18,17 +8,18 @@ export async function savePublicationAttachments(
   resourceId: string,
   files: FormDataEntryValue[]
 ) {
-  const selected = files.filter((value): value is File => value instanceof File && value.size > 0);
+  const validation = validateAttachmentSelection(files, {
+    maxFiles: 12,
+    maxBytesPerFile: 10 * 1024 * 1024,
+    allowedMimeTypes: PUBLICATION_ATTACHMENT_TYPES,
+  });
+  if (!validation.files) throw new Error(validation.error);
+  const selected = validation.files;
   if (!selected.length) return;
-
-  if (selected.length > 12 || selected.some(file => file.size > 10 * 1024 * 1024)) {
-    throw new Error("INVALID_ATTACHMENTS");
-  }
 
   const rows: Array<Record<string, string | number>> = [];
   for (const file of selected) {
-    const kind = IMAGE_TYPES.has(file.type) ? "IMAGE" : DOCUMENT_TYPES.has(file.type) ? "DOCUMENT" : null;
-    if (!kind) throw new Error("UNSUPPORTED_ATTACHMENT");
+    const kind = file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT";
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 140);
     const path = `${userId}/${resourceType.toLowerCase()}/${resourceId}/${crypto.randomUUID()}-${safeName}`;
     const { error } = await supabase.storage.from("publication-media").upload(path, file, { contentType: file.type, upsert: false });
