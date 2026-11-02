@@ -3,25 +3,16 @@
 import { createHash } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireNormalAccount } from "@/lib/auth/access";
 
 export async function acceptBusinessInvitation(formData: FormData) {
   const token = String(formData.get("token") || "");
   if (!/^[a-f0-9]{64}$/.test(token)) redirect("/dashboard/acessos?invite=invalid");
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.email) redirect("/login");
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("account_status")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (profileError || !profile || (profile.account_status && profile.account_status !== "ACTIVE")) {
-    await supabase.auth.signOut();
-    redirect("/login?inactive=1");
-  }
+  const context = await requireNormalAccount();
+  if (!context.user?.email) redirect("/login");
+  const supabase = context.supabase;
+  const user = context.user;
 
   const tokenHash = createHash("sha256").update(token).digest("hex");
   const { data: invitation } = await supabase
