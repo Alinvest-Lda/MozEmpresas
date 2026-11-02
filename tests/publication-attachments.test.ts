@@ -22,7 +22,7 @@ function mockSupabase(options?: {
 }
 
 function file(name: string): File {
-  return new File(["sample"], name, { type: "application/pdf" });
+  return new File([Uint8Array.from([0x25,0x50,0x44,0x46,0x2d,0x31,0x2e,0x37])], name, { type: "application/pdf" });
 }
 
 describe("savePublicationAttachments", () => {
