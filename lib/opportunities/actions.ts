@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireNormalAccount } from "@/lib/auth/access";
 import { savePublicationAttachments } from "@/lib/publications/attachments";
 import { canManageBusiness } from "@/lib/businesses/permissions";
 
@@ -16,22 +16,10 @@ function parseMaputoDate(value: string | null): Date | null {
 }
 
 async function user() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const userId = data?.claims?.sub;
-  if (!userId) redirect("/login");
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("account_status")
-    .eq("id", userId)
-    .maybeSingle();
-  if (profileError || !profile || (profile.account_status && profile.account_status !== "ACTIVE")) {
-    redirect("/login?inactive=1");
-  }
-  return { supabase, userId };
+  const context = await requireNormalAccount();
+  if (!context.user) redirect("/login");
+  return { supabase: context.supabase, userId: context.user.id };
 }
-
 export async function applyToOpportunity(formData: FormData) {
   const { supabase, userId } = await user();
   const opportunityId = text(formData.get("opportunity_id"));
