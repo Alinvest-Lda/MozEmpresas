@@ -6,7 +6,7 @@ export type ApiRequestContext = {
   route: string;
 };
 
-type ApiHandler = (request: Request, context: ApiRequestContext) => Promise<NextResponse>;
+type ApiHandler = (request: Request, context: ApiRequestContext) => Promise<Response>;
 
 function requestIdFrom(request: Request) {
   const supplied = request.headers.get("x-request-id")?.trim() ?? "";
@@ -17,7 +17,7 @@ export function withApiObservability(route: string, handler: ApiHandler) {
   return async (request: Request) => {
     const requestId = requestIdFrom(request);
     const startedAt = Date.now();
-    let response: NextResponse;
+    let response: Response;
 
     try {
       response = await handler(request, { requestId, route });
