@@ -16,8 +16,11 @@ export const POST = withApiObservability("api.ads_decision", async (request: Req
  const rate = await enforceRateLimit(request, { scope: "ads-decision", limit: 30, windowSeconds: 60 });
  if (!rate.allowed) return rateLimitResponse(rate.unavailable);
 
+ const parsed = schema.safeParse(await request.json().catch(() => null));
+ if (!parsed.success) return NextResponse.json({error:"Pedido de publicidade inválido."},{status:400});
+
  try{
-  const payload=schema.parse(await request.json());
+  const payload=parsed.data;
   const supabase=await createClient();
   const {data:{user}}=await supabase.auth.getUser();
   const context=payload.context||{};
@@ -43,5 +46,5 @@ export const POST = withApiObservability("api.ads_decision", async (request: Req
     }
   }
   return NextResponse.json({ad});
- }catch{return NextResponse.json({error:"Pedido de publicidade inválido."},{status:400});}
+ }catch{return NextResponse.json({error:"Não foi possível seleccionar a publicidade."},{status:500});}
 });
