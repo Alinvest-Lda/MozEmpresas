@@ -3,6 +3,12 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import {
+  calculateCampaignPrice,
+  isUuid,
+  normalizeCampaignTargets,
+  parseMaputoCampaignStart,
+} from "@/lib/advertising/purchase-validation";
 
 const text = (v: FormDataEntryValue | null) => typeof v === "string" ? v.trim() : "";
 
@@ -14,42 +20,77 @@ async function auth() {
 }
 
 async function manages(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, businessId: string) {
-  const { data: business } = await supabase
+  const { data: business, error: businessError } = await supabase
     .from("businesses")
     .select("id,owner_id")
     .eq("id", businessId)
     .is("archived_at", null)
     .maybeSingle();
-  if (!business) return false;
+  if (businessError || !business) return false;
   if (business.owner_id === userId) return true;
-  const { data: member } = await supabase
+  const { data: member, error: memberError } = await supabase
     .from("business_members")
     .select("role")
     .eq("business_id", businessId)
     .eq("user_id", userId)
-    .in("role", ["owner","admin","operator"])
+    .in("role", ["owner", "admin", "operator"])
     .maybeSingle();
-  return Boolean(member);
+  return !memberError && Boolean(member);
+}
+
+function purchaseInput(formData: FormData) {
+  const businessId = text(formData.get("business_id"));
+  const productId = text(formData.get("ad_product_id"));
+  const listingValue = text(formData.get("listing_id"));
+  const title = text(formData.get("title"));
+  const startsAt = parseMaputoCampaignStart(text(formData.get("starts_at")));
+  const locations = normalizeCampaignTargets(formData.getAll("target_location"));
+  const categories = normalizeCampaignTargets(formData.getAll("target_category"));
+
+  if (
+    !isUuid(businessId) || !isUuid(productId) ||
+    (listingValue !== "" && !isUuid(listingValue)) ||
+    (title.length > 160) || !startsAt || !locations || !categories
+  ) return null;
+
+  return {
+    businessId,
+    productId,
+    listingId: listingValue || null,
+    title: title || "Campanha publicitária",
+    startsAt,
+    locations,
+    categories,
+  };
+}
+
+function purchaseErrorCode(message: string) {
+  if (message.includes("INSUFFICIENT_CREDITS")) return "credits";
+  if (message.includes("NO_AVAILABILITY")) return "availability";
+  if (message.includes("FORBIDDEN")) return "forbidden";
+  if (message.includes("LISTING_NOT_AVAILABLE")) return "listing";
+  if (message.includes("INVALID_CAMPAIGN")) return "invalid";
+  return "purchase";
 }
 
 export async function purchaseAdCredits(formData: FormData) {
   const { supabase, userId } = await auth();
-  const businessId = text(formData.get("business_id"));
-  const productId = text(formData.get("ad_product_id"));
-  const listingId = text(formData.get("listing_id")) || null;
-  const title = text(formData.get("title"));
-  const locations = formData.getAll("target_location").filter((v): v is string => typeof v === "string" && v.trim() !== "").map(v => v.trim());
-  const categories = formData.getAll("target_category").filter((v): v is string => typeof v === "string" && v.trim() !== "").map(v => v.trim());
-  const starts = new Date(text(formData.get("starts_at")));
-  if (!businessId || !productId || Number.isNaN(starts.getTime()) || !(await manages(supabase,userId,businessId))) redirect("/dashboard/publicidade?error=invalid");
-  const { data, error } = await supabase.rpc("purchase_promotion_with_credits", {
-    p_business_id: businessId, p_ad_product_id: productId, p_listing_id: listingId,
-    p_title: title || "Campanha publicitária", p_starts_at: starts.toISOString(), p_locations: locations, p_categories: categories
-  });
-  if (error) {
-    const code = error.message.includes("INSUFFICIENT_CREDITS") ? "credits" : error.message.includes("NO_AVAILABILITY") ? "availability" : error.message.includes("FORBIDDEN") ? "forbidden" : "purchase";
-    redirect("/dashboard/publicidade?error=" + code);
+  const input = purchaseInput(formData);
+  if (!input || !(await manages(supabase, userId, input.businessId))) {
+    redirect("/dashboard/publicidade?error=invalid");
   }
+
+  const { data, error } = await supabase.rpc("purchase_promotion_with_credits", {
+    p_business_id: input.businessId,
+    p_ad_product_id: input.productId,
+    p_listing_id: input.listingId,
+    p_title: input.title,
+    p_starts_at: input.startsAt,
+    p_locations: input.locations,
+    p_categories: input.categories,
+  });
+  if (error) redirect("/dashboard/publicidade?error=" + purchaseErrorCode(error.message));
+
   revalidatePath("/dashboard/publicidade");
   revalidatePath("/dashboard/admin/monetizacao");
   redirect("/dashboard/publicidade?success=credits&promotion=" + String(data?.promotion_id ?? ""));
@@ -57,33 +98,23 @@ export async function purchaseAdCredits(formData: FormData) {
 
 export async function requestAdMpesaPayment(formData: FormData) {
   const { supabase, userId } = await auth();
-  const businessId = text(formData.get("business_id"));
-  const productId = text(formData.get("ad_product_id"));
-  const listingId = text(formData.get("listing_id")) || null;
-  const title = text(formData.get("title"));
-  const locations = formData.getAll("target_location").filter((v): v is string => typeof v === "string" && v.trim() !== "").map(v => v.trim());
-  const categories = formData.getAll("target_category").filter((v): v is string => typeof v === "string" && v.trim() !== "").map(v => v.trim());
-  const starts = new Date(text(formData.get("starts_at")));
-  if (!businessId || !productId || Number.isNaN(starts.getTime()) || !(await manages(supabase,userId,businessId))) redirect("/dashboard/publicidade?error=invalid");
-  const { data: product } = await supabase.from("ad_products").select("id,name,placement,duration_days,direct_price_mzn,capacity").eq("id",productId).eq("active",true).maybeSingle();
-  if (!product) redirect("/dashboard/publicidade?error=product");
-  const factor = 1 + (locations.length ? 0.10 : 0) + (categories.length ? 0.10 : 0);
-  const finalPrice = Number((Number(product.direct_price_mzn) * factor).toFixed(2));
-  const ends = new Date(starts.getTime() + product.duration_days * 86400000);
-  const { count } = await supabase.from("business_promotions").select("id",{count:"exact",head:true}).eq("ad_product_id",product.id).in("status",["PENDING","ACTIVE"]).lt("starts_at",ends.toISOString()).gt("ends_at",starts.toISOString());
-  if ((count ?? 0) >= product.capacity) redirect("/dashboard/publicidade?error=availability");
-  const { error } = await supabase.from("business_promotions").insert({
-    business_id: businessId, listing_id: listingId, title: title || product.name,
-    placement: product.placement, status: "PENDING", starts_at: starts.toISOString(), ends_at: ends.toISOString(),
-    budget: finalPrice, currency: "MZN", ad_product_id: product.id, payment_method: "MPESA", price_mzn: finalPrice, audience_mode: (locations.length || categories.length) ? "TARGETED" : "GENERAL"
-  });
-  if (error) redirect("/dashboard/publicidade?error=purchase");
-  const promotion = await supabase.from("business_promotions").select("id").eq("business_id", businessId).eq("ad_product_id", product.id).eq("starts_at", starts.toISOString()).order("created_at",{ascending:false}).limit(1).maybeSingle();
-  if (promotion.data?.id) {
-    const targets = [...locations.map(value => ({promotion_id: promotion.data!.id, target_type:"LOCATION", target_value:value})), ...categories.map(value => ({promotion_id: promotion.data!.id, target_type:"CATEGORY", target_value:value}))];
-    if (targets.length) await supabase.from("business_promotion_targets").insert(targets);
+  const input = purchaseInput(formData);
+  if (!input || !(await manages(supabase, userId, input.businessId))) {
+    redirect("/dashboard/publicidade?error=invalid");
   }
+
+  const { data, error } = await supabase.rpc("request_promotion_with_mpesa", {
+    p_business_id: input.businessId,
+    p_ad_product_id: input.productId,
+    p_listing_id: input.listingId,
+    p_title: input.title,
+    p_starts_at: input.startsAt,
+    p_locations: input.locations,
+    p_categories: input.categories,
+  });
+  if (error) redirect("/dashboard/publicidade?error=" + purchaseErrorCode(error.message));
+
   revalidatePath("/dashboard/publicidade");
   revalidatePath("/dashboard/admin/monetizacao");
-  redirect("/dashboard/publicidade?success=mpesa");
+  redirect("/dashboard/publicidade?success=mpesa&promotion=" + String(data?.promotion_id ?? ""));
 }
