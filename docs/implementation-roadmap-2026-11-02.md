@@ -279,3 +279,18 @@ Não foi alterado o Supabase activo. Permanecem pendentes os testes de integraç
 - Commits principais: `95a7f01`, `95a0156`, `ccdc687`, `c734dac`, `c63c34a`, `bbcf520`, `ee171e5`, `d5d0e0b`, `aae7ec8`, `9ac46c2`, `ece196b`.
 
 A P2.3 continua em curso: Server Actions críticas ainda precisam de contexto/logging uniforme; alertas externos, métricas operacionais e integração com Storage/notificações ficam para a tranche seguinte. Nenhuma alteração foi feita ao Supabase activo.
+
+
+### P2.4 — segurança e robustez, primeira tranche (02/11/2026)
+
+- Criada a migração `20261102190000_atomic_direct_ad_purchase.sql` com a RPC transaccional `request_promotion_with_mpesa` e substituição da RPC de créditos para bloquear a linha de `ad_products` com `FOR UPDATE`. Ambas contam capacidade e inserem campanha/alvos dentro da mesma transacção, evitando sobre-reserva entre pagamentos concorrentes no mesmo produto.
+- Corrigida a divergência do campo de pagamento: o esquema aceita `DIRECT`/`CREDITS`; o pedido M-Pesa é gravado como `DIRECT`. A nova RPC devolve directamente o ID da campanha, eliminando a procura ambígua posterior.
+- Validação de início no fuso de Maputo, UUIDs, título, limites de segmentação e associação de oferta publicada à empresa proprietária.
+- As acções de empresas, marketplace, oportunidades, serviços, publicidade e compra de créditos passaram a exigir contexto de conta normal activa. As acções de oportunidades de parceiros passaram a exigir contexto de parceiro activo e papel `owner`/`manager`.
+- Verificação de assinatura binária de anexos antes do Storage (PDF, JPEG, PNG, WebP, GIF, Office e texto UTF-8); comprovativos de compra de créditos limitados a PDF/JPEG/PNG/WebP, 10 MiB e extensão controlada pelo MIME.
+- Testes novos: `tests/advertising-purchase-validation.test.ts`, `tests/partner-permissions.test.ts`; testes de anexos estendidos e fixtures PDF de compensação actualizados.
+- Fixtures e asserções PostgreSQL: `scripts/ci/setup-ad-purchase.sql` e `scripts/ci/verify-ad-purchase.sql`; workflow inclui verificação da reserva DIRECT, capacidade, associação de oferta, autorização negativa, compra com créditos, débito e ledger.
+- CI `41503236027` passou integralmente: auditoria, testes, typecheck, lint, build e os quatro blocos PostgreSQL.
+- Commits nucleares: `e0e5c0c`, `f2eb80e`, `cc2b813`, `a4befc9`, `f64a4c8`, `cf91ee5`, `41ff3f8`, `a1df2e9`, `abaeec3`, `5f14e13`, `8c73db6`, `a6ab366`, `e4bc651`, `a0c555d`, `a1315bd`, `5c64b1f`, `895c944`, `0cad72a`.
+
+**Limites:** não foi realizado teste concorrente multi-sessão; o bloqueio de linha é verificado na definição SQL e os testes funcionais exercitam a capacidade sequencial. A migração é apenas repositório e não foi aplicada ao Supabase activo; por isso a acção M-Pesa que depende da RPC nova não deve ser activada em produção antes da migração aprovada. Não houve teste de Storage real nem integração com o provedor M-Pesa. O deployment Vercel deste conjunto de commits não foi confirmado.
