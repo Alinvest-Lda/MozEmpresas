@@ -62,7 +62,8 @@ export default async function AdminMonetizationPage() {
           <article><span>Assinaturas activas</span><strong>{subscriptions ?? "—"}</strong><small>Empresas com plano activo</small></article>
           <article><span>Promoções recentes</span><strong>{promotionRows.length}</strong><small>Máximo de 30 registos recentes</small></article>
           <article><span>Impressões</span><strong>{impressions == null ? "—" : impressions.toLocaleString("pt-MZ")}</strong><small>Eventos de exibição registados</small></article>
-          <article><span>Cliques</span><strong>{clicks == null ? "—" : clicks.toLocaleString("pt-MZ")}</strong><small>Interacções registadas</small></article>\n          <article><span>Produtos activos</span><strong>{activeProducts}</strong><small>Inventário empresarial e parceiro</small></article>
+          <article><span>Cliques</span><strong>{clicks == null ? "—" : clicks.toLocaleString("pt-MZ")}</strong><small>Interacções registadas</small></article>
+          <article><span>Produtos activos</span><strong>{activeProducts}</strong><small>Inventário empresarial e parceiro</small></article>
         </section>
 
         <section className={styles.panel} aria-labelledby="plans-title">
