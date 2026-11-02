@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireNormalAccount } from "@/lib/auth/access";
 import {
-  calculateCampaignPrice,
   isUuid,
   normalizeCampaignTargets,
   parseMaputoCampaignStart,
@@ -18,7 +17,9 @@ async function auth() {
   return { supabase: context.supabase, userId: context.user.id };
 }
 
-async function manages(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, businessId: string) {
+type ServerSupabaseClient = Awaited<ReturnType<typeof requireNormalAccount>>["supabase"];
+
+async function manages(supabase: ServerSupabaseClient, userId: string, businessId: string) {
   const { data: business, error: businessError } = await supabase
     .from("businesses")
     .select("id,owner_id")
