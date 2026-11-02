@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { canManageBusiness, MANAGER_ROLES } from "../lib/businesses/permissions";
 
-type Row = Record<string, unknown>;
 type Fixture = {
   business?: { id: string; owner_id: string; archived_at: string | null } | null;
   member?: { business_id: string; user_id: string; role: string } | null;
@@ -42,7 +41,7 @@ function mockSupabase(fixture: Fixture): SupabaseClient {
           return { data: null, error: null };
         },
       };
-      return this;
+      return query;
     },
   } as unknown as SupabaseClient;
 }
