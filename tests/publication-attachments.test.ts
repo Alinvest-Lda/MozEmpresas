@@ -8,7 +8,7 @@ function mockSupabase(options?: {
   failCleanup?: boolean;
 }) {
   let uploadCount = 0;
-  const remove = vi.fn(async () => ({ error: options?.failCleanup ? new Error("cleanup failed") : null }));
+  const remove = vi.fn(async (_paths: string[]) => ({ error: options?.failCleanup ? new Error("cleanup failed") : null }));
   const upload = vi.fn(async () => {
     uploadCount += 1;
     return { error: options?.failUploadAt === uploadCount ? new Error("upload failed") : null };
