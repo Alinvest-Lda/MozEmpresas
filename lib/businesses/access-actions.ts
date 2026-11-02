@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { requireNormalAccount } from "@/lib/auth/access";
 
 const schema = z.object({
   businessId: z.string().uuid(),
@@ -52,8 +52,9 @@ export async function updateBusinessMemberRole(formData: FormData) {
   });
   if (!parsed.success) redirect("/dashboard/acessos?status=invalid-request");
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const context = await requireNormalAccount();
+  const supabase = context.supabase;
+  const user = context.user;
   if (!user || !(await manager(supabase, parsed.data.businessId, user.id))) {
     redirect("/dashboard/acessos?status=permission-denied");
   }
@@ -102,8 +103,9 @@ export async function removeBusinessMember(formData: FormData) {
   });
   if (!parsed.success) redirect("/dashboard/acessos?status=invalid-request");
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const context = await requireNormalAccount();
+  const supabase = context.supabase;
+  const user = context.user;
   if (!user || !(await manager(supabase, parsed.data.businessId, user.id))) {
     redirect("/dashboard/acessos?status=permission-denied");
   }
