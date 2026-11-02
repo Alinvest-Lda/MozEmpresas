@@ -1,5 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { PUBLICATION_ATTACHMENT_TYPES, validateAttachmentSelection } from "@/lib/publications/attachment-validation";
+import { PUBLICATION_ATTACHMENT_TYPES, validateAttachmentSelection } from "./attachment-validation";
 
 export async function savePublicationAttachments(
   supabase: SupabaseClient,
