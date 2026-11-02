@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { withApiObservability } from "@/lib/observability/api";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, enforceRateLimit, getPostgresClient, rateLimitResponse } from "@/lib/security/rate-limit";
 import { adEventSchema, isEligibleCampaign, type AdEventPayload, type CampaignEligibility } from "@/lib/advertising/event-validation";
 
-export async function POST(request: Request) {
+export const POST = withApiObservability("api.ads_event", async (request: Request) => {
   const rate = await enforceRateLimit(request, { scope: "ads-event", limit: 60, windowSeconds: 60 });
   if (!rate.allowed) return rateLimitResponse(rate.unavailable);
 
@@ -103,4 +104,4 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "Não foi possível processar o evento de publicidade." }, { status: 500 });
   }
-}
+});
