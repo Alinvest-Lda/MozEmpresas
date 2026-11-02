@@ -63,3 +63,7 @@ insert into public.ad_products(id,name,placement,duration_days,direct_price_mzn,
  ('60000000-0000-4000-8000-000000000002','Destaque Créditos','DIRECTORY',7,500,50,2,true,'PAID');
 insert into public.business_credit_wallets(business_id,balance_credits)
 values ('20000000-0000-4000-8000-000000000001',200);
+
+-- Grant only the read access required by assertions executed as the test user.
+grant select on public.business_promotions, public.business_promotion_targets,
+  public.business_credit_wallets, public.credit_transactions to authenticated;
