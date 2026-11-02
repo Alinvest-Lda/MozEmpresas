@@ -15,8 +15,11 @@ export const POST = withApiObservability("api.public_contact", async (request: R
   const rate = await enforceRateLimit(request, { scope: "public-contact", limit: 5, windowSeconds: 60 });
   if (!rate.allowed) return rateLimitResponse(rate.unavailable);
 
+  const parsed = schema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Verifique os dados preenchidos e tente novamente." }, { status: 400 });
+
   try {
-    const payload = schema.parse(await request.json());
+    const payload = parsed.data;
     const sql = getPostgresClient();
     if (sql) {
       await sql.unsafe(
@@ -31,6 +34,6 @@ export const POST = withApiObservability("api.public_contact", async (request: R
     }
     return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json({ error: "Verifique os dados preenchidos e tente novamente." }, { status: 400 });
+    return NextResponse.json({ error: "Não foi possível registar a mensagem." }, { status: 500 });
   }
 });
