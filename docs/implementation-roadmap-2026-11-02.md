@@ -142,3 +142,5 @@ Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 
 - Ficheiros CSS migrados: `oportunidades.module.css`, `publicidade.module.css` e `suporte.module.css`.
 - Commits desta tranche: `be4c23c`, `45c8ef0`, `3f1ebe7`, `863eec3`, `5802c28`, `9a6fa13`, `e6c5011`.
 - Validação de produção pendente para esta tranche; confirmar o deployment da sequência final de commits antes de declarar a migração concluída.
+
+- A página Central de monetização também passou a consumir tokens de cor partilhados; o layout, os indicadores e as consultas existentes foram preservados. Não foram adicionados formulários ou acções novas, nem alterados dados. Commits: `63a0d36`, `d1b0063`.
