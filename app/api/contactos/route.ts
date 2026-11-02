@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { withApiObservability } from "@/lib/observability/api";
 import { z } from "zod";
 import { createAdminClient, enforceRateLimit, getPostgresClient, rateLimitResponse } from "@/lib/security/rate-limit";
 
@@ -10,7 +11,7 @@ const schema = z.object({
   message: z.string().trim().min(5).max(5000),
 });
 
-export async function POST(request: Request) {
+export const POST = withApiObservability("api.public_contact", async (request: Request) => {
   const rate = await enforceRateLimit(request, { scope: "public-contact", limit: 5, windowSeconds: 60 });
   if (!rate.allowed) return rateLimitResponse(rate.unavailable);
 
@@ -32,4 +33,4 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "Verifique os dados preenchidos e tente novamente." }, { status: 400 });
   }
-}
+});
