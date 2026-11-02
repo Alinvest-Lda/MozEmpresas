@@ -108,3 +108,30 @@ Também ficam pendentes: integração real com Supabase Storage (o tratamento de
 - CI `41499838769` terminou com sucesso: auditoria, testes unitários, typecheck, lint, build e todos os passos PostgreSQL.
 
 Esta tranche cobre as principais rotas HTTP públicas e error boundaries. Ainda não uniformiza logs em todas as Server Actions nem integra alertas externos, métricas de negócio ou tracing distribuído. A P2.3 permanece aberta para essas extensões e para instrumentação adicional de Storage/notificações.
+
+
+### P2.4 — segurança e robustez, primeira tranche (02/11/2026)
+
+**Reserva de inventário publicitário e pagamentos**
+- Corrigido o fluxo de pedido M-Pesa: a acção anterior fazia uma verificação de capacidade separada do INSERT, permitindo sobre-reserva concorrente; procurava depois a campanha por empresa/produto/data, o que podia associar alvos à linha errada. A nova acção usa a RPC transaccional `request_promotion_with_mpesa`, recebe directamente o ID criado e grava os alvos na mesma transacção.
+- A reserva M-Pesa e a compra com créditos passam a bloquear a linha do produto com `FOR UPDATE` antes de contar capacidade e inserir campanha, serializando as reservas do mesmo produto entre métodos de pagamento.
+- Corrigida a incompatibilidade do campo `payment_method`: o esquema versionado aceita `DIRECT` ou `CREDITS`; o fluxo de M-Pesa passa a registar `DIRECT` (o método de pagamento continua apresentado ao utilizador como M-Pesa).
+- A RPC valida conta activa e autorização owner/admin/operator, data de início, tamanho e número de critérios de segmentação, e garante que uma oferta associada pertence à empresa e está publicada.
+- A data `datetime-local` é interpretada no fuso de Maputo (+02:00); IDs, títulos e critérios de segmentação são validados antes de chamar a base de dados.
+- Migração nova: `supabase/migrations/20261102190000_atomic_direct_ad_purchase.sql`. Está apenas no repositório; **não foi aplicada ao Supabase de produção**. O fluxo M-Pesa que usa esta RPC requer a migração antes de ser activado em produção.
+
+**Autorização no servidor**
+- Acções de empresas, marketplace, oportunidades, pedidos de serviços, publicidade e compra de créditos passam a exigir `requireNormalAccount()`, que valida sessão, classificação da conta e estado activo, falhando fechado perante erro de contexto.
+- Acções de oportunidades de parceiros passam a usar `requirePartnerAccount()` e exigem papel `owner` ou `manager`; os papéis viewer/member não podem alterar oportunidades ou candidaturas.
+
+**Anexos e comprovativos**
+- A allowlist MIME já existente passa a ser complementada por verificação da assinatura binária inicial para PDF, imagens, documentos Office e texto UTF-8. A validação é executada antes de enviar ficheiros ao Storage em marketplace e publicações.
+- Comprovativos de compra de créditos passam a aceitar apenas PDF/JPEG/PNG/WebP, até 10 MiB, com extensão derivada do MIME validado e limpeza do objecto se a gravação do pedido falhar.
+- Fixtures PDF dos testes de compensação foram actualizadas para usar bytes com assinatura válida.
+
+**Verificação**
+- CI `41503236027` terminou com sucesso nos dois jobs. Passaram auditoria de dependências, testes unitários, TypeScript, lint, build de produção e os quatro cenários PostgreSQL descartáveis: SECURITY DEFINER/search_path, marketplace/serviços/notificações, reservas publicitárias atómicas e membership/contexto de parceiro.
+- Os testes PostgreSQL de publicidade verificam pedido DIRECT pendente, preço com segmentação, gravação de alvos, bloqueio de capacidade, rejeição de oferta de outra empresa, rejeição de utilizador externo, débito de créditos e transacção correspondente. Também verificam que ambas as RPCs usam bloqueio `FOR UPDATE`.
+- Testes unitários adicionais cobrem validação de datas/segmentação, assinaturas de ficheiros e papéis de parceiro.
+
+**Limitações ainda abertas:** a concorrência foi protegida com bloqueio transaccional e verificada pela definição da função e pelos testes de capacidade sequenciais; não foi executado um teste multi-sessão concorrente. Não foi feita validação do Storage real, nem teste do provedor M-Pesa, nem reconciliação read-only do schema/RLS activo. A migração nova não está aplicada em produção e o deployment Vercel correspondente ao código desta tranche não foi confirmado. Não alterar produção sem reconciliação e aprovação explícita.
