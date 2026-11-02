@@ -4,8 +4,7 @@ import "./styles/tokens.css";
 import "./globals.css";
 import "./styles/components.css";
 import "./dashboard/dashboard-ux.css";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
+import { PublicShell } from "@/components/shells/public-shell";
 import { getCurrentAccountContext } from "@/lib/auth/access";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -24,9 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="pt-MZ">
       <body className={inter.variable}>
-        <Header initialSignedIn={Boolean(user)} initialAccountType={accountType} />
-        {children}
-        <Footer />
+        <PublicShell initialSignedIn={Boolean(user)} initialAccountType={accountType}>{children}</PublicShell>
       </body>
     </html>
   );
