@@ -28,7 +28,7 @@ Repositório: `Alinvest-Lda/MozEmpresas`, branch `main`.
   - `app/not-found.tsx`
   - `lib/observability/logger.ts`
 - Estes estados são uma primeira cobertura global de carregamento, erro e rota inexistente; não substituem os estados específicos de cada página.
-- A validação Vercel do commit `8ec7763f8a995f7c13f22839d5659b919e3fa901` estava pendente no momento desta actualização. Não declarar build ou deploy concluído até confirmação.
+- O responsável do projecto confirmou que o deploy passou após esta actualização. O estado de produção deve continuar a ser confirmado pelo painel Vercel em cada nova entrega.
 
 ### Supabase activo
 
@@ -88,3 +88,19 @@ Só iniciar a migração visual estrutural depois dos gates essenciais da Fase 0
 ## Critério de conclusão
 
 Cada módulo só pode ser marcado como concluído quando tiver: esquema validado, regras de negócio, autorização/RLS, acções seguras, UI, estados de carregamento/vazio/erro/sucesso, testes, acessibilidade e documentação baseada em evidência.
+
+
+## Actualização pós-deploy — 02/11/2026
+
+O deploy foi confirmado pelo responsável do projecto. A revisão read-only de segurança e migrações foi registada em `docs/security-and-migration-review-2026-11-02.md`.
+
+Estado actual da reconciliação:
+- 68 migrações no ledger activo.
+- 57 ficheiros SQL no repositório.
+- 33 correspondências exactas por nome.
+- 35 entradas do ledger sem ficheiro com o mesmo nome e 24 ficheiros sem entrada com o mesmo nome. Estes números representam divergência de nomenclatura/histórico, não migrações comprovadamente em falta.
+- As quatro tabelas RLS sem policies têm grants apenas para `postgres` e `service_role`; não foi demonstrado acesso directo por `anon` ou `authenticated`.
+- As quatro funções SECURITY DEFINER acessíveis por `anon` foram classificadas como endpoints públicos/pré-autenticação com contratos distintos; a revisão aprofundada de validação, limites e consumidores continua pendente.
+- Não foram feitas alterações DDL ou de grants à produção.
+
+Próximo gate: obter snapshot nativo do esquema activo e concluir comparação por objecto; em paralelo, preparar testes SQL/RLS reproduzíveis num PostgreSQL isolado. O desenvolvimento do Super Admin que dependa de novas tabelas, funções ou policies continua bloqueado até estes gates passarem.
