@@ -29,6 +29,21 @@ values ('50000000-0000-4000-8000-000000000001',
 -- Seller owner may progress the order; the actual update trigger notifies buyer.
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',false);
+do $before_seller_update$
+begin
+  if auth.uid() is distinct from '10000000-0000-4000-8000-000000000002'::uuid then
+    raise exception 'Seller JWT context was not set before update: %', auth.uid();
+  end if;
+  if not exists (
+    select 1 from pg_trigger
+    where tgrelid='public.commerce_orders'::regclass
+      and tgname='notify_commerce_order_updated_trigger'
+      and not tgisinternal
+  ) then
+    raise exception 'Commerce order update notification trigger is missing';
+  end if;
+end
+$before_seller_update$;
 update public.commerce_orders set status='CONTACTED'
 where id='50000000-0000-4000-8000-000000000001';
 
