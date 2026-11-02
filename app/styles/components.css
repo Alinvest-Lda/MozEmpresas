@@ -23,6 +23,6 @@
 .admin-nav-link:focus-visible,.admin-nav-active:focus-visible{outline-offset:2px}
 .admin-content:focus{outline:none}
 @media(prefers-reduced-motion:reduce){
-  .admin-shell *, .admin-shell *::before, .admin-shell *::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .admin-shell *, .admin-shell *::before, .admin-shell *::after{scroll-behavior:auto;animation:none;transition:none}
 }
 }
