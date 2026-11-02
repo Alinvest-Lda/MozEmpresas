@@ -76,3 +76,22 @@ Ficam fora desta tranche, por exigirem ambiente/schema reconciliado ou contrato 
 
 Commits desta tranche: `fc6bd51`, `6c8c6be`, `a904bb7`, `f148057`, `8c44798`, `62c908e`, `7e3a78b`.
 CI gerado para esta sequência: workflows `41494982052`, `41494990423`, `41495141211`, `41495151081` e `41495158198`; resultados finais a confirmar. Nenhuma alteração foi feita ao Supabase activo, RLS, grants ou dados.
+
+
+### P2.2 — integração focalizada de marketplace, serviços e notificações (02/11/2026)
+
+Foi acrescentado ao job PostgreSQL descartável um cenário de integração que aplica directamente as migrações actuais:
+
+- `20260928120000_commerce_partner_service_audit_foundation.sql`
+- `20260929233000_commerce_seller_order_actions.sql`
+- `20261004173000_commerce_participant_access_and_order_progress.sql`
+- `20261012170000_marketplace_order_notifications.sql`
+- `20261026100000_align_commerce_order_update_policy.sql`
+
+Os testes exercitam criação de pedido comercial pelo comprador, actualização pelo vendedor, leitura de itens e eventos por participantes, isolamento perante utilizador externo, criação/leitura de pedidos de serviços e notificações de criação/actualização com leitura restrita ao destinatário. A execução confirma também a suite já existente de SECURITY DEFINER e memberships de parceiros.
+
+Ficheiros: `scripts/ci/setup-marketplace-integration.sql` e `scripts/ci/verify-marketplace-integration.sql`. Workflow: `.github/workflows/ci.yml`. Execução PostgreSQL do workflow `41498073765`: os três passos SQL — SECURITY DEFINER, integração marketplace/serviços/notificações e memberships de parceiro — passaram. No momento deste registo, o job geral `validate` já tinha passado auditoria, testes unitários, typecheck e lint; o build de produção ainda estava em execução.
+
+**Limite importante de fidelidade do fixture:** a origem da tabela `commerce_orders` e a política SELECT de base para vendedores não estão representadas na sequência de migrações versionadas consultada. O fixture inclui as regras mínimas de leitura de comprador/vendedor necessárias para executar o teste de UPDATE e os triggers; por isso, este resultado valida as migrações listadas e o comportamento das regras testadas, mas não constitui ainda prova de paridade integral com o schema/RLS activo. Essa paridade fica pendente de uma exportação/reconciliação read-only do schema, sem aplicar alterações em produção.
+
+Também ficam pendentes: integração real com Supabase Storage (o tratamento de compensação de uploads tem testes unitários com mocks), execução através do serviço de Storage e validação de políticas de objectos, testes E2E autenticados com contas reais descartáveis e entrega externa de notificações. Não foram usadas credenciais, tabelas ou dados de produção; nenhuma alteração foi feita ao Supabase activo.
