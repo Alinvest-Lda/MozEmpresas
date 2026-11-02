@@ -22,7 +22,7 @@ export async function updateBusiness(_state:BusinessState,formData:FormData):Pro
  const id=String(formData.get("businessId")||"");
  const parsed=schema.safeParse({name:formData.get("name"),description:formData.get("description")||undefined,categoryId:formData.get("categoryId")||"",location:formData.get("location")||undefined,phone:formData.get("phone")||undefined,email:formData.get("email")||"",website:formData.get("website")||"",logoUrl:formData.get("logoUrl")||"",coverUrl:formData.get("coverUrl")||"",isPublic:formData.get("isPublic")||"true"});
  if(!id || !parsed.success)return{error:"Verifique os dados introduzidos."};
- const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user)redirect("/login");
+ const context=await requireNormalAccount(); const supabase=context.supabase; const user=context.user; if(!user)redirect("/login");
  const {data:business,error:loadError}=await supabase.from("businesses").select("id,slug,owner_id,archived_at").eq("id",id).maybeSingle();
  if(loadError || !business)return{error:"Empresa não encontrada ou sem permissão para alterar."};
  if(business.archived_at)return{error:"Esta empresa está arquivada."};
@@ -53,7 +53,7 @@ export async function updateBusiness(_state:BusinessState,formData:FormData):Pro
 export async function deleteBusinessAction(formData:FormData):Promise<void>{ await deleteBusiness({},formData); }
 export async function deleteBusiness(_state:BusinessState,formData:FormData):Promise<BusinessState>{
  const id=String(formData.get("businessId")||""); if(!id)return{error:"Empresa inválida."};
- const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user)redirect("/login");
+ const context=await requireNormalAccount(); const supabase=context.supabase; const user=context.user; if(!user)redirect("/login");
  const {data:business,error:loadError}=await supabase.from("businesses").select("id,slug,owner_id,archived_at").eq("id",id).maybeSingle();
  if(loadError || !business)return{error:"Empresa não encontrada."};
  if(business.owner_id!==user.id)return{error:"Apenas o proprietário pode arquivar esta empresa."};
