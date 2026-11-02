@@ -135,3 +135,15 @@ Esta tranche cobre as principais rotas HTTP públicas e error boundaries. Ainda 
 - Testes unitários adicionais cobrem validação de datas/segmentação, assinaturas de ficheiros e papéis de parceiro.
 
 **Limitações ainda abertas:** a concorrência foi protegida com bloqueio transaccional e verificada pela definição da função e pelos testes de capacidade sequenciais; não foi executado um teste multi-sessão concorrente. Não foi feita validação do Storage real, nem teste do provedor M-Pesa, nem reconciliação read-only do schema/RLS activo. A migração nova não está aplicada em produção e o deployment Vercel correspondente ao código desta tranche não foi confirmado. Não alterar produção sem reconciliação e aprovação explícita.
+
+
+### P2.4 — rate limiting e comunicação de dependência ausente (02/11/2026)
+
+- resolveTrustedClientAddress passou a ler exclusivamente o cabeçalho de proxy configurado (por omissão x-vercel-forwarded-for), validar o valor com node:net.isIP e rejeitar valores ausentes/malformados. Não usa x-forwarded-for enviado pelo cliente como fallback.
+- Quando não existe endereço de proxy confiável, o rate limiter falha fechado com resposta 503, em vez de agrupar todos os pedidos na chave unknown e criar um bloqueio global por partilha de contador.
+- Testes em tests/rate-limit.test.ts cobrem IPv4, IPv6, cabeçalho configurado, rejeição de cabeçalhos arbitrários e valores inválidos.
+- A documentação de cabeçalhos da Vercel identifica x-vercel-forwarded-for como equivalente a x-forwarded-for, com a vantagem de não ser sobrescrito da mesma forma quando existe um proxy adicional; a aplicação mantém o nome de cabeçalho configurável para outros ambientes.
+- Se a RPC request_promotion_with_mpesa ainda não existir no schema PostgREST, a acção passa a classificar o erro como dependência não activada e a página informa que a reserva segura aguarda a migração, em vez de apresentar apenas uma falha genérica.
+- CI 41503815149 terminou com sucesso: auditoria, testes unitários, typecheck, lint, build e todos os quatro grupos PostgreSQL. O workflow 41504020604, que inclui a mensagem de dependência ausente, ainda estava em execução no momento deste registo.
+
+**Estado de produção:** a última deployment Vercel READY observada corresponde ao commit 444b005; não inclui os commits posteriores de rate limiting e da mensagem de dependência. A migração 20261102190000_atomic_direct_ad_purchase.sql continua apenas no repositório. Não aplicar a migração nem activar o fluxo M-Pesa seguro em produção sem reconciliação read-only do schema e aprovação explícita.
