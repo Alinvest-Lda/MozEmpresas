@@ -294,3 +294,12 @@ A P2.3 continua em curso: Server Actions críticas ainda precisam de contexto/lo
 - Commits nucleares: `e0e5c0c`, `f2eb80e`, `cc2b813`, `a4befc9`, `f64a4c8`, `cf91ee5`, `41ff3f8`, `a1df2e9`, `abaeec3`, `5f14e13`, `8c73db6`, `a6ab366`, `e4bc651`, `a0c555d`, `a1315bd`, `5c64b1f`, `895c944`, `0cad72a`.
 
 **Limites:** não foi realizado teste concorrente multi-sessão; o bloqueio de linha é verificado na definição SQL e os testes funcionais exercitam a capacidade sequencial. A migração é apenas repositório e não foi aplicada ao Supabase activo; por isso a acção M-Pesa que depende da RPC nova não deve ser activada em produção antes da migração aprovada. Não houve teste de Storage real nem integração com o provedor M-Pesa. O deployment Vercel deste conjunto de commits não foi confirmado.
+
+
+### P2.4 — rate limiting e fallback de dependência (02/11/2026)
+
+- O rate limiter usa apenas o cabeçalho de proxy configurado (default x-vercel-forwarded-for) e valida IP com node:net.isIP; não confia em x-forwarded-for arbitrário. Sem IP confiável, responde 503 fail-closed, evitando uma chave global unknown.
+- Adicionados testes tests/rate-limit.test.ts para IPv4/IPv6, header configurado, header não confiável, ausência e formato inválido.
+- Erro PostgREST de RPC ainda não publicada é identificado como dependência por activar; a página de publicidade comunica que o pedido M-Pesa seguro aguarda a migração necessária.
+- CI 41503815149: sucesso integral, incluindo testes, TypeScript, lint, build e quatro suites PostgreSQL. Workflow 41504020604 ainda em execução no momento do registo para os últimos ajustes de mensagem.
+- A deployment Vercel READY mais recente observada é do commit 444b005; não confirma os commits de rate limiting e mensagem. A migração 20261102190000_atomic_direct_ad_purchase.sql permanece no repositório e não foi aplicada ao Supabase activo.
