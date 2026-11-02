@@ -51,7 +51,7 @@ export default async function AdminMonetizationPage() {
             <h1>Central de monetização</h1>
             <p>Visão consolidada dos planos empresariais, assinaturas, inventário publicitário e actividade comercial da plataforma.</p>
           </div>
-          <div className={styles.heroSummary}><span>Catálogo comercial</span><strong>{products.length}</strong><small>Formatos publicitários registados</small><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Consulta de planos, inventário e actividade.</span></div>
+          <div className={styles.heroSummary}><span>Catálogo comercial</span><strong>{products.length}</strong><small>Formatos publicitários registados</small><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Consulta de planos, inventário e actividade.</span><a className={styles.creditLink} href="/dashboard/admin/monetizacao/creditos">Gerir créditos <span aria-hidden="true">→</span></a></div>
           <span className={styles.heroMark} aria-hidden="true">M</span>
         </header>
 
@@ -62,7 +62,7 @@ export default async function AdminMonetizationPage() {
           <article><span>Assinaturas activas</span><strong>{subscriptions ?? "—"}</strong><small>Empresas com plano activo</small></article>
           <article><span>Promoções recentes</span><strong>{promotionRows.length}</strong><small>Máximo de 30 registos recentes</small></article>
           <article><span>Impressões</span><strong>{impressions == null ? "—" : impressions.toLocaleString("pt-MZ")}</strong><small>Eventos de exibição registados</small></article>
-          <article><span>Cliques</span><strong>{clicks == null ? "—" : clicks.toLocaleString("pt-MZ")}</strong><small>Interacções registadas</small></article>
+          <article><span>Cliques</span><strong>{clicks == null ? "—" : clicks.toLocaleString("pt-MZ")}</strong><small>Interacções registadas</small></article>\n          <article><span>Produtos activos</span><strong>{activeProducts}</strong><small>Inventário empresarial e parceiro</small></article>
         </section>
 
         <section className={styles.panel} aria-labelledby="plans-title">
