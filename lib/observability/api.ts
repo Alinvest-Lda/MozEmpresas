@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { logger } from "@/lib/observability/logger";
+import { logger } from "./logger";
 
 export type ApiRequestContext = {
   requestId: string;
