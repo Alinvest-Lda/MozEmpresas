@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
+import { Input, Select } from "@/components/ui";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { replySupportAsStaff } from "@/lib/support/admin-actions";
 import styles from "./suporte.module.css";
@@ -62,10 +63,10 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
         <section className={styles.panel} aria-labelledby="support-filters-title">
           <div className={styles.panelHead}><div><span className={styles.kicker}>Pesquisa e triagem</span><h2 id="support-filters-title">Filtrar atendimentos</h2></div><span className={styles.muted}>Localize um pedido por área, estado, empresa ou assunto.</span></div>
           <form className={styles.filters} method="get">
-            <label>Área<select name="area" defaultValue={area}>{areas.map(a => <option key={a} value={a}>{a || "Todas as áreas"}</option>)}</select></label>
-            <label>Estado<select name="status" defaultValue={status}>{statuses.map(s => <option key={s} value={s}>{s ? statusLabels[s] : "Todos os estados"}</option>)}</select></label>
-            <label>Empresa<select name="business" defaultValue={p.business || ""}><option value="">Todas as empresas</option>{businessOptions.map(b => <option value={b.id} key={b.id}>{b.name}</option>)}</select></label>
-            <label>Assunto<input name="subject" defaultValue={subject} maxLength={100} placeholder="Pesquisar por assunto" /></label>
+            <label>Área<Select name="area" defaultValue={area}>{areas.map(a => <option key={a} value={a}>{a || "Todas as áreas"}</option>)}</Select></label>
+            <label>Estado<Select name="status" defaultValue={status}>{statuses.map(s => <option key={s} value={s}>{s ? statusLabels[s] : "Todos os estados"}</option>)}</Select></label>
+            <label>Empresa<Select name="business" defaultValue={p.business || ""}><option value="">Todas as empresas</option>{businessOptions.map(b => <option value={b.id} key={b.id}>{b.name}</option>)}</Select></label>
+            <label>Assunto<Input name="subject" defaultValue={subject} maxLength={100} placeholder="Pesquisar por assunto" /></label>
             <div className={styles.filterActions}><button className="btn primary" type="submit">Aplicar filtros</button><a className={styles.clear} href="/dashboard/admin/suporte">Limpar</a></div>
           </form>
         </section>
