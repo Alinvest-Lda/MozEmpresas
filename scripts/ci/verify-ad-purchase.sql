@@ -1,11 +1,10 @@
--- Execute the RPCs as authenticated users against the disposable PostgreSQL fixture.
+-- Exercise the RPCs as authenticated users; inspect persisted results as the fixture owner.
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
 
-do $direct_purchase$
+do $direct_calls$
 declare
   result jsonb;
-  promotion_id uuid;
 begin
   result := public.request_promotion_with_mpesa(
     '20000000-0000-4000-8000-000000000001',
@@ -16,16 +15,6 @@ begin
     array['Maputo'],
     array['Tecnologia']
   );
-  promotion_id := (result->>'promotion_id')::uuid;
-
-  if not exists (
-    select 1 from public.business_promotions
-    where id=promotion_id and payment_method='DIRECT' and status='PENDING'
-      and price_mzn=600 and audience_mode='TARGETED'
-  ) then raise exception 'Direct/M-Pesa request did not persist with expected price and state'; end if;
-  if (select count(*) from public.business_promotion_targets where promotion_id=promotion_id) <> 2 then
-    raise exception 'Direct/M-Pesa targeting values were not persisted atomically';
-  end if;
 
   begin
     perform public.request_promotion_with_mpesa(
@@ -50,17 +39,32 @@ begin
     if sqlerrm <> 'LISTING_NOT_AVAILABLE' then raise; end if;
   end;
 end
-$direct_purchase$;
+$direct_calls$;
+reset role;
 
-do $credit_purchase$
+do $direct_assertions$
+declare
+  v_promotion_id uuid;
+begin
+  select id into v_promotion_id from public.business_promotions where title='Campanha de teste';
+  if v_promotion_id is null then raise exception 'Direct/M-Pesa promotion was not persisted'; end if;
+  if not exists (
+    select 1 from public.business_promotions
+    where id=v_promotion_id and payment_method='DIRECT' and status='PENDING'
+      and price_mzn=600 and audience_mode='TARGETED'
+  ) then raise exception 'Direct/M-Pesa request did not persist with expected price and state'; end if;
+  if (select count(*) from public.business_promotion_targets where promotion_id=v_promotion_id) <> 2 then
+    raise exception 'Direct/M-Pesa targeting values were not persisted atomically';
+  end if;
+end
+$direct_assertions$;
+
+set role authenticated;
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
+do $credit_call$
 declare
   result jsonb;
-  before_balance integer;
-  after_balance integer;
-  promotion_id uuid;
 begin
-  select balance_credits into before_balance from public.business_credit_wallets
-  where business_id='20000000-0000-4000-8000-000000000001';
   result := public.purchase_promotion_with_credits(
     '20000000-0000-4000-8000-000000000001',
     '60000000-0000-4000-8000-000000000002',
@@ -70,19 +74,28 @@ begin
     array['Matola'],
     array[]::text[]
   );
-  promotion_id := (result->>'promotion_id')::uuid;
-  select balance_credits into after_balance from public.business_credit_wallets
-  where business_id='20000000-0000-4000-8000-000000000001';
+end
+$credit_call$;
+reset role;
 
-  if before_balance-after_balance <> 55 then raise exception 'Credit wallet debit is not atomic or price factor is wrong'; end if;
-  if not exists (select 1 from public.credit_transactions where reference_id=promotion_id and credits=-55) then
+do $credit_assertions$
+declare
+  v_promotion_id uuid;
+  v_balance integer;
+begin
+  select id into v_promotion_id from public.business_promotions where title='Campanha com créditos';
+  if v_promotion_id is null then raise exception 'Credit-backed promotion was not persisted'; end if;
+  select balance_credits into v_balance from public.business_credit_wallets
+  where business_id='20000000-0000-4000-8000-000000000001';
+  if v_balance <> 145 then raise exception 'Credit wallet debit or targeting factor is incorrect'; end if;
+  if not exists (select 1 from public.credit_transactions where reference_id=v_promotion_id and credits=-55) then
     raise exception 'Credit transaction was not written';
   end if;
-  if not exists (select 1 from public.business_promotions where id=promotion_id and payment_method='CREDITS' and status='ACTIVE') then
+  if not exists (select 1 from public.business_promotions where id=v_promotion_id and payment_method='CREDITS' and status='ACTIVE') then
     raise exception 'Credit-backed promotion was not activated';
   end if;
 end
-$credit_purchase$;
+$credit_assertions$;
 
 do $security$
 declare
@@ -100,4 +113,3 @@ begin
   end if;
 end
 $security$;
-reset role;
