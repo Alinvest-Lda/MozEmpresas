@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { withApiObservability } from "@/lib/observability/api";
 import { z } from "zod";
 import { createAdminClient, enforceRateLimit, getPostgresClient, rateLimitResponse } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
@@ -29,7 +30,7 @@ const schema = z.object({
   targetLocations: z.string().trim().max(500).optional(),
 });
 
-export async function POST(request: Request) {
+export const POST = withApiObservability("api.advertising_request", async (request: Request) => {
   const rate = await enforceRateLimit(request, { scope: "public-advertising-request", limit: 5, windowSeconds: 60 });
   if (!rate.allowed) return rateLimitResponse(rate.unavailable);
 
@@ -109,4 +110,4 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "Verifique os dados preenchidos." }, { status: 400 });
   }
-}
+});
