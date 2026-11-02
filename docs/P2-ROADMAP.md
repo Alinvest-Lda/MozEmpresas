@@ -95,3 +95,16 @@ Ficheiros: `scripts/ci/setup-marketplace-integration.sql` e `scripts/ci/verify-m
 **Limite importante de fidelidade do fixture:** a origem da tabela `commerce_orders` e a política SELECT de base para vendedores não estão representadas na sequência de migrações versionadas consultada. O fixture inclui as regras mínimas de leitura de comprador/vendedor necessárias para executar o teste de UPDATE e os triggers; por isso, este resultado valida as migrações listadas e o comportamento das regras testadas, mas não constitui ainda prova de paridade integral com o schema/RLS activo. Essa paridade fica pendente de uma exportação/reconciliação read-only do schema, sem aplicar alterações em produção.
 
 Também ficam pendentes: integração real com Supabase Storage (o tratamento de compensação de uploads tem testes unitários com mocks), execução através do serviço de Storage e validação de políticas de objectos, testes E2E autenticados com contas reais descartáveis e entrega externa de notificações. Não foram usadas credenciais, tabelas ou dados de produção; nenhuma alteração foi feita ao Supabase activo.
+
+
+### P2.3 — primeira tranche de observabilidade operacional (02/11/2026)
+
+- O logger estruturado existente foi endurecido com allowlist de campos operacionais. Mensagens, payloads, email, telefone, user IDs, tokens, cookies e valores arbitrários deixam de ser serializados pelo logger.
+- Criado `withApiObservability`: valida/gera um `x-request-id`, devolve-o no header de resposta e regista rota, método, status e duração. Excepções não tratadas geram resposta genérica 500 e log apenas com o nome da classe do erro.
+- Instrumentadas as rotas públicas de eventos e decisão de publicidade, contactos e pedidos de publicidade.
+- Erros de persistência nas rotas de contactos, publicidade e decisão de anúncios passam a ser classificados como 500, separando-os de payloads inválidos (400), permitindo que os logs operacionais distingam falhas de cliente e de servidor.
+- Os limites de erro das páginas geral, Super Admin e administração passaram a omitir `error.message`, que poderia conter dados de entrada; mantêm apenas componente, nome do erro e digest técnico.
+- Testes em `tests/observability.test.ts`: sanitização de contexto, propagação do request ID e fallback seguro para excepções não tratadas.
+- CI `41499838769` terminou com sucesso: auditoria, testes unitários, typecheck, lint, build e todos os passos PostgreSQL.
+
+Esta tranche cobre as principais rotas HTTP públicas e error boundaries. Ainda não uniformiza logs em todas as Server Actions nem integra alertas externos, métricas de negócio ou tracing distribuído. A P2.3 permanece aberta para essas extensões e para instrumentação adicional de Storage/notificações.
