@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { canManageBusiness } from "@/lib/businesses/permissions";
 import { canTransitionCommerceOrder, canTransitionListing, commerceOrderTransitions } from "@/lib/commerce/state-machine";
-import { MARKETPLACE_ATTACHMENT_TYPES, validateAttachmentSelection } from "@/lib/publications/attachment-validation";
+import { MARKETPLACE_ATTACHMENT_TYPES, validateAttachmentContentSelection, validateAttachmentSelection } from "@/lib/publications/attachment-validation";
 
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -64,6 +64,7 @@ export async function createListing(formData: FormData) {
   });
   if (!attachmentValidation.files) redirect("/dashboard/marketplace?publish=error");
   const attachments = attachmentValidation.files;
+  if (!(await validateAttachmentContentSelection(attachments))) redirect("/dashboard/marketplace?publish=error");
 
   const { data: createdListing, error } = await supabase.from("listings").insert({
     owner_id: userId,
@@ -316,7 +317,7 @@ export async function updateListing(_state: { error?: string; success?: string }
   const attachments = formData.getAll("attachments").filter((value): value is File => value instanceof File && value.size > 0);
   if (attachments.length > 10) redirect("/dashboard/marketplace/" + listingId + "?status=attachments-error");
   const allowed = new Set(["image/jpeg","image/png","image/webp","application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]);
-  if (attachments.some((file) => !allowed.has(file.type) || file.size > 10 * 1024 * 1024)) redirect("/dashboard/marketplace/" + listingId + "?status=attachments-error");
+  if (attachments.some((file) => !allowed.has(file.type) || file.size > 10 * 1024 * 1024) || !(await validateAttachmentContentSelection(attachments))) redirect("/dashboard/marketplace/" + listingId + "?status=attachments-error");
 
   const base = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "oferta";
   const slug = `${base}-${crypto.randomUUID().slice(0, 8)}`;
