@@ -78,6 +78,22 @@ grant execute on function auth.uid() to authenticated, anon;
 grant select, insert, update on public.commerce_orders to authenticated;
 create policy "commerce buyer read own order" on public.commerce_orders
   for select to authenticated using (buyer_user_id=(select auth.uid()));
+-- The deployed seller-update path also requires SELECT visibility for UPDATE's
+-- row qualification. This baseline is represented in the focused fixture because
+-- its original schema provenance is not available in the checked-in migrations.
+create policy "commerce seller read own orders" on public.commerce_orders
+  for select to authenticated using (
+    exists (
+      select 1 from public.commerce_order_items oi
+      join public.businesses b on b.id=oi.seller_business_id
+      where oi.order_id=commerce_orders.id
+        and (b.owner_id=(select auth.uid()) or exists (
+          select 1 from public.business_members bm
+          where bm.business_id=b.id and bm.user_id=(select auth.uid())
+            and bm.role in ('owner','admin','operator')
+        ))
+    )
+  );
 grant select, insert on public.commerce_order_items to authenticated;
 grant select on public.notifications to authenticated;
 create policy "users read own notifications" on public.notifications for select to authenticated using (user_id=(select auth.uid()));
