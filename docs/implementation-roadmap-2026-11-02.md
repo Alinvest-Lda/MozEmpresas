@@ -243,3 +243,14 @@ Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 
 - Ficheiros adicionados: `scripts/ci/setup-partner-account-hardening.sql` e `scripts/ci/verify-partner-account-hardening.sql`; workflow actualizado em `.github/workflows/ci.yml`.
 - Nenhuma alteração ao Supabase activo, DDL de produção, grants, RLS ou dados.
 - A P2.1 continua aberta: esta tranche cobre o isolamento de conta parceira, não substitui os testes restantes de marketplace, anexos, serviços, publicidade e operações administrativas.
+
+
+### Reavaliação de cobertura e execução P2.1 — 02/11/2026
+
+Antes de acrescentar novos testes, foi feita uma comparação com o histórico e os ficheiros já existentes. A cobertura abaixo foi considerada concluída e retirada da lista de execução repetida: testes Vitest no CI; validação de eventos/elegibilidade publicitária; máquinas de estado de marketplace e oportunidades; permissões de gestão empresarial; teste PostgreSQL de SECURITY DEFINER; teste PostgreSQL de membership/contexto de parceiro.
+
+Foi acrescentada cobertura de validação de anexos (marketplace e publicações) e pedidos de serviços. A validação passou a estar em módulos puros reutilizáveis pelas Server Actions, e as regras existentes foram mantidas. A actualização administrativa de pedidos de serviços passou a comparar o estado actual no UPDATE, evitando sobrescrita concorrente silenciosa. Os testes correspondentes estão em `tests/attachment-validation.test.ts` e `tests/service-validation.test.ts`.
+
+A sequência de commits é: `fc6bd51`, `6c8c6be`, `a904bb7`, `f148057`, `8c44798`, `62c908e`, `7e3a78b`. CI associado: `41494982052`, `41494990423`, `41495141211`, `41495151081`, `41495158198`; aguarda-se a confirmação dos resultados finais.
+
+Não foi alterado o Supabase activo. Permanecem pendentes os testes de integração RLS comprador/vendedor, compensação de Storage sob falhas, concorrência de capacidade de campanhas pagas, ciclo financeiro, transições de serviços ainda sem contrato canónico confirmado e validação visual autenticada. Não retomar a Fase 0/P0–P5 suspensa nem declarar o produto validado em produção com base apenas no CI.
