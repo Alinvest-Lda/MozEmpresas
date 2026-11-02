@@ -2,6 +2,7 @@ import { createPartnerAccess, requireSuperAdmin } from "@/lib/auth/partner-acces
 import { PartnerAccessLink } from "@/components/partner-access-link";
 import { PartnerAccessSubmitButton } from "@/components/partner-access-submit-button";
 import styles from "./parceiros.module.css";
+import { Input, Select } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -79,17 +80,17 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
             <form action={createPartnerAccess} className={styles.form}>
               <label className={styles.field} htmlFor="partner-email">
                 <span>Email do parceiro</span>
-                <input id="partner-email" name="email" type="email" placeholder="nome@organizacao.co.mz" autoComplete="email" required />
+                <Input id="partner-email" name="email" type="email" placeholder="nome@organizacao.co.mz" autoComplete="email" required />
                 <small>O convite só pode ser aceite com este endereço de email.</small>
               </label>
               <label className={styles.field} htmlFor="partner-expiry">
                 <span>Validade do convite</span>
-                <select id="partner-expiry" name="expiresInDays" defaultValue="7">
+                <Select id="partner-expiry" name="expiresInDays" defaultValue="7">
                   <option value="1">1 dia</option>
                   <option value="7">7 dias</option>
                   <option value="14">14 dias</option>
                   <option value="30">30 dias</option>
-                </select>
+                </Select>
               </label>
               <PartnerAccessSubmitButton />
             </form>
@@ -116,13 +117,13 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
             </div>
             <form method="get" className={styles.statusFilter}>
               <label htmlFor="invite-status">Estado</label>
-              <select id="invite-status" name="status" defaultValue={selectedStatus}>
+              <Select id="invite-status" name="status" defaultValue={selectedStatus}>
                 <option value="ALL">Todos</option>
                 <option value="PENDING">Pendentes</option>
                 <option value="ACCEPTED">Aceites</option>
                 <option value="EXPIRED">Expirados</option>
                 <option value="REVOKED">Revogados</option>
-              </select>
+              </Select>
               <button type="submit">Filtrar</button>
             </form>
           </div>
