@@ -184,3 +184,31 @@ Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 
 - Não foram alterados o fluxo de autenticação, o modelo de um utilizador por organização, as RPCs, a base de dados ou as políticas.
 - Commits adicionais: `f149335`, `abe633e`.
 - Validação do deployment final desta sequência pendente.
+
+
+### Monetização e créditos — continuação da Fase 1 (02/11/2026)
+
+- A página de gestão de créditos foi consolidada sob `getSuperAdminContext()`, aplicando a mesma verificação server-side de utilizador activo com papel `super_admin` usada no restante plano de controlo.
+- A vista administrativa apresenta pacotes, pedidos recentes de compra, saldos das carteiras empresariais e movimentos do livro de créditos. Os limites de consulta (50 pedidos, 100 carteiras e 20 movimentos) são explicitados na interface.
+- Os movimentos são consultados apenas para as carteiras listadas, evitando apresentar um histórico sem relação com os saldos mostrados.
+- A página é deliberadamente read-only: não foram criadas acções de aprovação, rejeição, pagamento ou atribuição de créditos. Essas operações exigem validação do fluxo financeiro, transições permitidas e registo auditável antes de serem activadas.
+- A Central de monetização passou a ligar directamente à gestão de créditos e a apresentar o número de produtos publicitários activos.
+- Commits: `416e209`, `17ef6d8`, `4ea8fc7`, `066d3e8`, `7626281`.
+
+### Shell administrativo, acessibilidade e estados de rota (02/11/2026)
+
+- A navegação lateral passou a activar apenas a rota mais específica, evitando que a secção geral de Monetização e a subsecção Créditos apareçam simultaneamente seleccionadas.
+- Melhorado o controlo da navegação móvel: rótulo do botão acompanha o estado aberto/fechado, mantendo o fecho pelo item seleccionado e pelo fundo de sobreposição.
+- Adicionado link de salto para o conteúdo, foco visível consistente e suporte a preferência de movimento reduzido.
+- Criados estados próprios de carregamento e erro para a área administrativa, com skeletons, tentativa de repetição e registo estruturado do erro no cliente.
+- Commits: `af0557c`, `a6c5bb9`, `ae9f7f4`, `afaef7d`, `aff2189`, `52d6d1b`.
+- Não foram alterados autenticação, permissões, tabelas, RLS, grants, RPCs ou dados Supabase.
+
+### Revisão transversal da Fase 1 — estado de 02/11/2026
+
+- Verificados os 10 principais ecrãs administrativos: visão geral, empresas, utilizadores, ofertas, oportunidades, publicidade, suporte, parceiros, monetização e créditos.
+- Todos estes ecrãs apresentam tratamento de estados vazios e de erro no próprio conteúdo; os novos estados de carregamento/erro ao nível do segmento cobrem a área administrativa inteira.
+- Os formulários migrados não apresentam estilos inline de layout; permanecem controlos nativos pontuais para campos ocultos, áreas de texto e botões especializados, onde a substituição não melhora a semântica nem o fluxo.
+- O sistema de estilos partilhado `app/styles/components.css` e `app/styles/tokens.css` foi verificado sem declarações `!important` e sem cores hexadecimais, conforme as regras Stylelint aplicadas a estes ficheiros.
+- A navegação do Super Admin foi comparada com as rotas existentes no repositório; não foi adicionada uma ligação de Notificações inexistente.
+- A Fase 1 continua aberta até confirmação do build/deployment e verificação visual final em desktop e mobile. A Fase 2 não será iniciada nesta entrega.
