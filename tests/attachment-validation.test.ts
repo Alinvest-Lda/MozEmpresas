@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   MARKETPLACE_ATTACHMENT_TYPES,
   PUBLICATION_ATTACHMENT_TYPES,
+  validateAttachmentContentSelection,
   validateAttachmentSelection,
 } from "../lib/publications/attachment-validation";
 
@@ -54,5 +55,25 @@ describe("validateAttachmentSelection", () => {
     expect(PUBLICATION_ATTACHMENT_TYPES.has("image/gif")).toBe(true);
     expect(PUBLICATION_ATTACHMENT_TYPES.has("text/plain")).toBe(true);
     expect(MARKETPLACE_ATTACHMENT_TYPES.has("image/gif")).toBe(false);
+  });
+});
+
+
+describe("attachment content signatures", () => {
+  it("accepts a PDF whose bytes match its declared MIME type", async () => {
+    const pdf = new File([Uint8Array.from([0x25,0x50,0x44,0x46,0x2d,0x31,0x2e,0x37])], "proof.pdf", { type: "application/pdf" });
+    expect(await validateAttachmentContentSelection([pdf])).toBe(true);
+  });
+
+  it("rejects a renamed executable or arbitrary bytes declared as PDF", async () => {
+    const disguised = new File([Uint8Array.from([0x4d,0x5a,0x90,0x00,0x03,0x00])], "invoice.pdf", { type: "application/pdf" });
+    expect(await validateAttachmentContentSelection([disguised])).toBe(false);
+  });
+
+  it("checks image signatures rather than trusting browser MIME metadata", async () => {
+    const validPng = new File([Uint8Array.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a])], "image.png", { type: "image/png" });
+    const spoofedPng = new File([Uint8Array.from([0xff,0xd8,0xff,0x00])], "image.png", { type: "image/png" });
+    expect(await validateAttachmentContentSelection([validPng])).toBe(true);
+    expect(await validateAttachmentContentSelection([spoofedPng])).toBe(false);
   });
 });
