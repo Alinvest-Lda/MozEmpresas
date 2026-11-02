@@ -3,7 +3,7 @@ import { useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type Rea
 import Link from "next/link";
 
 type ButtonVariant="primary"|"secondary"|"quiet"|"danger";
-export function Button({variant="secondary",className="",...props}:ButtonHTMLAttributes<HTMLButtonElement>&{variant?:ButtonVariant}){return <button className={`ui-button ui-button-${variant} ${className}`.trim()} {...props}/>;}
+export function Button({variant="secondary",className="",type="button",...props}:ButtonHTMLAttributes<HTMLButtonElement>&{variant?:ButtonVariant}){return <button type={type} className={`ui-button ui-button-${variant} ${className}`.trim()} {...props}/>;}
 export function Input(props:InputHTMLAttributes<HTMLInputElement>){return <input {...props} className={`ui-input ${props.className??""}`.trim()}/>;}
 export function Select(props:SelectHTMLAttributes<HTMLSelectElement>){return <select {...props} className={`ui-input ${props.className??""}`.trim()}/>;}
 export function Field({label,hint,error,children,htmlFor}:{label:string;hint?:string;error?:string;children:ReactNode;htmlFor?:string}){return <div className="ui-field"><label htmlFor={htmlFor}>{label}</label>{children}{error?<span className="ui-field-error" role="alert">{error}</span>:hint?<small>{hint}</small>:null}</div>;}
