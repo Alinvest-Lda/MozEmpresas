@@ -58,7 +58,7 @@ begin
   if (select count(*) from public.notifications where user_id=auth.uid()) <> 1 then
     raise exception 'Seller owner should receive exactly one new-interest notification';
   end if;
-  if (select status from public.commerce_orders where id='50000000-0000-4000-8000-000000000001') <> 'CONTACTED' then
+  if (select status from public.commerce_orders where id='50000000-0000-4000-8000-000000000001') is distinct from 'CONTACTED' then
     raise exception 'Seller owner should be able to advance the commercial request';
   end if;
 end
