@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { Input, Select } from "@/components/ui";
 import styles from "./oportunidades.module.css";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { moderateOpportunity } from "@/lib/admin/opportunity-actions";
@@ -142,10 +143,10 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
           </div>
 
           <form className={styles.filters} method="get">
-            <label className={styles.searchField}><span>Pesquisar</span><input name="q" defaultValue={q} maxLength={120} placeholder="Título, organização ou localização" /></label>
-            <label><span>Tipo de oportunidade</span><select name="tipo" defaultValue={type}><option value="">Todos os tipos</option>{Object.entries(typeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-            <label><span>Estado</span><select name="estado" defaultValue={status}><option value="">Todos os estados</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-            <label><span>Prazo</span><select name="prazo" defaultValue={deadlineFilter}><option value="">Todos os prazos</option><option value="proximo">Encerra nos próximos 7 dias</option><option value="expirado">Prazo ultrapassado</option><option value="sem-prazo">Sem prazo definido</option></select></label>
+            <label className={styles.searchField}><span>Pesquisar</span><Input name="q" defaultValue={q} maxLength={120} placeholder="Título, organização ou localização" /></label>
+            <label><span>Tipo de oportunidade</span><Select name="tipo" defaultValue={type}><option value="">Todos os tipos</option>{Object.entries(typeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select></label>
+            <label><span>Estado</span><Select name="estado" defaultValue={status}><option value="">Todos os estados</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select></label>
+            <label><span>Prazo</span><Select name="prazo" defaultValue={deadlineFilter}><option value="">Todos os prazos</option><option value="proximo">Encerra nos próximos 7 dias</option><option value="expirado">Prazo ultrapassado</option><option value="sem-prazo">Sem prazo definido</option></Select></label>
             <div className={styles.filterActions}><button className="btn primary" type="submit">Aplicar filtros</button>{q || type || status || deadlineFilter ? <Link className="btn" href="/dashboard/admin/oportunidades">Limpar</Link> : null}</div>
           </form>
 
@@ -163,7 +164,7 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
                     <td><strong className={styles.typeLabel}>{typeLabels[item.type] || item.type}</strong><small className={styles.organization}>{item.organization || "Organização não indicada"}</small><small className={styles.origin}>{item.partner_account_id ? "Conta de parceiro" : "Conta de utilizador"}</small></td>
                     <td><span className={styles.deadline}>{item.closes_at ? dateLabel(item.closes_at) : "Sem prazo"}</span>{expired ? <small className={styles.deadlineExpired}>Prazo ultrapassado</small> : closingSoon ? <small className={styles.deadlineSoon}>Encerra em breve</small> : null}{item.opens_at ? <small className={styles.opensAt}>Abre: {dateLabel(item.opens_at)}</small> : null}</td>
                     <td><span className={`${styles.status} ${styles[statusClass[item.status] || "draft"]}`}>{statusLabels[item.status] || item.status}</span><small className={styles.updated}>Actualizada {dateLabel(item.updated_at)}</small></td>
-                    <td><form action={moderateOpportunity} className={styles.actionForm}><input type="hidden" name="opportunityId" value={item.id}/><label className={styles.srOnly} htmlFor={`status-${item.id}`}>Novo estado para {item.title}</label><select id={`status-${item.id}`} name="status" defaultValue={item.status}><option value="DRAFT">Rascunho</option><option value="PUBLISHED">Publicar</option><option value="CLOSED">Encerrar</option><option value="ARCHIVED">Arquivar</option></select><button className="btn primary" type="submit">Guardar</button></form></td>
+                    <td><form action={moderateOpportunity} className={styles.actionForm}><input type="hidden" name="opportunityId" value={item.id}/><label className={styles.srOnly} htmlFor={`status-${item.id}`}>Novo estado para {item.title}</label><Select id={`status-${item.id}`} name="status" defaultValue={item.status}><option value="DRAFT">Rascunho</option><option value="PUBLISHED">Publicar</option><option value="CLOSED">Encerrar</option><option value="ARCHIVED">Arquivar</option></Select><button className="btn primary" type="submit">Guardar</button></form></td>
                   </tr>;
                 })}</tbody>
               </table>
