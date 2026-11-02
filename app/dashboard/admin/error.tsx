@@ -2,16 +2,15 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui";
+import { logger } from "@/lib/observability/logger";
 
 export default function AdminError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error(JSON.stringify({
-      level: "error",
-      event: "admin.segment_error",
-      message: error.message,
+    logger.error("admin.segment_error", {
+      component: "admin.error",
+      error_name: error.name,
       digest: error.digest ?? null,
-      occurred_at: new Date().toISOString(),
-    }));
+    });
   }, [error]);
 
   return (
