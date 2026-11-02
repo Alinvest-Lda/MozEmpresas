@@ -303,3 +303,11 @@ A P2.3 continua em curso: Server Actions críticas ainda precisam de contexto/lo
 - Erro PostgREST de RPC ainda não publicada é identificado como dependência por activar; a página de publicidade comunica que o pedido M-Pesa seguro aguarda a migração necessária.
 - CI 41503815149: sucesso integral, incluindo testes, TypeScript, lint, build e quatro suites PostgreSQL. Workflow 41504020604 ainda em execução no momento do registo para os últimos ajustes de mensagem.
 - A deployment Vercel READY mais recente observada é do commit 444b005; não confirma os commits de rate limiting e mensagem. A migração 20261102190000_atomic_direct_ad_purchase.sql permanece no repositório e não foi aplicada ao Supabase activo.
+
+
+### P2.4 — consolidação dos guardas de conta nas acções de servidor (02/11/2026)
+
+- O mesmo contexto fail-closed de conta normal activa foi aplicado também a convites empresariais (criação e aceitação), gestão de acessos empresariais e suporte do utilizador.
+- Com esta tranche, os principais fluxos normais de empresa, marketplace, oportunidades, serviços, publicidade, créditos, convites, acessos e suporte passam pelo helper partilhado requireNormalAccount. Os fluxos do parceiro usam requirePartnerAccount e exigem owner/manager para gerir oportunidades/candidaturas. Operações administrativas continuam a validar Super Admin separadamente.
+- O workflow 41504353263 já confirmou os quatro blocos PostgreSQL; a validação geral (auditoria, testes, typecheck, lint e build) ainda estava em execução no momento do registo.
+- Não houve alteração ao Supabase activo nem aplicação da migração publicitária nova.
