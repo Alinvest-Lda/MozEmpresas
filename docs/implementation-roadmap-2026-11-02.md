@@ -222,3 +222,13 @@ Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 
 - Commits: `2127a98`, `46ea0e5`, `5af70b7`.
 - A revisão estática confirmou a API dos componentes Skeleton/Button utilizados nos estados de rota e a presença do token de foco.
 - O build anterior passou, mas estes três commits exigem nova confirmação de build. A inspecção visual interactiva com sessão autenticada continua pendente; a ferramenta de navegação gráfica não está disponível nesta execução. Não considerar a Fase 1 formalmente encerrada até concluir essa verificação e executar `npm run lint` e `npm run typecheck` no ambiente do repositório.
+
+
+### Validação CI e última limpeza CSS — 02/11/2026
+
+- O deployment de produção do commit `39faede003dd730e880cd872f12fc6e2f0800198` foi confirmado como `READY`, com alias `moz-empresas.vercel.app`.
+- O workflow CI `41487482966` terminou com sucesso nos dois jobs: `validate` e `migration-hardening`. No job `validate`, passaram instalação, auditoria de dependências, testes unitários, typecheck, lint e build de produção. O teste isolado PostgreSQL da migração de hardening também passou.
+- A revisão dos nove módulos CSS do Super Admin confirmou ausência de cores hexadecimais. Foi encontrado um único `!important` residual em Publicidade; a regra foi substituída por um selector local mais específico, preservando a margem visual sem prioridade forçada.
+- Commit da limpeza: `961f62d`.
+- A Fase 1 permanece tecnicamente validada por CI e deploy, mas a inspecção visual autenticada em desktop e mobile ainda não foi executada nesta sessão. Não declarar essa verificação como concluída nem avançar para alterações dependentes de esquema na Fase 2 até esse controlo visual.
+- Nenhuma alteração foi feita ao Supabase, schema, grants, RLS ou dados.
