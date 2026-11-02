@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { withApiObservability } from "@/lib/observability/api";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { createAdminClient, enforceRateLimit, getPostgresClient, rateLimitResponse } from "@/lib/security/rate-limit";
@@ -11,7 +12,7 @@ const schema=z.object({
  interests:z.array(z.string()).max(20).optional(),
 });
 
-export async function POST(request:Request){
+export const POST = withApiObservability("api.ads_decision", async (request: Request) => {
  const rate = await enforceRateLimit(request, { scope: "ads-decision", limit: 30, windowSeconds: 60 });
  if (!rate.allowed) return rateLimitResponse(rate.unavailable);
 
@@ -43,4 +44,4 @@ export async function POST(request:Request){
   }
   return NextResponse.json({ad});
  }catch{return NextResponse.json({error:"Pedido de publicidade inválido."},{status:400});}
-}
+});
