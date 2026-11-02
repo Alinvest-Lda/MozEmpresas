@@ -73,6 +73,7 @@ alter table public.business_buyer_interests enable row level security;
 alter table public.access_audit_log enable row level security;
 
 grant usage on schema public, auth to authenticated, anon;
+grant select on public.businesses, public.business_members to authenticated;
 grant execute on function auth.uid() to authenticated, anon;
 grant select, insert, update on public.commerce_orders to authenticated;
 create policy "commerce buyer read own order" on public.commerce_orders
