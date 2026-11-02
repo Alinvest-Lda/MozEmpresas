@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { logger } from "@/lib/observability/logger";
 
 export default function GlobalError({
   error,
@@ -10,13 +11,11 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(JSON.stringify({
-      level: "error",
-      event: "app.root_error",
-      message: error.message,
+    logger.error("app.root_error", {
+      component: "app.global_error",
+      error_name: error.name,
       digest: error.digest ?? null,
-      occurred_at: new Date().toISOString(),
-    }));
+    });
   }, [error]);
 
   return (
