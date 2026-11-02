@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireNormalAccount } from "@/lib/auth/access";
 import { getManagedBusinessIds } from "@/lib/businesses/permissions";
 
 const supportAreas = [
@@ -15,19 +15,9 @@ const supportAreas = [
 ] as const;
 
 async function activeUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login?next=/dashboard/suporte");
-
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("account_status")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (error || !profile || (profile.account_status && profile.account_status !== "ACTIVE")) {
-    redirect("/login?inactive=1");
-  }
-  return { supabase, user };
+  const context = await requireNormalAccount();
+  if (!context.user) redirect("/login?next=/dashboard/suporte");
+  return { supabase: context.supabase, user: context.user };
 }
 
 export async function createSupportTicket(formData: FormData) {
