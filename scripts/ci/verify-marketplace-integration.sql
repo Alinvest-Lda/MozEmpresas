@@ -1,9 +1,5 @@
 -- Assertions run against actual policy and trigger SQL on disposable PostgreSQL.
 -- User IDs: buyer A, seller owner B, seller admin B, unrelated outsider.
-insert into public.commerce_order_events(order_id, actor_user_id, from_status, to_status, note)
-values
- ('50000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001',null,'INTERESTED','buyer event');
-
 -- Buyer creates a commercial-intent order through the actual INSERT policy.
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
@@ -11,6 +7,8 @@ insert into public.commerce_orders(id,buyer_user_id,buyer_business_id,status)
 values ('50000000-0000-4000-8000-000000000001',
         '10000000-0000-4000-8000-000000000001',
         '20000000-0000-4000-8000-000000000001','INTERESTED');
+insert into public.commerce_order_events(order_id,actor_user_id,from_status,to_status,note)
+values ('50000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001',null,'INTERESTED','buyer event');
 insert into public.service_requests(service_id,requester_user_id,requester_business_id,notes)
 values ('30000000-0000-4000-8000-000000000001',
         '10000000-0000-4000-8000-000000000001',
