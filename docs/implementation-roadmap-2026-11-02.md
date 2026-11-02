@@ -132,3 +132,13 @@ Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 
 
 - As páginas de empresas e utilizadores passaram também a consumir os controlos partilhados `Input` e `Select`, mantendo os filtros GET e os formulários de moderação existentes.
 - Commits adicionais: `a8d5ada`, `183562f`.
+
+
+### Consolidação dos módulos operacionais do Super Admin — 02/11/2026
+
+- Migrada a paleta dos módulos Oportunidades, Publicidade e Suporte para tokens partilhados em `app/styles/tokens.css`, preservando os valores de cor existentes.
+- As páginas passaram a utilizar os componentes comuns `Input` e `Select` nos filtros e controlos de estado. Os campos ocultos e a caixa de resposta do suporte mantêm os elementos nativos adequados às suas funções.
+- Preservados os filtros GET, paginação, acções de moderação, estados, respostas aos tickets e consultas Supabase. Não foram alteradas acções de servidor, tabelas, políticas, permissões ou dados.
+- Ficheiros CSS migrados: `oportunidades.module.css`, `publicidade.module.css` e `suporte.module.css`.
+- Commits desta tranche: `be4c23c`, `45c8ef0`, `3f1ebe7`, `863eec3`, `5802c28`, `9a6fa13`, `e6c5011`.
+- Validação de produção pendente para esta tranche; confirmar o deployment da sequência final de commits antes de declarar a migração concluída.
