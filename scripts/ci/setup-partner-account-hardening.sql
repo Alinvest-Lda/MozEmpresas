@@ -7,8 +7,8 @@ begin
 end
 $roles$;
 
-create schema auth;
-create function auth.uid()
+create schema if not exists auth;
+create or replace function auth.uid()
 returns uuid
 language sql
 stable
