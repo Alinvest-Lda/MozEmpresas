@@ -75,6 +75,8 @@ alter table public.access_audit_log enable row level security;
 grant usage on schema public, auth to authenticated, anon;
 grant execute on function auth.uid() to authenticated, anon;
 grant select, insert, update on public.commerce_orders to authenticated;
+create policy "commerce buyer read own order" on public.commerce_orders
+  for select to authenticated using (buyer_user_id=(select auth.uid()));
 grant select, insert on public.commerce_order_items to authenticated;
 grant select on public.notifications to authenticated;
 create policy "users read own notifications" on public.notifications for select to authenticated using (user_id=(select auth.uid()));
