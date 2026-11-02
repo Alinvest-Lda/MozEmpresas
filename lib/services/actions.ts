@@ -1,21 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { canManageBusiness } from "@/lib/businesses/permissions";
-
-const schema = z.object({
-  serviceId: z.string().uuid(),
-  businessId: z.string().uuid().optional().or(z.literal("")),
-  notes: z.string().trim().max(2000).optional(),
-});
-
-const requestStatuses = ["REQUESTED", "UNDER_REVIEW", "QUOTED", "ACCEPTED", "IN_PROGRESS", "COMPLETED"] as const;
+import { parseServiceRequestInput, parseServiceRequestUpdateInput } from "@/lib/services/validation";
 
 export async function requestPlatformService(formData: FormData) {
-  const parsed = schema.safeParse({
+  const parsed = parseServiceRequestInput({
     serviceId: formData.get("serviceId"),
     businessId: formData.get("businessId") || "",
     notes: formData.get("notes") || undefined,
@@ -52,25 +44,22 @@ export async function requestPlatformService(formData: FormData) {
 }
 
 export async function updatePlatformServiceRequest(formData: FormData) {
-  const requestId = String(formData.get("requestId") || "");
-  const status = String(formData.get("status") || "").toUpperCase();
-  const requestedPriceRaw = String(formData.get("requestedPrice") || "").trim();
-
-  if (!z.string().uuid().safeParse(requestId).success || !requestStatuses.includes(status as typeof requestStatuses[number])) {
-    return { error: "Pedido ou estado inválido." };
+  const parsed = parseServiceRequestUpdateInput({
+    requestId: formData.get("requestId"),
+    status: formData.get("status"),
+    requestedPrice: formData.get("requestedPrice"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error === "INVALID_PRICE" ? "O valor proposto é inválido." : "Pedido ou estado inválido." };
   }
-
-  const requestedPrice = requestedPriceRaw ? Number(requestedPriceRaw.replace(",", ".")) : null;
-  if (requestedPriceRaw && (requestedPrice === null || !Number.isFinite(requestedPrice) || requestedPrice < 0)) {
-    return { error: "O valor proposto é inválido." };
-  }
+  const { requestId, status, requestedPrice } = parsed.data;
 
   const { supabase, authorized, user } = await getSuperAdminContext();
   if (!authorized || !user) return { error: "Sem autorização para gerir pedidos." };
 
   const { data: request, error: requestError } = await supabase
     .from("service_requests")
-    .select("id,requester_user_id,service_id")
+    .select("id,requester_user_id,service_id,status")
     .eq("id", requestId)
     .maybeSingle();
 
@@ -86,6 +75,7 @@ export async function updatePlatformServiceRequest(formData: FormData) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", requestId)
+    .eq("status", request.status)
     .select("id")
     .maybeSingle();
 
