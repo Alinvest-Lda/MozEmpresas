@@ -129,3 +129,6 @@ Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 
 - A lógica de consultas, filtros, moderação e permissões destas páginas não foi alterada. Nenhuma alteração foi feita ao Supabase.
 - Commits desta tranche: `b309017`, `17fecb6`, `52d497a`, `d4cb36f`.
 - Validação pendente: confirmar o resultado dos deployments Vercel gerados por estes commits e executar lint/build automatizados; não marcar a Fase 1 como concluída antes dessa verificação.
+
+- As páginas de empresas e utilizadores passaram também a consumir os controlos partilhados `Input` e `Select`, mantendo os filtros GET e os formulários de moderação existentes.
+- Commits adicionais: `a8d5ada`, `183562f`.
