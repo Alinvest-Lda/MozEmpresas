@@ -18,15 +18,31 @@ export async function savePublicationAttachments(
   if (!selected.length) return;
 
   const rows: Array<Record<string, string | number>> = [];
-  for (const file of selected) {
-    const kind = file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT";
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 140);
-    const path = `${userId}/${resourceType.toLowerCase()}/${resourceId}/${crypto.randomUUID()}-${safeName}`;
-    const { error } = await supabase.storage.from("publication-media").upload(path, file, { contentType: file.type, upsert: false });
-    if (error) throw error;
-    rows.push({ resource_type: resourceType, resource_id: resourceId, storage_path: path, file_name: file.name, mime_type: file.type, size_bytes: file.size, kind });
+  const uploadedPaths: string[] = [];
+
+  async function cleanupUploadedFiles() {
+    if (!uploadedPaths.length) return true;
+    const { error } = await supabase.storage.from("publication-media").remove(uploadedPaths);
+    return !error;
   }
 
-  const { error } = await supabase.from("publication_attachments").insert(rows);
-  if (error) throw error;
+  try {
+    for (const file of selected) {
+      const kind = file.type.startsWith("image/") ? "IMAGE" : "DOCUMENT";
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 140);
+      const path = `${userId}/${resourceType.toLowerCase()}/${resourceId}/${crypto.randomUUID()}-${safeName}`;
+      // Track before upload so an ambiguous network failure can also be compensated.
+      uploadedPaths.push(path);
+      const { error } = await supabase.storage.from("publication-media").upload(path, file, { contentType: file.type, upsert: false });
+      if (error) throw error;
+      rows.push({ resource_type: resourceType, resource_id: resourceId, storage_path: path, file_name: file.name, mime_type: file.type, size_bytes: file.size, kind });
+    }
+
+    const { error } = await supabase.from("publication_attachments").insert(rows);
+    if (error) throw error;
+  } catch (error) {
+    const cleaned = await cleanupUploadedFiles();
+    if (!cleaned) throw new Error("ATTACHMENT_CLEANUP_FAILED");
+    throw error;
+  }
 }
