@@ -164,3 +164,13 @@ Por decisão do responsável do projecto, a reconciliação detalhada da Fase 0 
 - Não foram alterados dados, tabelas, policies, permissões ou configuração do Supabase.
 - Commits: `6b002c9` e `71aea61`.
 - Validação de build/deployment pendente.
+
+
+### Continuação da migração dos controlos administrativos — 02/11/2026
+
+- A página de gestão de ofertas passou a utilizar os componentes partilhados `Field`, `Input`, `Select` e `Button` nos filtros e na moderação; estilos inline foram substituídos por classes responsivas no CSS global.
+- A página de acessos de parceiros passou a utilizar `Input` e `Select` no convite e no filtro de estado, preservando o botão especializado de submissão e o fluxo seguro de activação.
+- Mantidos os parâmetros GET, a paginação, as Server Actions, a RPC `partner_access_list`, os estados dos convites e os dados apresentados.
+- Não foram alterados o modelo de um utilizador por organização parceira, as permissões, a base de dados ou as políticas Supabase.
+- Commits: `5f4857d`, `4906af4`, `9140167`.
+- Validação do deployment desta tranche pendente.
