@@ -3,18 +3,25 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requirePartnerAccount } from "@/lib/auth/access";
+import { canManagePartnerOpportunity } from "@/lib/auth/partner-permissions";
 import { canTransitionOpportunity, canTransitionPartnerApplication } from "@/lib/opportunities/state-machine";
+
+async function partnerManager() {
+  const context = await requirePartnerAccount();
+  if (!context.user || !canManagePartnerOpportunity(context.partnerContext.member_role)) {
+    redirect("/parceiro/oportunidades?error=forbidden");
+  }
+  return { supabase: context.supabase, userId: context.user.id, accountId: context.partnerContext.account_id };
+}
 
 export async function changeOpportunityStatus(formData: FormData) {
   const id = String(formData.get("opportunity_id") || "");
   const status = String(formData.get("status") || "");
-  if (!id || !["PUBLISHED","CLOSED","ARCHIVED","DRAFT"].includes(status)) redirect("/parceiro/oportunidades?error=status");
-  const supabase = await createClient();
-  const { data: claims } = await supabase.auth.getClaims();
-  const userId = claims?.claims?.sub;
-  if (!userId) redirect("/login");
-  const { data: accountId } = await supabase.rpc("current_partner_account_id");
-  if (!accountId) redirect("/parceiro/oportunidades?error=status");
+  if (!id || !["PUBLISHED", "CLOSED", "ARCHIVED", "DRAFT"].includes(status)) {
+    redirect("/parceiro/oportunidades?error=status");
+  }
+  const { supabase, accountId } = await partnerManager();
 
   const { data: currentOpportunity, error: readError } = await supabase
     .from("opportunities")
@@ -46,24 +53,17 @@ export async function changeOpportunityApplicationStatus(formData: FormData) {
   if (!id || !["UNDER_REVIEW", "SHORTLISTED", "ACCEPTED", "REJECTED"].includes(status)) {
     redirect("/parceiro/oportunidades/candidaturas?error=status");
   }
-  const supabase = await createClient();
-  const { data: claims } = await supabase.auth.getClaims();
-  const userId = claims?.claims?.sub;
-  if (!userId) redirect("/login");
-  const { data: accountId } = await supabase.rpc("current_partner_account_id");
-  if (!accountId) redirect("/parceiro/oportunidades/candidaturas?error=status");
+  const { supabase, accountId } = await partnerManager();
+
   const { data: application, error: applicationError } = await supabase
     .from("opportunity_applications")
     .select("id,opportunity_id,status")
     .eq("id", id)
     .maybeSingle();
-  if (
-    applicationError ||
-    !application ||
-    !canTransitionPartnerApplication(application.status, status)
-  ) {
+  if (applicationError || !application || !canTransitionPartnerApplication(application.status, status)) {
     redirect("/parceiro/oportunidades/candidaturas?error=status");
   }
+
   const { data: ownedOpportunity, error: ownershipError } = await supabase
     .from("opportunities")
     .select("id")
@@ -71,6 +71,7 @@ export async function changeOpportunityApplicationStatus(formData: FormData) {
     .eq("partner_account_id", accountId)
     .maybeSingle();
   if (ownershipError || !ownedOpportunity) redirect("/parceiro/oportunidades/candidaturas?error=status");
+
   const { data: updatedApplication, error } = await supabase
     .from("opportunity_applications")
     .update({ status, updated_at: new Date().toISOString() })
