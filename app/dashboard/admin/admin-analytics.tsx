@@ -1,4 +1,4 @@
-"import { getSuperAdminContext } from "@/lib/auth/super-admin";
+import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import styles from "./admin-analytics.module.css";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
