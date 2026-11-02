@@ -265,3 +265,17 @@ Não foi alterado o Supabase activo. Permanecem pendentes os testes de integraç
 - Workflow `41498073765`: terminou integralmente com sucesso, incluindo auditoria, testes unitários, typecheck, lint, build de produção e os três passos PostgreSQL.
 - Limitação: como a sequência versionada não contém a origem completa de `commerce_orders` nem a política SELECT inicial do vendedor, o fixture inclui as políticas-base de leitura de comprador/vendedor necessárias para simular a operação. É necessária uma comparação read-only com o schema activo para fechar a paridade RLS. Os testes de anexos continuam unitários/mockados; Storage real e entrega externa de notificações não foram simulados.
 - Não houve ligação a credenciais de produção, migração, DDL, grant, alteração de RLS ou mutação de dados no Supabase activo.
+
+
+### P2.3 — observabilidade operacional, primeira tranche (02/11/2026)
+
+- Endurecido `lib/observability/logger.ts`: allowlist de campos de baixo risco, normalização de strings e exclusão de dados pessoais, segredos, payloads e mensagens arbitrárias.
+- Criado `lib/observability/api.ts` com `withApiObservability`, correlação por `x-request-id`, header de resposta, status HTTP, método, rota e duração. O wrapper não regista corpos de pedido nem respostas; excepções inesperadas geram resposta genérica 500.
+- Aplicado nas rotas `/api/ads/event`, `/api/ads/decision`, `/api/contactos` e `/api/publicidade`.
+- Corrigida a classificação HTTP: falhas de persistência em contactos, publicidade e decisão de anúncios deixam de ser devolvidas como 400; erros de entrada continuam 400 e falhas internas passam a 500.
+- Os error boundaries geral, raiz e Super Admin deixaram de registar `error.message`; registam apenas nome da classe, componente e digest técnico.
+- Testes em `tests/observability.test.ts` cobrem redacção de campos sensíveis, propagação/geração do request ID e resposta segura a excepções.
+- CI `41499838769` passou integralmente: auditoria, testes unitários, typecheck, lint, build e os três grupos de testes PostgreSQL.
+- Commits principais: `95a7f01`, `95a0156`, `ccdc687`, `c734dac`, `c63c34a`, `bbcf520`, `ee171e5`, `d5d0e0b`, `aae7ec8`, `9ac46c2`, `ece196b`.
+
+A P2.3 continua em curso: Server Actions críticas ainda precisam de contexto/logging uniforme; alertas externos, métricas operacionais e integração com Storage/notificações ficam para a tranche seguinte. Nenhuma alteração foi feita ao Supabase activo.
