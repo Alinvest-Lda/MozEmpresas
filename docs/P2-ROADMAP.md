@@ -147,3 +147,11 @@ Esta tranche cobre as principais rotas HTTP públicas e error boundaries. Ainda 
 - CI 41503815149 terminou com sucesso: auditoria, testes unitários, typecheck, lint, build e todos os quatro grupos PostgreSQL. O workflow 41504020604, que inclui a mensagem de dependência ausente, ainda estava em execução no momento deste registo.
 
 **Estado de produção:** a última deployment Vercel READY observada corresponde ao commit 444b005; não inclui os commits posteriores de rate limiting e da mensagem de dependência. A migração 20261102190000_atomic_direct_ad_purchase.sql continua apenas no repositório. Não aplicar a migração nem activar o fluxo M-Pesa seguro em produção sem reconciliação read-only do schema e aprovação explícita.
+
+
+### P2.4 — consolidação dos guardas de conta nas acções de servidor (02/11/2026)
+
+- O mesmo contexto fail-closed de conta normal activa foi aplicado também a convites empresariais (criação e aceitação), gestão de acessos empresariais e suporte do utilizador.
+- Com esta tranche, os principais fluxos normais de empresa, marketplace, oportunidades, serviços, publicidade, créditos, convites, acessos e suporte passam pelo helper partilhado requireNormalAccount. Os fluxos do parceiro usam requirePartnerAccount e exigem owner/manager para gerir oportunidades/candidaturas. Operações administrativas continuam a validar Super Admin separadamente.
+- O workflow 41504353263 já confirmou os quatro blocos PostgreSQL; a validação geral (auditoria, testes, typecheck, lint e build) ainda estava em execução no momento do registo.
+- Não houve alteração ao Supabase activo nem aplicação da migração publicitária nova.
