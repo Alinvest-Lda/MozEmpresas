@@ -13,13 +13,14 @@ export async function acceptBusinessInvitation(formData: FormData) {
   if (!context.user?.email) redirect("/login");
   const supabase = context.supabase;
   const user = context.user;
+  const normalizedEmail = user.email.toLowerCase();
 
   const tokenHash = createHash("sha256").update(token).digest("hex");
   const { data: invitation } = await supabase
     .from("business_invitations")
     .select("id,business_id,role,email,expires_at")
     .eq("token_hash", tokenHash)
-    .eq("email", user.email.toLowerCase())
+    .eq("email", normalizedEmail)
     .is("accepted_at", null)
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
@@ -57,7 +58,7 @@ export async function acceptBusinessInvitation(formData: FormData) {
     action: "INVITE_ACCEPTED",
     role_from: null,
     role_to: invitation.role,
-    metadata: { email: user.email.toLowerCase() },
+    metadata: { email: normalizedEmail },
   });
 
   revalidatePath("/dashboard");
