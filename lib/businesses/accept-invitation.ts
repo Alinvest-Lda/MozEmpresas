@@ -10,10 +10,12 @@ export async function acceptBusinessInvitation(formData: FormData) {
   if (!/^[a-f0-9]{64}$/.test(token)) redirect("/dashboard/acessos?invite=invalid");
 
   const context = await requireNormalAccount();
-  if (!context.user?.email) redirect("/login");
-  const supabase = context.supabase;
+  const email = context.user?.email;
+  if (!email) redirect("/login");
   const user = context.user;
-  const normalizedEmail = user.email.toLowerCase();
+  if (!user) redirect("/login");
+  const supabase = context.supabase;
+  const normalizedEmail = email.toLowerCase();
 
   const tokenHash = createHash("sha256").update(token).digest("hex");
   const { data: invitation } = await supabase
