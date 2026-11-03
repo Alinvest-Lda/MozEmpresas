@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireNormalAccount } from "@/lib/auth/access";
 
 const schema = z.object({
@@ -13,7 +14,7 @@ const schema = z.object({
 const memberSchema = schema.pick({ businessId: true, userId: true });
 
 async function manager(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   businessId: string,
   userId: string,
 ) {
