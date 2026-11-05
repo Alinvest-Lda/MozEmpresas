@@ -311,3 +311,12 @@ A P2.3 continua em curso: Server Actions críticas ainda precisam de contexto/lo
 - Com esta tranche, os principais fluxos normais de empresa, marketplace, oportunidades, serviços, publicidade, créditos, convites, acessos e suporte passam pelo helper partilhado requireNormalAccount. Os fluxos do parceiro usam requirePartnerAccount e exigem owner/manager para gerir oportunidades/candidaturas. Operações administrativas continuam a validar Super Admin separadamente.
 - O workflow 41504353263 já confirmou os quatro blocos PostgreSQL; a validação geral (auditoria, testes, typecheck, lint e build) ainda estava em execução no momento do registo.
 - Não houve alteração ao Supabase activo nem aplicação da migração publicitária nova.
+
+
+### P2.5 — primeira tranche de acessibilidade e desempenho (05/11/2026)
+
+- Identificado carregamento sem limite de todas as associações empresariais e membros administrativos no directório de utilizadores, apesar de a listagem apresentar no máximo 100 perfis. A correcção exige preservar os filtros globais de associação e acesso; não substituir por filtros parciais/inexactos.
+- O módulo de oportunidades faz oito pedidos de contagem paralelos além da listagem. Avaliar agregação no servidor apenas após desenho e testes que preservem os totais.
+- Corrigidos Dialog/Drawer do kit partilhado: foco inicial, contenção do ciclo de foco, fecho por Escape, restauração do foco anterior, título ligado por aria-labelledby e backdrop que só fecha quando o alvo é o próprio backdrop.
+- Commit 78f1ba0; CI 41988169238 pendente no momento do registo.
+- A auditoria visual autenticada desktop/mobile permanece por executar. Nenhuma migração ou alteração de produção foi aplicada.
