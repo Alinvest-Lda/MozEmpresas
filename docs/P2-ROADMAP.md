@@ -155,3 +155,12 @@ Esta tranche cobre as principais rotas HTTP públicas e error boundaries. Ainda 
 - Com esta tranche, os principais fluxos normais de empresa, marketplace, oportunidades, serviços, publicidade, créditos, convites, acessos e suporte passam pelo helper partilhado requireNormalAccount. Os fluxos do parceiro usam requirePartnerAccount e exigem owner/manager para gerir oportunidades/candidaturas. Operações administrativas continuam a validar Super Admin separadamente.
 - O workflow 41504353263 já confirmou os quatro blocos PostgreSQL; a validação geral (auditoria, testes, typecheck, lint e build) ainda estava em execução no momento do registo.
 - Não houve alteração ao Supabase activo nem aplicação da migração publicitária nova.
+
+
+### P2.5 — primeira tranche de acessibilidade e auditoria de desempenho (05/11/2026)
+
+- Auditoria estática identificou consultas não limitadas em `app/dashboard/admin/usuarios/page.tsx`: a página lê todas as linhas de `platform_members` e `business_members` para depois apresentar no máximo 100 perfis. O volume de dados transferido e o trabalho em memória crescem com a plataforma; requer redesenho cuidadoso dos filtros de associação/acesso, sem alterar a semântica.
+- `app/dashboard/admin/oportunidades/page.tsx` executa oito consultas de contagem paralelas, além da consulta paginada. Uma futura consolidação deve preservar a precisão dos indicadores e ser testada antes de introduzir RPC/migração.
+- `Dialog` e `Drawer` no kit partilhado não tinham tratamento de Escape, ciclo de foco, reposição do foco anterior ou associação semântica do título. Corrigido em `components/ui/index.tsx`: foco inicial, contenção de Tab/Shift+Tab, Escape, retorno do foco, `aria-labelledby` e fecho apenas por clique no backdrop.
+- Commit: 78f1ba0. CI 41988169238 foi iniciado; resultado ainda pendente neste registo.
+- Não foi realizada validação visual autenticada em browser. Não foram alterados dados, schema, grants ou políticas RLS de produção.
