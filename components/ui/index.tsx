@@ -1,5 +1,5 @@
 "use client";
-import { useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
+import { useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
 import Link from "next/link";
 
 type ButtonVariant="primary"|"secondary"|"quiet"|"danger";
@@ -17,8 +17,40 @@ export function TableBody({children}:{children:ReactNode}){return <tbody>{childr
 export function TableRow({children}:{children:ReactNode}){return <tr>{children}</tr>;}
 export function TableCell({children,header=false}:{children:ReactNode;header?:boolean}){return header?<th scope="col">{children}</th>:<td>{children}</td>;}
 export function Tabs({items,defaultValue}:{items:{value:string;label:string}[];defaultValue:string}){const[active,setActive]=useState(defaultValue);return <div className="ui-tabs" role="tablist" aria-label="Separadores">{items.map(item=><button key={item.value} type="button" role="tab" aria-selected={active===item.value} onClick={()=>setActive(item.value)}>{item.label}</button>)}</div>;}
-export function Dialog({open,title,children,onClose}:{open:boolean;title:string;children:ReactNode;onClose:()=>void}){if(!open)return null;return <div className="ui-overlay" onMouseDown={onClose}><section role="dialog" aria-modal="true" aria-label={title} className="ui-dialog" onMouseDown={e=>e.stopPropagation()}><header><strong>{title}</strong><Button variant="quiet" onClick={onClose}>Fechar</Button></header><div>{children}</div></section></div>;}
-export function Drawer({open,title,children,onClose}:{open:boolean;title:string;children:ReactNode;onClose:()=>void}){if(!open)return null;return <div className="ui-overlay ui-overlay-drawer" onMouseDown={onClose}><aside role="dialog" aria-modal="true" aria-label={title} className="ui-drawer" onMouseDown={e=>e.stopPropagation()}><header><strong>{title}</strong><Button variant="quiet" onClick={onClose}>Fechar</Button></header><div>{children}</div></aside></div>;}
+function useModalAccessibility(open:boolean,onClose:()=>void){
+  const dialogRef=useRef<HTMLElement>(null);
+  const titleId=useId();
+  useEffect(()=>{
+    if(!open)return;
+    const previousFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
+    const root=dialogRef.current;
+    const focusable=()=>Array.from(root?.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')??[]);
+    const first=focusable()[0];
+    (first??root)?.focus();
+    const handleKeyDown=(event:KeyboardEvent)=>{
+      if(event.key==="Escape"){event.preventDefault();onClose();return;}
+      if(event.key!=="Tab"||!root)return;
+      const items=focusable().filter(item=>item.offsetParent!==null);
+      if(!items.length){event.preventDefault();root.focus();return;}
+      const firstItem=items[0],lastItem=items[items.length-1];
+      if(event.shiftKey&&(document.activeElement===firstItem||document.activeElement===root)){event.preventDefault();lastItem.focus();}
+      else if(!event.shiftKey&&document.activeElement===lastItem){event.preventDefault();firstItem.focus();}
+    };
+    document.addEventListener("keydown",handleKeyDown);
+    return()=>{document.removeEventListener("keydown",handleKeyDown);previousFocus?.focus();};
+  },[open,onClose]);
+  return {dialogRef,titleId};
+}
+export function Dialog({open,title,children,onClose}:{open:boolean;title:string;children:ReactNode;onClose:()=>void}){
+  const {dialogRef,titleId}=useModalAccessibility(open,onClose);
+  if(!open)return null;
+  return <div className="ui-overlay" onMouseDown={event=>{if(event.target===event.currentTarget)onClose();}}><section ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId} className="ui-dialog" onMouseDown={event=>event.stopPropagation()}><header><strong id={titleId}>{title}</strong><Button variant="quiet" onClick={onClose}>Fechar</Button></header><div>{children}</div></section></div>;
+}
+export function Drawer({open,title,children,onClose}:{open:boolean;title:string;children:ReactNode;onClose:()=>void}){
+  const {dialogRef,titleId}=useModalAccessibility(open,onClose);
+  if(!open)return null;
+  return <div className="ui-overlay ui-overlay-drawer" onMouseDown={event=>{if(event.target===event.currentTarget)onClose();}}><aside ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId} className="ui-drawer" onMouseDown={event=>event.stopPropagation()}><header><strong id={titleId}>{title}</strong><Button variant="quiet" onClick={onClose}>Fechar</Button></header><div>{children}</div></aside></div>;
+}
 export function Toast({children,tone="success"}:{children:ReactNode;tone?:"success"|"danger"|"warning"}){return <div className={`ui-toast ui-tone-${tone}`} role={tone==="danger"?"alert":"status"}>{children}</div>;}
 export function EmptyState({title,description,action}:{title:string;description:string;action?:ReactNode}){return <div className="ui-empty"><strong>{title}</strong><p>{description}</p>{action}</div>;}
 export function ErrorState({title="Não foi possível carregar esta informação.",onRetry}:{title?:string;onRetry?:()=>void}){return <div className="ui-error" role="alert"><strong>{title}</strong>{onRetry?<Button onClick={onRetry}>Tentar novamente</Button>:null}</div>;}
