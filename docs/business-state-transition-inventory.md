@@ -53,7 +53,7 @@ Esta regra é distinta dos pagamentos próprios da plataforma, como compra de cr
 
 Foram confirmadas no esquema activo as tabelas `partner_accounts`, `partner_account_members`, `credit_purchase_requests`, `platform_service_orders`, `financial_payments`, `business_promotions`, `partner_ad_campaigns`, `advertising_requests`, `support_tickets` e `platform_members`. Os checks de estado de `credit_purchase_requests`, `platform_service_orders` e `partner_ad_campaigns` correspondem aos valores listados acima. As tabelas públicas verificadas têm RLS activo. A função `current_partner_account_id()` não verifica o estado da conta/perfil, embora `current_partner_opportunity_role()` o faça; incluir esse desvio no fecho de autorização multi-tenant.
 
-O projecto activo apresenta 67 registos de migração, enquanto o inventário do repositório documenta 53 ficheiros SQL e várias diferenças de nome. A existência de tabelas em produção não comprova que a migração correspondente esteja versionada ou seja reproduzível. Não executar `db push`, reparação do ledger ou alterações RLS até reconciliar cada diferença.
+A consulta SQL e a API de listagem foram comparadas novamente em 10/11/2026: ambas devolvem 68 versões únicas no ledger, sem versões duplicadas ou ausentes entre as fontes. A migration `20261102190000_atomic_direct_ad_purchase.sql` existe no repositório, mas não consta do ledger de produção e declara-se repository-only até revisão/aprovação. A existência de tabelas em produção não comprova que todas as migrations do repositório estejam aplicadas ou sejam reproduzíveis. Não executar `db push`, reparação do ledger ou alterações RLS até reconciliar cada ficheiro com o esquema nativo.
 
 ## 6. Limitações
 
@@ -92,6 +92,6 @@ Estes estados estão espelhados em `lib/monetization/state-catalog.ts`, com test
 
 A migration `20261101111659_harden_partner_account_memberships` consta do ledger activo e reforça a regra de uma membership activa por utilizador, com resolução de contexto apenas para uma única conta elegível. A RPC legada `partner_account_add_manager` permanece bloqueada até existir convite vinculado a `account_id` e papel. O teste SQL em `scripts/ci/verify-partner-account-hardening.sql` agora protege explicitamente esta decisão.
 
-**Reconciliação:** a consulta SQL devolveu 68 registos no ledger, enquanto a API `list_migrations` devolveu 67; a diferença ainda não está explicada. A migration `20261102190000_atomic_direct_ad_purchase.sql` está no repositório/CI mas não consta do ledger de produção consultado. Não executar push, repair ou replay até resolver a diferença e comparar o esquema nativo.
+**Reconciliação:** a consulta SQL e a API `list_migrations` confirmaram 68 versões únicas em ambas. A diferença 68/67 da primeira leitura não se confirmou. A migration `20261102190000_atomic_direct_ad_purchase.sql` está no repositório/CI, mas não consta do ledger de produção e permanece não aplicada. Não executar push, repair ou replay sem comparar a migration com o esquema nativo e validar os testes isolados.
 
 Ver também [Fecho da Fase 1 do roadmap de lançamento](./phase-1-architecture-closure-2026-11-10.md) para findings de segurança, modelo de parceiro e critérios de saída.
