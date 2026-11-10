@@ -5,7 +5,7 @@ import { Input, Select } from "@/components/ui";
 import styles from "./usuarios.module.css";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
-type SearchParams = Promise<{ q?: string; tipo?: string; estado?: string; acesso?: string; associacao?: string }>;
+type SearchParams = Promise<{ q?: string; tipo?: string; estado?: string; acesso?: string; associacao?: string; page?: string }>;
 
 const userTypes: Record<string, string> = {
   empresa: "Empresa",
@@ -26,6 +26,8 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
   const status = ["ACTIVE", "INACTIVE", "SUSPENDED", "DELETED"].includes(params?.estado ?? "") ? params?.estado ?? "" : "";
   const access = ["admin_activo", "admin_inactivo", "sem_admin"].includes(params?.acesso ?? "") ? params?.acesso ?? "" : "";
   const association = ["com_empresa", "sem_empresa"].includes(params?.associacao ?? "") ? params?.associacao ?? "" : "";
+  const pageNumber = Math.max(1, Math.min(10000, Number.parseInt(params?.page ?? "1", 10) || 1));
+  const pageSize = 30;
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
 
@@ -42,8 +44,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
   let usersQuery = supabase
     .from("profiles")
     .select("id,full_name,user_type,account_status,created_at,deactivated_at,deletion_requested_at", { count: "exact" })
-    .order("created_at", { ascending: false })
-    .limit(100);
+    .order("created_at", { ascending: false });
 
   if (q) {
     const safeQuery = q.replace(/[%,_]/g, " ").trim();
@@ -57,12 +58,30 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
   if (association === "com_empresa") usersQuery = businessUserIds.length ? usersQuery.in("id", businessUserIds) : usersQuery.eq("id", "00000000-0000-0000-0000-000000000000");
   if (association === "sem_empresa" && businessUserIds.length) usersQuery = usersQuery.not("id", "in", `(${businessUserIds.join(",")})`);
 
-  const { data: users, count, error } = await usersQuery;
+  let currentPage = pageNumber;
+  let from = (currentPage - 1) * pageSize;
+  let { data: users, count, error } = await usersQuery.range(from, from + pageSize - 1);
+  const total = count ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  if (currentPage > pageCount) {
+    currentPage = pageCount;
+    from = (currentPage - 1) * pageSize;
+    ({ data: users, count, error } = await usersQuery.range(from, from + pageSize - 1));
+  }
   const userIds = (users ?? []).map((profile) => profile.id);
   const [{ data: memberships }, { data: platformMembers }] = userIds.length ? await Promise.all([
     supabase.from("business_members").select("user_id,business_id,role,businesses:business_id(name)").in("user_id", userIds),
     supabase.from("platform_members").select("user_id,role,active").in("user_id", userIds),
   ]) : [{ data: [] }, { data: [] }];
+
+  const filterParams = new URLSearchParams();
+  if (q) filterParams.set("q", q);
+  if (type) filterParams.set("tipo", type);
+  if (status) filterParams.set("estado", status);
+  if (access) filterParams.set("acesso", access);
+  if (association) filterParams.set("associacao", association);
+  const queryString = filterParams.toString();
+  const pageHref = (number: number) => "/dashboard/admin/usuarios?" + [queryString, "page=" + number].filter(Boolean).join("&");
 
   const activeCount = (users ?? []).filter((profile) => profile.account_status === "ACTIVE").length;
   const deletionRequests = (users ?? []).filter((profile) => Boolean(profile.deletion_requested_at)).length;
@@ -86,7 +105,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
           <div className={styles.sectionHead}>
             <div>
               <h2 id="users-directory-title">Directório de utilizadores</h2>
-              <p>Consulta até 100 registos por pesquisa, dos mais recentes para os mais antigos. Não altera contas nem permissões.</p>
+              <p>Consulte os perfis por páginas, dos mais recentes para os mais antigos. Não altera contas nem permissões.</p>
             </div>
           </div>
 
@@ -140,8 +159,8 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
           {error ? <div className="notice" role="alert">Não foi possível carregar os perfis. Verifique as permissões da base de dados e tente novamente.</div> : users?.length ? (
             <>
               <div className={styles.tableMeta}>
-                <span>A mostrar <strong>{users.length}</strong> de <strong>{(count ?? users.length).toLocaleString("pt-MZ")}</strong> perfis correspondentes</span>
-                <span>Máximo de 100 por consulta</span>
+                <span>A mostrar <strong>{from + 1}–{from + users.length}</strong> de <strong>{total.toLocaleString("pt-MZ")}</strong> perfis correspondentes</span>
+                <span>{pageSize} perfis por página</span>
               </div>
               <div className={styles.tableWrap}>
                 <table className={styles.table}>
@@ -187,6 +206,13 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
                   </tbody>
                 </table>
               </div>
+              <nav className={styles.pagination} aria-label="Paginação">
+                <span>Página {currentPage} de {pageCount}</span>
+                <div>
+                  {currentPage > 1 ? <Link className="btn" href={pageHref(currentPage - 1)}>← Anterior</Link> : <span className={styles.secondary}>← Anterior</span>}
+                  {currentPage < pageCount ? <Link className="btn" href={pageHref(currentPage + 1)}>Seguinte →</Link> : <span className={styles.secondary}>Seguinte →</span>}
+                </div>
+              </nav>
             </>
           ) : <div className={styles.emptyState}><strong>{q || type || status || access || association ? "Nenhum perfil corresponde aos filtros." : "Não existem perfis para apresentar."}</strong><span>Experimente alterar ou limpar os filtros de pesquisa.</span></div>}
         </section>
