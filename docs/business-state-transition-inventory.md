@@ -78,3 +78,20 @@ A máquina de estados de `listings` foi adicionada a `lib/commerce/state-machine
 Transições configuradas: `DRAFT → PUBLISHED/ARCHIVED`; `PUBLISHED → PAUSED/SOLD_OUT/ARCHIVED`; `PAUSED → PUBLISHED/SOLD_OUT/ARCHIVED`; `SOLD_OUT → PUBLISHED/ARCHIVED`; `ARCHIVED` é terminal. A edição de conteúdo sem alteração do estado actual continua permitida, sujeita às verificações de propriedade existentes.
 
 Foram acrescentados testes unitários em `tests/commerce-state-machine.test.ts`. A validação CI de uma versão anterior já confirmou os testes existentes e a tarefa isolada de hardening SQL, mas os últimos commits com as transições de publicações ainda precisam de terminar o CI. A máquina de estados é aplicada nas acções da aplicação; a validação de todas as vias SQL/RLS continua pendente.
+
+
+## 8. Actualização de esquema e catálogo financeiro (2026-11-10)
+
+A verificação read-only de 10/11/2026 confirmou os checks activos seguintes:
+
+- `credit_purchase_requests.status`: `REQUESTED`, `PAYMENT_PENDING`, `PAID`, `REJECTED`, `CANCELLED`.
+- `financial_payments.status`: `PENDING`, `CONFIRMED`, `FAILED`, `REFUNDED`.
+- `platform_service_orders.status`: `PENDING_PAYMENT`, `PAID`, `PROCESSING`, `COMPLETED`, `CANCELLED`, `FAILED`.
+
+Estes estados estão espelhados em `lib/monetization/state-catalog.ts`, com testes em `tests/monetization-state-catalog.test.ts`. O catálogo apenas valida valores conhecidos; não define transições sem evidência de regra de negócio.
+
+A migration `20261101111659_harden_partner_account_memberships` consta do ledger activo e reforça a regra de uma membership activa por utilizador, com resolução de contexto apenas para uma única conta elegível. A RPC legada `partner_account_add_manager` permanece bloqueada até existir convite vinculado a `account_id` e papel. O teste SQL em `scripts/ci/verify-partner-account-hardening.sql` agora protege explicitamente esta decisão.
+
+**Reconciliação:** a consulta SQL devolveu 68 registos no ledger, enquanto a API `list_migrations` devolveu 67; a diferença ainda não está explicada. A migration `20261102190000_atomic_direct_ad_purchase.sql` está no repositório/CI mas não consta do ledger de produção consultado. Não executar push, repair ou replay até resolver a diferença e comparar o esquema nativo.
+
+Ver também [Fecho da Fase 1 do roadmap de lançamento](./phase-1-architecture-closure-2026-11-10.md) para findings de segurança, modelo de parceiro e critérios de saída.
