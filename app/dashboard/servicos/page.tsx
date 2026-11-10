@@ -71,6 +71,7 @@ export default async function ServicesPage() {
     ACCEPTED: "Aceite",
     IN_PROGRESS: "Em execução",
     COMPLETED: "Concluído",
+    CANCELLED: "Cancelado",
   };
 
   return (
