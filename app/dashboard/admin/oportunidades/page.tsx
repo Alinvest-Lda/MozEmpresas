@@ -82,11 +82,16 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
   if (deadlineFilter === "sem-prazo") query = query.eq("status", "PUBLISHED").is("closes_at", null);
   if (deadlineFilter === "proximo") query = query.eq("status", "PUBLISHED").gte("closes_at", nowIso).lte("closes_at", soonIso);
 
-  const from = (pageNumber - 1) * pageSize;
-  const { data: opportunities, count, error } = await query.range(from, from + pageSize - 1);
+  let currentPage = pageNumber;
+  let from = (currentPage - 1) * pageSize;
+  let { data: opportunities, count, error } = await query.range(from, from + pageSize - 1);
   const total = count ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
-  const currentPage = Math.min(pageNumber, pageCount);
+  if (currentPage > pageCount) {
+    currentPage = pageCount;
+    from = (currentPage - 1) * pageSize;
+    ({ data: opportunities, count, error } = await query.range(from, from + pageSize - 1));
+  }
   const filterParams = new URLSearchParams();
   if (q) filterParams.set("q", q);
   if (type) filterParams.set("tipo", type);
