@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireNormalAccount } from "@/lib/auth/access";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { canManageBusiness } from "@/lib/businesses/permissions";
+import { canTransitionServiceRequest } from "@/lib/services/state-machine";
 import { parseServiceRequestInput, parseServiceRequestUpdateInput } from "@/lib/services/validation";
 
 export async function requestPlatformService(formData: FormData) {
