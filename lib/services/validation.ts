@@ -7,6 +7,7 @@ export const serviceRequestStatuses = [
   "ACCEPTED",
   "IN_PROGRESS",
   "COMPLETED",
+  "CANCELLED",
 ] as const;
 
 export const serviceRequestInputSchema = z.object({
