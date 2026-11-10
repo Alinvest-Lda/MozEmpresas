@@ -78,7 +78,7 @@ Por segurança, a função `partner_account_add_manager` permanece bloqueada. O 
 - revogação/reenvio e trilho de auditoria;
 - testes de isolamento entre contas e de convite inválido/expirado/reutilizado.
 
-Esta implementação fica para a fase de execução funcional depois de a reconciliação do ledger permitir gerar e validar a migration com segurança.
+Foi criado `docs/architecture/partner-manager-invitations.md` com o contrato técnico, alterações propostas, autorização, concorrência e 15 testes obrigatórios. A implementação SQL continua pendente porque a criação de migration com Supabase CLI não está disponível nesta sessão; não foi inventado timestamp nem aplicada DDL. A RPC legada permanece bloqueada.
 
 ## 4. Segurança e RLS — findings actuais
 
