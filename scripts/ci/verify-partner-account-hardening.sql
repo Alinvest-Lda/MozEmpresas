@@ -64,3 +64,27 @@ begin
   end if;
 end;
 $context_check$;
+
+-- The legacy direct-add RPC must remain unavailable until account-bound,
+-- single-use manager invitations are implemented and tested end-to-end.
+do $manager_invite_guard$
+begin
+  if has_function_privilege(
+    'authenticated',
+    'public.partner_account_add_manager(text,text)',
+    'EXECUTE'
+  ) then
+    raise exception 'Authenticated users must not execute the legacy direct manager-add RPC';
+  end if;
+
+  begin
+    perform public.partner_account_add_manager('manager@example.test', 'manager');
+    raise exception 'The legacy direct manager-add RPC unexpectedly succeeded';
+  exception
+    when others then
+      if sqlerrm <> 'PARTNER_MANAGER_INVITES_REQUIRED' then
+        raise;
+      end if;
+  end;
+end;
+$manager_invite_guard$;
