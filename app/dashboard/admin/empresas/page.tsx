@@ -34,11 +34,16 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
   if (visibility === "privada") query = query.eq("is_public", false).is("archived_at", null);
   if (visibility === "arquivada") query = query.not("archived_at", "is", null);
 
-  const from = (pageNumber - 1) * pageSize;
-  const { data: businesses, count, error } = await query.range(from, from + pageSize - 1);
+  let currentPage = pageNumber;
+  let from = (currentPage - 1) * pageSize;
+  let { data: businesses, count, error } = await query.range(from, from + pageSize - 1);
   const total = count ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
-  const currentPage = Math.min(pageNumber, pageCount);
+  if (currentPage > pageCount) {
+    currentPage = pageCount;
+    from = (currentPage - 1) * pageSize;
+    ({ data: businesses, count, error } = await query.range(from, from + pageSize - 1));
+  }
   const filterParams = new URLSearchParams();
   if (q) filterParams.set("q", q);
   if (visibility) filterParams.set("visibilidade", visibility);
