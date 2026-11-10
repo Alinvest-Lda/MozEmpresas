@@ -32,6 +32,11 @@ describe("platform service request administration", () => {
     })).toMatchObject({ success: true, data: { status: "QUOTED", requestedPrice: 12500.5 } });
   });
 
+  it("accepts the cancellation status supported by PostgreSQL", () => {
+    expect(parseServiceRequestUpdateInput({ requestId, status: "cancelled", requestedPrice: "" }))
+      .toMatchObject({ success: true, data: { status: "CANCELLED", requestedPrice: null } });
+  });
+
   it("allows an empty price and a zero quote", () => {
     expect(parseServiceRequestUpdateInput({ requestId, status: "REQUESTED", requestedPrice: "" }))
       .toMatchObject({ success: true, data: { requestedPrice: null } });
