@@ -44,6 +44,12 @@ A experiência final-user está publicada e separada de funcionalidades reservad
 - `business_partner_relationships` não é o núcleo conceptual da conta de parceiro.
 - O design do parceiro reutiliza as fundações transversais do produto; não será criado um segundo design system.
 
+## Fase 2 — módulos operacionais (em execução)
+
+A Fase 2 do roadmap de lançamento está em execução. O plano e o progresso estão em [`docs/phase-2-operational-modules-2026-11-10.md`](../phase-2-operational-modules-2026-11-10.md). A primeira tranche reforça o fluxo de pedidos de Serviços MozEmpresas com máquina de estados explícita, validação server-side, compare-and-set e testes unitários. Esta entrega não altera o esquema de produção.
+
+Pendências principais: convites de gestores vinculados à conta, ciclo financeiro real/idempotente, publicidade dependente de migration ainda não aplicada, e validação integrada de autorização e notificações.
+
 ## Próxima fase — desenvolvimento do módulo de Parceiros
 A especificação fechada está em `docs/architecture/partner-module.md`.
 
