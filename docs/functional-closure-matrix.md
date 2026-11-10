@@ -158,3 +158,19 @@ No código, foram introduzidas máquinas de transição explícitas para oportun
 
 
 A correcção de transições de 31/10 também abrange `listings` do marketplace: criação de máquina de estados, validação nas acções de edição/alteração de estado, updates condicionais contra concorrência e opções de UI limitadas aos destinos válidos. Testes unitários adicionados; o CI dos commits mais recentes ainda está em execução. A validação SQL/RLS e end-to-end permanece pendente.
+
+
+## 5. Actualização da Fase 1 — verificação de 2026-11-10
+
+A revisão read-only mais recente está documentada em [Fecho da Fase 1 do roadmap de lançamento](./phase-1-architecture-closure-2026-11-10.md). Esta actualização substitui apenas os snapshots datados anteriores quando houver evidência mais recente; não declara os fluxos funcionais concluídos.
+
+- A migration `20261101111659_harden_partner_account_memberships` consta do ledger activo. O helper de contexto exige exactamente uma membership elegível, membership activa, conta `ACTIVE` e perfil de parceiro `ACTIVE`.
+- A adição directa de gestores continua bloqueada. O modelo de convite existente não identifica conta de destino nem papel, pelo que não deve ser usado para associar gestores a uma conta existente.
+- A contagem SQL do ledger foi 68, enquanto a API de listagem devolveu 67. A diferença permanece por reconciliar.
+- A migration `20261102190000_atomic_direct_ad_purchase.sql` existe no repositório e tem teste isolado no CI, mas não aparece entre as versões do ledger de produção consultadas.
+- O Security Advisor de 10/11 reportou RLS activo sem políticas em `partner_accounts`, `partner_account_members`, `contact_messages` e `public_rate_limits`; também sinalizou 4 funções SECURITY DEFINER para `anon`, 21 para `authenticated` e protecção contra palavras-passe comprometidas desactivada. Não foram criadas políticas nem revogados grants em massa.
+- Foi criado `lib/monetization/state-catalog.ts` e respectivo teste para alinhar os estados de compras de créditos, pagamentos e ordens de serviço aos checks activos do PostgreSQL. O catálogo não presume transições.
+
+**Estado F21 — migrações:** continua bloqueador até reconciliação um-para-um entre ledger, ficheiros SQL e esquema nativo.
+**Estado F11 — parceiro:** contexto e membership reforçados; convite de gestor para conta existente ainda não implementado.
+**Estado F07/F18 — financeiro:** vocabulário de estados alinhado em TypeScript; idempotência, reconciliação e confirmação end-to-end continuam por provar.
