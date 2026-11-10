@@ -68,6 +68,9 @@ export async function updatePlatformServiceRequest(formData: FormData) {
   if (requestError || !request) {
     return { error: "Pedido não encontrado ou indisponível." };
   }
+  if (!canTransitionServiceRequest(request.status, status)) {
+    return { error: "Esta alteração não é permitida a partir do estado actual do pedido." };
+  }
 
   const { data: updatedRequest, error } = await supabase
     .from("service_requests")
