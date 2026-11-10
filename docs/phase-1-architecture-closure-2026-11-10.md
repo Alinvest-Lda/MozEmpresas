@@ -29,14 +29,17 @@ Snapshot read-only:
 - 121 políticas RLS inventariadas nos schemas `public` e `private`.
 - 29 funções `SECURITY DEFINER` no schema `public`.
 - 68 registos no ledger, por consulta SQL directa a `supabase_migrations.schema_migrations`.
-- A ferramenta de listagem de migrações devolveu 67 registos na mesma verificação.
-- A última versão comum observada é `20261101111659_harden_partner_account_memberships`.
+- 68 registos na API de listagem de migrações, confirmados numa segunda leitura comparativa.
+- As 68 versões são únicas e coincidem entre a consulta SQL e a API; não foram encontradas versões duplicadas, ausentes ou exclusivas de uma das fontes.
+- A última versão aplicada é `20261101111659_harden_partner_account_memberships`.
 
-### Divergência que permanece bloqueadora
+### Estado da reconciliação do ledger
 
-A contagem SQL do ledger (68) e a listagem de migrações (67) não coincidem. Além disso, o repositório contém `supabase/migrations/20261102190000_atomic_direct_ad_purchase.sql`, que não aparece no ledger activo consultado. Esta migration está identificada no CI como teste isolado e não deve ser considerada aplicada em produção.
+A diferença inicial 68 vs. 67 não se confirmou: uma nova leitura comparativa encontrou 68 versões na consulta SQL e 68 na API, todas únicas e coincidentes. Este ponto fica resolvido para o ledger consultado.
 
-A diferença de contagem entre ledger e API, os nomes históricos e a correspondência integral entre ficheiros e versões ainda exigem reconciliação. Não executar:
+Permanece uma pendência distinta: o repositório contém `supabase/migrations/20261102190000_atomic_direct_ad_purchase.sql`, mas a versão `20261102190000` não aparece no ledger de produção. O próprio ficheiro declara que é repository-only até revisão e aprovação. Não deve ser considerada aplicada nem ser executada automaticamente.
+
+A reconciliação integral dos ficheiros SQL do repositório com as versões aplicadas e com o esquema nativo continua necessária. Não executar:
 - `supabase db push`;
 - `migration repair`;
 - replay de migrations;
@@ -62,7 +65,7 @@ O teste de integração em CI foi reforçado para proteger a decisão de manter 
 
 ### Lacuna funcional deliberadamente não mascarada
 
-A tabela `private.partner_access_grants` activa ainda não tem `account_id` nem papel pretendido. A RPC `partner_access_create` cria um convite por email sem destino de conta; a RPC `partner_access_claim` foi concebida para criar/activar uma conta nova com papel `owner` quando necessário. Isso não implementa um convite de gestor para uma conta existente.
+A tabela `private.partner_access_grants` activa contém `id`, `email`, `token_hash`, `status`, `created_by`, `accepted_user_id`, `created_at`, `expires_at` e `accepted_at`; não contém `account_id` nem papel pretendido. A RPC `partner_access_create(p_email, p_token_hash, p_expires_at)` só permite criação por Super Admin e grava convite sem destino de conta. A RPC `partner_access_claim(p_token_hash, p_user_id)` valida sessão e correspondência de email, mas cria uma nova conta/membership `owner` quando não encontra associação existente. Isso não implementa um convite de gestor para uma conta existente.
 
 Por segurança, a função `partner_account_add_manager` permanece bloqueada. O fluxo de convites de gestores exige uma migration própria, com:
 - conta de destino obrigatória;
@@ -139,8 +142,8 @@ Esta intervenção acrescenta ao conjunto:
 
 ## 7. Pendências para fechar a Fase 1
 
-- [ ] Resolver a diferença 68 vs. 67 entre a contagem SQL e a API de listagem do ledger.
-- [ ] Reconciliar todas as migrations do repositório com o ledger e o esquema activo.
+- [x] Confirmar a igualdade entre a consulta SQL e a API de listagem: 68 versões únicas em ambas.
+- [ ] Reconciliar todos os ficheiros de migration do repositório com o ledger e o esquema activo.
 - [ ] Determinar formalmente o estado de aplicação de `20261102190000_atomic_direct_ad_purchase.sql`.
 - [ ] Exportar e comparar o esquema nativo completo.
 - [ ] Mapear cada RPC SECURITY DEFINER para actor, finalidade, grants, tenant e testes negativos.
