@@ -95,3 +95,21 @@ A migration `20261101111659_harden_partner_account_memberships` consta do ledger
 **Reconciliação:** a consulta SQL e a API `list_migrations` confirmaram 68 versões únicas em ambas. A diferença 68/67 da primeira leitura não se confirmou. A migration `20261102190000_atomic_direct_ad_purchase.sql` está no repositório/CI, mas não consta do ledger de produção e permanece não aplicada. Não executar push, repair ou replay sem comparar a migration com o esquema nativo e validar os testes isolados.
 
 Ver também [Fecho da Fase 1 do roadmap de lançamento](./phase-1-architecture-closure-2026-11-10.md) para findings de segurança, modelo de parceiro e critérios de saída.
+
+
+## 9. Fase 2 — transições de pedidos de Serviços MozEmpresas (2026-11-10)
+
+A constraint activa `service_requests_status_check` foi consultada directamente no PostgreSQL e confirma os estados `REQUESTED`, `UNDER_REVIEW`, `QUOTED`, `ACCEPTED`, `IN_PROGRESS`, `COMPLETED` e `CANCELLED`.
+
+Foi criada a máquina `lib/services/state-machine.ts` e ligada à acção administrativa `updatePlatformServiceRequest`. A acção valida estado actual → destino antes de fazer update condicional pelo estado anteriormente lido. A lista de estados aceite pela validação TypeScript passou a incluir `CANCELLED`, e a página de Serviços mostra o rótulo “Cancelado”.
+
+Transições configuradas nesta primeira tranche:
+
+- `REQUESTED → UNDER_REVIEW/CANCELLED`
+- `UNDER_REVIEW → QUOTED/ACCEPTED/CANCELLED`
+- `QUOTED → ACCEPTED/CANCELLED`
+- `ACCEPTED → IN_PROGRESS/CANCELLED`
+- `IN_PROGRESS → COMPLETED/CANCELLED`
+- `COMPLETED` e `CANCELLED` são terminais.
+
+Testes unitários foram adicionados em `tests/service-state-machine.test.ts` e `tests/service-validation.test.ts`. A execução no CI ainda não foi confirmada nesta revisão. A validação é aplicada na acção administrativa; não prova que todas as vias SQL/RPC imponham as mesmas transições. Nenhuma migration, política RLS ou dado de produção foi alterado.
