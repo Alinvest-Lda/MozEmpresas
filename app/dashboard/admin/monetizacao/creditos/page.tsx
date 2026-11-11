@@ -5,7 +5,7 @@ import styles from "./creditos.module.css";
 
 const money = (value: number | string | null) => value == null ? "—" : `${Number(value).toLocaleString("pt-MZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MZN`;
 const dateTime = (value: string) => new Date(value).toLocaleString("pt-MZ", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Maputo" });
-const statusLabel: Record<string, string> = { REQUESTED: "Por validar", PENDING: "Pendente", APPROVED: "Aprovado", REJECTED: "Recusado", PAID: "Pago", CANCELLED: "Cancelado" };
+const statusLabel: Record<string, string> = { REQUESTED: "Por validar", PAYMENT_PENDING: "A aguardar pagamento", PENDING: "Pendente", APPROVED: "Aprovado", REJECTED: "Recusado", PAID: "Pago", CANCELLED: "Cancelado" };
 
 export default async function AdminCreditsPage() {
   const { supabase, authorized } = await getSuperAdminContext();
@@ -35,7 +35,7 @@ export default async function AdminCreditsPage() {
     : { data: [], error: null };
   const businessNames = new Map((businesses ?? []).map((item) => [item.id, item.name]));
   const recentTransactions = transactionRows;
-  const pendingCount = requestRows.filter((item) => ["REQUESTED", "PENDING"].includes(String(item.status).toUpperCase())).length;
+  const pendingCount = requestRows.filter((item) => ["REQUESTED", "PAYMENT_PENDING", "PENDING"].includes(String(item.status).toUpperCase())).length;
   const totalBalance = walletRows.reduce((sum, wallet) => sum + Number(wallet.balance_credits || 0), 0);
   const queryErrors = [packagesError, requestsError, walletsError, transactionsError, businessesError].filter(Boolean).length;
 
@@ -60,7 +60,7 @@ export default async function AdminCreditsPage() {
           <div className={styles.panelHeading}><div><span className={styles.kicker}>01 · Operações</span><h2 id="requests-title">Pedidos de compra</h2><p>Pedidos mais recentes submetidos pelas empresas.</p></div><span className={styles.counter}>{requestRows.length} registos · máximo 50</span></div>
           {requestRows.length ? <div className={styles.list}>{requestRows.map((request) => {
             const status = String(request.status || "").toUpperCase();
-            const pending = ["REQUESTED", "PENDING"].includes(status);
+            const pending = ["REQUESTED", "PAYMENT_PENDING", "PENDING"].includes(status);
             return <article className={styles.row} key={request.id}>
               <div className={styles.primary}><strong>{businessNames.get(request.business_id) || "Empresa não identificada"}</strong><span>{Number(request.credits).toLocaleString("pt-MZ")} créditos · {money(request.amount_mzn)}</span><small>{dateTime(request.created_at)} · {request.payment_method || "Método não indicado"}</small></div>
               <span className={`${styles.status} ${pending ? styles.pending : status === "APPROVED" || status === "PAID" ? styles.approved : styles.neutral}`}>{statusLabel[status] || status || "Sem estado"}</span>
