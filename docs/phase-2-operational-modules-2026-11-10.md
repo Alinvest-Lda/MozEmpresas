@@ -58,7 +58,7 @@ Alterações em main:
 - A acção administrativa updatePlatformServiceRequest agora valida o par estado actual → estado pretendido antes de actualizar.
 - O update continua a usar compare-and-set pelo estado previamente lido, rejeitando actualizações obsoletas/concurrentes.
 - A validação de entrada passou a aceitar CANCELLED, já suportado pela constraint activa.
-- A página de Serviços apresenta o estado CANCELLED como “Cancelado”.
+- As páginas de Serviços e da fila Super Admin apresentam CANCELLED como “Cancelado”; a fila administrativa permite agora seleccionar explicitamente o cancelamento.
 - Criado tests/service-state-machine.test.ts com cobertura de progressão, cancelamento, estados terminais, auto-transições e valores desconhecidos.
 - Expandido tests/service-validation.test.ts para cobrir o estado de cancelamento.
 
@@ -79,6 +79,7 @@ Estas transições são aplicadas na acção de gestão administrativa. A valida
 ## 4. Próximas entregas
 
 1. Executar CI para a tranche F2.2 e corrigir falhas que surjam.
+2. Confirmar na interface administrativa que todos os estados válidos, incluindo CANCELLED, estão disponíveis e correctamente identificados.
 2. Rever a fila Super Admin de pedidos de serviço e os estados apresentados, sem criar nova estrutura de dados.
 3. Mapear o ciclo de aprovação/recusa de compras de créditos e os efeitos atómicos no ledger financeiro.
 4. Completar os fluxos de oportunidade do parceiro com estados, autorização e feedback.
