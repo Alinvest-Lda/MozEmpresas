@@ -76,6 +76,14 @@ Alterações em main:
 
 Estas transições são aplicadas na acção de gestão administrativa. A validação SQL/RLS de todas as vias directas permanece pendente; não declarar a máquina globalmente fechada antes dos testes de integração.
 
+### Entrega adicional F2.1 — moderação de oportunidades (11/11/2026)
+
+- A acção Super Admin `moderateOpportunity` passou a aplicar a máquina `canTransitionOpportunity` já usada no workspace de parceiros.
+- A leitura do estado actual antecede a decisão; o update usa compare-and-set pelo estado lido.
+- A interface administrativa apresenta apenas destinos permitidos e impede seleccionar o estado actual como nova transição.
+- A regra aplica-se também ao Super Admin, sem bypass administrativo da máquina de estados.
+- A cobertura unitária existente da máquina de oportunidades valida as transições permitidas e proibidas; o CI desta alteração ainda aguarda confirmação.
+
 ## 4. Próximas entregas
 
 1. Executar CI para a tranche F2.2 e corrigir falhas que surjam.
