@@ -5,6 +5,7 @@ import { Input, Select } from "@/components/ui";
 import styles from "./oportunidades.module.css";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { moderateOpportunity } from "@/lib/admin/opportunity-actions";
+import { opportunityTransitions } from "@/lib/opportunities/state-machine";
 
 type SearchParams = Promise<{ q?: string; tipo?: string; estado?: string; prazo?: string; page?: string; result?: string }>;
 
@@ -163,13 +164,13 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
                 <tbody>{opportunities.map((item) => {
                   const expired = item.status === "PUBLISHED" && Boolean(item.closes_at && new Date(item.closes_at).getTime() < now.getTime());
                   const closingSoon = item.status === "PUBLISHED" && Boolean(item.closes_at && new Date(item.closes_at).getTime() >= now.getTime() && new Date(item.closes_at).getTime() <= now.getTime() + 7 * 86400000);
-                  const nextStatus = item.status === "DRAFT" ? "PUBLISHED" : item.status === "PUBLISHED" ? "CLOSED" : item.status === "CLOSED" ? "PUBLISHED" : "PUBLISHED";
+                  const allowedNextStatuses = opportunityTransitions[item.status] ?? [];
                   return <tr key={item.id}>
                     <td><div className={styles.opportunityCell}><strong>{item.title}</strong><small>{item.location || "Localização não indicada"} · Registada {dateLabel(item.created_at)}</small><span className={styles.description}>{(item.description || "Sem descrição").slice(0, 145)}{(item.description || "").length > 145 ? "…" : ""}</span>{item.status === "PUBLISHED" ? <Link className={styles.detailLink} href={"/oportunidades/" + item.slug} target="_blank" rel="noreferrer">Ver publicação ↗</Link> : null}</div></td>
                     <td><strong className={styles.typeLabel}>{typeLabels[item.type] || item.type}</strong><small className={styles.organization}>{item.organization || "Organização não indicada"}</small><small className={styles.origin}>{item.partner_account_id ? "Conta de parceiro" : "Conta de utilizador"}</small></td>
                     <td><span className={styles.deadline}>{item.closes_at ? dateLabel(item.closes_at) : "Sem prazo"}</span>{expired ? <small className={styles.deadlineExpired}>Prazo ultrapassado</small> : closingSoon ? <small className={styles.deadlineSoon}>Encerra em breve</small> : null}{item.opens_at ? <small className={styles.opensAt}>Abre: {dateLabel(item.opens_at)}</small> : null}</td>
                     <td><span className={`${styles.status} ${styles[statusClass[item.status] || "draft"]}`}>{statusLabels[item.status] || item.status}</span><small className={styles.updated}>Actualizada {dateLabel(item.updated_at)}</small></td>
-                    <td><form action={moderateOpportunity} className={styles.actionForm}><input type="hidden" name="opportunityId" value={item.id}/><label className={styles.srOnly} htmlFor={`status-${item.id}`}>Novo estado para {item.title}</label><Select id={`status-${item.id}`} name="status" defaultValue={item.status}><option value="DRAFT">Rascunho</option><option value="PUBLISHED">Publicar</option><option value="CLOSED">Encerrar</option><option value="ARCHIVED">Arquivar</option></Select><button className="btn primary" type="submit">Guardar</button></form></td>
+                    <td><form action={moderateOpportunity} className={styles.actionForm}><input type="hidden" name="opportunityId" value={item.id}/><label className={styles.srOnly} htmlFor={`status-${item.id}`}>Novo estado para {item.title}</label><Select id={`status-${item.id}`} name="status" defaultValue={item.status}><option value={item.status} disabled>Estado actual · {statusLabels[item.status] || item.status}</option>{allowedNextStatuses.map((nextStatus) => <option value={nextStatus} key={nextStatus}>{statusLabels[nextStatus] || nextStatus}</option>)}</Select><button className="btn primary" type="submit">Guardar</button></form></td>
                   </tr>;
                 })}</tbody>
               </table>
