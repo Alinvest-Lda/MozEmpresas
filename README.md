@@ -16,6 +16,7 @@ A matriz de fecho funcional e regras de negócio é a referência de trabalho pa
 - [Roadmap P1](docs/P1-ROADMAP.md)
 - [Roadmap P2 — qualidade e robustez](docs/P2-ROADMAP.md)
 - [Fase 2 — módulos operacionais](docs/phase-2-operational-modules-2026-11-10.md)
+- [Contrato de aprovação de compras de créditos](docs/architecture/credit-purchase-approval.md)
 
 ## Stack
 
