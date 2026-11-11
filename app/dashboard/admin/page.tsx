@@ -13,6 +13,7 @@ const statuses = [
   ["ACCEPTED", "Aceite"],
   ["IN_PROGRESS", "Em execução"],
   ["COMPLETED", "Concluído"],
+  ["CANCELLED", "Cancelado"],
 ] as const;
 
 type SearchParams = Promise<{ result?: string; action?: string; alerta?: string }>;
