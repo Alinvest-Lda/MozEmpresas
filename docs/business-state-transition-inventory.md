@@ -113,3 +113,14 @@ Transições configuradas nesta primeira tranche:
 - `COMPLETED` e `CANCELLED` são terminais.
 
 Testes unitários foram adicionados em `tests/service-state-machine.test.ts` e `tests/service-validation.test.ts`. A execução no CI ainda não foi confirmada nesta revisão. A validação é aplicada na acção administrativa; não prova que todas as vias SQL/RPC imponham as mesmas transições. Nenhuma migration, política RLS ou dado de produção foi alterado.
+
+
+## 10. Fase 2 — moderação administrativa de oportunidades (2026-11-11)
+
+A acção Super Admin `moderateOpportunity` passou a reutilizar `canTransitionOpportunity` de `lib/opportunities/state-machine.ts`. Antes de alterar o registo, lê o estado actual e valida a transição; a actualização é condicionada pelo estado lido, pelo que uma operação concorrente ou obsoleta não sobrescreve uma mudança mais recente.
+
+A interface administrativa passou a apresentar apenas os destinos permitidos para o estado actual, mantendo o estado actual como opção informativa não seleccionável. Isto evita que o formulário sugira combinações que a regra de negócio rejeita.
+
+A máquina reutilizada mantém as transições já documentadas: `DRAFT → PUBLISHED`; `PUBLISHED → CLOSED/ARCHIVED`; `CLOSED → PUBLISHED/ARCHIVED`; `ARCHIVED → DRAFT`. O Super Admin não recebe uma via de bypass: também fica sujeito à mesma regra de transição.
+
+A validação permanece na camada de aplicação. A aplicação de regras equivalentes a todas as vias SQL/RPC e o CI desta alteração ainda precisam de confirmação.
