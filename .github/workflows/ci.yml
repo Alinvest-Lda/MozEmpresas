@@ -52,12 +52,17 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
       - name: Verify SECURITY DEFINER search_path migration on isolated PostgreSQL
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
         run: |
+          # Use the PostgreSQL client from the same pinned image as the service.
+          # This avoids apt mirrors/DNS on the GitHub-hosted runner.
+          psql() {
+            docker run --rm -i --network host \
+              -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
+              postgres:16 psql "$@"
+          }
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
           create schema private;
           create function public.test_public_path()
