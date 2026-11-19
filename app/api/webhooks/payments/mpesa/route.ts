@@ -79,13 +79,45 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "O pagamento não pertence à conta comercial configurada." }, { status: 403 });
   }
 
-  // Pending/failed callbacks are acknowledged but never credit a wallet.
+  const supabase = createServiceRoleClient();
+  const receivedAt = new Date().toISOString();
+  const { data: callbackEvent, error: auditError } = await supabase
+    .from("credit_payment_callback_events")
+    .upsert({
+      provider: "MPESA",
+      provider_transaction_id: payment.transactionId,
+      payment_reference: payment.paymentReference,
+      amount_mzn: payment.amount,
+      currency: payment.currency,
+      merchant_code: payment.merchantCode,
+      callback_status: payment.status,
+      processing_status: "RECEIVED",
+      processing_error_code: null,
+      last_received_at: receivedAt,
+      processed_at: null,
+    }, {
+      onConflict: "provider,provider_transaction_id,callback_status",
+    })
+    .select("id,processing_status")
+    .single();
+
+  if (auditError || !callbackEvent) {
+    return NextResponse.json({ error: "Não foi possível registar o evento de pagamento." }, { status: 503 });
+  }
+
+  // Non-success callbacks are recorded for audit but can never credit a wallet.
   if (payment.status !== "SUCCESS") {
+    const { error: updateError } = await supabase
+      .from("credit_payment_callback_events")
+      .update({ processing_status: "IGNORED", processed_at: receivedAt })
+      .eq("id", callbackEvent.id);
+    if (updateError) {
+      return NextResponse.json({ error: "Não foi possível concluir o registo do evento." }, { status: 503 });
+    }
     return NextResponse.json({ ok: true, credited: false, paymentStatus: payment.status }, { status: 202 });
   }
 
   try {
-    const supabase = createServiceRoleClient();
     const { data, error } = await supabase.rpc("confirm_mpesa_credit_purchase", {
       p_payment_reference: payment.paymentReference,
       p_provider_transaction_id: payment.transactionId,
@@ -94,7 +126,7 @@ export async function POST(request: Request) {
       p_payload: {
         merchant_code: payment.merchantCode,
         callback_status: payment.status,
-        received_at: new Date().toISOString(),
+        received_at: receivedAt,
       },
     });
 
@@ -103,10 +135,33 @@ export async function POST(request: Request) {
         || error.message.includes("PAYMENT_AMOUNT_MISMATCH")
         || error.message.includes("PURCHASE_NOT_PAYABLE")
         || error.message.includes("PROVIDER_TRANSACTION_ALREADY_USED");
+      await supabase.from("credit_payment_callback_events").update({
+        processing_status: known ? "REJECTED" : "RETRY",
+        processing_error_code: known
+          ? error.message.match(/PAYMENT_REFERENCE_NOT_FOUND|PAYMENT_AMOUNT_MISMATCH|PURCHASE_NOT_PAYABLE|PROVIDER_TRANSACTION_ALREADY_USED/)?.[0] || "PAYMENT_REJECTED"
+          : "CONFIRMATION_UNAVAILABLE",
+        processed_at: known ? new Date().toISOString() : null,
+      }).eq("id", callbackEvent.id);
       return NextResponse.json(
         { error: known ? "A confirmação não corresponde a um pedido válido." : "Não foi possível reconciliar o pagamento." },
         { status: known ? 409 : 503 },
       );
+    }
+
+    const processedAt = new Date().toISOString();
+    const { error: auditUpdateError } = await supabase
+      .from("credit_payment_callback_events")
+      .update({
+        request_id: data?.request_id ?? null,
+        processing_status: "PROCESSED",
+        processing_error_code: null,
+        processed_at: processedAt,
+      })
+      .eq("id", callbackEvent.id);
+
+    if (auditUpdateError) {
+      // The wallet confirmation is already committed. A retry remains safe because the RPC is idempotent.
+      return NextResponse.json({ error: "Pagamento confirmado; a actualização do registo de auditoria será repetida." }, { status: 503 });
     }
 
     return NextResponse.json({
@@ -116,6 +171,10 @@ export async function POST(request: Request) {
       requestId: data?.request_id,
     });
   } catch {
+    await supabase.from("credit_payment_callback_events").update({
+      processing_status: "RETRY",
+      processing_error_code: "CONFIRMATION_UNAVAILABLE",
+    }).eq("id", callbackEvent.id);
     return NextResponse.json({ error: "Serviço de confirmação temporariamente indisponível." }, { status: 503 });
   }
 }
