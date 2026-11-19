@@ -238,3 +238,10 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - A leitura permite distinguir pedidos que exigem análise de pedidos que aguardam liquidação, sem alterar estados nem conceder créditos.
 - Commits: `dff89dc` (contagens e apresentação) e `f13c405` (estilos).
 - Sem alterações ao schema, ledger ou fluxo de pagamento. CI/deploy não confirmado nesta intervenção.
+
+### F2.6 — consistência da distribuição de estados de compras (19/11/2026)
+
+- A distribuição administrativa dos pedidos de compra de créditos passou a incluir explicitamente o estado `APPROVED`, que já era reconhecido no mapa de rótulos da página mas estava ausente da lista de estados apresentados no resumo.
+- A alteração evita que pedidos aprovados desapareçam da distribuição visual, mantendo-os separados de pedidos pagos (`PAID`).
+- A métrica continua limitada aos últimos 50 pedidos carregados e não deve ser interpretada como total histórico.
+- Não foram alterados estados financeiros, permissões, saldo de carteiras ou schema.
