@@ -89,6 +89,11 @@ export async function requestCreditPurchase(formData: FormData) {
       const { error: cleanupError } = await supabase.storage.from("payment-proofs").remove([proofPath]);
       if (cleanupError) redirect("/dashboard/monetizacao/creditos?error=cleanup");
     }
+    // The partial unique index is the authoritative concurrency guard.
+    // PostgreSQL 23505 means another open request won the race after our pre-check.
+    if (error.code === "23505") {
+      redirect("/dashboard/monetizacao/creditos?error=pending");
+    }
     redirect("/dashboard/monetizacao/creditos?error=purchase");
   }
 
