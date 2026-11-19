@@ -3,20 +3,26 @@ import {
   canTransitionCreditPurchase,
   creditPurchaseTransitions,
   isTerminalCreditPurchaseStatus,
+  requiresAtomicCreditPosting,
 } from "../lib/credit-purchases/state-machine";
 
 describe("credit purchase state machine", () => {
-  it("allows requests to enter payment pending or be decided", () => {
+  it("allows requests to enter payment pending or be rejected/cancelled", () => {
     expect(canTransitionCreditPurchase("REQUESTED", "PAYMENT_PENDING")).toBe(true);
-    expect(canTransitionCreditPurchase("REQUESTED", "PAID")).toBe(true);
     expect(canTransitionCreditPurchase("REQUESTED", "REJECTED")).toBe(true);
     expect(canTransitionCreditPurchase("REQUESTED", "CANCELLED")).toBe(true);
   });
 
-  it("allows a pending payment to be confirmed, rejected, or cancelled", () => {
-    expect(canTransitionCreditPurchase("PAYMENT_PENDING", "PAID")).toBe(true);
+  it("allows a pending payment to be rejected or cancelled", () => {
     expect(canTransitionCreditPurchase("PAYMENT_PENDING", "REJECTED")).toBe(true);
     expect(canTransitionCreditPurchase("PAYMENT_PENDING", "CANCELLED")).toBe(true);
+  });
+
+  it("never allows a generic transition to mark a purchase as paid", () => {
+    expect(canTransitionCreditPurchase("REQUESTED", "PAID")).toBe(false);
+    expect(canTransitionCreditPurchase("PAYMENT_PENDING", "PAID")).toBe(false);
+    expect(requiresAtomicCreditPosting("PAID")).toBe(true);
+    expect(requiresAtomicCreditPosting("REJECTED")).toBe(false);
   });
 
   it("keeps paid, rejected, and cancelled requests terminal", () => {
@@ -34,5 +40,6 @@ describe("credit purchase state machine", () => {
     expect(canTransitionCreditPurchase("PAID", "PAYMENT_PENDING")).toBe(false);
     expect(canTransitionCreditPurchase("UNKNOWN", "PAID")).toBe(false);
     expect(canTransitionCreditPurchase("REQUESTED", "UNKNOWN")).toBe(false);
+    expect(isTerminalCreditPurchaseStatus("UNKNOWN")).toBe(false);
   });
 });
