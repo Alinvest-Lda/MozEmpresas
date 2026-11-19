@@ -39,6 +39,16 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
       .order("processed_at", { ascending: false })
     : { data: [], error: null };
   const paymentEventRows = paymentEvents ?? [];
+  const { data: callbackEvents, error: callbackEventsError } = await supabase
+    .from("credit_payment_callback_events")
+    .select("id,provider_transaction_id,payment_reference,amount_mzn,currency,callback_status,processing_status,processing_error_code,request_id,delivery_count,first_received_at,last_received_at,processed_at")
+    .order("last_received_at", { ascending: false })
+    .limit(100);
+  const callbackRows = callbackEvents ?? [];
+  const callbackStatusCounts = callbackRows.reduce<Record<string, number>>((counts, event) => {
+    counts[event.processing_status] = (counts[event.processing_status] || 0) + 1;
+    return counts;
+  }, {});
   const eventsByRequest = new Map<string, typeof paymentEventRows>();
   for (const event of paymentEventRows) {
     eventsByRequest.set(event.request_id, [...(eventsByRequest.get(event.request_id) ?? []), event]);
@@ -70,7 +80,7 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
     }
     return events.length > 0 && String(item.status).toUpperCase() !== "PAID";
   });
-  const queryErrors = [packagesError, requestsError, walletsError, transactionsError, businessesError, paymentEventsError].filter(Boolean).length;
+  const queryErrors = [packagesError, requestsError, walletsError, transactionsError, businessesError, paymentEventsError, callbackEventsError].filter(Boolean).length;
 
   return (
     <main className={`dashboard-main admin-workspace ${styles.page}`}>
@@ -96,6 +106,7 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
           <article><span>Valor em análise</span><strong>{money(pendingAmount)}</strong><small>{pendingCredits.toLocaleString("pt-MZ")} créditos · pedidos pendentes</small></article>
           <article><span>Carteiras empresariais</span><strong>{walletRows.length}</strong><small>Até 100 carteiras carregadas · saldo agregado {totalBalance.toLocaleString("pt-MZ")} cr</small></article>
           <article><span>Pagamentos confirmados</span><strong>{money(paidAmount)}</strong><small>{paidRequests.length} pedidos pagos · últimos 50 pedidos</small></article>
+          <article><span>Callbacks por tratar</span><strong>{(callbackStatusCounts.RETRY || 0) + (callbackStatusCounts.REJECTED || 0)}</strong><small>{callbackRows.length} eventos recentes · máximo 100</small></article>
         </section>
 
         <section className={styles.panel} aria-labelledby="requests-title">
@@ -135,8 +146,17 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
           <p className={styles.readOnlyNote}>A reconciliação cobre os últimos 50 pedidos. O callback actual regista apenas confirmações; pagamentos recusados, expirados ou falhados fora do callback não são visíveis nesta tabela.</p>
         </section>
 
+        <section className={styles.panel} aria-labelledby="callback-audit-title">
+          <div className={styles.panelHeading}><div><span className={styles.kicker}>03 · Auditoria do operador</span><h2 id="callback-audit-title">Eventos de pagamento recebidos</h2><p>Callbacks autenticados, incluindo entregas repetidas e eventos que exigem análise.</p></div><span className={styles.counter}>{callbackRows.length} eventos · máximo 100</span></div>
+          <div className={styles.statusSummary}>{["RECEIVED","PROCESSED","IGNORED","REJECTED","RETRY"].filter((status) => (callbackStatusCounts[status] || 0) > 0).map((status) => <span key={status}>{status}<strong>{callbackStatusCounts[status]}</strong></span>)}</div>
+          {callbackRows.length ? <div className={styles.list}>{callbackRows.map((event) => <article className={styles.row} key={event.id}>
+            <div className={styles.primary}><strong>{event.payment_reference} · {money(event.amount_mzn)}</strong><span>{event.provider_transaction_id} · {event.callback_status}</span><small>{dateTime(event.last_received_at)} · {event.delivery_count} entrega(s){event.processed_at ? " · Processado " + dateTime(event.processed_at) : ""}</small>{event.processing_error_code ? <small>Ocorrência: {event.processing_error_code}</small> : null}</div>
+            <span className={styles.status + " " + (["REJECTED","RETRY"].includes(event.processing_status) ? styles.pending : event.processing_status === "PROCESSED" ? styles.approved : styles.neutral)}>{event.processing_status}</span>
+          </article>)}</div> : <div className={styles.empty}><strong>Sem callbacks registados.</strong><p>Os eventos autenticados recebidos do gateway serão apresentados aqui.</p></div>}
+          <p className={styles.readOnlyNote}>São guardados apenas metadados necessários à auditoria. O corpo original, assinatura e segredo do callback não são persistidos. Eventos REJECTED e RETRY exigem análise operacional.</p>
+        </section>
         <section className={styles.panel} aria-labelledby="packages-title">
-          <div className={styles.panelHeading}><div><span className={styles.kicker}>03 · Catálogo</span><h2 id="packages-title">Pacotes de créditos</h2><p>Volumes e preços actualmente configurados.</p></div><span className={styles.counter}>{packageRows.length} pacotes</span></div>
+          <div className={styles.panelHeading}><div><span className={styles.kicker}>04 · Catálogo</span><h2 id="packages-title">Pacotes de créditos</h2><p>Volumes e preços actualmente configurados.</p></div><span className={styles.counter}>{packageRows.length} pacotes</span></div>
           {packageRows.length ? <div className={styles.packageGrid}>{packageRows.map((item) => <article className={styles.package} key={item.id}>
             <div><span className={styles.code}>{item.code}</span><span className={`${styles.status} ${item.active ? styles.approved : styles.neutral}`}>{item.active ? "Activo" : "Inactivo"}</span></div>
             <h3>{item.name}</h3><strong>{Number(item.credit_volume).toLocaleString("pt-MZ")} créditos</strong><span>{money(item.price_mzn)}</span>
@@ -145,7 +165,7 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
         </section>
 
         <section className={styles.panel} aria-labelledby="wallets-title">
-          <div className={styles.panelHeading}><div><span className={styles.kicker}>04 · Saldos</span><h2 id="wallets-title">Carteiras empresariais</h2><p>Saldos por empresa, ordenados pelo volume disponível.</p></div><span className={styles.counter}>{walletRows.length} carteiras · máximo 100</span></div>
+          <div className={styles.panelHeading}><div><span className={styles.kicker}>05 · Saldos</span><h2 id="wallets-title">Carteiras empresariais</h2><p>Saldos por empresa, ordenados pelo volume disponível.</p></div><span className={styles.counter}>{walletRows.length} carteiras · máximo 100</span></div>
           {walletRows.length ? <div className={styles.list}>{walletRows.map((wallet) => <article className={styles.row} key={wallet.id}>
             <div className={styles.primary}><strong>{businessNames.get(wallet.business_id) || "Empresa não identificada"}</strong><small>Carteira empresarial</small></div>
             <strong className={styles.balance}>{Number(wallet.balance_credits || 0).toLocaleString("pt-MZ")} cr</strong>
@@ -153,7 +173,7 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
         </section>
 
         <section className={styles.panel} aria-labelledby="transactions-title">
-          <div className={styles.panelHeading}><div><span className={styles.kicker}>05 · Rastreabilidade</span><h2 id="transactions-title">Movimentos recentes</h2><p>Últimos movimentos das carteiras empresariais listadas.</p></div><span className={styles.counter}>{recentTransactions.length} movimentos · máximo 20</span></div>
+          <div className={styles.panelHeading}><div><span className={styles.kicker}>06 · Rastreabilidade</span><h2 id="transactions-title">Movimentos recentes</h2><p>Últimos movimentos das carteiras empresariais listadas.</p></div><span className={styles.counter}>{recentTransactions.length} movimentos · máximo 20</span></div>
           {recentTransactions.length ? <div className={styles.list}>{recentTransactions.map((item) => {
             const wallet = walletRows.find((candidate) => candidate.id === item.wallet_id);
             const credits = Number(item.credits || 0);
