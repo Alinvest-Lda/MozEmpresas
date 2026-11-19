@@ -71,7 +71,7 @@ export default async function AdminCreditsPage() {
             const status = String(request.status || "").toUpperCase();
             const pending = ["REQUESTED", "PAYMENT_PENDING", "PENDING"].includes(status);
             return <article className={styles.row} key={request.id}>
-              <div className={styles.primary}><strong>{businessNames.get(request.business_id) || "Empresa não identificada"}</strong><span>{Number(request.credits).toLocaleString("pt-MZ")} créditos · {money(request.amount_mzn)}</span><small>{dateTime(request.created_at)} · {request.payment_method || "Método não indicado"} · {request.proof_path ? "Comprovativo anexado" : "Sem comprovativo"}</small>{request.notes ? <small>Nota: {request.notes}</small> : null}</div>
+              <div className={styles.primary}><strong>{businessNames.get(request.business_id) || "Empresa não identificada"}</strong><span>{Number(request.credits).toLocaleString("pt-MZ")} créditos · {money(request.amount_mzn)}</span><small>{dateTime(request.created_at)} · {request.payment_method || "Método não indicado"} · {request.proof_path ? <a href={`/api/admin/credit-purchases/${request.id}/proof`} target="_blank" rel="noopener noreferrer">Consultar comprovativo</a> : "Sem comprovativo"}</small>{request.notes ? <small>Nota: {request.notes}</small> : null}</div>
               <span className={`${styles.status} ${pending ? styles.pending : status === "APPROVED" || status === "PAID" ? styles.approved : styles.neutral}`}>{statusLabel[status] || status || "Sem estado"}</span>
             </article>;
           })}</div> : <div className={styles.empty}><strong>Sem pedidos de compra.</strong><p>Os novos pedidos submetidos pelas empresas serão apresentados aqui.</p></div>}
