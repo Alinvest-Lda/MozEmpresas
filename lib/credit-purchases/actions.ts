@@ -31,6 +31,16 @@ export async function requestCreditPurchase(formData: FormData) {
     redirect("/dashboard/monetizacao/creditos?error=forbidden");
   }
 
+  const { data: pendingPurchase, error: pendingError } = await supabase
+    .from("credit_purchase_requests")
+    .select("id")
+    .eq("business_id", businessId)
+    .in("status", ["REQUESTED", "PAYMENT_PENDING"])
+    .limit(1)
+    .maybeSingle();
+  if (pendingError) redirect("/dashboard/monetizacao/creditos?error=purchase");
+  if (pendingPurchase) redirect("/dashboard/monetizacao/creditos?error=pending");
+
   const proofEntry = formData.get("proof");
   const proof = proofEntry instanceof File && proofEntry.size > 0 ? proofEntry : null;
   if (paymentMethod === "BANK_TRANSFER" && !proof) {
