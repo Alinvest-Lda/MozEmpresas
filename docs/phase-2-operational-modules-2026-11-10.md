@@ -254,3 +254,16 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - A listagem de pedidos passou a disponibilizar a ligação “Consultar comprovativo” apenas quando existe `proof_path`.
 - A implementação depende de o bucket `payment-proofs` permanecer privado e de as políticas RLS/storage estarem correctamente configuradas. A revisão efectiva dessas políticas e o teste com utilizador não administrador ficam para a auditoria integrada final.
 - Não foram alterados pagamentos, saldos, ledger ou schema; não existe ainda aprovação financeira automatizada.
+
+
+### F2.8 — reconciliação read-only e acesso seguro a comprovativos (19/11/2026)
+
+- Ligação confirmada ao projecto Supabase activo `zikjvjzbbfzrelbkaaci`, PostgreSQL 17.6. O ledger nativo contém 68 migrations, da versão `20260927143639` à `20261101111659`; este inventário confirma o estado activo, mas não substitui o mapeamento conteúdo-a-conteúdo dos ficheiros do repositório.
+- A tabela `credit_purchase_requests` está vazia no momento da consulta. A constraint de estado activa permite `REQUESTED`, `PAYMENT_PENDING`, `PAID`, `REJECTED` e `CANCELLED`; os rótulos `PENDING` e `APPROVED` na interface são apenas compatibilidade visual e não devem ser tratados como estados graváveis.
+- O bucket `payment-proofs` existe e é privado. As policies Storage activas permitem ao utilizador autenticado ler/enviar apenas objectos na pasta com o seu próprio UUID. Não existe policy de leitura para Super Admin.
+- A leitura confirmou uma incompatibilidade no endpoint F2.7: a sessão normal autenticada não satisfaz a policy Storage do proprietário do comprovativo, pelo que a geração do signed URL pelo cliente de sessão podia falhar mesmo após a autorização Super Admin.
+- Correcção em código: o endpoint continua a autenticar e autorizar o Super Admin e a obter o caminho do comprovativo com o cliente da sessão; a assinatura do URL temporário passa a usar cliente privilegiado exclusivamente server-side. O URL mantém TTL de 60 segundos e resposta sem cache. O endpoint falha fechado com 503 se a credencial privilegiada não estiver configurada.
+- Criado `lib/supabase/service-role.ts`, sem expor a chave ao browser. A variável `SUPABASE_SERVICE_ROLE_KEY` é preferida, com compatibilidade para `SUPABASE_SECRET_KEY`. A configuração efectiva no Vercel e o teste de acesso real ainda precisam de confirmação.
+- Advisors de segurança reportaram: 4 tabelas RLS sem policies (contact_messages, partner_account_members, partner_accounts, public_rate_limits); 4 funções SECURITY DEFINER executáveis por anon; 21 executáveis por authenticated; protecção contra palavras-passe comprometidas desactivada. Estes avisos exigem revisão função a função — não se deve revogar permissões em lote sem confirmar o contrato de cada RPC.
+- Advisors de performance reportaram 26 casos de policies permissivas sobrepostas e 2 pares de índices duplicados, entre outros índices ainda não utilizados. Não foram removidas policies nem índices: primeiro é necessário verificar consumidores e equivalência exacta.
+- Nenhuma DDL, alteração de RLS, reparação de migrations ou mudança de dados foi aplicada nesta intervenção.
