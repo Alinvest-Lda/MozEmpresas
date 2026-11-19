@@ -203,3 +203,12 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - A actualização usa também filtro de estado `SUBMITTED` para reduzir condição de corrida contra mudança de estado.
 - Commit: `347f21d`.
 - A validação de integração/RLS e concorrência permanece para a fase final.
+
+
+### Entrega F2.2 — prevenção de pedidos duplicados de compra de créditos (19/11/2026)
+
+- Antes de carregar comprovativos, a acção verifica se a empresa já tem uma compra em `REQUESTED` ou `PAYMENT_PENDING`.
+- Quando existe pedido pendente, a nova submissão é bloqueada e a interface explica que deve aguardar a resolução do pedido existente.
+- Esta verificação reduz duplicados acidentais, mas **não é atómica**: uma constraint/índice e operação transaccional no banco continuam necessárias para impedir duplicação concorrente. Não foi aplicada alteração ao schema.
+- Commits: `b8b48a6` (server action) e `d7fe879` (mensagem UX).
+- CI não foi executado/confirmado nesta intervenção; testes integrados continuam reservados para a fase final.
