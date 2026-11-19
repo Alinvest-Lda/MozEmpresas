@@ -51,7 +51,7 @@ export default async function AdminMonetizationPage() {
             <h1>Central de monetização</h1>
             <p>Visão consolidada dos planos empresariais, assinaturas, inventário publicitário e actividade comercial da plataforma.</p>
           </div>
-          <div className={styles.heroSummary}><span>Catálogo comercial</span><strong>{products.length}</strong><small>Formatos publicitários registados</small><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Consulta de planos, inventário e actividade.</span><a className={styles.creditLink} href="/dashboard/admin/monetizacao/creditos">Gerir créditos <span aria-hidden="true">→</span></a></div>
+          <div className={styles.heroSummary}><span>Catálogo comercial</span><strong>{products.length}</strong><small>Formatos publicitários registados</small><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Consulta de planos, inventário e actividade.</span><a className={styles.creditLink} href="/dashboard/admin/monetizacao/creditos">Gerir créditos <span aria-hidden="true">→</span></a><a className={styles.creditLink} href="/dashboard/admin/monetizacao/servicos">Reconciliar serviços <span aria-hidden="true">→</span></a></div>
           <span className={styles.heroMark} aria-hidden="true">M</span>
         </header>
 
