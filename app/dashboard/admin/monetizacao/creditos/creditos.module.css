@@ -70,3 +70,10 @@
 .reportRow small{color:var(--color-text-muted);font-size:9px;line-height:1.4}
 .reportEmpty{margin:0;padding:12px 0;color:var(--color-text-muted);font-size:10px;line-height:1.5}
 @media(max-width:760px){.reportMetrics{grid-template-columns:repeat(2,minmax(0,1fr));padding:13px 15px}.reportColumns{grid-template-columns:minmax(0,1fr);padding:13px 15px}.reportFilters{padding:13px 15px}}
+
+.inlineCheck{display:flex!important;align-items:center;gap:8px;min-height:34px;color:var(--color-text-muted);font-size:11px;font-weight:700}
+.inlineCheck input{width:15px;height:15px;accent-color:var(--color-brand)}
+.eventHistory{display:grid;gap:5px;margin-top:8px;padding:9px 11px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface-muted)}
+.eventHistory strong{font-size:10px;color:var(--color-text)}
+.eventHistory small{font-size:10px;color:var(--color-text-muted)}
+.reportFilters select{min-height:33px;padding:6px 9px;border:1px solid var(--color-border-strong);border-radius:7px;background:var(--color-surface);color:var(--color-text);font:inherit;font-size:11px}
