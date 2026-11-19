@@ -9,10 +9,27 @@ const money = (value: number | string | null) => value == null ? "—" : `${Numb
 const dateTime = (value: string) => new Date(value).toLocaleString("pt-MZ", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Maputo" });
 const statusLabel: Record<string, string> = { REQUESTED: "Por validar", PAYMENT_PENDING: "A aguardar pagamento", PENDING: "Pendente", APPROVED: "Aprovado", REJECTED: "Recusado", PAID: "Pago", CANCELLED: "Cancelado" };
 
-export default async function AdminCreditsPage({ searchParams }: { searchParams: Promise<{ decision?: string; adjustment?: string }> }) {
+export default async function AdminCreditsPage({ searchParams }: { searchParams: Promise<{ decision?: string; adjustment?: string; from?: string; to?: string }> }) {
   const params = await searchParams;
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
+
+  const todayMaputo = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Maputo" }).format(new Date());
+  const defaultReportFrom = todayMaputo.slice(0, 7) + "-01";
+  const reportFrom = /^\\d{4}-\\d{2}-\\d{2}$/.test(params.from || "") ? params.from! : defaultReportFrom;
+  const reportTo = /^\\d{4}-\\d{2}-\\d{2}$/.test(params.to || "") ? params.to! : todayMaputo;
+  const { data: financialReportData, error: financialReportError } = await supabase.rpc("admin_credit_financial_report", {
+    p_from: reportFrom,
+    p_to: reportTo,
+  });
+  const financialReport = financialReportData as {
+    wallets?: { wallet_count: number; current_balance: number; ledger_balance: number; mismatch_count: number };
+    reconciliation?: { mismatch_count: number; mismatches: Array<{ wallet_id: string; business_id: string; business_name: string; balance_credits: number; ledger_balance: number; difference: number; transaction_count: number }> };
+    purchases?: { purchase_count: number; received_mzn: number; credits_sold: number };
+    pending?: { request_count: number; amount_mzn: number; credits: number };
+    ledger_movements?: Array<{ type: string; reference_type: string; transaction_count: number; credits_delta: number; amount_mzn: number }>;
+    callbacks?: { event_count: number; needs_review: number; processed: number; repeated_deliveries: number };
+  } | null;
 
   const [
     { data: packages, error: packagesError },
@@ -123,6 +140,39 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
           <article><span>Carteiras empresariais</span><strong>{walletRows.length}</strong><small>Até 100 carteiras carregadas · saldo agregado {totalBalance.toLocaleString("pt-MZ")} cr</small></article>
           <article><span>Pagamentos confirmados</span><strong>{money(paidAmount)}</strong><small>{paidRequests.length} pedidos pagos · últimos 50 pedidos</small></article>
           <article><span>Callbacks por tratar</span><strong>{(callbackStatusCounts.RETRY || 0) + (callbackStatusCounts.REJECTED || 0)}</strong><small>{callbackRows.length} eventos recentes · máximo 100</small></article>
+        </section>
+
+        <section className={styles.panel} aria-labelledby="financial-report-title">
+          <div className={styles.panelHeading}>
+            <div><span className={styles.kicker}>00 · Relatório consolidado</span><h2 id="financial-report-title">Reconciliação do ledger e indicadores financeiros</h2><p>Valores completos calculados na base de dados, sem limitar a análise aos últimos registos apresentados nas listas.</p></div>
+            <span className={styles.counter}>{reportFrom} → {reportTo}</span>
+          </div>
+          <form method="get" className={styles.reportFilters}>
+            <label>De <input type="date" name="from" value={reportFrom} required /></label>
+            <label>Até <input type="date" name="to" value={reportTo} required /></label>
+            <button className={styles.approveButton} type="submit">Actualizar relatório</button>
+          </form>
+          {financialReportError || !financialReport ? <div className={styles.empty}><strong>Relatório indisponível.</strong><p>Verifique o intervalo (máximo 366 dias) e as permissões de acesso. Os restantes módulos continuam disponíveis.</p></div> : <>
+            <div className={styles.reportMetrics}>
+              <article><span>Carteiras</span><strong>{Number(financialReport.wallets?.wallet_count || 0).toLocaleString("pt-MZ")}</strong><small>Saldo total: {Number(financialReport.wallets?.current_balance || 0).toLocaleString("pt-MZ")} cr</small></article>
+              <article><span>Créditos no ledger</span><strong>{Number(financialReport.wallets?.ledger_balance || 0).toLocaleString("pt-MZ")}</strong><small>Diferença: {(Number(financialReport.wallets?.current_balance || 0) - Number(financialReport.wallets?.ledger_balance || 0)).toLocaleString("pt-MZ")} cr</small></article>
+              <article><span>Compras pagas</span><strong>{money(financialReport.purchases?.received_mzn ?? 0)}</strong><small>{Number(financialReport.purchases?.purchase_count || 0)} compras · {Number(financialReport.purchases?.credits_sold || 0).toLocaleString("pt-MZ")} cr vendidos</small></article>
+              <article><span>Pedidos em aberto</span><strong>{Number(financialReport.pending?.request_count || 0)}</strong><small>{money(financialReport.pending?.amount_mzn ?? 0)} · {Number(financialReport.pending?.credits || 0).toLocaleString("pt-MZ")} cr</small></article>
+              <article><span>Divergências de saldo</span><strong>{Number(financialReport.reconciliation?.mismatch_count || 0)}</strong><small>Carteiras com saldo diferente do ledger</small></article>
+              <article><span>Callbacks a rever</span><strong>{Number(financialReport.callbacks?.needs_review || 0)}</strong><small>{Number(financialReport.callbacks?.event_count || 0)} eventos · {Number(financialReport.callbacks?.repeated_deliveries || 0)} repetições</small></article>
+            </div>
+            <div className={styles.reportColumns}>
+              <div className={styles.reportBlock}>
+                <h3>Reconciliação por carteira</h3>
+                {financialReport.reconciliation?.mismatches?.length ? financialReport.reconciliation.mismatches.map((item) => <div className={styles.reportRow} key={item.wallet_id}><div><strong>{item.business_name}</strong><small>Saldo {item.balance_credits.toLocaleString("pt-MZ")} cr · Ledger {item.ledger_balance.toLocaleString("pt-MZ")} cr</small></div><strong className={styles.negative}>{item.difference > 0 ? "+" : ""}{item.difference.toLocaleString("pt-MZ")} cr</strong></div>) : <p className={styles.reportEmpty}>Não foram detectadas divergências entre carteiras e ledger.</p>}
+              </div>
+              <div className={styles.reportBlock}>
+                <h3>Movimentos por natureza</h3>
+                {financialReport.ledger_movements?.length ? financialReport.ledger_movements.map((item) => <div className={styles.reportRow} key={item.type + item.reference_type}><div><strong>{item.type}</strong><small>{item.reference_type} · {item.transaction_count} movimentos</small></div><strong className={item.credits_delta >= 0 ? styles.positive : styles.negative}>{item.credits_delta > 0 ? "+" : ""}{item.credits_delta.toLocaleString("pt-MZ")} cr</strong></div>) : <p className={styles.reportEmpty}>Sem movimentos no período seleccionado.</p>}
+              </div>
+            </div>
+            <p className={styles.readOnlyNote}>O saldo de cada carteira é comparado com a soma histórica de todos os movimentos. Compras pagas são reportadas separadamente dos consumos de créditos; o valor MZN dos movimentos não representa receita líquida contabilística.</p>
+          </>}
         </section>
 
         <section className={styles.panel} aria-labelledby="requests-title">
