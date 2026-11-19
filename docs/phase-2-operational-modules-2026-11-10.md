@@ -371,3 +371,12 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Revogada a assinatura legada de cinco argumentos; a assinatura com segmentação permanece acessível apenas a utilizadores autenticados e mantém verificação de autorização dentro da função.
 - Migração aplicada no Supabase: `20261119190000_f36_advertising_credit_inventory_serialization.sql`. Commit: `8eb4cb3e5a18e5d4475309578dbebb8927e628ff`.
 - Limitação de validação: não existem carteiras nem campanhas comerciais no projecto activo para executar um cenário real de compra concorrente. A validação transaccional com dados reais fica pendente; não foram criados dados comerciais artificiais.
+
+## F3.7 — Idempotência de contratação de serviços com créditos (19/11/2026)
+
+- A contratação self-service de serviços da plataforma passa a exigir uma chave UUID de idempotência, persistida em `platform_service_orders` e protegida por índice único parcial por empresa.
+- A RPC `purchase_platform_service_with_credits` foi substituída por uma versão com validação de sessão, utilizador, empresa activa e papel autorizado; bloqueia a carteira com `FOR UPDATE`, verifica uma contratação anterior após obter o bloqueio e devolve a mesma ordem em caso de repetição.
+- Débito da carteira, criação da ordem, eventual subscrição, movimento de consumo no ledger e documento financeiro continuam numa única transacção.
+- O formulário cliente mantém a mesma chave durante tentativas repetidas e só permite submeter depois da sua geração. A Server Action valida o formato UUID e envia a chave à RPC.
+- Migração aplicada no Supabase: `20261119200000_f37_idempotent_platform_service_credit_checkout.sql`. Commit da migração: `d50d885ecbdfb66a9c688e173d53b7e383c3c3db`; commits da Server Action e formulário: `7e85aaa28c1cf036000db543eece3b4f2a357df3` e `caf49ce5c2932883bff6c7c853417432fb0e8ecb`.
+- Limitação: não existem carteiras e ordens comerciais no projecto activo para executar uma compra real ou concorrente. A confirmação de idempotência foi feita por inspecção da definição, assinatura, índice e privilégios; cenário transaccional com utilizador real fica pendente. Build, testes automáticos e deploy ainda não foram confirmados.
