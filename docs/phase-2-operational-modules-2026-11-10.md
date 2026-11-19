@@ -212,3 +212,11 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Esta verificação reduz duplicados acidentais, mas **não é atómica**: uma constraint/índice e operação transaccional no banco continuam necessárias para impedir duplicação concorrente. Não foi aplicada alteração ao schema.
 - Commits: `b8b48a6` (server action) e `d7fe879` (mensagem UX).
 - CI não foi executado/confirmado nesta intervenção; testes integrados continuam reservados para a fase final.
+
+
+### Entrega F2.3 — detalhe de pedidos no painel Super Admin (19/11/2026)
+
+- O painel de créditos agora apresenta, em cada pedido, a indicação de comprovativo anexado/ausente e as notas submetidas pela empresa.
+- Esta informação é apenas metadado de consulta; não expõe o caminho interno do ficheiro nem disponibiliza o comprovativo. A abertura segura do comprovativo requer endpoint/action com autorização e URL temporário, a desenvolver separadamente.
+- Commit: `e48fb1d`.
+- CI/deploy não foi confirmado nesta entrega.
