@@ -105,7 +105,7 @@ export default async function CreditosPage({
 
   const { data: purchaseRequests } = businesses.length
     ? await supabase.from("credit_purchase_requests")
-      .select("id,business_id,credits,amount_mzn,payment_method,status,created_at")
+      .select("id,business_id,credits,amount_mzn,payment_method,payment_reference,status,created_at")
       .in("business_id", businesses.map((business) => business.id))
       .order("created_at", { ascending: false })
       .limit(8)
@@ -198,13 +198,14 @@ export default async function CreditosPage({
             credits: number;
             amount_mzn: number;
             payment_method: string | null;
+            payment_reference: string | null;
             status: string;
             created_at: string;
           }) => (
             <div key={request.id} className="credit-request-row">
               <div>
                 <strong>{businesses.find((business) => business.id === request.business_id)?.name || "Empresa"} · {request.credits.toLocaleString("pt-MZ")} créditos</strong>
-                <small>{money(request.amount_mzn)} · {request.payment_method || "Pagamento"} · {dateTime(request.created_at)}</small>
+                <small>{money(request.amount_mzn)} · {request.payment_method || "Pagamento"} · {dateTime(request.created_at)}{request.payment_reference ? ` · Ref. ${request.payment_reference}` : ""}</small>
               </div>
               <span>{purchaseStatusLabels[request.status] || request.status}</span>
             </div>
