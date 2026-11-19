@@ -21,6 +21,8 @@ export function PlatformServiceRequestForm({
   billing: string | null;
   defaultTermDays: number | null;
 }) {
+  const [purchaseKey, setPurchaseKey] = useState("");
+  useEffect(() => { setPurchaseKey(crypto.randomUUID()); }, []);
   const [state, action, pending] = useActionState<State, FormData>(
     async (_, formData) => {
       if (price == null) {
@@ -58,7 +60,8 @@ export function PlatformServiceRequestForm({
 
   return (
     <form action={action} className="service-request-form">
-      <input type="hidden" name="serviceId" value={serviceId} />\n      <input type="hidden" name="purchaseKey" value={purchaseKey} />
+      <input type="hidden" name="serviceId" value={serviceId} />
+      <input type="hidden" name="purchaseKey" value={purchaseKey} />\n      <input type="hidden" name="purchaseKey" value={purchaseKey} />
 
       <div className="service-form-heading">
         <span className="dashboard-kicker">Contratar este serviço</span>
