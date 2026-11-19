@@ -123,7 +123,7 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
               </div> : null}
             </article>;
           })}</div> : <div className={styles.empty}><strong>Sem pedidos de compra.</strong><p>Os novos pedidos submetidos pelas empresas serão apresentados aqui.</p></div>}
-          <p className={styles.readOnlyNote}>Esta vista é de consulta. A validação financeira e a atribuição de créditos não são executadas nesta página.</p>
+          <p className={styles.readOnlyNote}>As decisões são processadas no servidor através de uma operação transaccional e auditável. Confirme o recebimento fora da plataforma antes de aprovar manualmente um pedido sem confirmação automática do operador.</p>
         </section>
 
         <section className={styles.panel} aria-labelledby="reconciliation-title">
