@@ -187,3 +187,11 @@ A leitura directa do ledger activo e do directório `supabase/migrations` confir
 Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0001`–`0007`. Os 35 registos sem ficheiro homónimo não significam, por si só, que o SQL esteja ausente: podem corresponder a renomeações, consolidações ou migrações históricas cujo conteúdo não está preservado com o mesmo nome no repositório.
 
 **Limite da evidência:** o ledger guarda versão/nome, não o conteúdo SQL executado. Portanto, coincidência de nome (mesmo com timestamp diferente) não prova equivalência de conteúdo. O próximo passo de reconciliação exige exportação nativa do schema e comparação por objectos (tabelas, colunas, constraints, índices, funções, triggers, policies e grants), além da recuperação dos ficheiros históricos quando disponíveis. Nenhuma alteração foi feita ao schema activo.
+
+### Entrega F2.1 — validação de IDs nas acções de oportunidades (19/11/2026)
+
+- Criado validador de UUID para identificadores de oportunidade/candidatura nas acções server-side.
+- As acções de transição rejeitam identificadores malformados antes de consultar a base de dados.
+- Adicionado teste unitário para UUIDs válidos, formatos inválidos, valores vazios e strings arbitrárias.
+- Commits: `d1cbd0f`, `508e12f`, `91d766f`.
+- Esta entrega é hardening do fluxo; não representa fecho do módulo de oportunidades nem validação de integração.
