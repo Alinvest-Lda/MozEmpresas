@@ -24,10 +24,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "O canal de pagamento ainda não está configurado." }, { status: 503 });
   }
 
-  const rawBody = await request.text();
-  if (Buffer.byteLength(rawBody, "utf8") > MAX_BODY_BYTES) {
+  const declaredLength = Number(request.headers.get("content-length") || 0);
+  if (declaredLength > MAX_BODY_BYTES) {
     return NextResponse.json({ error: "Evento demasiado grande." }, { status: 413 });
   }
+
+  const reader = request.body?.getReader();
+  if (!reader) return NextResponse.json({ error: "Evento vazio." }, { status: 400 });
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    totalBytes += value.byteLength;
+    if (totalBytes > MAX_BODY_BYTES) {
+      await reader.cancel();
+      return NextResponse.json({ error: "Evento demasiado grande." }, { status: 413 });
+    }
+    chunks.push(value);
+  }
+  const bodyBytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bodyBytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  const rawBody = new TextDecoder("utf-8", { fatal: true }).decode(bodyBytes);
 
   const timestamp = request.headers.get("x-mpesa-timestamp");
   const signature = request.headers.get("x-mpesa-signature");
