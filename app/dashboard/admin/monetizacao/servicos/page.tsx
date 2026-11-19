@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import styles from "../creditos/creditos.module.css";
+import { adminCancelPlatformServiceOrder } from "@/lib/services/checkout-actions";
 
 type ServicePaymentRow = {
   order_id: string;
@@ -35,7 +36,7 @@ const label = (value: string | null) => value ? value.replaceAll("_", " ").toLoc
 export default async function AdminServiceReconciliationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ estado?: string; ocorrencias?: string }>;
+  searchParams: Promise<{ estado?: string; ocorrencias?: string; resultado?: string }>;
 }) {
   const params = await searchParams;
   const { supabase, authorized } = await getSuperAdminContext();
@@ -66,6 +67,8 @@ export default async function AdminServiceReconciliationPage({
           <Link className={styles.backLink} href="/dashboard/admin/monetizacao">Voltar à monetização</Link>
         </header>
 
+        {params.resultado === "success" ? <div className={styles.notice}>Ajustamento concluído e registado no histórico financeiro.</div> : null}
+        {params.resultado && params.resultado !== "success" ? <div className={styles.notice} role="alert">A operação não foi concluída ({label(params.resultado)}). Confirme as condições da ordem e os dados do reembolso.</div> : null}
         {error ? <div className={styles.notice} role="alert">Não foi possível carregar a reconciliação. Verifique a função de administração e tente novamente.</div> : null}
 
         <section className={styles.metrics} aria-label="Indicadores de contratação">
@@ -111,6 +114,16 @@ export default async function AdminServiceReconciliationPage({
                   <strong>Histórico de estados</strong>
                   {row.event_history.map(event => <small key={event.id}>{event.previous_status ? label(event.previous_status) + " → " : "Criada como "}{label(event.new_status)} · {label(event.event_source)} · {dateTime(event.created_at)}</small>)}
                 </div> : null}
+                {["PENDING_PAYMENT","PAID","PROCESSING"].includes(row.order_status) ? <details className={styles.adjustmentForm}>
+                  <summary>Cancelar / estornar ordem</summary>
+                  <form action={adminCancelPlatformServiceOrder}>
+                    <input type="hidden" name="orderId" value={row.order_id}/>
+                    {row.payment_method === "MPESA" && ["PAID","PROCESSING"].includes(row.order_status) ? <label>Referência do reembolso M-Pesa já efectuado<input name="refundReference" minLength={4} maxLength={160} required placeholder="Referência emitida pelo operador"/></label> : null}
+                    <label>Motivo do ajustamento<textarea name="reason" minLength={8} maxLength={1000} required placeholder="Explique o motivo e a autorização do cancelamento"/></label>
+                    <button className={styles.rejectButton} type="submit">Confirmar cancelamento</button>
+                    <small>Para pagamentos M-Pesa confirmados, o reembolso tem de ser realizado no operador antes desta confirmação. A plataforma apenas regista a referência e reconcilia os estados.</small>
+                  </form>
+                </details> : null}
               </div>
               <span className={styles.status + " " + (row.reconciliation_issue ? styles.pending : ["PAID","PROCESSING","COMPLETED"].includes(row.order_status) ? styles.approved : styles.neutral)}>{label(row.order_status)}</span>
             </article>)}
