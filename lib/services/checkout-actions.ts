@@ -85,37 +85,29 @@ export async function purchasePlatformService(formData: FormData) {
   return { success: true, orderId: String(pendingOrder.order_id), pending: true };
 }
 
-export async function adminCancelPlatformServiceOrder(formData: FormData) {
+export async function adminCancelPlatformServiceOrder(formData: FormData): Promise<void> {
   const s = await createClient();
   const { data: { user } } = await s.auth.getUser();
-  if (!user) return { error: "Sessão expirada. Inicie sessão novamente." };
+  if (!user) redirect("/login");
   const orderId = text(formData.get("orderId"));
   const reason = text(formData.get("reason"));
   const refundReference = text(formData.get("refundReference")) || null;
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(orderId)) {
-    return { error: "Ordem inválida." };
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(orderId) || reason.length < 8 || reason.length > 1000) {
+    redirect("/dashboard/admin/monetizacao/servicos?resultado=invalid");
   }
-  if (reason.length < 8 || reason.length > 1000) return { error: "Indique um motivo com pelo menos 8 caracteres." };
-  const { data, error } = await s.rpc("admin_cancel_platform_service_order", {
+  const { error } = await s.rpc("admin_cancel_platform_service_order", {
     p_order_id: orderId,
     p_reason: reason,
     p_external_refund_reference: refundReference,
   });
   if (error) {
-    const known: Record<string,string> = {
-      FORBIDDEN: "Apenas um Super Admin activo pode executar esta operação.",
-      COMPLETED_ORDER_NOT_REVERSIBLE: "Uma ordem concluída não pode ser estornada por esta operação.",
-      ORDER_ALREADY_CANCELLED: "Esta ordem já foi cancelada.",
-      FAILED_ORDER_NOT_CANCELLABLE: "Uma ordem falhada não pode ser cancelada novamente.",
-      EXTERNAL_REFUND_REFERENCE_REQUIRED: "Registe a referência externa do reembolso M-Pesa já realizado.",
-      ORDER_ALREADY_ADJUSTED: "Esta ordem já possui um ajustamento financeiro.",
-    };
-    const code = Object.keys(known).find(key => error.message.includes(key));
-    return { error: code ? known[code] : "Não foi possível executar o ajustamento. Verifique o estado da ordem e tente novamente." };
+    const known = ["FORBIDDEN","COMPLETED_ORDER_NOT_REVERSIBLE","ORDER_ALREADY_CANCELLED","FAILED_ORDER_NOT_CANCELLABLE","EXTERNAL_REFUND_REFERENCE_REQUIRED","ORDER_ALREADY_ADJUSTED"];
+    const code = known.find(key => error.message.includes(key)) || "FAILED";
+    redirect("/dashboard/admin/monetizacao/servicos?resultado=" + code);
   }
   revalidatePath("/dashboard/admin/monetizacao/servicos");
   revalidatePath("/dashboard/servicos");
   revalidatePath("/dashboard/financeiro");
   revalidatePath("/dashboard/monetizacao/creditos");
-  return { success: true, adjustment: data };
+  redirect("/dashboard/admin/monetizacao/servicos?resultado=success");
 }
