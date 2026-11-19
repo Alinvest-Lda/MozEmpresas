@@ -143,3 +143,20 @@ Estas transições são aplicadas na acção de gestão administrativa. A valida
 - A reconciliação um-para-um de todos os ficheiros SQL com o esquema nativo continua aberta.
 - A tranche de pedidos de serviço aguarda resultado de CI após estes commits.
 - Não foram feitas alterações ao Supabase activo nesta tranche.
+
+
+### Entrega de segurança — ciclo de créditos (19/11/2026)
+
+- A máquina de estados deixou de permitir que uma transição genérica altere um pedido para `PAID`.
+- `PAID` permanece terminal, mas só pode ser alcançado pela futura operação SQL transaccional que confirma a liquidação, regista o movimento no ledger e actualiza o saldo na mesma transacção.
+- Adicionada a função explícita `requiresAtomicCreditPosting` para identificar que a confirmação exige esse caminho privilegiado; não representa autorização para actualizar o estado directamente.
+- Os testes unitários passaram a cobrir a rejeição de `REQUESTED → PAID` e `PAYMENT_PENDING → PAID`, transições terminais e estados desconhecidos.
+- A interface administrativa continua deliberadamente em modo de consulta. Não foi criada acção de aprovação/recusa, não foram alterados saldos e nenhuma DDL foi aplicada.
+- Dependência ainda aberta: a RPC atómica, a unicidade idempotente da referência no ledger e os campos/registo de decisão dependem da reconciliação de migrations e da validação em PostgreSQL isolado.
+
+### Estado de execução e sequência imediata — 19/11/2026
+
+- O CI do commit `733c78ba30147df6a626cdf39b3592b395317ed5` terminou com sucesso (workflow `44514389257`).
+- A entrega de segurança acima foi aplicada directamente em `main`; o CI do novo commit deve ser confirmado antes de considerar esta tranche tecnicamente validada.
+- Próxima tarefa estrutural: produzir o inventário completo e rastreável das 58 migrations do repositório e 68 versões do ledger, distinguindo correspondência exacta, renomeação provável e ausência de evidência. Não usar timestamp como prova de equivalência e não executar `migration repair`, `db push` ou DDL em produção.
+- Só depois do mapeamento e da comparação do schema nativo se deve gerar, via Supabase CLI, as migrations para aprovação atómica de créditos e convites de gestores. A falta de CLI/workspace impede criar migrations válidas nesta sessão; não será inventado um nome/timestamp.
