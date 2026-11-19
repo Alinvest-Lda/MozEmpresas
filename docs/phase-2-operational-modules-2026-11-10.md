@@ -357,3 +357,8 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Limitação: os totais de MZN são valores operacionais de compras confirmadas e valores associados a movimentos; não constituem demonstração de resultados contabilística, receita líquida ou reconciliação bancária. Créditos expirados não são calculados porque o modelo actual não define expiração de créditos.
 - Commits: `57110a1` (RPC, correcção de consumo e protecção do ledger), `6c5971c` (painel de relatório), `ada08fc` (validação de datas), `273c6d1` (estilos), `4b0735e` (índices).
 - Validação: migrações aplicadas; teste autenticado da RPC passou; verificação da função de consumo e da FK passou. Build/testes automáticos/deploy final ainda não confirmados.
+
+- Teste transaccional adicional (rollback): a RPC de relatório foi exercitada com dados sintéticos temporários (compra +100 cr, consumo -20 cr, carteira com 79 cr e pedido pago de 5.000 MZN); identificou correctamente saldo contabilístico de 80 cr, diferença de -1 cr, uma compra paga, 100 créditos vendidos e os dois tipos de movimento. A transacção foi revertida.
+- Teste transaccional de ajustes (rollback): ajuste -10 cr alterou saldo e ledger de 100 para 90; repetição da mesma chave devolveu já processado sem duplicar o evento; reutilização da chave com valor diferente foi rejeitada. A transacção foi revertida.
+- Consulta posterior confirmou zero carteiras, zero movimentos, zero pedidos e zero ajustes persistidos. Nenhum dado comercial real foi modificado.
+- Advisors após os índices: as ocorrências de chaves estrangeiras sem índice no projecto baixaram de 42 para 34; os restantes avisos reportados são preexistentes e não foram alterados nesta fase.
