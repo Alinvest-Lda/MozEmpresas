@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requirePartnerAccount } from "@/lib/auth/access";
 import { canManagePartnerOpportunity } from "@/lib/auth/partner-permissions";
 import { canTransitionOpportunity, canTransitionPartnerApplication } from "@/lib/opportunities/state-machine";
+import { isValidOpportunityId } from "@/lib/opportunities/validation";
 
 async function partnerManager() {
   const context = await requirePartnerAccount();
@@ -17,7 +18,7 @@ async function partnerManager() {
 export async function changeOpportunityStatus(formData: FormData) {
   const id = String(formData.get("opportunity_id") || "");
   const status = String(formData.get("status") || "");
-  if (!id || !["PUBLISHED", "CLOSED", "ARCHIVED", "DRAFT"].includes(status)) {
+  if (!isValidOpportunityId(id) || !["PUBLISHED", "CLOSED", "ARCHIVED", "DRAFT"].includes(status)) {
     redirect("/parceiro/oportunidades?error=status");
   }
   const { supabase, accountId } = await partnerManager();
@@ -49,7 +50,7 @@ export async function changeOpportunityStatus(formData: FormData) {
 export async function changeOpportunityApplicationStatus(formData: FormData) {
   const id = String(formData.get("application_id") || "");
   const status = String(formData.get("status") || "");
-  if (!id || !["UNDER_REVIEW", "SHORTLISTED", "ACCEPTED", "REJECTED"].includes(status)) {
+  if (!isValidOpportunityId(id) || !["UNDER_REVIEW", "SHORTLISTED", "ACCEPTED", "REJECTED"].includes(status)) {
     redirect("/parceiro/oportunidades/candidaturas?error=status");
   }
   const { supabase, accountId } = await partnerManager();
