@@ -37,3 +37,42 @@ export async function decideCreditPurchase(formData: FormData) {
   revalidatePath("/dashboard/financeiro");
   redirect("/dashboard/admin/monetizacao/creditos?decision=success");
 }
+
+
+export async function adjustCreditWallet(formData: FormData) {
+  const { supabase, authorized } = await getSuperAdminContext();
+  if (!authorized) redirect("/login?next=/dashboard/admin/monetizacao/creditos");
+
+  const walletId = String(formData.get("wallet_id") || "").trim();
+  const idempotencyKey = String(formData.get("idempotency_key") || "").trim();
+  const deltaRaw = String(formData.get("delta_credits") || "").trim();
+  const reason = String(formData.get("reason") || "").trim();
+  const delta = Number(deltaRaw);
+
+  if (!UUID.test(walletId) || !UUID.test(idempotencyKey)
+      || !/^-?\\d+$/.test(deltaRaw) || !Number.isSafeInteger(delta)
+      || delta === 0 || Math.abs(delta) > 1000000
+      || reason.length < 10 || reason.length > 500) {
+    redirect("/dashboard/admin/monetizacao/creditos?adjustment=invalid");
+  }
+
+  const { error } = await supabase.rpc("admin_adjust_credit_wallet", {
+    p_wallet_id: walletId,
+    p_delta_credits: delta,
+    p_reason: reason,
+    p_idempotency_key: idempotencyKey,
+  });
+
+  if (error) {
+    const code = error.message.includes("INSUFFICIENT_CREDIT_BALANCE") ? "insufficient"
+      : error.message.includes("WALLET_NOT_FOUND") ? "missing"
+      : error.message.includes("IDEMPOTENCY_KEY_CONFLICT") ? "conflict"
+      : error.message.includes("FORBIDDEN") ? "forbidden"
+      : "failed";
+    redirect("/dashboard/admin/monetizacao/creditos?adjustment=" + code);
+  }
+
+  revalidatePath("/dashboard/admin/monetizacao/creditos");
+  revalidatePath("/dashboard/monetizacao/creditos");
+  redirect("/dashboard/admin/monetizacao/creditos?adjustment=success");
+}
