@@ -310,3 +310,16 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Adicionados testes unitários para assinatura válida, corpo adulterado, assinatura inválida e timestamp fora da janela.
 - **Contrato de integração:** este endpoint recebe um evento normalizado assinado pelo adaptador/gateway. Não é ainda uma implementação do protocolo proprietário de um operador ou agregador. O conector de produção deverá converter o callback real do provedor para este contrato e assinar o corpo com o segredo configurado.
 - Activação depende de configurar `MPESA_WEBHOOK_SECRET` e `MPESA_MERCHANT_CODE` no ambiente Vercel e registar o URL `/api/webhooks/payments/mpesa` no adaptador/provedor. Não existem credenciais merchant ou provedor configuradas neste repositório; nenhum pagamento real foi recebido ou simulado.
+
+
+## F3.3 — Reconciliação operacional de pagamentos e experiência de compra (19/11/2026)
+
+- O painel Super Admin de créditos passou a consultar os eventos de pagamento associados aos últimos 50 pedidos e a cruzá-los com estado, referência, montante e identificador da transacção.
+- São assinalados pedidos MPesa marcados como pagos sem evento único correspondente, sem identificador de transacção, ou com referência/montante divergentes; também são assinalados eventos associados a pedidos que não estejam marcados como pagos.
+- O painel apresenta o total de pedidos pagos e o respectivo montante apenas dentro da amostra dos últimos 50 pedidos, sem o apresentar como receita histórica total.
+- A lista de pedidos passou a expor referência de pagamento, identificador da transacção e instante de confirmação, quando disponíveis.
+- A área empresarial de créditos passou a destacar a referência de pagamento e a explicar que a referência identifica o pedido, mas não prova a transferência nem credita automaticamente o saldo.
+- Limitação deliberada: o callback actualmente persistido regista apenas confirmações bem-sucedidas. Pagamentos recusados, falhados, expirados ou callbacks rejeitados antes da confirmação ainda não constituem um histórico de eventos consultável. A integração directa com operador/agregador continua dependente de contrato, credenciais e adaptador do fornecedor.
+- A reconciliação apresentada é operacional e limitada aos últimos 50 pedidos; não substitui fecho contabilístico, extracto do operador ou reconciliação integral por período.
+- Commits: `5787d59c3f06d71aeb37c274ea55dd6afcb6fd55` (painel Super Admin) e `8856db9d295280fa2c63f674b6f21a69dd0acdc6` (área empresarial).
+- Validação: os dois ficheiros foram relidos a partir de `main`. O estado Vercel dos dois commits permanecia `pending` no momento do registo; não foram encontrados workflow runs associados. Build, testes e deploy não estão confirmados.
