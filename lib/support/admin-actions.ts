@@ -43,7 +43,7 @@ export async function replySupportAsStaff(formData: FormData): Promise<{ success
     ticket_id: parsed.data.ticketId, sender_user_id: user.id, sender_role: "BACKOFFICE", body: parsed.data.body,
   });
   if (messageError) return { error: "Não foi possível registar a resposta." };
-  if (ticket.status !== "WAITING_USER") {
+  {
     const { data: updated, error: updateError } = await supabase.from("support_tickets")
       .update({ status: "WAITING_USER", updated_at: new Date().toISOString() })
       .eq("id", parsed.data.ticketId).eq("status", ticket.status).select("id").maybeSingle();

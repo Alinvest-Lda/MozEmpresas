@@ -61,7 +61,7 @@ export async function addSupportMessage(formData: FormData) {
     const { data: updated, error: updateError } = await supabase.from("support_tickets")
       .update({ status: nextStatus, closed_at: null, updated_at: new Date().toISOString() })
       .eq("id", ticketId).eq("user_id", user.id).eq("status", ticket.status);
-    if (updateError) {
+    if (updateError || !updated) {
       revalidatePath("/dashboard/suporte");
       redirect("/dashboard/suporte?status=reply-saved");
     }
