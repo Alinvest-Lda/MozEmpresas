@@ -230,3 +230,11 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Ajustado o grid responsivo para acomodar cinco indicadores em ecrãs largos e três em ecrãs intermédios.
 - Commits: `07e4e54` (página) e `8826bd9` (CSS).
 - Não foram adicionadas acções de aprovação, alterações de schema ou atribuição de créditos. CI/deploy ainda não confirmado.
+
+
+### Entrega F2.5 — distribuição dos estados dos pedidos de crédito no Super Admin (19/11/2026)
+
+- A secção de pedidos apresenta agora uma síntese por estado, contando separadamente pedidos por validar, a aguardar pagamento, pendentes, pagos, recusados e cancelados (apenas estados presentes nos 50 registos carregados).
+- A leitura permite distinguir pedidos que exigem análise de pedidos que aguardam liquidação, sem alterar estados nem conceder créditos.
+- Commits: `dff89dc` (contagens e apresentação) e `f13c405` (estilos).
+- Sem alterações ao schema, ledger ou fluxo de pagamento. CI/deploy não confirmado nesta intervenção.
