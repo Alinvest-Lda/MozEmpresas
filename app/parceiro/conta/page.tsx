@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-import { redirect } from "next/navigation";
 import { requirePartnerAccount } from "@/lib/auth/access";
 import { PartnerPage, PartnerSection, PartnerMetric, PartnerEmpty } from "@/components/partner-workspace";
 
