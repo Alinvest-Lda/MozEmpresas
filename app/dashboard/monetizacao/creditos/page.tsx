@@ -43,6 +43,7 @@ function getFlash(params: { success?: string; error?: string }) {
 
   const errors: Record<string, string> = {
     purchase: "Não foi possível registar o pedido. Verifique os dados e tente novamente.",
+    pending: "Esta empresa já tem um pedido de compra em análise ou à espera de pagamento. Aguarde a conclusão antes de iniciar outro pedido.",
     forbidden: "Não tem permissão para solicitar créditos para esta empresa.",
     proof: "O comprovativo é obrigatório na transferência bancária e deve ser PDF, JPG, PNG ou WEBP, até 10 MB.",
     cleanup: "O pedido não foi concluído e não foi possível remover o ficheiro temporário. Contacte o suporte antes de repetir o envio.",
