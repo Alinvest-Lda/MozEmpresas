@@ -184,12 +184,29 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
           <div className={styles.panelHeading}><div><span className={styles.kicker}>05 · Saldos</span><h2 id="wallets-title">Carteiras empresariais</h2><p>Saldos por empresa, ordenados pelo volume disponível.</p></div><span className={styles.counter}>{walletRows.length} carteiras · máximo 100</span></div>
           {walletRows.length ? <div className={styles.list}>{walletRows.map((wallet) => <article className={styles.row} key={wallet.id}>
             <div className={styles.primary}><strong>{businessNames.get(wallet.business_id) || "Empresa não identificada"}</strong><small>Carteira empresarial</small></div>
-            <strong className={styles.balance}>{Number(wallet.balance_credits || 0).toLocaleString("pt-MZ")} cr</strong>
+            <div className={styles.decisionArea}>
+              <strong className={styles.balance}>{Number(wallet.balance_credits || 0).toLocaleString("pt-MZ")} cr</strong>
+              <form action={adjustCreditWallet} className={styles.decisionForm}>
+                <input type="hidden" name="wallet_id" value={wallet.id} />
+                <input type="hidden" name="idempotency_key" value={randomUUID()} />
+                <input className={styles.decisionNotes} name="delta_credits" type="number" step="1" min="-1000000" max="1000000" placeholder="+/- créditos" aria-label="Variação de créditos" required />
+                <input className={styles.decisionNotes} name="reason" minLength={10} maxLength={500} placeholder="Justificação obrigatória" aria-label="Justificação do ajuste" required />
+                <button className={styles.approveButton} type="submit">Registar ajuste</button>
+              </form>
+            </div>
           </article>)}</div> : <div className={styles.empty}><strong>Sem carteiras para apresentar.</strong><p>As carteiras empresariais serão listadas quando existirem.</p></div>}
         </section>
 
+        <section className={styles.panel} aria-labelledby="adjustments-title">
+          <div className={styles.panelHeading}><div><span className={styles.kicker}>06 · Correcções auditáveis</span><h2 id="adjustments-title">Ajustes de carteiras</h2><p>Correcções positivas ou negativas registadas no ledger, sem apagar movimentos anteriores.</p></div><span className={styles.counter}>{adjustmentRows.length} registos · máximo 50</span></div>
+          {adjustmentRows.length ? <div className={styles.list}>{adjustmentRows.map((event) => <article className={styles.row} key={event.id}>
+            <div className={styles.primary}><strong>{businessNames.get(event.business_id) || "Empresa não identificada"}</strong><span>{event.reason}</span><small>{dateTime(event.created_at)} · Saldo {Number(event.balance_before).toLocaleString("pt-MZ")} → {Number(event.balance_after).toLocaleString("pt-MZ")} · {event.transaction_id ? "Movimento registado" : "Movimento sem referência"}</small></div>
+            <strong className={Number(event.delta_credits) >= 0 ? styles.positive : styles.negative}>{Number(event.delta_credits) > 0 ? "+" : ""}{Number(event.delta_credits).toLocaleString("pt-MZ")} cr</strong>
+          </article>)}</div> : <div className={styles.empty}><strong>Sem ajustes registados.</strong><p>As correcções administrativas serão apresentadas neste histórico.</p></div>}
+          <p className={styles.readOnlyNote}>Cada ajuste exige justificação, validação Super Admin, bloqueio da carteira, chave de idempotência e registo simultâneo no saldo e no ledger. Não permite saldo negativo.</p>
+        </section>
         <section className={styles.panel} aria-labelledby="transactions-title">
-          <div className={styles.panelHeading}><div><span className={styles.kicker}>06 · Rastreabilidade</span><h2 id="transactions-title">Movimentos recentes</h2><p>Últimos movimentos das carteiras empresariais listadas.</p></div><span className={styles.counter}>{recentTransactions.length} movimentos · máximo 20</span></div>
+          <div className={styles.panelHeading}><div><span className={styles.kicker}>07 · Rastreabilidade</span><h2 id="transactions-title">Movimentos recentes</h2><p>Últimos movimentos das carteiras empresariais listadas.</p></div><span className={styles.counter}>{recentTransactions.length} movimentos · máximo 20</span></div>
           {recentTransactions.length ? <div className={styles.list}>{recentTransactions.map((item) => {
             const wallet = walletRows.find((candidate) => candidate.id === item.wallet_id);
             const credits = Number(item.credits || 0);
