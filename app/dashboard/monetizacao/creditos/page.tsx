@@ -205,7 +205,9 @@ export default async function CreditosPage({
             <div key={request.id} className="credit-request-row">
               <div>
                 <strong>{businesses.find((business) => business.id === request.business_id)?.name || "Empresa"} · {request.credits.toLocaleString("pt-MZ")} créditos</strong>
-                <small>{money(request.amount_mzn)} · {request.payment_method || "Pagamento"} · {dateTime(request.created_at)}{request.payment_reference ? ` · Ref. ${request.payment_reference}` : ""}</small>
+                <small>{money(request.amount_mzn)} · {request.payment_method || "Pagamento"} · {dateTime(request.created_at)}</small>
+                {request.payment_reference ? <div className="credit-payment-reference"><strong>Referência de pagamento: {request.payment_reference}</strong><span>Indique exactamente esta referência ao efectuar o pagamento e guarde o comprovativo. O saldo só será creditado após confirmação.</span></div> : null}
+                {request.payment_method === "MPESA" && request.status === "PAYMENT_PENDING" ? <small>O pedido está registado e aguarda confirmação do pagamento. A referência identifica este pedido; não representa, por si só, confirmação de transferência.</small> : null}
               </div>
               <span>{purchaseStatusLabels[request.status] || request.status}</span>
             </div>
