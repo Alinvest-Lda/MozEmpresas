@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import styles from "./creditos.module.css";
+import { decideCreditPurchase } from "@/lib/credit-purchases/admin-actions";
 
 const money = (value: number | string | null) => value == null ? "—" : `${Number(value).toLocaleString("pt-MZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MZN`;
 const dateTime = (value: string) => new Date(value).toLocaleString("pt-MZ", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Maputo" });
@@ -73,6 +74,20 @@ export default async function AdminCreditsPage() {
             return <article className={styles.row} key={request.id}>
               <div className={styles.primary}><strong>{businessNames.get(request.business_id) || "Empresa não identificada"}</strong><span>{Number(request.credits).toLocaleString("pt-MZ")} créditos · {money(request.amount_mzn)}</span><small>{dateTime(request.created_at)} · {request.payment_method || "Método não indicado"} · {request.proof_path ? <a href={`/api/admin/credit-purchases/${request.id}/proof`} target="_blank" rel="noopener noreferrer">Consultar comprovativo</a> : "Sem comprovativo"}</small>{request.notes ? <small>Nota: {request.notes}</small> : null}</div>
               <span className={`${styles.status} ${pending ? styles.pending : status === "APPROVED" || status === "PAID" ? styles.approved : styles.neutral}`}>{statusLabel[status] || status || "Sem estado"}</span>
+              {["REQUESTED", "PAYMENT_PENDING"].includes(status) ? <div className={styles.decisionArea}>
+                <form action={decideCreditPurchase} className={styles.decisionForm}>
+                  <input type="hidden" name="request_id" value={request.id} />
+                  <input type="hidden" name="decision" value="APPROVE" />
+                  <input className={styles.decisionNotes} name="notes" maxLength={2000} placeholder="Nota interna (opcional)" aria-label="Nota interna para aprovação" />
+                  <button className={styles.approveButton} type="submit">Confirmar pagamento e creditar</button>
+                </form>
+                <form action={decideCreditPurchase} className={styles.decisionForm}>
+                  <input type="hidden" name="request_id" value={request.id} />
+                  <input type="hidden" name="decision" value="REJECT" />
+                  <input className={styles.decisionNotes} name="notes" maxLength={2000} placeholder="Motivo da recusa (opcional)" aria-label="Motivo da recusa" />
+                  <button className={styles.rejectButton} type="submit">Recusar pedido</button>
+                </form>
+              </div> : null}
             </article>;
           })}</div> : <div className={styles.empty}><strong>Sem pedidos de compra.</strong><p>Os novos pedidos submetidos pelas empresas serão apresentados aqui.</p></div>}
           <p className={styles.readOnlyNote}>Esta vista é de consulta. A validação financeira e a atribuição de créditos não são executadas nesta página.</p>
