@@ -17,7 +17,7 @@ export default async function AdminCreditsPage() {
     { data: wallets, error: walletsError },
   ] = await Promise.all([
     supabase.from("credit_packages").select("id,code,name,credit_volume,price_mzn,active").order("credit_volume"),
-    supabase.from("credit_purchase_requests").select("id,business_id,credits,amount_mzn,payment_method,status,created_at").order("created_at", { ascending: false }).limit(50),
+    supabase.from("credit_purchase_requests").select("id,business_id,credits,amount_mzn,payment_method,status,created_at,proof_path,notes").order("created_at", { ascending: false }).limit(50),
     supabase.from("business_credit_wallets").select("id,business_id,balance_credits").order("balance_credits", { ascending: false }).limit(100),
   ]);
 
@@ -62,7 +62,7 @@ export default async function AdminCreditsPage() {
             const status = String(request.status || "").toUpperCase();
             const pending = ["REQUESTED", "PAYMENT_PENDING", "PENDING"].includes(status);
             return <article className={styles.row} key={request.id}>
-              <div className={styles.primary}><strong>{businessNames.get(request.business_id) || "Empresa não identificada"}</strong><span>{Number(request.credits).toLocaleString("pt-MZ")} créditos · {money(request.amount_mzn)}</span><small>{dateTime(request.created_at)} · {request.payment_method || "Método não indicado"}</small></div>
+              <div className={styles.primary}><strong>{businessNames.get(request.business_id) || "Empresa não identificada"}</strong><span>{Number(request.credits).toLocaleString("pt-MZ")} créditos · {money(request.amount_mzn)}</span><small>{dateTime(request.created_at)} · {request.payment_method || "Método não indicado"} · {request.proof_path ? "Comprovativo anexado" : "Sem comprovativo"}</small>{request.notes ? <small>Nota: {request.notes}</small> : null}</div>
               <span className={`${styles.status} ${pending ? styles.pending : status === "APPROVED" || status === "PAID" ? styles.approved : styles.neutral}`}>{statusLabel[status] || status || "Sem estado"}</span>
             </article>;
           })}</div> : <div className={styles.empty}><strong>Sem pedidos de compra.</strong><p>Os novos pedidos submetidos pelas empresas serão apresentados aqui.</p></div>}
