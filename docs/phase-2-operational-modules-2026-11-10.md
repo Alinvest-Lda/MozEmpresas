@@ -220,3 +220,13 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Esta informação é apenas metadado de consulta; não expõe o caminho interno do ficheiro nem disponibiliza o comprovativo. A abertura segura do comprovativo requer endpoint/action com autorização e URL temporário, a desenvolver separadamente.
 - Commit: `e48fb1d`.
 - CI/deploy não foi confirmado nesta entrega.
+
+
+### Entrega F2.4 — resumo financeiro de pedidos pendentes no Super Admin (19/11/2026)
+
+- O painel de créditos apresenta agora o valor monetário agregado dos pedidos pendentes (`REQUESTED`, `PAYMENT_PENDING`, `PENDING`) e o volume de créditos correspondente.
+- A métrica é calculada sobre os 50 pedidos mais recentes carregados; não é um total histórico completo nem substitui reconciliação financeira.
+- O indicador de carteiras mantém o número de carteiras carregadas e passa a mostrar o saldo agregado no texto auxiliar, evitando perder a métrica anterior.
+- Ajustado o grid responsivo para acomodar cinco indicadores em ecrãs largos e três em ecrãs intermédios.
+- Commits: `07e4e54` (página) e `8826bd9` (CSS).
+- Não foram adicionadas acções de aprovação, alterações de schema ou atribuição de créditos. CI/deploy ainda não confirmado.
