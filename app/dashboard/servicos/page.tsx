@@ -61,6 +61,14 @@ export default async function ServicesPage() {
           .limit(20),
   ]);
 
+  const orderIds = (orders ?? []).map(order => order.id);
+  const { data: adjustments } = orderIds.length
+    ? await supabase.from("platform_service_adjustments")
+        .select("order_id,adjustment_type,amount_mzn,credits,currency,external_refund_reference,reason,created_at")
+        .in("order_id", orderIds)
+    : { data: [] as { order_id: string; adjustment_type: string; amount_mzn: number; credits: number; currency: string; external_refund_reference: string | null; reason: string; created_at: string }[] };
+  const adjustmentByOrder = new Map((adjustments ?? []).map(item => [item.order_id, item]));
+
   const services = serviceRows ?? [];
   const serviceNames = new Map(services.map((service) => [service.id, service.name]));
   const categories = [...new Set(services.map((service) => service.category))];
@@ -149,6 +157,15 @@ export default async function ServicesPage() {
                       </span>
                       <strong>{Number(order.amount_mzn).toLocaleString("pt-MZ")} {order.currency || "MZN"}</strong>
                     </div>
+                    {adjustmentByOrder.has(order.id) ? (() => {
+                      const adjustment = adjustmentByOrder.get(order.id)!;
+                      return <div className="service-order-adjustment">
+                        <strong>{adjustment.adjustment_type === "CREDIT_REFUND" ? "Créditos devolvidos" : adjustment.adjustment_type === "MPESA_REFUND" ? "Reembolso M-Pesa registado" : "Pagamento pendente cancelado"}</strong>
+                        <small>{adjustment.credits > 0 ? adjustment.credits + " créditos" : Number(adjustment.amount_mzn).toLocaleString("pt-MZ") + " " + (adjustment.currency || "MZN")} · {new Date(adjustment.created_at).toLocaleDateString("pt-MZ")}</small>
+                        {adjustment.external_refund_reference ? <small>Referência do reembolso: {adjustment.external_refund_reference}</small> : null}
+                        <small>Motivo: {adjustment.reason}</small>
+                      </div>;
+                    })() : null}
                   </div>
                 );
               })}
