@@ -1,14 +1,15 @@
 export const dynamic = "force-dynamic";
 
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
+import { randomUUID } from "node:crypto";
 import styles from "./creditos.module.css";
-import { decideCreditPurchase } from "@/lib/credit-purchases/admin-actions";
+import { decideCreditPurchase, adjustCreditWallet } from "@/lib/credit-purchases/admin-actions";
 
 const money = (value: number | string | null) => value == null ? "—" : `${Number(value).toLocaleString("pt-MZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MZN`;
 const dateTime = (value: string) => new Date(value).toLocaleString("pt-MZ", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Maputo" });
 const statusLabel: Record<string, string> = { REQUESTED: "Por validar", PAYMENT_PENDING: "A aguardar pagamento", PENDING: "Pendente", APPROVED: "Aprovado", REJECTED: "Recusado", PAID: "Pago", CANCELLED: "Cancelado" };
 
-export default async function AdminCreditsPage({ searchParams }: { searchParams: Promise<{ decision?: string }> }) {
+export default async function AdminCreditsPage({ searchParams }: { searchParams: Promise<{ decision?: string; adjustment?: string }> }) {
   const params = await searchParams;
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
@@ -45,6 +46,12 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
     .order("last_received_at", { ascending: false })
     .limit(100);
   const callbackRows = callbackEvents ?? [];
+  const { data: adjustmentEvents, error: adjustmentEventsError } = await supabase
+    .from("credit_wallet_adjustment_events")
+    .select("id,wallet_id,business_id,actor_user_id,delta_credits,reason,balance_before,balance_after,transaction_id,created_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  const adjustmentRows = adjustmentEvents ?? [];
   const callbackStatusCounts = callbackRows.reduce<Record<string, number>>((counts, event) => {
     counts[event.processing_status] = (counts[event.processing_status] || 0) + 1;
     return counts;
@@ -53,7 +60,7 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
   for (const event of paymentEventRows) {
     eventsByRequest.set(event.request_id, [...(eventsByRequest.get(event.request_id) ?? []), event]);
   }
-  const businessIds = [...new Set([...requestRows.map((item) => item.business_id), ...walletRows.map((item) => item.business_id)])];
+  const businessIds = [...new Set([...requestRows.map((item) => item.business_id), ...walletRows.map((item) => item.business_id), ...adjustmentRows.map((item) => item.business_id)])];
   const { data: businesses, error: businessesError } = businessIds.length
     ? await supabase.from("businesses").select("id,name").in("id", businessIds)
     : { data: [], error: null };
@@ -80,7 +87,7 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
     }
     return events.length > 0 && String(item.status).toUpperCase() !== "PAID";
   });
-  const queryErrors = [packagesError, requestsError, walletsError, transactionsError, businessesError, paymentEventsError, callbackEventsError].filter(Boolean).length;
+  const queryErrors = [packagesError, requestsError, walletsError, transactionsError, businessesError, paymentEventsError, callbackEventsError, adjustmentEventsError].filter(Boolean).length;
 
   return (
     <main className={`dashboard-main admin-workspace ${styles.page}`}>
@@ -91,6 +98,15 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
         </header>
 
         {queryErrors > 0 ? <div className={styles.notice} role="status">Algumas consultas não puderam ser concluídas. Os dados apresentados podem estar incompletos.</div> : null}
+        {params.adjustment ? <div className={styles.notice} role="status">{({
+          success: "Ajuste registado no ledger e no saldo da carteira.",
+          invalid: "Indique um valor inteiro diferente de zero e uma justificação entre 10 e 500 caracteres.",
+          insufficient: "O ajuste não pode deixar o saldo da carteira negativo.",
+          missing: "A carteira indicada não foi encontrada.",
+          conflict: "A chave de idempotência já foi utilizada com dados diferentes.",
+          forbidden: "Não tem autorização para ajustar carteiras.",
+          failed: "Não foi possível registar o ajuste. Nenhum saldo deve ser considerado alterado.",
+        } as Record<string, string>)[params.adjustment] || "Operação de ajuste concluída."}</div> : null}
         {params.decision ? <div className={styles.notice} role="status">{({
           success: "Decisão registada. Os saldos e movimentos foram actualizados.",
           final: "Este pedido já foi concluído e não pode ser alterado.",
