@@ -50,7 +50,7 @@ export async function adjustCreditWallet(formData: FormData) {
   const delta = Number(deltaRaw);
 
   if (!UUID.test(walletId) || !UUID.test(idempotencyKey)
-      || !/^-?\\d+$/.test(deltaRaw) || !Number.isSafeInteger(delta)
+      || !/^-?\d+$/.test(deltaRaw) || !Number.isSafeInteger(delta)
       || delta === 0 || Math.abs(delta) > 1000000
       || reason.length < 10 || reason.length > 500) {
     redirect("/dashboard/admin/monetizacao/creditos?adjustment=invalid");
