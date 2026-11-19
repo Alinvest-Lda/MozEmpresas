@@ -362,3 +362,12 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Teste transaccional de ajustes (rollback): ajuste -10 cr alterou saldo e ledger de 100 para 90; repetição da mesma chave devolveu já processado sem duplicar o evento; reutilização da chave com valor diferente foi rejeitada. A transacção foi revertida.
 - Consulta posterior confirmou zero carteiras, zero movimentos, zero pedidos e zero ajustes persistidos. Nenhum dado comercial real foi modificado.
 - Advisors após os índices: as ocorrências de chaves estrangeiras sem índice no projecto baixaram de 42 para 34; os restantes avisos reportados são preexistentes e não foram alterados nesta fase.
+
+## F3.6 — Integridade do consumo publicitário de créditos (19/11/2026)
+
+- Reforçada a RPC `purchase_promotion_with_credits` para serializar a verificação de capacidade por produto através de bloqueio de linha `FOR UPDATE`, impedindo que compras concorrentes ultrapassem a capacidade comercial configurada.
+- A operação continua transaccional: débito da carteira, criação da campanha, registo no ledger e definição dos alvos são confirmados ou revertidos em conjunto.
+- A RPC valida a empresa activa e o papel do utilizador, a associação da oferta/listing à empresa, a data de início, limites de segmentação e produto pago activo.
+- Revogada a assinatura legada de cinco argumentos; a assinatura com segmentação permanece acessível apenas a utilizadores autenticados e mantém verificação de autorização dentro da função.
+- Migração aplicada no Supabase: `20261119190000_f36_advertising_credit_inventory_serialization.sql`. Commit: `8eb4cb3e5a18e5d4475309578dbebb8927e628ff`.
+- Limitação de validação: não existem carteiras nem campanhas comerciais no projecto activo para executar um cenário real de compra concorrente. A validação transaccional com dados reais fica pendente; não foram criados dados comerciais artificiais.
