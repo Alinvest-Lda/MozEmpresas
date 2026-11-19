@@ -19,7 +19,7 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
     { data: wallets, error: walletsError },
   ] = await Promise.all([
     supabase.from("credit_packages").select("id,code,name,credit_volume,price_mzn,active").order("credit_volume"),
-    supabase.from("credit_purchase_requests").select("id,business_id,credits,amount_mzn,payment_method,status,created_at,proof_path,notes").order("created_at", { ascending: false }).limit(50),
+    supabase.from("credit_purchase_requests").select("id,business_id,credits,amount_mzn,payment_method,status,created_at,proof_path,notes,payment_reference,provider_transaction_id,payment_confirmed_at").order("created_at", { ascending: false }).limit(50),
     supabase.from("business_credit_wallets").select("id,business_id,balance_credits").order("balance_credits", { ascending: false }).limit(100),
   ]);
 
@@ -31,6 +31,18 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
     ? await supabase.from("credit_transactions").select("id,wallet_id,type,credits,amount_mzn,description,created_at").in("wallet_id", walletIds).order("created_at", { ascending: false }).limit(20)
     : { data: [], error: null };
   const transactionRows = transactions ?? [];
+  const requestIds = requestRows.map((item) => item.id);
+  const { data: paymentEvents, error: paymentEventsError } = requestIds.length
+    ? await supabase.from("credit_payment_events")
+      .select("id,request_id,provider,provider_transaction_id,payment_reference,amount_mzn,currency,event_type,processed_at")
+      .in("request_id", requestIds)
+      .order("processed_at", { ascending: false })
+    : { data: [], error: null };
+  const paymentEventRows = paymentEvents ?? [];
+  const eventsByRequest = new Map<string, typeof paymentEventRows>();
+  for (const event of paymentEventRows) {
+    eventsByRequest.set(event.request_id, [...(eventsByRequest.get(event.request_id) ?? []), event]);
+  }
   const businessIds = [...new Set([...requestRows.map((item) => item.business_id), ...walletRows.map((item) => item.business_id)])];
   const { data: businesses, error: businessesError } = businessIds.length
     ? await supabase.from("businesses").select("id,name").in("id", businessIds)
@@ -47,7 +59,18 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
   const pendingAmount = pendingRequests.reduce((sum, item) => sum + Number(item.amount_mzn || 0), 0);
   const pendingCredits = pendingRequests.reduce((sum, item) => sum + Number(item.credits || 0), 0);
   const totalBalance = walletRows.reduce((sum, wallet) => sum + Number(wallet.balance_credits || 0), 0);
-  const queryErrors = [packagesError, requestsError, walletsError, transactionsError, businessesError].filter(Boolean).length;
+  const paidRequests = requestRows.filter((item) => String(item.status).toUpperCase() === "PAID");
+  const paidAmount = paidRequests.reduce((sum, item) => sum + Number(item.amount_mzn || 0), 0);
+  const reconciliationIssues = requestRows.filter((item) => {
+    const events = eventsByRequest.get(item.id) ?? [];
+    if (String(item.status).toUpperCase() === "PAID" && item.payment_method === "MPESA") {
+      return !item.provider_transaction_id || events.length !== 1 ||
+        (events[0] && (events[0].payment_reference !== item.payment_reference ||
+          Number(events[0].amount_mzn) !== Number(item.amount_mzn)));
+    }
+    return events.length > 0 && String(item.status).toUpperCase() !== "PAID";
+  });
+  const queryErrors = [packagesError, requestsError, walletsError, transactionsError, businessesError, paymentEventsError].filter(Boolean).length;
 
   return (
     <main className={`dashboard-main admin-workspace ${styles.page}`}>
@@ -72,6 +95,7 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
           <article><span>Pedidos por validar</span><strong>{pendingCount}</strong><small>Nos últimos 50 pedidos carregados</small></article>
           <article><span>Valor em análise</span><strong>{money(pendingAmount)}</strong><small>{pendingCredits.toLocaleString("pt-MZ")} créditos · pedidos pendentes</small></article>
           <article><span>Carteiras empresariais</span><strong>{walletRows.length}</strong><small>Até 100 carteiras carregadas · saldo agregado {totalBalance.toLocaleString("pt-MZ")} cr</small></article>
+          <article><span>Pagamentos confirmados</span><strong>{money(paidAmount)}</strong><small>{paidRequests.length} pedidos pagos · últimos 50 pedidos</small></article>
         </section>
 
         <section className={styles.panel} aria-labelledby="requests-title">
@@ -81,7 +105,7 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
             const status = String(request.status || "").toUpperCase();
             const pending = ["REQUESTED", "PAYMENT_PENDING", "PENDING"].includes(status);
             return <article className={styles.row} key={request.id}>
-              <div className={styles.primary}><strong>{businessNames.get(request.business_id) || "Empresa não identificada"}</strong><span>{Number(request.credits).toLocaleString("pt-MZ")} créditos · {money(request.amount_mzn)}</span><small>{dateTime(request.created_at)} · {request.payment_method || "Método não indicado"} · {request.proof_path ? <a href={`/api/admin/credit-purchases/${request.id}/proof`} target="_blank" rel="noopener noreferrer">Consultar comprovativo</a> : "Sem comprovativo"}</small>{request.notes ? <small>Nota: {request.notes}</small> : null}</div>
+              <div className={styles.primary}><strong>{businessNames.get(request.business_id) || "Empresa não identificada"}</strong><span>{Number(request.credits).toLocaleString("pt-MZ")} créditos · {money(request.amount_mzn)}</span><small>{dateTime(request.created_at)} · {request.payment_method || "Método não indicado"} · Ref. {request.payment_reference || "não atribuída"}{request.provider_transaction_id ? " · Transacção " + request.provider_transaction_id : ""}{request.payment_confirmed_at ? " · Confirmado " + dateTime(request.payment_confirmed_at) : ""} · {request.proof_path ? <a href={`/api/admin/credit-purchases/${request.id}/proof`} target="_blank" rel="noopener noreferrer">Consultar comprovativo</a> : "Sem comprovativo"}</small>{request.notes ? <small>Nota: {request.notes}</small> : null}</div>
               <span className={`${styles.status} ${pending ? styles.pending : status === "APPROVED" || status === "PAID" ? styles.approved : styles.neutral}`}>{statusLabel[status] || status || "Sem estado"}</span>
               {["REQUESTED", "PAYMENT_PENDING"].includes(status) ? <div className={styles.decisionArea}>
                 <form action={decideCreditPurchase} className={styles.decisionForm}>
@@ -102,8 +126,17 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
           <p className={styles.readOnlyNote}>Esta vista é de consulta. A validação financeira e a atribuição de créditos não são executadas nesta página.</p>
         </section>
 
+        <section className={styles.panel} aria-labelledby="reconciliation-title">
+          <div className={styles.panelHeading}><div><span className={styles.kicker}>02 · Controlo financeiro</span><h2 id="reconciliation-title">Reconciliação de pagamentos</h2><p>Verificação cruzada entre pedidos, referências e eventos confirmados pelo callback.</p></div><span className={styles.counter}>{paymentEventRows.length} eventos · {reconciliationIssues.length} alertas</span></div>
+          {reconciliationIssues.length ? <div className={styles.list}>{reconciliationIssues.map((item) => <article className={styles.row} key={item.id}>
+            <div className={styles.primary}><strong>{businessNames.get(item.business_id) || "Empresa não identificada"}</strong><span>{item.payment_reference || "Sem referência"} · {money(item.amount_mzn)}</span><small>{String(item.status).toUpperCase() === "PAID" ? "Pedido marcado como pago, mas o registo do evento não coincide ou está ausente." : "Existe evento de pagamento associado a um pedido que não está marcado como pago."}</small></div>
+            <span className={styles.status + " " + styles.pending}>Verificar</span>
+          </article>)}</div> : <div className={styles.empty}><strong>Sem divergências detectadas.</strong><p>Nos pedidos carregados, os eventos e estados não apresentam inconsistências identificáveis.</p></div>}
+          <p className={styles.readOnlyNote}>A reconciliação cobre os últimos 50 pedidos. O callback actual regista apenas confirmações; pagamentos recusados, expirados ou falhados fora do callback não são visíveis nesta tabela.</p>
+        </section>
+
         <section className={styles.panel} aria-labelledby="packages-title">
-          <div className={styles.panelHeading}><div><span className={styles.kicker}>02 · Catálogo</span><h2 id="packages-title">Pacotes de créditos</h2><p>Volumes e preços actualmente configurados.</p></div><span className={styles.counter}>{packageRows.length} pacotes</span></div>
+          <div className={styles.panelHeading}><div><span className={styles.kicker}>03 · Catálogo</span><h2 id="packages-title">Pacotes de créditos</h2><p>Volumes e preços actualmente configurados.</p></div><span className={styles.counter}>{packageRows.length} pacotes</span></div>
           {packageRows.length ? <div className={styles.packageGrid}>{packageRows.map((item) => <article className={styles.package} key={item.id}>
             <div><span className={styles.code}>{item.code}</span><span className={`${styles.status} ${item.active ? styles.approved : styles.neutral}`}>{item.active ? "Activo" : "Inactivo"}</span></div>
             <h3>{item.name}</h3><strong>{Number(item.credit_volume).toLocaleString("pt-MZ")} créditos</strong><span>{money(item.price_mzn)}</span>
@@ -112,7 +145,7 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
         </section>
 
         <section className={styles.panel} aria-labelledby="wallets-title">
-          <div className={styles.panelHeading}><div><span className={styles.kicker}>03 · Saldos</span><h2 id="wallets-title">Carteiras empresariais</h2><p>Saldos por empresa, ordenados pelo volume disponível.</p></div><span className={styles.counter}>{walletRows.length} carteiras · máximo 100</span></div>
+          <div className={styles.panelHeading}><div><span className={styles.kicker}>04 · Saldos</span><h2 id="wallets-title">Carteiras empresariais</h2><p>Saldos por empresa, ordenados pelo volume disponível.</p></div><span className={styles.counter}>{walletRows.length} carteiras · máximo 100</span></div>
           {walletRows.length ? <div className={styles.list}>{walletRows.map((wallet) => <article className={styles.row} key={wallet.id}>
             <div className={styles.primary}><strong>{businessNames.get(wallet.business_id) || "Empresa não identificada"}</strong><small>Carteira empresarial</small></div>
             <strong className={styles.balance}>{Number(wallet.balance_credits || 0).toLocaleString("pt-MZ")} cr</strong>
@@ -120,7 +153,7 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
         </section>
 
         <section className={styles.panel} aria-labelledby="transactions-title">
-          <div className={styles.panelHeading}><div><span className={styles.kicker}>04 · Rastreabilidade</span><h2 id="transactions-title">Movimentos recentes</h2><p>Últimos movimentos das carteiras empresariais listadas.</p></div><span className={styles.counter}>{recentTransactions.length} movimentos · máximo 20</span></div>
+          <div className={styles.panelHeading}><div><span className={styles.kicker}>05 · Rastreabilidade</span><h2 id="transactions-title">Movimentos recentes</h2><p>Últimos movimentos das carteiras empresariais listadas.</p></div><span className={styles.counter}>{recentTransactions.length} movimentos · máximo 20</span></div>
           {recentTransactions.length ? <div className={styles.list}>{recentTransactions.map((item) => {
             const wallet = walletRows.find((candidate) => candidate.id === item.wallet_id);
             const credits = Number(item.credits || 0);
