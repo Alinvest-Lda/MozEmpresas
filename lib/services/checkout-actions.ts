@@ -22,6 +22,10 @@ export async function purchasePlatformService(formData: FormData) {
   const serviceId = text(formData.get("serviceId"));
   const businessId = text(formData.get("businessId"));
   const method = text(formData.get("paymentMethod")) || "CREDITS";
+  const purchaseKey = text(formData.get("purchaseKey"));
+  if (method === "CREDITS" && !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(purchaseKey)) {
+    return { error: "Actualize a página e tente novamente." };
+  }
 
   if (!serviceId || !businessId || !(await access(s, user.id, businessId))) {
     return { error: "Não tem autorização para esta contratação." };
@@ -43,6 +47,7 @@ export async function purchasePlatformService(formData: FormData) {
       p_service_id: serviceId,
       p_business_id: businessId,
       p_user_id: user.id,
+      p_idempotency_key: purchaseKey,
     });
 
     if (error) {
