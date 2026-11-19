@@ -81,27 +81,17 @@ export async function POST(request: Request) {
 
   const supabase = createServiceRoleClient();
   const receivedAt = new Date().toISOString();
-  const { data: callbackEvent, error: auditError } = await supabase
-    .from("credit_payment_callback_events")
-    .upsert({
-      provider: "MPESA",
-      provider_transaction_id: payment.transactionId,
-      payment_reference: payment.paymentReference,
-      amount_mzn: payment.amount,
-      currency: payment.currency,
-      merchant_code: payment.merchantCode,
-      callback_status: payment.status,
-      processing_status: "RECEIVED",
-      processing_error_code: null,
-      last_received_at: receivedAt,
-      processed_at: null,
-    }, {
-      onConflict: "provider,provider_transaction_id,callback_status",
-    })
-    .select("id,processing_status")
-    .single();
+  const { data: callbackEvent, error: auditError } = await supabase.rpc("record_credit_payment_callback", {
+    p_provider_transaction_id: payment.transactionId,
+    p_payment_reference: payment.paymentReference,
+    p_amount_mzn: payment.amount,
+    p_currency: payment.currency,
+    p_merchant_code: payment.merchantCode,
+    p_callback_status: payment.status,
+    p_received_at: receivedAt,
+  });
 
-  if (auditError || !callbackEvent) {
+  if (auditError || !callbackEvent?.id) {
     return NextResponse.json({ error: "Não foi possível registar o evento de pagamento." }, { status: 503 });
   }
 
