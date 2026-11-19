@@ -35,7 +35,10 @@ export default async function AdminCreditsPage() {
     : { data: [], error: null };
   const businessNames = new Map((businesses ?? []).map((item) => [item.id, item.name]));
   const recentTransactions = transactionRows;
-  const pendingCount = requestRows.filter((item) => ["REQUESTED", "PAYMENT_PENDING", "PENDING"].includes(String(item.status).toUpperCase())).length;
+  const pendingRequests = requestRows.filter((item) => ["REQUESTED", "PAYMENT_PENDING", "PENDING"].includes(String(item.status).toUpperCase()));
+  const pendingCount = pendingRequests.length;
+  const pendingAmount = pendingRequests.reduce((sum, item) => sum + Number(item.amount_mzn || 0), 0);
+  const pendingCredits = pendingRequests.reduce((sum, item) => sum + Number(item.credits || 0), 0);
   const totalBalance = walletRows.reduce((sum, wallet) => sum + Number(wallet.balance_credits || 0), 0);
   const queryErrors = [packagesError, requestsError, walletsError, transactionsError, businessesError].filter(Boolean).length;
 
@@ -52,8 +55,8 @@ export default async function AdminCreditsPage() {
         <section className={styles.metrics} aria-label="Indicadores de créditos">
           <article><span>Pacotes activos</span><strong>{packageRows.filter((item) => item.active).length}</strong><small>{packageRows.length} no catálogo</small></article>
           <article><span>Pedidos por validar</span><strong>{pendingCount}</strong><small>Nos últimos 50 pedidos carregados</small></article>
-          <article><span>Carteiras empresariais</span><strong>{walletRows.length}</strong><small>Até 100 carteiras carregadas</small></article>
-          <article><span>Saldo agregado</span><strong>{totalBalance.toLocaleString("pt-MZ")}</strong><small>Créditos nas carteiras carregadas</small></article>
+          <article><span>Valor em análise</span><strong>{money(pendingAmount)}</strong><small>{pendingCredits.toLocaleString("pt-MZ")} créditos · pedidos pendentes</small></article>
+          <article><span>Carteiras empresariais</span><strong>{walletRows.length}</strong><small>Até 100 carteiras carregadas · saldo agregado {totalBalance.toLocaleString("pt-MZ")} cr</small></article>
         </section>
 
         <section className={styles.panel} aria-labelledby="requests-title">
