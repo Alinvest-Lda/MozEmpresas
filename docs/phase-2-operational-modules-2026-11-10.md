@@ -245,3 +245,12 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - A alteração evita que pedidos aprovados desapareçam da distribuição visual, mantendo-os separados de pedidos pagos (`PAID`).
 - A métrica continua limitada aos últimos 50 pedidos carregados e não deve ser interpretada como total histórico.
 - Não foram alterados estados financeiros, permissões, saldo de carteiras ou schema.
+
+### F2.7 — consulta protegida de comprovativos de compra (19/11/2026)
+
+- Criado o endpoint `GET /api/admin/credit-purchases/[id]/proof` para disponibilizar comprovativos apenas após validação server-side da sessão e do papel `super_admin` através de `getSuperAdminContext()`.
+- O endpoint valida o UUID, consulta apenas o caminho associado ao pedido indicado e gera URL assinada no bucket privado `payment-proofs`, com validade de 60 segundos.
+- A resposta usa redirecionamento temporário e cabeçalho `Cache-Control: private, no-store`; o caminho interno do storage não é exposto na página administrativa.
+- A listagem de pedidos passou a disponibilizar a ligação “Consultar comprovativo” apenas quando existe `proof_path`.
+- A implementação depende de o bucket `payment-proofs` permanecer privado e de as políticas RLS/storage estarem correctamente configuradas. A revisão efectiva dessas políticas e o teste com utilizador não administrador ficam para a auditoria integrada final.
+- Não foram alterados pagamentos, saldos, ledger ou schema; não existe ainda aprovação financeira automatizada.
