@@ -58,7 +58,7 @@ export async function addSupportMessage(formData: FormData) {
   });
   if (messageError) redirect("/dashboard/suporte?status=reply-error");
   if (nextStatus !== ticket.status) {
-    const { error: updateError } = await supabase.from("support_tickets")
+    const { data: updated, error: updateError } = await supabase.from("support_tickets")
       .update({ status: nextStatus, closed_at: null, updated_at: new Date().toISOString() })
       .eq("id", ticketId).eq("user_id", user.id).eq("status", ticket.status);
     if (updateError) {

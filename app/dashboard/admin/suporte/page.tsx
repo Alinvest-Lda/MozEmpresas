@@ -15,7 +15,7 @@ type SearchParams = Promise<{ area?: string; status?: string; business?: string;
 
 export default async function AdminSupport({ searchParams }: { searchParams?: SearchParams }) {
   const p = searchParams ? await searchParams : {};
-  const result = ["success", "error", "stale"].includes(p.result ?? "") ? p.result ?? "" : "";
+  const result = ["success", "error", "stale", "partial"].includes(p.result ?? "") ? p.result ?? "" : "";
   const area = areas.includes(p.area ?? "") ? p.area ?? "" : "";
   const status = statuses.includes(p.status ?? "") ? p.status ?? "" : "";
   const subject = (p.subject ?? "").trim().slice(0, 100);
@@ -52,7 +52,7 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
           <span className={styles.heroMark} aria-hidden="true">?</span>
         </header>
 
-        {result ? <div className={`${styles.notice} ${result === "error" ? styles.noticeError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Operação concluída com sucesso." : result === "stale" ? "O atendimento foi actualizado por outra operação. Actualize a página e reveja o estado antes de repetir." : "Não foi possível concluir a operação. Confirme o histórico antes de tentar novamente."}</div> : null}
+        {result ? <div className={`${styles.notice} ${result === "error" ? styles.noticeError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Operação concluída com sucesso." : result === "stale" ? "O atendimento foi actualizado por outra operação. Actualize a página e reveja o estado antes de repetir." : result === "partial" ? "A resposta foi registada, mas o estado mudou em simultâneo. Consulte o histórico; não envie a mesma resposta novamente." : "Não foi possível concluir a operação. Confirme o histórico antes de tentar novamente."}</div> : null}
 
         <section className={styles.metrics} aria-label="Resumo da fila">
           <article><span>Em aberto</span><strong>{openCount}</strong><small>Precisam de triagem</small></article>
@@ -89,10 +89,10 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
               <details className={styles.conversation} open={thread.length > 0}><summary>{thread.length} {thread.length === 1 ? "mensagem" : "mensagens"} no histórico <span>Ver conversa</span></summary><div className={styles.thread}>{thread.length ? thread.map(m => { const isUser = m.sender_role === "USER"; return <div className={`${styles.message} ${isUser ? styles.messageUser : styles.messageStaff}`} key={m.id}><div className={styles.messageMeta}><strong>{isUser ? "Utilizador" : "Backoffice"}</strong><time>{new Date(m.created_at).toLocaleString("pt-MZ", { dateStyle: "medium", timeStyle: "short" })}</time></div><p>{m.body}</p></div>; }) : <p className={styles.noMessages}>Ainda não existem mensagens neste atendimento.</p>}</div></details>
               {getSupportTicketTransitions(statusKey).length ? <form action={updateSupportTicketStatus} className={styles.moderationForm}>
                 <input type="hidden" name="ticket_id" value={t.id} />
-                <label><span>Estado do atendimento</span><Select name="status" defaultValue={statusKey}>{getSupportTicketTransitions(statusKey).map(nextStatus => <option key={nextStatus} value={nextStatus}>{statusLabels[nextStatus] || nextStatus}</option>)}</Select></label>
+                <label><span>Estado do atendimento</span><Select name="status" defaultValue=""><option value="" disabled>Escolher novo estado</option>{getSupportTicketTransitions(statusKey).map(nextStatus => <option key={nextStatus} value={nextStatus}>{statusLabels[nextStatus] || nextStatus}</option>)}</Select></label>
                 <button className="btn secondary" type="submit">Actualizar estado</button>
               </form> : <p className={styles.noMessages}>Atendimento fechado. Não existem transições disponíveis.</p>}
-              {statusKey !== "CLOSED" && statusKey !== "RESOLVED" ? <form action={async (formData) => { "use server"; const outcome = await replySupportAsStaff(formData); redirect("/dashboard/admin/suporte?result=" + ("error" in outcome ? "error" : "success")); }} className={styles.reply}>
+              {statusKey !== "CLOSED" && statusKey !== "RESOLVED" ? <form action={async (formData) => { "use server"; const outcome = await replySupportAsStaff(formData); redirect("/dashboard/admin/suporte?result=" + ("error" in outcome ? outcome.saved ? "partial" : "error" : "success")); }} className={styles.reply}>
                 <input type="hidden" name="ticket_id" value={t.id} /><label htmlFor={`reply-${t.id}`}>Resposta do backoffice</label><div className={styles.replyRow}><textarea id={`reply-${t.id}`} name="body" placeholder="Escreva uma resposta clara para o utilizador…" required maxLength={5000} rows={2} /><button className="btn primary" type="submit">Enviar resposta</button></div>
               </form> : null}
             </article>;
