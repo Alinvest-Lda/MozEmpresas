@@ -72,6 +72,7 @@ export async function requestCreditPurchase(formData: FormData) {
     if (uploadError) redirect("/dashboard/monetizacao/creditos?error=proof");
   }
 
+  const paymentReference = "ME" + crypto.randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase();
   const { error } = await supabase.from("credit_purchase_requests").insert({
     business_id: businessId,
     package_id: packageId,
@@ -79,8 +80,9 @@ export async function requestCreditPurchase(formData: FormData) {
     amount_mzn: pkg.price_mzn,
     credits: pkg.credit_volume,
     payment_method: paymentMethod,
+    payment_reference: paymentReference,
     notes: notes || null,
-    status: "REQUESTED",
+    status: paymentMethod === "MPESA" ? "PAYMENT_PENDING" : "REQUESTED",
     proof_path: proofPath,
   });
 
