@@ -35,6 +35,11 @@ export default async function AdminCreditsPage() {
     : { data: [], error: null };
   const businessNames = new Map((businesses ?? []).map((item) => [item.id, item.name]));
   const recentTransactions = transactionRows;
+  const statusCounts = requestRows.reduce<Record<string, number>>((counts, item) => {
+    const status = String(item.status || "UNKNOWN").toUpperCase();
+    counts[status] = (counts[status] || 0) + 1;
+    return counts;
+  }, {});
   const pendingRequests = requestRows.filter((item) => ["REQUESTED", "PAYMENT_PENDING", "PENDING"].includes(String(item.status).toUpperCase()));
   const pendingCount = pendingRequests.length;
   const pendingAmount = pendingRequests.reduce((sum, item) => sum + Number(item.amount_mzn || 0), 0);
@@ -61,6 +66,7 @@ export default async function AdminCreditsPage() {
 
         <section className={styles.panel} aria-labelledby="requests-title">
           <div className={styles.panelHeading}><div><span className={styles.kicker}>01 · Operações</span><h2 id="requests-title">Pedidos de compra</h2><p>Pedidos mais recentes submetidos pelas empresas.</p></div><span className={styles.counter}>{requestRows.length} registos · máximo 50</span></div>
+          {requestRows.length ? <div className={styles.statusSummary} aria-label="Distribuição dos estados dos pedidos">{[["REQUESTED", "Por validar"], ["PAYMENT_PENDING", "A aguardar pagamento"], ["PENDING", "Pendente"], ["PAID", "Pago"], ["REJECTED", "Recusado"], ["CANCELLED", "Cancelado"]].filter(([status]) => (statusCounts[status] || 0) > 0).map(([status, label]) => <span key={status}>{label}<strong>{statusCounts[status]}</strong></span>)}</div> : null}
           {requestRows.length ? <div className={styles.list}>{requestRows.map((request) => {
             const status = String(request.status || "").toUpperCase();
             const pending = ["REQUESTED", "PAYMENT_PENDING", "PENDING"].includes(status);
