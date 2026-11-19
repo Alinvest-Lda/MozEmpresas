@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requirePartnerAccount } from "@/lib/auth/access";
 import { PartnerPage, PartnerSection, PartnerMetric } from "@/components/partner-workspace";
 import { changeOpportunityStatus } from "@/lib/opportunities/partner-actions";
 
@@ -30,9 +30,7 @@ const statusLabel = (status: string) =>
 
 export default async function PartnerOpportunitiesPage({ searchParams }: { searchParams?: Promise<{ saved?: string; updated?: string; error?: string }> }) {
   const params = searchParams ? await searchParams : {};
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  const { supabase, user } = await requirePartnerAccount();
 
   const [{ data: accountId, error: accountError }, { data: contextRows, error: contextError }] = await Promise.all([
     supabase.rpc("current_partner_account_id"),

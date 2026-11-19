@@ -1,6 +1,6 @@
 export const dynamic="force-dynamic";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requirePartnerAccount } from "@/lib/auth/access";
 import { PartnerPage, PartnerSection, PartnerEmpty } from "@/components/partner-workspace";
 import { changeOpportunityApplicationStatus } from "@/lib/opportunities/partner-actions";
 import { partnerApplicationTransitions } from "@/lib/opportunities/state-machine";
@@ -10,9 +10,7 @@ const dateLabel=(v:string|null)=>v?new Date(v).toLocaleString("pt-MZ",{dateStyle
 
 export default async function PartnerOpportunityApplicationsPage({searchParams}:{searchParams?:Promise<{updated?:string;error?:string}>}) {
  const params=searchParams?await searchParams:{};
- const supabase=await createClient();
- const {data:{user}}=await supabase.auth.getUser();
- if(!user)return null;
+ const {supabase,user}=await requirePartnerAccount();
  const [{data:accountId,error:accountError},{data:contextRows,error:contextError}]=await Promise.all([supabase.rpc("current_partner_account_id"),supabase.rpc("partner_account_context")]);
  const context=Array.isArray(contextRows)?contextRows[0]:null;
  const canManage=context?.member_role==="owner"||context?.member_role==="manager";

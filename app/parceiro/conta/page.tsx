@@ -1,13 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requirePartnerAccount } from "@/lib/auth/access";
 import { PartnerPage, PartnerSection, PartnerMetric, PartnerEmpty } from "@/components/partner-workspace";
 
 export default async function PartnerAccountPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const { supabase, user } = await requirePartnerAccount();
 
   const [
     { data: profileRows, error: profileError },

@@ -1,13 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requirePartnerAccount } from "@/lib/auth/access";
 import { PartnerPage, PartnerSection, PartnerMetric, PartnerEmpty } from "@/components/partner-workspace";
 
 export default async function PartnerInsights() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  const { supabase, user } = await requirePartnerAccount();
 
   const { data: accountId, error: accountError } = await supabase.rpc("current_partner_account_id");
   const [

@@ -1,6 +1,6 @@
 export const dynamic="force-dynamic";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requirePartnerAccount } from "@/lib/auth/access";
 import { PartnerPage,PartnerSection,PartnerMetric,PartnerEmpty } from "@/components/partner-workspace";
 
 const statusLabel=(status:string)=>{
@@ -9,7 +9,7 @@ const statusLabel=(status:string)=>{
 };
 
 export default async function PartnerAds(){
-  const s=await createClient();
+  const {supabase:s}=await requirePartnerAccount();
   const [{data:products},{data:campaigns},{data:campaignMetrics}]=await Promise.all([
     s.rpc("partner_ad_products_list"),
     s.rpc("partner_ad_campaigns_list"),

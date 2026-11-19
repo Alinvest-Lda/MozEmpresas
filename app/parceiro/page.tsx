@@ -1,12 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requirePartnerAccount } from "@/lib/auth/access";
 
 export default async function PartnerHome() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  const { supabase, user } = await requirePartnerAccount();
 
   const [
     { data: context, error: contextError },
