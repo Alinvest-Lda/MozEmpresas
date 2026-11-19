@@ -23,7 +23,7 @@ export async function purchasePlatformService(formData: FormData) {
   const businessId = text(formData.get("businessId"));
   const method = text(formData.get("paymentMethod")) || "CREDITS";
   const purchaseKey = text(formData.get("purchaseKey"));
-  if (method === "CREDITS" && !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(purchaseKey)) {
+  if ((method === "CREDITS" || method === "MPESA") && !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(purchaseKey)) {
     return { error: "Actualize a página e tente novamente." };
   }
 
@@ -68,60 +68,19 @@ export async function purchasePlatformService(formData: FormData) {
 
   if (method !== "MPESA") return { error: "Meio de pagamento não suportado." };
 
-  const startsAt = new Date();
-  const endsAt = new Date(startsAt);
-  if (service.billing === "MONTHLY") {
-    endsAt.setMonth(endsAt.getMonth() + 1);
-  } else if (service.billing === "ANNUAL") {
-    endsAt.setFullYear(endsAt.getFullYear() + 1);
-  } else if (service.default_term_days) {
-    endsAt.setDate(endsAt.getDate() + service.default_term_days);
-  } else {
-    endsAt.setDate(endsAt.getDate() + 30);
-  }
-
-  const renewalPeriod =
-    service.billing === "MONTHLY" ? "MONTHLY" :
-    service.billing === "ANNUAL" ? "ANNUAL" : null;
-
-  const { data: order, error } = await s
-    .from("platform_service_orders")
-    .insert({
-      service_id: serviceId,
-      business_id: businessId,
-      requester_user_id: user.id,
-      amount_mzn: service.price,
-      currency: service.currency || "MZN",
-      payment_method: "MPESA",
-      credits_charged: 0,
-      status: "PENDING_PAYMENT",
-      starts_at: startsAt.toISOString(),
-      ends_at: endsAt.toISOString(),
-      renewal_period: renewalPeriod,
-      auto_renew: false,
-      renewal_status: renewalPeriod ? "ACTIVE" : "NONE",
-    })
-    .select("id")
-    .single();
-
-  if (error || !order) return { error: "Não foi possível criar a contratação M-Pesa." };
-
-  const payment = await s.from("financial_payments").insert({
-    business_id: businessId,
-    user_id: user.id,
-    amount_mzn: service.price,
-    currency: service.currency || "MZN",
-    method: "MPESA",
-    status: "PENDING",
-    reference: "SERVICE:" + order.id,
+  const { data: pendingOrder, error: pendingOrderError } = await s.rpc("create_mpesa_platform_service_order", {
+    p_service_id: serviceId,
+    p_business_id: businessId,
+    p_user_id: user.id,
+    p_idempotency_key: purchaseKey,
   });
-
-  if (payment.error) {
-    await s.from("platform_service_orders").update({ status: "FAILED", renewal_status: "NONE" }).eq("id", order.id);
-    return { error: "A contratação foi criada, mas não foi possível registar o pagamento pendente." };
+  if (pendingOrderError || !pendingOrder?.order_id) {
+    return { error: pendingOrderError?.message.includes("FORBIDDEN")
+      ? "Não tem autorização para esta contratação."
+      : "Não foi possível registar a contratação M-Pesa." };
   }
 
   revalidatePath("/dashboard/servicos");
   revalidatePath("/dashboard/financeiro");
-  return { success: true, orderId: String(order.id), pending: true };
+  return { success: true, orderId: String(pendingOrder.order_id), pending: true };
 }
