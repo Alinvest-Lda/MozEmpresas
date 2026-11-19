@@ -93,16 +93,37 @@ Estas transições são aplicadas na acção de gestão administrativa. A valida
 - Criado `docs/architecture/credit-purchase-approval.md` com contrato de aprovação/recusa, atomicidade, idempotência, auditoria e testes SQL necessários.
 - Nenhuma DDL foi aplicada. A RPC transaccional e o controlo único do ledger ficam pendentes da geração de migration pelo Supabase CLI e validação em PostgreSQL isolado.
 
+## 3.1 — Entregas de 19/11/2026
+
+### F2.5 — Notificações e suporte (código aplicado)
+- As acções de leitura de notificações validam UUID, sessão autenticada e propriedade do registo; só actualizam notificações ainda não lidas.
+- Criada máquina de estados para atendimentos: `OPEN`, `IN_PROGRESS`, `WAITING_USER`, `RESOLVED` e `CLOSED`.
+- A fila Super Admin passou a apresentar apenas transições permitidas, com compare-and-set sobre o estado previamente lido.
+- O fecho grava `closed_at`; atendimentos fechados não aceitam novas respostas.
+- Respostas do utilizador reabrem atendimentos resolvidos ou devolvem atendimentos à equipa quando aguardavam o utilizador.
+- As respostas actualizam a actividade do ticket com controlo concorrente. Se a mensagem for guardada mas o estado mudar em simultâneo, a interface informa que não deve ser reenviada.
+- Adicionados testes unitários da máquina de estados do suporte.
+
+### F2.1 — Reforço de acesso ao workspace de parceiros (código aplicado)
+- As páginas de visão geral, conta, inteligência, oportunidades, candidaturas, publicidade, pedidos publicitários, serviços e resultados passaram a exigir `requirePartnerAccount()`.
+- O controlo central valida sessão, perfil activo, classificação de parceiro, contexto da conta, estado activo da conta e membership.
+- O fluxo de convites de gestores continua suspenso; não foi reactivada a RPC legada de associação directa.
+
+### Bloqueios de schema confirmados — não contornar
+- O esquema activo não dispõe da RPC transaccional de aprovação de compras de créditos nem da unicidade por referência no ledger. A aprovação financeira permanece apenas de consulta.
+- `partner_access_grants` não contém conta-alvo nem papel pretendido; o convite de gestores exige a migração e as RPCs descritas em `docs/architecture/partner-manager-invitations.md`.
+- Reconciliação read-only em 19/11: 58 ficheiros SQL no repositório e 68 versões no ledger activo. Apenas 33 nomes coincidem literalmente; há ficheiros do repositório sem nome correspondente no ledger e versões activas sem ficheiro com o mesmo nome. Isto não prova que as alterações estejam ausentes — indica histórico renomeado/reconciliado de forma incompleta. Não inferir equivalência por timestamp nem executar repair/db push.
+- A migration `20261102190000_atomic_direct_ad_purchase.sql` continua fora do ledger activo. Funcionalidades dependentes dela não devem ser activadas em produção.
+
 ## 4. Próximas entregas
 
-1. Executar CI para a tranche F2.2 e corrigir falhas que surjam.
-2. Confirmar na interface administrativa que todos os estados válidos, incluindo CANCELLED, estão disponíveis e correctamente identificados.
-2. Rever a fila Super Admin de pedidos de serviço e os estados apresentados, sem criar nova estrutura de dados.
-3. Mapear o ciclo de aprovação/recusa de compras de créditos e os efeitos atómicos no ledger financeiro.
-4. Completar os fluxos de oportunidade do parceiro com estados, autorização e feedback.
-5. Implementar o contrato de convites de gestores quando a migração puder ser gerada pelo Supabase CLI e validada em PostgreSQL isolado.
-6. Rever o ciclo de publicidade DIRECT/créditos e manter M-Pesa bloqueado onde a RPC não esteja instalada.
-7. Fechar auditoria/notificações dos eventos operacionais com testes de isolamento.
+1. Fechar a reconciliação do histórico de migrations com um mapeamento conteúdo-a-conteúdo, sem aplicar alterações ao projecto activo.
+2. Preparar a aprovação/recusa atómica de compras de créditos, incluindo ledger idempotente e registo da decisão.
+3. Implementar convites de gestores vinculados à conta e respectivos RPCs, mantendo bloqueada a associação directa legada.
+4. Completar os fluxos de oportunidades, publicidade e serviços de parceiros, incluindo estados, permissões e feedback.
+5. Completar publicidade empresarial/parceiro e contratação DIRECT apenas depois de confirmar a migration/RPC no ambiente correcto.
+6. Concluir os ciclos comerciais de suporte e monetização que não exijam novas estruturas, preservando as regras actuais.
+7. Reservar auditoria operacional transversal e testes de validação integrada exclusivamente para a última fase, conforme decisão do projecto.
 
 ## 5. Critérios de aceitação da Fase 2
 
