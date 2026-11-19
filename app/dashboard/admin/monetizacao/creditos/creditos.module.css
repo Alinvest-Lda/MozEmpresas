@@ -6,7 +6,7 @@
 .backLink{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 12px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);font-size:12px;font-weight:700;white-space:nowrap}
 .backLink:hover{background:var(--color-surface-muted)}
 .notice{margin:0 0 16px;padding:12px 14px;border:1px solid var(--color-border-strong);border-radius:10px;background:var(--color-surface-muted);color:var(--color-text);font-size:12px;line-height:1.5}
-.metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:11px;margin-bottom:20px}
+.metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:11px;margin-bottom:20px}
 .metrics article{display:grid;gap:7px;min-width:0;padding:16px;border:1px solid var(--color-border);border-radius:13px;background:var(--color-surface)}
 .metrics article>span{color:var(--color-text-muted);font-size:11px;font-weight:750}
 .metrics article>strong{font-size:27px;line-height:1.1;letter-spacing:-.04em;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
