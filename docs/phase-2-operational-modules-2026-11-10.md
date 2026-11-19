@@ -403,3 +403,17 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Migrações aplicadas: `20261119220000_f39_service_order_audit_and_admin_reconciliation.sql` e `20261119223000_f39_reconciliation_credit_orders_and_actor_hardening.sql`.
 - Commits principais: `7f540206dffb796e7f5c50c9205671d102d3c213` (migração), `69f6c7fecbb931d69c3b05077a3387c15c1ab9f5` (página), `6e6fd7e5a22c8003d30e46f3e0b82d4ae80a44f0` (estilos), `a12ee56935dbd894eddd47634c8fdd138f150727` (ligação à central), `c7c7f3457509d39efe092b21dfd4b8acc80e3f4b` (correcção da reconciliação).
 - Limitação: não há ordens, pagamentos ou documentos no ambiente activo para validar visualmente casos reais; a contagem consultada foi zero. Não foram feitos pagamentos reais. Build e deploy ainda não confirmados.
+
+## F3.10 — Cancelamento e ajustamentos financeiros de serviços (19/11/2026)
+
+- Criada `platform_service_adjustments`, trilho imutável com unicidade por ordem e referência externa única, contendo tipo, montante, créditos, pagamento original, motivo, actor e data. RLS activa; leitura apenas por membros autorizados da empresa e Super Admin; escrita privilegiada por RPC.
+- Criada RPC transaccional `admin_cancel_platform_service_order`, que verifica Super Admin activo, bloqueia a ordem, verifica elegibilidade, impede duplicação e executa em conjunto o cancelamento, ajuste financeiro, subscrição e documento.
+- Contratações pagas com créditos: devolve os créditos à carteira e insere movimento compensatório `REFUND` em `credit_transactions`; o movimento original de consumo não é apagado.
+- M-Pesa pendente: marca pagamento falhado e cancela a ordem, sem criar reembolso fictício.
+- M-Pesa confirmado: exige referência do reembolso externo já executado pelo operador; regista `REFUNDED`, cancela a ordem e subscrição, invalida o documento e conserva referência, motivo e actor. A plataforma não executa transferência de dinheiro nem comunica directamente com o operador.
+- Ordens concluídas, falhadas, já canceladas, sem pagamento elegível ou sem referência externa são recusadas. Chave única por ordem impede segundo estorno.
+- Nova Server Action protegida e formulário na página Super Admin de reconciliação. A empresa e o Super Admin conseguem consultar o ajustamento e o respectivo histórico.
+- Migrações aplicadas: `20261119230000_f310_service_order_cancellation_and_compensating_refunds.sql` e `20261119231500_f310_admin_read_service_adjustments.sql`.
+- Commits: migração `8c81caf961e8ea3adb181d3771f217aa9fb1a8b1`; Server Action `cfcb56b356b973c25c49c9e17e5452b248845d0a`, `f4b63c5c5d948080e74a92c723505e736c746f17`; formulário `5ebdc8965e73a726abbbd26a13d6d8faa04c6487`; histórico cliente `528de19c980017ae265007f9cd3a454c1cd12e48`; acesso Super Admin `14e370cf7e0d5db452ffef26cec75fb95ea8750e`; painel de histórico `5b44c98bbb48b3f19e5008d9a7585143c1d55fb2`; CSS cliente `d02014eca0f84d4ee56d73cd80c87242908f8037`.
+- Limitação operacional: reembolso M-Pesa continua a depender da execução no operador e da introdução da referência externa pelo Super Admin. Sem API de operador configurada, não existe reembolso automático.
+- Não foram executados estornos reais nem testes com transacções reais, dado que o ambiente activo não tem ordens/pagamentos de serviço. Build e deploy devem ser confirmados no CI antes da entrada em produção.
