@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireNormalAccount } from "@/lib/auth/access";
 import { savePublicationAttachments } from "@/lib/publications/attachments";
 import { canManageBusiness } from "@/lib/businesses/permissions";
+import { isValidOpportunityId } from "@/lib/opportunities/validation";
 
 const text = (v: FormDataEntryValue | null) => typeof v === "string" ? v.trim() : "";
 
@@ -25,7 +26,7 @@ export async function applyToOpportunity(formData: FormData) {
   const opportunityId = text(formData.get("opportunity_id"));
   const businessId = text(formData.get("business_id")) || null;
   const coverNote = text(formData.get("cover_note")) || null;
-  if (!opportunityId) redirect("/oportunidades");
+  if (!isValidOpportunityId(opportunityId)) redirect("/oportunidades?application=error");
 
   if (businessId && !(await canManageBusiness(supabase, userId, businessId))) {
     // Association alone is insufficient: viewer/member roles cannot act for a business.
@@ -38,7 +39,7 @@ export async function applyToOpportunity(formData: FormData) {
 
   const { data: existingApplication, error: existingError } = await supabase
     .from("opportunity_applications")
-    .select("id")
+    .select("id,status")
     .eq("opportunity_id", opportunityId)
     .eq("applicant_user_id", userId)
     .maybeSingle();
@@ -46,11 +47,13 @@ export async function applyToOpportunity(formData: FormData) {
 
   let submissionError;
   if (existingApplication) {
+    if (existingApplication.status !== "SUBMITTED") redirect("/oportunidades?application=locked");
     const { error } = await supabase
       .from("opportunity_applications")
       .update({ applicant_business_id: businessId, cover_note: coverNote })
       .eq("id", existingApplication.id)
-      .eq("applicant_user_id", userId);
+      .eq("applicant_user_id", userId)
+      .eq("status", "SUBMITTED");
     submissionError = error;
   } else {
     const { error } = await supabase.from("opportunity_applications").insert({
