@@ -341,3 +341,19 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Teste transaccional read-only/rollback do recorder de callbacks: primeira entrega criou um evento dentro da transacção, a repetição idêntica incrementou o contador e uma referência divergente para o mesmo identificador foi rejeitada com `CALLBACK_TRANSACTION_CONFLICT`; a transacção foi revertida e a consulta posterior confirmou zero linhas de teste persistidas.
 - Privilégios verificados: `service_role` pode executar `record_credit_payment_callback`; `authenticated` não pode. A RPC de ajustes é executável por `authenticated`, mas valida `auth.uid()` contra membro Super Admin activo dentro da função.
 - A função de ajustes ainda não foi exercitada ponta a ponta porque a base de dados não tem carteiras empresariais existentes; nenhum saldo real foi criado ou alterado.
+
+
+## F3.5 — Reconciliação integral do ledger e relatório financeiro (19/11/2026)
+
+- Criada a RPC `admin_credit_financial_report(p_from,p_to)`, disponível apenas a utilizadores autenticados e com validação interna de membro Super Admin activo. O intervalo é limitado a 366 dias.
+- O relatório calcula directamente no PostgreSQL, sem limites de paginação da interface: saldo agregado das carteiras, soma histórica do ledger, divergências por carteira, compras pagas, créditos vendidos, pedidos em aberto, movimentos por tipo/referência e estado dos callbacks.
+- O painel Super Admin ganhou filtros de data (por defeito, mês corrente), indicadores consolidados, lista de divergências por carteira e resumo dos movimentos por natureza.
+- A comparação de saldo usa a soma de todos os movimentos históricos de cada carteira, e não apenas os 20/50/100 registos apresentados nas listas operacionais.
+- Corrigida a função `purchase_platform_service_with_credits`: tentava gravar o tipo `SERVICE_PURCHASE`, que não é permitido pelo CHECK constraint de `credit_transactions`. Passa a gravar `CONSUMPTION` com referência `PLATFORM_SERVICE_ORDER`, alinhando a operação com o ledger existente.
+- Alterada a FK `credit_transactions.wallet_id` para `ON DELETE RESTRICT`, impedindo que a eliminação de uma carteira apague em cascata o seu histórico financeiro.
+- Criados índices para consultas por carteira/data, referência de callback, pedido de pagamento, pacote e actor dos ajustes.
+- Verificação real com sessão autenticada de Super Admin: a RPC devolveu o relatório esperado para 19/11/2026. A base de dados tem actualmente zero carteiras, movimentos, pedidos de compra e ordens de serviço; por isso, o relatório correcto é zero, não foram criados dados artificiais.
+- Verificado que `anon` não pode executar a RPC de relatório; `authenticated` pode invocá-la, mas a função só devolve dados depois de validar o Super Admin activo.
+- Limitação: os totais de MZN são valores operacionais de compras confirmadas e valores associados a movimentos; não constituem demonstração de resultados contabilística, receita líquida ou reconciliação bancária. Créditos expirados não são calculados porque o modelo actual não define expiração de créditos.
+- Commits: `57110a1` (RPC, correcção de consumo e protecção do ledger), `6c5971c` (painel de relatório), `ada08fc` (validação de datas), `273c6d1` (estilos), `4b0735e` (índices).
+- Validação: migrações aplicadas; teste autenticado da RPC passou; verificação da função de consumo e da FK passou. Build/testes automáticos/deploy final ainda não confirmados.
