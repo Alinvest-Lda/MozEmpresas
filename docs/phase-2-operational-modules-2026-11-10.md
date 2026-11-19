@@ -323,3 +323,17 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - A reconciliação apresentada é operacional e limitada aos últimos 50 pedidos; não substitui fecho contabilístico, extracto do operador ou reconciliação integral por período.
 - Commits: `5787d59c3f06d71aeb37c274ea55dd6afcb6fd55` (painel Super Admin) e `8856db9d295280fa2c63f674b6f21a69dd0acdc6` (área empresarial).
 - Validação: os dois ficheiros foram relidos a partir de `main`. O estado Vercel dos dois commits permanecia `pending` no momento do registo; não foram encontrados workflow runs associados. Build, testes e deploy não estão confirmados.
+
+
+## F3.4 — Auditoria de callbacks e ajustes auditáveis de carteiras (19/11/2026)
+
+- Criada `credit_payment_callback_events`, com RLS activo e leitura exclusiva de Super Admin; conserva metadados dos callbacks autenticados (referência, transacção, montante, estado, estado de processamento, entregas repetidas e timestamps), sem persistir corpo bruto, assinatura ou segredo.
+- Criada a RPC `record_credit_payment_callback`, executável apenas por `service_role`, para registar entregas de forma atómica, incrementar contagem de repetição e rejeitar reutilização do mesmo identificador com referência, montante, moeda ou comerciante divergentes.
+- O endpoint M-Pesa passou a registar callbacks SUCCESS, PENDING, FAILED e CANCELLED; apenas SUCCESS segue para a RPC transaccional de crédito. Eventos não bem-sucedidos ficam como IGNORED; erros de negócio como REJECTED; indisponibilidade transitória como RETRY.
+- O painel Super Admin passou a mostrar a fila de callbacks, contagem por estado, repetição de entregas e códigos de ocorrência.
+- Criada `credit_wallet_adjustment_events` e a RPC `admin_adjust_credit_wallet`: ajuste positivo/negativo requer actor Super Admin activo, motivo (10–500 caracteres), bloqueio da carteira, impedimento de saldo negativo, chave de idempotência serializada e registo atómico de evento, movimento `ADJUSTMENT` no ledger e novo saldo.
+- A interface Super Admin passou a permitir ajustes controlados e consultar os últimos 50 eventos de ajuste. Os movimentos anteriores não são apagados nem editados.
+- Verificação read-only pós-migração confirmou as tabelas e funções e não encontrou eventos de callback ou ajustes (ambas as tabelas vazias no momento da verificação). Não foram efectuados pagamentos nem alterações artificiais de saldo.
+- Limitação: estes ajustes corrigem unidades de crédito; não representam estorno bancário nem devolução de dinheiro ao cliente. O processo de reembolso monetário e integração directa com o operador/agregador continuam dependentes de regras comerciais e integração do fornecedor.
+- Commits principais: `9abc9a1` (tabela de callbacks), `1fa3783` (RPC de registo), `b3dd009` (endpoint), `48efe32` (idempotência callback), `65cf9f8` (ajustes), `3966294` (idempotência dos ajustes), `edcccbb`/`a47a4cb` (acção servidor), `5539a35`/`45b9262` (painel Super Admin), `f80b2e8` (estilos).
+- Validação: migrações aplicadas no Supabase e verificações read-only executadas. Build, testes automatizados e deploy Vercel não confirmados.
