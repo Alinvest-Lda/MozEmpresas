@@ -289,3 +289,13 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Super Admin recebe controlos de aprovação/recusa na lista de pedidos, nota interna opcional e feedback de resultado. A Server Action valida a sessão e a RPC volta a validar a autorização na base de dados.
 - Migration aplicada no projecto Supabase activo através das operações `atomic_admin_credit_purchase_decisions` e `validate_admin_credit_decision_input`. O ficheiro consolidado de migração foi adicionado ao repositório; a correspondência exacta dos nomes/versões do ledger do Supabase com os ficheiros locais fica para a reconciliação global de migrations.
 - Não foram criados pedidos artificiais nem movimentos de teste na carteira de produção. A validação end-to-end com uma conta Super Admin e comprovativo real permanece pendente.
+
+
+### F3.1 — referência de pagamento e reconciliação M-Pesa (19/11/2026)
+
+- Auditoria confirmou que o fluxo de compra disponível ao utilizador ainda era manual: seleccionava M-Pesa, registava pedido e aguardava validação administrativa. Não existia endpoint/callback de provedor nem confirmação automática M-Pesa no repositório.
+- Aplicada no Supabase a migration `mpesa_credit_payment_reconciliation`: adiciona referência única ao pedido, identificador único de transacção do provedor e data de confirmação; cria tabela privada `credit_payment_events` com unicidade por provedor/transacção.
+- Criada a função privilegiada `confirm_mpesa_credit_purchase`: só aceita chamadas com role `service_role`, valida referência, identificador de transacção, montante exacto e moeda MZN, bloqueia o pedido, deduplica eventos, credita a carteira, escreve o ledger e marca o pedido como `PAID` na mesma transacção.
+- A Server Action passou a gerar uma referência única `ME...` para cada pedido e classifica pedidos M-Pesa como `PAYMENT_PENDING`. O histórico da empresa apresenta a referência para facilitar identificação e reconciliação.
+- **Limite explícito:** esta fase ainda não liga o MozEmpresas ao API/merchant M-Pesa nem recebe callbacks reais. A confirmação automática só será activada quando existir contrato/API do provedor, credenciais merchant, mecanismo de assinatura/autenticação de callback e URL de produção registada. Até lá, a referência não prova pagamento e a atribuição automática permanece desactivada.
+- Não foram efectuados pagamentos de teste nem atribuídos créditos artificiais. O teste end-to-end com transacção M-Pesa real está pendente.
