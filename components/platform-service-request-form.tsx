@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { purchasePlatformService } from "@/lib/services/checkout-actions";
 import { requestPlatformService } from "@/lib/services/actions";
@@ -58,7 +58,7 @@ export function PlatformServiceRequestForm({
 
   return (
     <form action={action} className="service-request-form">
-      <input type="hidden" name="serviceId" value={serviceId} />
+      <input type="hidden" name="serviceId" value={serviceId} />\n      <input type="hidden" name="purchaseKey" value={purchaseKey} />
 
       <div className="service-form-heading">
         <span className="dashboard-kicker">Contratar este serviço</span>
@@ -118,7 +118,7 @@ export function PlatformServiceRequestForm({
                 : "A execução fica vinculada ao prazo apresentado."}
           </span>
         </div>
-        <button className="btn primary" type="submit" disabled={pending || !businesses.length || (price != null && Number(price) <= 0)}>
+        <button className="btn primary" type="submit" disabled={pending || !businesses.length || (price != null && Number(price) <= 0) || (price != null && purchaseKey === "")}>
           {pending ? "A processar…" : price == null ? "Enviar pedido →" : "Contratar agora →"}
         </button>
       </div>
