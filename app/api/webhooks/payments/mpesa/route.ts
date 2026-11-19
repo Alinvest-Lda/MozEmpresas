@@ -142,6 +142,37 @@ export async function POST(request: Request) {
     });
   }
 
+  if (
+    payment.paymentReference.startsWith("SERVICE:") &&
+    (payment.status === "FAILED" || payment.status === "CANCELLED")
+  ) {
+    const { data, error } = await supabase.rpc("record_mpesa_platform_service_failure", {
+      p_payment_reference: payment.paymentReference,
+      p_provider_transaction_id: payment.transactionId,
+      p_amount_mzn: payment.amount,
+      p_currency: payment.currency,
+      p_callback_status: payment.status,
+    });
+    if (error) {
+      const known = error.message.includes("SERVICE_PAYMENT_NOT_FOUND")
+        || error.message.includes("SERVICE_ORDER_NOT_FOUND")
+        || error.message.includes("PAYMENT_AMOUNT_MISMATCH");
+      await supabase.from("credit_payment_callback_events").update({
+        processing_status: known ? "REJECTED" : "RETRY",
+        processing_error_code: known ? "SERVICE_FAILURE_CALLBACK_REJECTED" : "SERVICE_FAILURE_CALLBACK_UNAVAILABLE",
+        processed_at: known ? new Date().toISOString() : null,
+      }).eq("id", callbackEvent.id);
+      return NextResponse.json({ error: "Não foi possível reconciliar o estado da contratação." }, { status: known ? 409 : 503 });
+    }
+    const { error: auditError } = await supabase.from("credit_payment_callback_events").update({
+      processing_status: "PROCESSED",
+      processing_error_code: null,
+      processed_at: new Date().toISOString(),
+    }).eq("id", callbackEvent.id);
+    if (auditError) return NextResponse.json({ error: "Estado actualizado; auditoria será repetida." }, { status: 503 });
+    return NextResponse.json({ ok: true, serviceOrderId: data?.order_id, ignored: Boolean(data?.ignored) }, { status: 202 });
+  }
+
   // Non-success callbacks are recorded for audit but can never credit a wallet.
   if (payment.status !== "SUCCESS") {
     const { error: updateError } = await supabase
