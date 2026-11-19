@@ -267,3 +267,13 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Advisors de segurança reportaram: 4 tabelas RLS sem policies (contact_messages, partner_account_members, partner_accounts, public_rate_limits); 4 funções SECURITY DEFINER executáveis por anon; 21 executáveis por authenticated; protecção contra palavras-passe comprometidas desactivada. Estes avisos exigem revisão função a função — não se deve revogar permissões em lote sem confirmar o contrato de cada RPC.
 - Advisors de performance reportaram 26 casos de policies permissivas sobrepostas e 2 pares de índices duplicados, entre outros índices ainda não utilizados. Não foram removidas policies nem índices: primeiro é necessário verificar consumidores e equivalência exacta.
 - Nenhuma DDL, alteração de RLS, reparação de migrations ou mudança de dados foi aplicada nesta intervenção.
+
+
+### F2.9 — integridade concorrente dos pedidos de créditos (19/11/2026)
+
+- Confirmado por consulta directa que `credit_purchase_requests` não contém pedidos históricos nem estados activos neste momento.
+- Aplicada no Supabase a migration `enforce_single_open_credit_purchase_per_business`, criando o índice único parcial `credit_purchase_requests_one_open_per_business_uidx` sobre `business_id` para estados `REQUESTED` e `PAYMENT_PENDING`.
+- Esta constraint na base de dados passa a ser a protecção definitiva contra duas submissões concorrentes da mesma empresa. A verificação prévia da aplicação mantém-se para resposta rápida, mas deixa de ser a única barreira.
+- Actualizada a Server Action para interpretar PostgreSQL `23505` como pedido pendente, remover o comprovativo carregado na tentativa concorrente e apresentar o erro de pendência em vez de um erro genérico.
+- Não foi implementada aprovação financeira nem atribuição de créditos nesta intervenção. O fluxo de liquidação e ledger requer uma RPC transaccional separada, com validação do actor, do estado actual e idempotência do movimento.
+- A migration foi aplicada directamente no projecto Supabase activo e registada no ledger. O ficheiro SQL correspondente também é mantido no repositório para rastreabilidade; o histórico anterior permanece sujeito à reconciliação global.
