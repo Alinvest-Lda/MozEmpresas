@@ -49,7 +49,12 @@ export async function POST(request: Request) {
     bodyBytes.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  const rawBody = new TextDecoder("utf-8", { fatal: true }).decode(bodyBytes);
+  let rawBody: string;
+  try {
+    rawBody = new TextDecoder("utf-8", { fatal: true }).decode(bodyBytes);
+  } catch {
+    return NextResponse.json({ error: "Codificação do evento inválida." }, { status: 400 });
+  }
 
   const timestamp = request.headers.get("x-mpesa-timestamp");
   const signature = request.headers.get("x-mpesa-signature");
