@@ -299,3 +299,14 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - A Server Action passou a gerar uma referência única `ME...` para cada pedido e classifica pedidos M-Pesa como `PAYMENT_PENDING`. O histórico da empresa apresenta a referência para facilitar identificação e reconciliação.
 - **Limite explícito:** esta fase ainda não liga o MozEmpresas ao API/merchant M-Pesa nem recebe callbacks reais. A confirmação automática só será activada quando existir contrato/API do provedor, credenciais merchant, mecanismo de assinatura/autenticação de callback e URL de produção registada. Até lá, a referência não prova pagamento e a atribuição automática permanece desactivada.
 - Não foram efectuados pagamentos de teste nem atribuídos créditos artificiais. O teste end-to-end com transacção M-Pesa real está pendente.
+
+
+### F3.2 — endpoint autenticado de callback M-Pesa (19/11/2026)
+
+- Criado `POST /api/webhooks/payments/mpesa`, em runtime Node.js, para receber eventos de um adaptador/provedor M-Pesa.
+- O endpoint exige `MPESA_WEBHOOK_SECRET` e `MPESA_MERCHANT_CODE`; valida HMAC-SHA256 sobre `timestamp.rawBody`, com timestamp Unix em `x-mpesa-timestamp`, assinatura em `x-mpesa-signature` (hex ou `sha256=hex`) e janela anti-replay de cinco minutos.
+- O payload normalizado e estrito contém `transactionId`, `paymentReference`, `amount` numérico, `currency=MZN`, `merchantCode` e `status` (`SUCCESS`, `PENDING`, `FAILED`, `CANCELLED`). Merchant, referência e valor são validados; só `SUCCESS` chama a função transaccional de crédito.
+- Eventos pendentes/falhados/cancelados são reconhecidos com HTTP 202, sem creditar. Confirmações válidas chamam `confirm_mpesa_credit_purchase` através do cliente service-role; repetições idempotentes não duplicam créditos.
+- Adicionados testes unitários para assinatura válida, corpo adulterado, assinatura inválida e timestamp fora da janela.
+- **Contrato de integração:** este endpoint recebe um evento normalizado assinado pelo adaptador/gateway. Não é ainda uma implementação do protocolo proprietário de um operador ou agregador. O conector de produção deverá converter o callback real do provedor para este contrato e assinar o corpo com o segredo configurado.
+- Activação depende de configurar `MPESA_WEBHOOK_SECRET` e `MPESA_MERCHANT_CODE` no ambiente Vercel e registar o URL `/api/webhooks/payments/mpesa` no adaptador/provedor. Não existem credenciais merchant ou provedor configuradas neste repositório; nenhum pagamento real foi recebido ou simulado.
