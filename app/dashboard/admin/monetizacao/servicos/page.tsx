@@ -44,6 +44,13 @@ export default async function AdminServiceReconciliationPage({
 
   const { data, error } = await supabase.rpc("admin_service_payment_reconciliation", { p_limit: 500 });
   const rows = (Array.isArray(data) ? data : []) as ServicePaymentRow[];
+  const orderIds = rows.map(row => row.order_id);
+  const { data: adjustmentRows } = orderIds.length
+    ? await supabase.from("platform_service_adjustments")
+        .select("order_id,adjustment_type,amount_mzn,credits,currency,external_refund_reference,reason,created_at")
+        .in("order_id", orderIds)
+    : { data: [] };
+  const adjustmentByOrder = new Map((adjustmentRows ?? []).map(item => [item.order_id, item]));
   const onlyIssues = params.ocorrencias === "1";
   const selectedStatus = params.estado || "ALL";
   const filtered = rows.filter(row =>
@@ -110,6 +117,15 @@ export default async function AdminServiceReconciliationPage({
                 <small>Referência: {row.payment_reference || "—"} · Transacção: {row.provider_transaction_id || "—"}</small>
                 <small>Confirmado: {dateTime(row.payment_confirmed_at)}</small>
                 {row.reconciliation_issue ? <span className={styles.status + " " + styles.pending}>Ocorrência: {label(row.reconciliation_issue)}</span> : null}
+                {adjustmentByOrder.has(row.order_id) ? (() => {
+                  const adjustment = adjustmentByOrder.get(row.order_id)!;
+                  return <div className={styles.eventHistory}>
+                    <strong>Ajustamento: {label(adjustment.adjustment_type)}</strong>
+                    <small>{adjustment.credits > 0 ? adjustment.credits + " créditos devolvidos" : money(adjustment.amount_mzn, adjustment.currency)} · {dateTime(adjustment.created_at)}</small>
+                    {adjustment.external_refund_reference ? <small>Referência de reembolso: {adjustment.external_refund_reference}</small> : null}
+                    <small>Motivo: {adjustment.reason}</small>
+                  </div>;
+                })() : null}
                 {row.event_history?.length ? <div className={styles.eventHistory}>
                   <strong>Histórico de estados</strong>
                   {row.event_history.map(event => <small key={event.id}>{event.previous_status ? label(event.previous_status) + " → " : "Criada como "}{label(event.new_status)} · {label(event.event_source)} · {dateTime(event.created_at)}</small>)}
