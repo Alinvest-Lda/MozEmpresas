@@ -16,8 +16,8 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
 
   const todayMaputo = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Maputo" }).format(new Date());
   const defaultReportFrom = todayMaputo.slice(0, 7) + "-01";
-  const reportFrom = /^\\d{4}-\\d{2}-\\d{2}$/.test(params.from || "") ? params.from! : defaultReportFrom;
-  const reportTo = /^\\d{4}-\\d{2}-\\d{2}$/.test(params.to || "") ? params.to! : todayMaputo;
+  const reportFrom = /^\d{4}-\d{2}-\d{2}$/.test(params.from || "") ? params.from! : defaultReportFrom;
+  const reportTo = /^\d{4}-\d{2}-\d{2}$/.test(params.to || "") ? params.to! : todayMaputo;
   const { data: financialReportData, error: financialReportError } = await supabase.rpc("admin_credit_financial_report", {
     p_from: reportFrom,
     p_to: reportTo,
