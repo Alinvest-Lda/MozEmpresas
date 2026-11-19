@@ -8,7 +8,8 @@ const money = (value: number | string | null) => value == null ? "—" : `${Numb
 const dateTime = (value: string) => new Date(value).toLocaleString("pt-MZ", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Maputo" });
 const statusLabel: Record<string, string> = { REQUESTED: "Por validar", PAYMENT_PENDING: "A aguardar pagamento", PENDING: "Pendente", APPROVED: "Aprovado", REJECTED: "Recusado", PAID: "Pago", CANCELLED: "Cancelado" };
 
-export default async function AdminCreditsPage() {
+export default async function AdminCreditsPage({ searchParams }: { searchParams: Promise<{ decision?: string }> }) {
+  const params = await searchParams;
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
 
@@ -57,6 +58,14 @@ export default async function AdminCreditsPage() {
         </header>
 
         {queryErrors > 0 ? <div className={styles.notice} role="status">Algumas consultas não puderam ser concluídas. Os dados apresentados podem estar incompletos.</div> : null}
+        {params.decision ? <div className={styles.notice} role="status">{({
+          success: "Decisão registada. Os saldos e movimentos foram actualizados.",
+          final: "Este pedido já foi concluído e não pode ser alterado.",
+          missing: "O pedido indicado não foi encontrado.",
+          forbidden: "Não tem autorização para executar esta operação.",
+          invalid: "Os dados da decisão são inválidos.",
+          failed: "Não foi possível concluir a decisão. Verifique o estado do pedido e tente novamente.",
+        } as Record<string, string>)[params.decision] || "Operação concluída."}</div> : null}
 
         <section className={styles.metrics} aria-label="Indicadores de créditos">
           <article><span>Pacotes activos</span><strong>{packageRows.filter((item) => item.active).length}</strong><small>{packageRows.length} no catálogo</small></article>
