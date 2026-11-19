@@ -95,6 +95,53 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Não foi possível registar o evento de pagamento." }, { status: 503 });
   }
 
+  // Service orders use a separate settlement RPC; they must never be routed through credit top-ups.
+  if (payment.status === "SUCCESS" && payment.paymentReference.startsWith("SERVICE:")) {
+    const { data, error } = await supabase.rpc("confirm_mpesa_platform_service_payment", {
+      p_payment_reference: payment.paymentReference,
+      p_provider_transaction_id: payment.transactionId,
+      p_amount_mzn: payment.amount,
+      p_currency: payment.currency,
+    });
+    if (error) {
+      const known = error.message.includes("SERVICE_PAYMENT_NOT_FOUND")
+        || error.message.includes("SERVICE_ORDER_NOT_FOUND")
+        || error.message.includes("PAYMENT_AMOUNT_MISMATCH")
+        || error.message.includes("SERVICE_ORDER_NOT_PAYABLE")
+        || error.message.includes("SERVICE_PAYMENT_ALREADY_SETTLED")
+        || error.message.includes("PROVIDER_TRANSACTION_ALREADY_USED");
+      await supabase.from("credit_payment_callback_events").update({
+        processing_status: known ? "REJECTED" : "RETRY",
+        processing_error_code: known
+          ? error.message.match(/SERVICE_PAYMENT_NOT_FOUND|SERVICE_ORDER_NOT_FOUND|PAYMENT_AMOUNT_MISMATCH|SERVICE_ORDER_NOT_PAYABLE|SERVICE_PAYMENT_ALREADY_SETTLED|PROVIDER_TRANSACTION_ALREADY_USED/)?.[0] || "SERVICE_PAYMENT_REJECTED"
+          : "SERVICE_CONFIRMATION_UNAVAILABLE",
+        processed_at: known ? new Date().toISOString() : null,
+      }).eq("id", callbackEvent.id);
+      return NextResponse.json(
+        { error: known ? "A confirmação não corresponde a uma contratação válida." : "Não foi possível reconciliar a contratação." },
+        { status: known ? 409 : 503 },
+      );
+    }
+
+    const processedAt = new Date().toISOString();
+    const { error: auditUpdateError } = await supabase
+      .from("credit_payment_callback_events")
+      .update({
+        processing_status: "PROCESSED",
+        processing_error_code: null,
+        processed_at: processedAt,
+      })
+      .eq("id", callbackEvent.id);
+    if (auditUpdateError) {
+      return NextResponse.json({ error: "Pagamento confirmado; a actualização do registo de auditoria será repetida." }, { status: 503 });
+    }
+    return NextResponse.json({
+      ok: true,
+      serviceOrderId: data?.order_id,
+      alreadyProcessed: Boolean(data?.already_processed),
+    });
+  }
+
   // Non-success callbacks are recorded for audit but can never credit a wallet.
   if (payment.status !== "SUCCESS") {
     const { error: updateError } = await supabase
