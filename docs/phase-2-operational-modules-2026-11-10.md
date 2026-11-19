@@ -195,3 +195,11 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Adicionado teste unitário para UUIDs válidos, formatos inválidos, valores vazios e strings arbitrárias.
 - Commits: `d1cbd0f`, `508e12f`, `91d766f`.
 - Esta entrega é hardening do fluxo; não representa fecho do módulo de oportunidades nem validação de integração.
+
+### Entrega F2.1 — controlo de edição de candidaturas (19/11/2026)
+
+- A submissão de candidaturas valida o UUID da oportunidade antes de consultas.
+- Candidaturas existentes só podem ter dados de submissão editados enquanto permanecem em `SUBMITTED`; decisões em análise, shortlist, aceite ou rejeitado bloqueiam edição.
+- A actualização usa também filtro de estado `SUBMITTED` para reduzir condição de corrida contra mudança de estado.
+- Commit: `347f21d`.
+- A validação de integração/RLS e concorrência permanece para a fase final.
