@@ -277,3 +277,15 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Actualizada a Server Action para interpretar PostgreSQL `23505` como pedido pendente, remover o comprovativo carregado na tentativa concorrente e apresentar o erro de pendência em vez de um erro genérico.
 - Não foi implementada aprovação financeira nem atribuição de créditos nesta intervenção. O fluxo de liquidação e ledger requer uma RPC transaccional separada, com validação do actor, do estado actual e idempotência do movimento.
 - A migration foi aplicada directamente no projecto Supabase activo e registada no ledger. O ficheiro SQL correspondente também é mantido no repositório para rastreabilidade; o histórico anterior permanece sujeito à reconciliação global.
+
+
+### F3.0 — decisão administrativa transaccional de compras de créditos (19/11/2026)
+
+- Criada a tabela privada `credit_purchase_decision_events`, com um registo de decisão por pedido, actor, estado anterior/novo, nota interna e data. RLS activa e sem acesso directo para `anon`/ `authenticated`.
+- Criada a função `admin_decide_credit_purchase` como operação transaccional: valida sessão e papel `super_admin` activo, bloqueia o pedido com `FOR UPDATE`, só permite decidir pedidos em `REQUESTED` ou `PAYMENT_PENDING`, e trata repetição da mesma decisão como idempotente.
+- Aprovação: cria/obtém carteira, bloqueia a carteira, soma créditos, regista um movimento `PURCHASE` com referência ao pedido e marca o pedido como `PAID`. Todas as alterações ocorrem na mesma transacção.
+- Recusa: marca como `REJECTED` e regista o evento, sem alterar a carteira.
+- Índice único parcial em `credit_transactions(reference_type, reference_id)` impede duplicação de movimento de compra para o mesmo pedido.
+- Super Admin recebe controlos de aprovação/recusa na lista de pedidos, nota interna opcional e feedback de resultado. A Server Action valida a sessão e a RPC volta a validar a autorização na base de dados.
+- Migration aplicada no projecto Supabase activo através das operações `atomic_admin_credit_purchase_decisions` e `validate_admin_credit_decision_input`. O ficheiro consolidado de migração foi adicionado ao repositório; a correspondência exacta dos nomes/versões do ledger do Supabase com os ficheiros locais fica para a reconciliação global de migrations.
+- Não foram criados pedidos artificiais nem movimentos de teste na carteira de produção. A validação end-to-end com uma conta Super Admin e comprovativo real permanece pendente.
