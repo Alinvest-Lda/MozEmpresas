@@ -66,7 +66,7 @@ export default async function AdminCreditsPage() {
 
         <section className={styles.panel} aria-labelledby="requests-title">
           <div className={styles.panelHeading}><div><span className={styles.kicker}>01 · Operações</span><h2 id="requests-title">Pedidos de compra</h2><p>Pedidos mais recentes submetidos pelas empresas.</p></div><span className={styles.counter}>{requestRows.length} registos · máximo 50</span></div>
-          {requestRows.length ? <div className={styles.statusSummary} aria-label="Distribuição dos estados dos pedidos">{[["REQUESTED", "Por validar"], ["PAYMENT_PENDING", "A aguardar pagamento"], ["PENDING", "Pendente"], ["PAID", "Pago"], ["REJECTED", "Recusado"], ["CANCELLED", "Cancelado"]].filter(([status]) => (statusCounts[status] || 0) > 0).map(([status, label]) => <span key={status}>{label}<strong>{statusCounts[status]}</strong></span>)}</div> : null}
+          {requestRows.length ? <div className={styles.statusSummary} aria-label="Distribuição dos estados dos pedidos">{[["REQUESTED", "Por validar"], ["PAYMENT_PENDING", "A aguardar pagamento"], ["PENDING", "Pendente"], ["APPROVED", "Aprovado"], ["PAID", "Pago"], ["REJECTED", "Recusado"], ["CANCELLED", "Cancelado"]].filter(([status]) => (statusCounts[status] || 0) > 0).map(([status, label]) => <span key={status}>{label}<strong>{statusCounts[status]}</strong></span>)}</div> : null}
           {requestRows.length ? <div className={styles.list}>{requestRows.map((request) => {
             const status = String(request.status || "").toUpperCase();
             const pending = ["REQUESTED", "PAYMENT_PENDING", "PENDING"].includes(status);
