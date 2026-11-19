@@ -160,3 +160,30 @@ Estas transições são aplicadas na acção de gestão administrativa. A valida
 - A entrega de segurança acima foi aplicada directamente em `main`; o CI do novo commit deve ser confirmado antes de considerar esta tranche tecnicamente validada.
 - Próxima tarefa estrutural: produzir o inventário completo e rastreável das 58 migrations do repositório e 68 versões do ledger, distinguindo correspondência exacta, renomeação provável e ausência de evidência. Não usar timestamp como prova de equivalência e não executar `migration repair`, `db push` ou DDL em produção.
 - Só depois do mapeamento e da comparação do schema nativo se deve gerar, via Supabase CLI, as migrations para aprovação atómica de créditos e convites de gestores. A falta de CLI/workspace impede criar migrations válidas nesta sessão; não será inventado um nome/timestamp.
+
+
+### F2.3 — melhorias autónomas na experiência de compra de créditos (19/11/2026)
+
+- A página empresarial passou a apresentar mensagens distintas para pedido inválido, falta de permissão, comprovativo inválido/em falta e falha de limpeza do ficheiro temporário.
+- O sucesso esclarece que o registo do pedido não significa crédito imediato: o saldo só muda após confirmação do pagamento.
+- Estados de compra e tipos de movimento passaram a ser apresentados em português, com datas formatadas no fuso `Africa/Maputo`.
+- Quando não existem pacotes activos, a página apresenta um estado vazio explícito em vez de deixar a área de compra sem conteúdo.
+- Estas melhorias não alteram o contrato financeiro, não aprovam pedidos e não escrevem no ledger.
+
+### Reconciliação read-only — inventário confirmado em 19/11/2026
+
+A leitura directa do ledger activo e do directório `supabase/migrations` confirmou:
+
+| Medida | Resultado |
+|---|---:|
+| Versões no ledger activo | 68 |
+| Ficheiros SQL no repositório | 58 |
+| Nomes de migration coincidentes | 33 |
+| Coincidência simultânea de nome e versão | 8 |
+| Mesmo nome, mas timestamp diferente | 25 |
+| Ficheiros sem nome correspondente no ledger | 25 |
+| Entradas do ledger sem ficheiro com o mesmo nome | 35 |
+
+Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0001`–`0007`. Os 35 registos sem ficheiro homónimo não significam, por si só, que o SQL esteja ausente: podem corresponder a renomeações, consolidações ou migrações históricas cujo conteúdo não está preservado com o mesmo nome no repositório.
+
+**Limite da evidência:** o ledger guarda versão/nome, não o conteúdo SQL executado. Portanto, coincidência de nome (mesmo com timestamp diferente) não prova equivalência de conteúdo. O próximo passo de reconciliação exige exportação nativa do schema e comparação por objectos (tabelas, colunas, constraints, índices, funções, triggers, policies e grants), além da recuperação dos ficheiros históricos quando disponíveis. Nenhuma alteração foi feita ao schema activo.
