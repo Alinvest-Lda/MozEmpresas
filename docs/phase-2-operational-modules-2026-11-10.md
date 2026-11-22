@@ -435,3 +435,13 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Repetições com dados idênticos continuam a incrementar delivery_count e preservam PROCESSED quando já processado; callbacks conflitantes levantam `CALLBACK_TRANSACTION_CONFLICT`, que o endpoint traduz em HTTP 409.
 - Migração aplicada no Supabase: `20261122100000_f312_mpesa_callback_identity_conflict_guard.sql` (45d20c9). A confirmação de catálogo do RPC foi consultada depois da aplicação.
 - Testes unitários adicionados/actualizados no helper de classificação; CI do commit F3.11 confirmou estado Vercel success. Testes SQL específicos de concorrência ainda não foram executados.
+
+
+## F3.13 — Cancelamento seguro de campanhas empresariais (22/11/2026)
+
+- Corrigido constraint de estado de `business_promotions` para incluir DRAFT, compatível com o default da tabela.
+- Implementado RPC `admin_cancel_business_promotion`, Super Admin-only, com lock da promoção, validação de elegibilidade (antes do início, estados PENDING/ACTIVE), motivo obrigatório, idempotência por registo único e trilha auditável.
+- Cancelamentos pagos por créditos estornam saldo e lançam transação REFUND atomicamente; M-Pesa pendente pode ser cancelado sem inventar reembolso; campanhas M-Pesa já ACTIVE não são canceladas sem refund externo.
+- Adicionado painel de cancelamento na fila Super Admin, com mensagem diferenciada de sucesso, não elegível e reembolso externo obrigatório.
+- Migração aplicada: `20261122110000_f313_safe_business_promotion_cancellation.sql`; commits `3c4d020` (migration file), `5d98dd0` (server action), `c3b6337` (admin UI), `87bf2dc` (styles). Deploy aguarda.
+- Limite: fluxo de reembolso MPesa é operacional externo, não foi automatizado; campanhas não são alteradas se reembolso externo não tiver sido realizado.
