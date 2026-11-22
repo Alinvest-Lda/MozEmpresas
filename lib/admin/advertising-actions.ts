@@ -52,3 +52,18 @@ export async function moderatePartnerCampaign(formData: FormData) {
 export async function updateAdvertisingRequest(formData: FormData) {
   return updateStatus("advertising_requests", formData.get("id"), formData.get("status"), requestStatuses, "pedidos");
 }
+
+export async function cancelBusinessPromotion(formData: FormData) {
+  const id = String(formData.get("id") || "");
+  const reason = String(formData.get("reason") || "").trim();
+  if (!z.string().uuid().safeParse(id).success || reason.length < 8 || reason.length > 500) redirect("/dashboard/admin/publicidade?result=cancel-error");
+  const { supabase, authorized } = await getSuperAdminContext();
+  if (!authorized) redirect("/login?next=/dashboard/admin/publicidade");
+  const { data, error } = await supabase.rpc("admin_cancel_business_promotion", { p_promotion_id: id, p_reason: reason });
+  if (error) {
+    const code = error.message.includes("MPESA_REFUND_REQUIRED") ? "mpesa-refund-required" : error.message.includes("CANCELLATION_NOT_ALLOWED") ? "cancel-not-allowed" : "cancel-error";
+    redirect("/dashboard/admin/publicidade?result=" + code);
+  }
+  revalidatePath("/dashboard/admin"); revalidatePath("/dashboard/admin/publicidade"); revalidatePath("/dashboard/admin/monetizacao"); revalidatePath("/dashboard/publicidade");
+  redirect("/dashboard/admin/publicidade?result=cancel-success&refund=" + String(data?.credits_refunded ?? 0));
+}
