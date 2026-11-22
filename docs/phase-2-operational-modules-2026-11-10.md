@@ -445,3 +445,6 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Adicionado painel de cancelamento na fila Super Admin, com mensagem diferenciada de sucesso, não elegível e reembolso externo obrigatório.
 - Migração aplicada: `20261122110000_f313_safe_business_promotion_cancellation.sql`; commits `3c4d020` (migration file), `5d98dd0` (server action), `c3b6337` (admin UI), `87bf2dc` (styles). Deploy aguarda.
 - Limite: fluxo de reembolso MPesa é operacional externo, não foi automatizado; campanhas não são alteradas se reembolso externo não tiver sido realizado.
+
+- F3.13 hardening adicional: removida a opção CANCELLED do selector de moderação e da allowlist da Server Action. Cancelamento não pode mais ser feito por alteração de estado simples, contornando o fluxo de estorno/auditoria; usa exclusivamente RPC de cancelamento.
+- Commits de hardening: `bebdf1f` e `698c152`.
