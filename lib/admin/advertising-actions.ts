@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
-const promotionStatuses = ["PENDING", "ACTIVE", "PAUSED", "EXPIRED", "CANCELLED"] as const;
+const promotionStatuses = ["PENDING", "ACTIVE", "PAUSED", "EXPIRED"] as const;
 const partnerStatuses = ["REQUESTED", "PENDING", "UNDER_REVIEW", "ACTIVE", "RUNNING", "PUBLISHED"] as const;
 const requestStatuses = ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT", "PAID", "APPROVED", "REJECTED", "CANCELLED"] as const;
 
