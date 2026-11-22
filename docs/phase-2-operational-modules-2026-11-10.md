@@ -506,3 +506,17 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Migration aplicada no Supabase: `20261122105012_f321_credit_purchase_write_lockdown_and_rls_consolidation`.
 - A interface Super Admin já usa a RPC `admin_decide_credit_purchase`; a compra por webhook continua a usar RPC separada de service_role. Não foram alterados os fluxos de checkout do cliente.
 - A auditoria continua a exigir análise das políticas de publicidade e das RPCs SECURITY DEFINER restantes. Não foram aplicadas revogações generalizadas.
+
+## F3.22 — Hardening de endpoints públicos de publicidade e convites (22/11/2026)
+
+- Endurecidos os `search_path` de quatro funções `SECURITY DEFINER`:
+  - `get_ad_decision(text,uuid,text,text,jsonb)`
+  - `home_ad_slots()`
+  - `record_ad_interest(text,uuid,text[],jsonb)`
+  - `partner_access_validate(text)`
+- `pg_temp` foi explicitamente colocado no final do caminho de pesquisa, impedindo que objectos temporários sombreiem objectos confiáveis usados pelas funções privilegiadas.
+- Preservada a execução anónima intencional dos endpoints públicos de entrega de anúncios, recolha de interesse e validação de convite. Não houve revogação indiscriminada de EXECUTE.
+- Verificação pós-migration: os quatro caminhos de pesquisa estão definidos explicitamente; os privilégios anon/authenticated mantêm-se como esperado.
+- Migration aplicada no Supabase: `20261122110210_f322_harden_public_definer_search_paths`.
+- O advisor continua a listar as quatro funções por serem `SECURITY DEFINER` acessíveis a anon; esse alerta é esperado enquanto os endpoints públicos forem mantidos. O hardening reduz o risco de object shadowing, mas não substitui validação de parâmetros, rate limiting e testes de abuso.
+- Ainda não foi executado teste transaccional de compra, entrega ou cancelamento de campanha com pagamentos reais. A validação desta fase cobre configuração de segurança e metadados, não a operação ponta-a-ponta.
