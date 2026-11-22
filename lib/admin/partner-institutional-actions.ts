@@ -141,7 +141,7 @@ export async function issuePartnerInvoice(formData: FormData) {
       amount_mzn:value(formData,"amount_mzn")});
   if (!parsed.success || (parsed.data.contract_id && !uuid.safeParse(parsed.data.contract_id).success) ||
       (parsed.data.engagement_id && !uuid.safeParse(parsed.data.engagement_id).success) || (parsed.data.campaign_id && !uuid.safeParse(parsed.data.campaign_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=invoice");
-  const {supabase,user}=await adminContext();
+  const {supabase}=await adminContext();
   if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id}))) redirect("/dashboard/admin/parceiros/gestao?error=invoice");
   const {error}=await supabase.rpc("admin_issue_partner_invoice",{
     p_account_id:parsed.data.account_id,p_contract_id:parsed.data.contract_id||null,
@@ -166,7 +166,7 @@ export async function recordPartnerBankTransfer(formData: FormData) {
       proof_url:value(formData,"proof_url")});
   if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id,parsed.data.campaign_id,parsed.data.document_id].some(x=>x && !uuid.safeParse(x).success))
     redirect("/dashboard/admin/parceiros/gestao?error=transfer");
-  const {supabase,user}=await adminContext();
+  const {supabase}=await adminContext();
   if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id,documentId:parsed.data.document_id}))) redirect("/dashboard/admin/parceiros/gestao?error=transfer");
   const {error}=await supabase.rpc("admin_record_partner_bank_transfer",{
     p_account_id:parsed.data.account_id,p_amount_mzn:parsed.data.amount_mzn,p_reference:parsed.data.reference,
