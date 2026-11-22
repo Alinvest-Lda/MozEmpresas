@@ -166,6 +166,10 @@ export async function createPartnerContact(formData: FormData) {
       is_billing_contact:value(formData,"is_billing_contact"),receives_reports:value(formData,"receives_reports")});
   if(!parsed.success || (!parsed.data.email && !parsed.data.phone)) redirect("/dashboard/admin/parceiros/gestao?error=contact");
   const {supabase,user}=await adminContext();
+  if(parsed.data.is_primary==="true") {
+    const {error:primaryError}=await supabase.from("partner_contacts").update({is_primary:false}).eq("account_id",parsed.data.account_id).eq("is_primary",true);
+    if(primaryError) redirect("/dashboard/admin/parceiros/gestao?error=contact-save");
+  }
   const {error}=await supabase.from("partner_contacts").insert({
     account_id:parsed.data.account_id,full_name:parsed.data.full_name,role_title:parsed.data.role_title||null,
     email:parsed.data.email||null,phone:parsed.data.phone||null,is_primary:parsed.data.is_primary==="true",
@@ -189,7 +193,7 @@ export async function createPartnerReportDelivery(formData: FormData) {
       recipient_emails:value(formData,"recipient_emails")||undefined,delivery_channel:value(formData,"delivery_channel"),
       status:value(formData,"status")});
   if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id].some(x=>x&&!uuid.safeParse(x).success) ||
-    (parsed.data.status==="DELIVERED"&&!parsed.data.storage_path&&!parsed.data.external_url))
+    (["READY","DELIVERED"].includes(parsed.data.status)&&!parsed.data.storage_path&&!parsed.data.external_url))
     redirect("/dashboard/admin/parceiros/gestao?error=report");
   const {supabase,user}=await adminContext();
   const recipients=(parsed.data.recipient_emails||"").split(/[;,\\n]/).map(x=>x.trim()).filter(Boolean);
