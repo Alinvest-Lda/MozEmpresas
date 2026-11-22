@@ -28,7 +28,7 @@ export default async function InstitutionalPartnersPage({searchParams}:{searchPa
   const {supabase,authorized}=await getSuperAdminContext();
   if(!authorized) return null;
   const params=await searchParams;
-  const [{data:partners,error:partnerError},{data:contracts},{data:engagements},{data:payments},{data:documents},{data:contacts},{data:reports},{data:contractFinance},{data:adProducts},{data:campaigns},{data:staff},{data:staffProfiles}] = await Promise.all([
+  const [{data:partners,error:partnerError},{data:contracts},{data:engagements},{data:payments},{data:documents},{data:contacts},{data:reports},{data:contractFinance},{data:adProducts},{data:campaigns},{data:staff}] = await Promise.all([
     supabase.from("partner_accounts").select("id,name,legal_name,operating_model,portal_enabled,status,contact_email,contact_phone,created_at").order("created_at",{ascending:false}).limit(250),
     supabase.from("partner_contracts").select("id,account_id,contract_code,title,contract_type,status,contracted_amount_mzn,billing_frequency,starts_on,ends_on").order("created_at",{ascending:false}).limit(150),
     supabase.from("partner_service_engagements").select("id,account_id,contract_id,title,service_type,status,request_source,agreed_amount_mzn,due_at,received_at,assigned_commercial_user_id,assigned_operations_user_id").order("received_at",{ascending:false}).limit(150),
@@ -39,11 +39,10 @@ export default async function InstitutionalPartnersPage({searchParams}:{searchPa
     supabase.from("partner_contract_financial_summary").select("contract_id,invoiced_amount_mzn,received_amount_mzn,outstanding_amount_mzn"),
     supabase.from("partner_ad_products").select("id,name,price_mzn,duration_days,capacity").eq("active",true).order("name"),
     supabase.from("partner_ad_campaigns").select("id,account_id,product_id,contract_id,assigned_operations_user_id,title,status,request_source,price_mzn,starts_at,ends_at,created_at").order("created_at",{ascending:false}).limit(100),
-    supabase.from("platform_members").select("user_id,role").eq("active",true).order("role"),
-    supabase.from("profiles").select("id,full_name").limit(1000),
+    supabase.rpc("admin_list_platform_staff"),
   ]);
   const p=partners??[], c=contracts??[], e=engagements??[], pay=payments??[], docs=documents??[], contactsRows=contacts??[], reportRows=reports??[], financeRows=contractFinance??[], products=adProducts??[], campaignRows=campaigns??[];
-  const staffUsers=(staff??[]).map(x=>({id:x.user_id,name:staffProfiles?.find(y=>y.id===x.user_id)?.full_name||"Utilizador interno",role:x.role}));
+  const staffUsers=(staff??[]).map(x=>({id:x.user_id,name:x.full_name||"Utilizador interno",role:x.role}));
   const partnerName=(id:string)=>p.find(x=>x.id===id)?.name??"Parceiro";
   const staffName=(id:string|null)=>staffUsers.find(x=>x.id===id)?.name??"Não atribuído";
   return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
