@@ -10,13 +10,15 @@ const statusLabel=(status:string)=>{
 
 export default async function PartnerAds(){
   const {supabase:s}=await requirePartnerAccount();
-  const [{data:products},{data:campaigns},{data:campaignMetrics}]=await Promise.all([
+  const [{data:products},{data:campaigns},{data:campaignMetrics},{data:paymentOrders}]=await Promise.all([
     s.rpc("partner_ad_products_list"),
     s.rpc("partner_ad_campaigns_list"),
-    s.rpc("partner_ad_campaign_metrics")
+    s.rpc("partner_ad_campaign_metrics"),
+    s.from("partner_ad_payment_orders").select("campaign_id,status,payment_method,payment_reference,amount_mzn,credits_charged,confirmed_at").order("created_at",{ascending:false})
   ]);
   const metricsByCampaign=new Map<string,{impressions:number;clicks:number}>((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}] as [string,{impressions:number;clicks:number}]));
-  const measuredCampaigns=(campaigns??[]).map((x:any)=>({...x,...(metricsByCampaign.get(x.id)||{impressions:0,clicks:0})}));
+  const paymentsByCampaign=new Map<string,any>();(paymentOrders??[]).forEach((x:any)=>{if(!paymentsByCampaign.has(x.campaign_id))paymentsByCampaign.set(x.campaign_id,x)});
+  const measuredCampaigns=(campaigns??[]).map((x:any)=>({...x,payment:paymentsByCampaign.get(x.id)||null,...(metricsByCampaign.get(x.id)||{impressions:0,clicks:0})}));
   const active=(campaigns??[]).filter((x:any)=>["ACTIVE","RUNNING","PUBLISHED"].includes(x.status)).length;
   const pending=(campaigns??[]).filter((x:any)=>["REQUESTED","PENDING","UNDER_REVIEW"].includes(x.status)).length;
   const impressions=measuredCampaigns.reduce((sum:number,x:any)=>sum+x.impressions,0);
@@ -91,7 +93,7 @@ export default async function PartnerAds(){
       {measuredCampaigns.length
         ? <div className="partner-record-list">{measuredCampaigns.map((x:any)=><div key={x.id}>
             <div><strong>{x.title||"Campanha sem título"}</strong><span>{x.product_name||"Espaço publicitário"} · {statusLabel(x.status)}</span><span>{x.impressions.toLocaleString("pt-MZ")} impressões · {x.clicks.toLocaleString("pt-MZ")} cliques · CTR {x.impressions>0?(x.clicks/x.impressions*100).toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"}</span></div>
-            <b>{x.price_mzn!=null?money(Number(x.price_mzn)):"Em análise"}</b>
+            <div><b>{x.price_mzn!=null?money(Number(x.price_mzn)):"Em análise"}</b>{x.payment?<small>Pagamento: {x.payment.status==="PAID"?"Liquidado":x.payment.status==="PENDING"?"A aguardar M-Pesa":x.payment.status==="FAILED"?"Falhado":"Estornado"} · {x.payment.payment_method} · {x.payment.payment_reference}</small>:<small>Sem cobrança emitida</small>}</div>
           </div>)}</div>
         : <PartnerEmpty title="Ainda sem campanhas" text="Escolha um espaço acima para iniciar uma proposta de exposição." href="#espacos" label="Ver espaços"/>
       }
