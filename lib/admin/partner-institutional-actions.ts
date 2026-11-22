@@ -22,25 +22,29 @@ function value(data: FormData, key: string) {
 
 type PartnerLinkIds = { contractId?: string; engagementId?: string; campaignId?: string; documentId?: string };
 async function partnerLinksValid(supabase: AdminSupabase, accountId: string, links: PartnerLinkIds) {
-  const checks: Array<[string,string]> = [
-    ...(links.contractId ? [["partner_contracts",links.contractId] as [string,string]] : []),
-    ...(links.engagementId ? [["partner_service_engagements",links.engagementId] as [string,string]] : []),
-    ...(links.campaignId ? [["partner_ad_campaigns",links.campaignId] as [string,string]] : []),
-    ...(links.documentId ? [["financial_documents",links.documentId] as [string,string]] : []),
-  ];
-  for (const [table,id] of checks) {
-    const ownerColumn=table==="financial_documents"?"partner_account_id":"account_id";
-    const {data,error}=await supabase.from(table).select(ownerColumn).eq("id",id).maybeSingle();
-    const owner=data?.[ownerColumn];
-    if(error || owner!==accountId) return false;
+  if (links.contractId) {
+    const {data,error}=await supabase.from("partner_contracts").select("account_id").eq("id",links.contractId).maybeSingle();
+    if(error || data?.account_id!==accountId) return false;
+  }
+  if (links.engagementId) {
+    const {data,error}=await supabase.from("partner_service_engagements").select("account_id").eq("id",links.engagementId).maybeSingle();
+    if(error || data?.account_id!==accountId) return false;
+  }
+  if (links.campaignId) {
+    const {data,error}=await supabase.from("partner_ad_campaigns").select("account_id").eq("id",links.campaignId).maybeSingle();
+    if(error || data?.account_id!==accountId) return false;
+  }
+  if (links.documentId) {
+    const {data,error}=await supabase.from("financial_documents").select("partner_account_id").eq("id",links.documentId).maybeSingle();
+    if(error || data?.partner_account_id!==accountId) return false;
   }
   return true;
 }
-
 async function isActivePlatformMember(supabase: any, userId?: string) {
   if (!userId) return true;
   const {data,error}=await supabase.rpc("admin_list_platform_staff");
-  return !error && Array.isArray(data) && data.some((member:{user_id:string})=>member.user_id===userId);
+  const members=(data??[]) as Array<{user_id:string}>;
+  return !error && members.some(member=>member.user_id===userId);
 }
 export async function createInstitutionalPartner(formData: FormData) {
   const parsed = z.object({
