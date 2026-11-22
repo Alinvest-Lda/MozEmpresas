@@ -19,7 +19,7 @@ const messages: Record<string,string> = {
   contract:"Revise os dados do contrato.", "contract-save":"Não foi possível registar o contrato. Verifique o código e a entidade.",
   engagement:"Revise os dados do serviço.", "engagement-save":"Não foi possível criar a ordem de execução.",
   invoice:"Revise os dados da factura.", "invoice-save":"Não foi possível emitir o documento.",
-  transfer:"Revise os dados da transferência.", "transfer-save":"Não foi possível registar o pagamento.",
+  transfer:"Revise os dados da transferência.", "transfer-save":"Não foi possível registar o pagamento.", "transfer-duplicate":"Esta referência bancária já foi registada para esta entidade.",
   verify:"Não foi possível confirmar o pagamento.", "payment-id":"Identificador de pagamento inválido.",
 };
 const saved: Record<string,string> = {"engagement-status":"Estado da execução actualizado.",campaign:"Campanha criada no backoffice.",contact:"Contacto registado.",report:"Relatório registado.",partner:"Entidade parceira criada.",contract:"Contrato registado.",engagement:"Ordem de execução criada.",invoice:"Factura emitida.",transfer:"Transferência registada para verificação.",verified:"Transferência confirmada."};
@@ -50,7 +50,7 @@ export default async function InstitutionalPartnersPage({searchParams}:{searchPa
     <section className={styles.grid}>
       <article className={styles.panel}><h2>Nova entidade parceira</h2><p>Não é necessário associar uma empresa, criar utilizador ou activar portal.</p><form action={createInstitutionalPartner} className={styles.form}>
         <label>Nome da organização<input name="name" required minLength={2} maxLength={180} placeholder="Nome institucional"/></label>
-        <label>Denominação legal<input name="legal_name" maxLength={180}/></label><label>NUIT<input name="tax_id" maxLength={80}/></label>
+        <label>Denominação legal<input name="legal_name" maxLength={180}/></label><label>NUIT<input name="tax_id" maxLength={80}/></label><div className={styles.two}><label>Morada de facturação<input name="billing_address" maxLength={300}/></label><label>Cidade de facturação<input name="billing_city" maxLength={120}/></label></div>
         <div className={styles.two}><label>Email de contacto<input name="contact_email" type="email"/></label><label>Telefone<input name="contact_phone" maxLength={60}/></label></div>
         <label>Modelo operacional<select name="operating_model" defaultValue="MANAGED"><option value="MANAGED">Gestão integral pela MozEmpresas</option><option value="STRATEGIC">Parceiro estratégico / institucional</option><option value="HYBRID">Híbrido (backoffice + portal)</option><option value="SELF_SERVICE">Auto-serviço</option></select></label>
         <label>Acesso ao portal<select name="portal_enabled" defaultValue="false"><option value="false">Não — sem acesso</option><option value="true">Sim — acesso opcional</option></select></label>
