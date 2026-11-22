@@ -177,6 +177,67 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, serviceOrderId: data?.order_id, ignored: Boolean(data?.ignored) }, { status: 202 });
   }
 
+  // Partner advertising has its own settlement lifecycle; never route it through credit top-ups.
+  if (payment.paymentReference.startsWith("PARTNER_AD:")) {
+    if (payment.status === "SUCCESS") {
+      const { data, error } = await supabase.rpc("confirm_mpesa_partner_ad_payment", {
+        p_payment_reference: payment.paymentReference,
+        p_provider_transaction_id: payment.transactionId,
+        p_amount_mzn: payment.amount,
+        p_currency: payment.currency,
+      });
+      if (error) {
+        const known = [
+          "PARTNER_AD_PAYMENT_NOT_FOUND", "PARTNER_AD_ORDER_NOT_FOUND",
+          "PAYMENT_AMOUNT_MISMATCH", "PARTNER_AD_PAYMENT_NOT_PAYABLE",
+          "PARTNER_AD_PAYMENT_ALREADY_SETTLED", "PROVIDER_TRANSACTION_ALREADY_USED",
+        ].find((code) => error.message.includes(code));
+        await supabase.from("credit_payment_callback_events").update({
+          processing_status: known ? "REJECTED" : "RETRY",
+          processing_error_code: known || "PARTNER_AD_CONFIRMATION_UNAVAILABLE",
+          processed_at: known ? new Date().toISOString() : null,
+        }).eq("id", callbackEvent.id);
+        return NextResponse.json(
+          { error: known ? "A confirmação não corresponde a uma campanha válida." : "Não foi possível reconciliar a campanha." },
+          { status: known ? 409 : 503 },
+        );
+      }
+      const { error: auditUpdateError } = await supabase.from("credit_payment_callback_events").update({
+        processing_status: "PROCESSED",
+        processing_error_code: null,
+        processed_at: new Date().toISOString(),
+      }).eq("id", callbackEvent.id);
+      if (auditUpdateError) return NextResponse.json({ error: "Pagamento confirmado; auditoria será repetida." }, { status: 503 });
+      return NextResponse.json({ ok: true, partnerAdOrderId: data?.order_id, alreadyProcessed: Boolean(data?.already_processed) });
+    }
+
+    if (payment.status === "FAILED" || payment.status === "CANCELLED") {
+      const { data, error } = await supabase.rpc("fail_mpesa_partner_ad_payment", {
+        p_payment_reference: payment.paymentReference,
+        p_provider_transaction_id: payment.transactionId,
+        p_amount_mzn: payment.amount,
+        p_currency: payment.currency,
+      });
+      if (error) {
+        const known = ["PARTNER_AD_PAYMENT_NOT_FOUND", "PARTNER_AD_ORDER_NOT_FOUND", "PAYMENT_AMOUNT_MISMATCH"]
+          .find((code) => error.message.includes(code));
+        await supabase.from("credit_payment_callback_events").update({
+          processing_status: known ? "REJECTED" : "RETRY",
+          processing_error_code: known || "PARTNER_AD_FAILURE_UNAVAILABLE",
+          processed_at: known ? new Date().toISOString() : null,
+        }).eq("id", callbackEvent.id);
+        return NextResponse.json({ error: "Não foi possível reconciliar o estado da campanha." }, { status: known ? 409 : 503 });
+      }
+      const { error: auditUpdateError } = await supabase.from("credit_payment_callback_events").update({
+        processing_status: "PROCESSED",
+        processing_error_code: null,
+        processed_at: new Date().toISOString(),
+      }).eq("id", callbackEvent.id);
+      if (auditUpdateError) return NextResponse.json({ error: "Estado actualizado; auditoria será repetida." }, { status: 503 });
+      return NextResponse.json({ ok: true, partnerAdOrderId: data?.order_id, ignored: Boolean(data?.ignored) }, { status: 202 });
+    }
+  }
+
   // Non-success callbacks are recorded for audit but can never credit a wallet.
   if (payment.status !== "SUCCESS") {
     const { error: updateError } = await supabase
