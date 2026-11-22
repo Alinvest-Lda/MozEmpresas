@@ -45,7 +45,7 @@ function businessName(campaign: Campaign) {
 }
 function label(status: string | null) { return status ? (statusLabels[status] || status) : "Sem estado"; }
 
-type SearchParams = Promise<{ q?: string; origem?: string; estado?: string; prazo?: string; result?: string; refund?: string }>;
+type SearchParams = Promise<{ q?: string; origem?: string; estado?: string; prazo?: string; result?: string; refund?: string; reference?: string; method?: string }>;
 export default async function AdminAdvertisingPage({ searchParams }: { searchParams?: SearchParams }) {
   const params = searchParams ? await searchParams : {};
   const q = (params.q ?? "").trim().slice(0, 100);
