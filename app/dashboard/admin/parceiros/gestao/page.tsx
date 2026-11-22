@@ -20,7 +20,7 @@ const messages: Record<string,string> = {
   engagement:"Revise os dados do serviço.", "engagement-save":"Não foi possível criar a ordem de execução.",
   invoice:"Revise os dados da factura.", "invoice-save":"Não foi possível emitir o documento.",
   transfer:"Revise os dados da transferência.", "transfer-save":"Não foi possível registar o pagamento.", "transfer-duplicate":"Esta referência bancária já foi registada para esta entidade.",
-  verify:"Não foi possível confirmar o pagamento.", "payment-id":"Identificador de pagamento inválido.",
+  verify:"Não foi possível confirmar o pagamento.", "verify-overpayment":"O valor acumulado ultrapassa o saldo da factura. Corrija a alocação antes de confirmar.", "verify-not-payable":"A factura está anulada, em rascunho ou já liquidada e não aceita mais pagamentos.", "payment-id":"Identificador de pagamento inválido.",
 };
 const saved: Record<string,string> = {"engagement-status":"Estado da execução actualizado.",campaign:"Campanha criada no backoffice.",contact:"Contacto registado.",report:"Relatório registado.",partner:"Entidade parceira criada.",contract:"Contrato registado.",engagement:"Ordem de execução criada.",invoice:"Factura emitida.",transfer:"Transferência registada para verificação.",verified:"Transferência confirmada."};
 
