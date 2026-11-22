@@ -427,3 +427,11 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Adicionados testes unitários para conflito e falha transitória, além da suite de assinatura existente.
 - Commits: helper `14f7cf079c6fd5411acd1326dd4fc4c3aed08eeb`; endpoint `dd21696a86b2bbbea07b7a8bfa76ea0ab182df84`; testes `5f28f1e7e6fb24d6dfe4ed3a501917f0366ad146`.
 - Validação: alterações commitadas em `main`; testes CI/build não executados manualmente neste ambiente. Deploy de produção F3.10 verificado READY; F3.11 aguarda nova build/deploy.
+
+
+## F3.12 — Integridade da identidade dos callbacks M-Pesa (22/11/2026)
+
+- O RPC `record_credit_payment_callback` agora rejeita callbacks repetidos para a mesma transacção e estado quando a referência de pagamento, valor, moeda ou merchant code divergem dos valores da primeira entrega.
+- Repetições com dados idênticos continuam a incrementar delivery_count e preservam PROCESSED quando já processado; callbacks conflitantes levantam `CALLBACK_TRANSACTION_CONFLICT`, que o endpoint traduz em HTTP 409.
+- Migração aplicada no Supabase: `20261122100000_f312_mpesa_callback_identity_conflict_guard.sql` (45d20c9). A confirmação de catálogo do RPC foi consultada depois da aplicação.
+- Testes unitários adicionados/actualizados no helper de classificação; CI do commit F3.11 confirmou estado Vercel success. Testes SQL específicos de concorrência ainda não foram executados.
