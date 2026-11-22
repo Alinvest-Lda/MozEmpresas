@@ -63,7 +63,7 @@ export default async function PartnerAds(){
           <p>{x.description||"Formato de exposição disponível mediante solicitação."}</p>
           <div className="partner-product-meta">
             <strong>{x.price_mzn!=null?Number(x.price_mzn).toLocaleString("pt-MZ")+" MZN":"Proposta personalizada"}</strong>
-            <small>{x.duration_days?x.duration_days+" dias":"Prazo personalizado"} · capacidade {x.capacity??"—"}</small>
+            <small>{x.duration_days?x.duration_days+" dias":"Prazo personalizado"} · capacidade {x.capacity??"—"}</small>{x.credit_price!=null?<small>{x.credit_price.toLocaleString("pt-MZ")} créditos · {x.credit_payment_available?"disponível nesta conta":"indisponível nesta conta"}</small>:<small>Pagamento por créditos ainda não configurado</small>}
           </div>
           <Link href={"/parceiro/publicidade/pedido?produto="+encodeURIComponent(x.id)} className="btn">Solicitar este espaço</Link>
         </article>)}
