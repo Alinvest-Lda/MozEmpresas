@@ -36,6 +36,11 @@ async function partnerLinksValid(supabase: any, accountId: string, links: Partne
   return true;
 }
 
+async function isActivePlatformMember(supabase: any, userId?: string) {
+  if (!userId) return true;
+  const {data,error}=await supabase.from("platform_members").select("user_id").eq("user_id",userId).eq("active",true).maybeSingle();
+  return !error && Boolean(data?.user_id);
+}
 export async function createInstitutionalPartner(formData: FormData) {
   const parsed = z.object({
     name: z.string().min(2).max(180),
@@ -100,21 +105,28 @@ export async function createPartnerEngagement(formData: FormData) {
     request_source:z.enum(["EMAIL","MEETING","CONTRACT","PHONE","BACKOFFICE","OTHER"]),
     title:z.string().min(2).max(180), description:z.string().max(4000).optional(),
     agreed_amount_mzn:z.string().optional(), due_at:z.string().optional(),
+    assigned_commercial_user_id:z.string().optional(), assigned_operations_user_id:z.string().optional(),
   }).safeParse({
     account_id:value(formData,"account_id"), contract_id:value(formData,"contract_id"),
     service_type:value(formData,"service_type"), request_source:value(formData,"request_source"),
     title:value(formData,"title"), description:value(formData,"description") || undefined,
     agreed_amount_mzn:value(formData,"agreed_amount_mzn"), due_at:value(formData,"due_at"),
+    assigned_commercial_user_id:value(formData,"assigned_commercial_user_id") || undefined,
+    assigned_operations_user_id:value(formData,"assigned_operations_user_id") || undefined,
   });
-  if (!parsed.success || (parsed.data.contract_id && !uuid.safeParse(parsed.data.contract_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
+  if (!parsed.success || (parsed.data.contract_id && !uuid.safeParse(parsed.data.contract_id).success) ||
+    [parsed.data.assigned_commercial_user_id,parsed.data.assigned_operations_user_id].some(x=>x&&!uuid.safeParse(x).success)) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
   const { supabase,user } = await adminContext();
   if(parsed.data.contract_id && !(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id}))) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
+  if(!(await isActivePlatformMember(supabase,parsed.data.assigned_commercial_user_id)) || !(await isActivePlatformMember(supabase,parsed.data.assigned_operations_user_id))) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
   const { error } = await supabase.from("partner_service_engagements").insert({
     account_id:parsed.data.account_id, contract_id:parsed.data.contract_id || null,
     service_type:parsed.data.service_type, request_source:parsed.data.request_source,
     title:parsed.data.title, description:parsed.data.description || null,
     agreed_amount_mzn:parsed.data.agreed_amount_mzn ? Number(parsed.data.agreed_amount_mzn) : null,
     due_at:parsed.data.due_at || null, created_by:user!.id,
+    assigned_commercial_user_id:parsed.data.assigned_commercial_user_id || null,
+    assigned_operations_user_id:parsed.data.assigned_operations_user_id || null,
   });
   if (error) redirect("/dashboard/admin/parceiros/gestao?error=engagement-save");
   revalidatePath("/dashboard/admin/parceiros/gestao");
@@ -243,13 +255,16 @@ export async function createPartnerReportDelivery(formData: FormData) {
 
 export async function createBackofficePartnerCampaign(formData: FormData) {
   const parsed=z.object({account_id:uuid,product_id:uuid,contract_id:z.string().optional(),title:z.string().min(2).max(180),
-    objective:z.string().max(1000).optional(),starts_at:z.string().optional(),ends_at:z.string().optional(),price_mzn:z.coerce.number().positive().max(100000000000)})
+    objective:z.string().max(1000).optional(),starts_at:z.string().optional(),ends_at:z.string().optional(),price_mzn:z.coerce.number().positive().max(100000000000),
+    assigned_operations_user_id:z.string().optional()})
     .safeParse({account_id:value(formData,"account_id"),product_id:value(formData,"product_id"),contract_id:value(formData,"contract_id")||undefined,
       title:value(formData,"title"),objective:value(formData,"objective")||undefined,starts_at:value(formData,"starts_at")||undefined,
       ends_at:value(formData,"ends_at")||undefined,price_mzn:value(formData,"price_mzn")});
-  if(!parsed.success || (parsed.data.contract_id&&!uuid.safeParse(parsed.data.contract_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
+  if(!parsed.success || (parsed.data.contract_id&&!uuid.safeParse(parsed.data.contract_id).success) ||
+    (parsed.data.assigned_operations_user_id&&!uuid.safeParse(parsed.data.assigned_operations_user_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
   const {supabase,user}=await adminContext();
   if(parsed.data.contract_id && !(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id}))) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
+  if(!(await isActivePlatformMember(supabase,parsed.data.assigned_operations_user_id))) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
   const {data:product,error:productError}=await supabase.from("partner_ad_products")
     .select("id,price_mzn,active,surface,slot,duration_days").eq("id",parsed.data.product_id).maybeSingle();
   if(productError||!product?.active) redirect("/dashboard/admin/parceiros/gestao?error=campaign-product");
@@ -259,7 +274,7 @@ export async function createBackofficePartnerCampaign(formData: FormData) {
     account_id:parsed.data.account_id,product_id:parsed.data.product_id,contract_id:parsed.data.contract_id||null,
     title:parsed.data.title,objective:parsed.data.objective||null,starts_at:parsed.data.starts_at||null,ends_at:parsed.data.ends_at||null,
     price_mzn:parsed.data.price_mzn,status:"REQUESTED",request_source:"BACKOFFICE",
-    created_by_internal_user_id:user!.id,surface:product.surface,slot:product.slot,
+    created_by_internal_user_id:user!.id,assigned_operations_user_id:parsed.data.assigned_operations_user_id||null,surface:product.surface,slot:product.slot,
     creative_type:"TEXT",campaign_mode:"GUARANTEED",priority:70,bid_mzn:0,frequency_cap:2,targeting:{},
     impression_goal:null,impressions_count:0,clicks_count:0,campaign_kind:"GUARANTEED",bid_cpm:0,
     target_interests:[],target_locations:[],payment_method_preference:"MPESA",
