@@ -67,3 +67,28 @@ export async function cancelBusinessPromotion(formData: FormData) {
   revalidatePath("/dashboard/admin"); revalidatePath("/dashboard/admin/publicidade"); revalidatePath("/dashboard/admin/monetizacao"); revalidatePath("/dashboard/publicidade");
   redirect("/dashboard/admin/publicidade?result=cancel-success&refund=" + String(data?.credits_refunded ?? 0));
 }
+
+export async function issuePartnerAdPayment(formData: FormData) {
+  const id = String(formData.get("id") || "");
+  const method = String(formData.get("payment_method") || "").toUpperCase();
+  if (!z.string().uuid().safeParse(id).success || !["MPESA", "CREDITS"].includes(method)) {
+    redirect("/dashboard/admin/publicidade?result=payment-error");
+  }
+  const { supabase, authorized } = await getSuperAdminContext();
+  if (!authorized) redirect("/login?next=/dashboard/admin/publicidade");
+  const { data, error } = await supabase.rpc("admin_issue_partner_ad_payment", {
+    p_campaign_id: id,
+    p_payment_method: method,
+  });
+  if (error) {
+    const known = [
+      "PARTNER_CREDIT_WALLET_NOT_LINKED", "PARTNER_CREDIT_WALLET_NOT_FOUND",
+      "INSUFFICIENT_CREDITS", "CAMPAIGN_PAYMENT_ALREADY_ISSUED",
+      "CAMPAIGN_NOT_PAYABLE", "CAMPAIGN_PRICE_NOT_CONFIGURED",
+    ].find((code) => error.message.includes(code));
+    redirect("/dashboard/admin/publicidade?result=" + (known || "payment-error"));
+  }
+  revalidatePath("/dashboard/admin/publicidade");
+  revalidatePath("/parceiro/publicidade");
+  redirect("/dashboard/admin/publicidade?result=payment-issued&method=" + method + "&reference=" + encodeURIComponent(String(data?.payment_reference || "")));
+}
