@@ -38,8 +38,8 @@ async function partnerLinksValid(supabase: any, accountId: string, links: Partne
 
 async function isActivePlatformMember(supabase: any, userId?: string) {
   if (!userId) return true;
-  const {data,error}=await supabase.from("platform_members").select("user_id").eq("user_id",userId).eq("active",true).maybeSingle();
-  return !error && Boolean(data?.user_id);
+  const {data,error}=await supabase.rpc("admin_list_platform_staff");
+  return !error && Array.isArray(data) && data.some((member:any)=>member.user_id===userId);
 }
 export async function createInstitutionalPartner(formData: FormData) {
   const parsed = z.object({
