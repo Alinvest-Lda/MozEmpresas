@@ -22,8 +22,8 @@ A associação a `businesses` permanece opcional e só é relevante para fluxos 
 4. **Registar pedido/execução** com origem `EMAIL`, `MEETING`, `CONTRACT`, `PHONE` ou `BACKOFFICE`; actualizar o estado ao longo da execução.
 5. **Criar campanha no backoffice** em nome do parceiro. Preços fixos do catálogo não podem ser substituídos; formatos sob proposta aceitam preço negociado. A campanha fica inicialmente `REQUESTED`.
 6. **Emitir factura** ligada à entidade e, quando aplicável, ao contrato, execução ou campanha.
-7. **Registar transferência bancária** como `PENDING`, com referência, banco, ordenante, data e comprovativo opcional. Pagamentos parciais são permitidos.
-8. **Confirmar transferência** através da RPC transaccional `admin_confirm_partner_bank_transfer`. O registo guarda o responsável, a data e as notas. Se a soma de pagamentos confirmados ligados à campanha atingir o preço, a campanha passa de `REQUESTED` para `APPROVED`; a activação final continua sujeita à revisão operacional.
+7. **Registar transferência bancária** como `PENDING`, com referência, banco, ordenante, data e comprovativo opcional. Pagamentos parciais são permitidos; quando o total confirmado associado à factura atinge o valor do documento, o estado passa automaticamente para `PAID`. A referência bancária não pode ser repetida para a mesma entidade.
+8. **Confirmar transferência** através da RPC transaccional `admin_confirm_partner_bank_transfer`. O registo guarda o responsável, a data e as notas. A confirmação é transaccional e valida que a factura e a campanha pertencem à entidade do pagamento. Se a soma de pagamentos confirmados ligados à campanha atingir o preço, a campanha passa de `REQUESTED` para `APPROVED`; a activação final continua sujeita à revisão operacional.
 9. **Registar relatório** com período, destinatários, canal e ficheiro/link. A entrega fica auditável mesmo sem login externo.
 
 ## Reconciliação contratual
@@ -49,7 +49,7 @@ O claim do convite cria a associação de utilizador à conta indicada. As funç
 - Execução da RPC de confirmação revogada para `PUBLIC` e `anon`; concedida apenas a `authenticated`, com validação de Super Admin no corpo.
 - Convites e claim associados a uma conta não podem ser usados para associar o utilizador a outra conta activa.
 - Acções verificam que contrato, campanha, execução e documento pertencem à entidade seleccionada.
-- Índices adicionados às novas chaves estrangeiras.
+- Índices adicionados às novas chaves estrangeiras e índice único para impedir duplicação da referência bancária por entidade.
 
 ## Limitações ainda explícitas
 
@@ -67,4 +67,4 @@ O claim do convite cria a associação de utilizador à conta indicada. As funç
 - `20261122121114_f326d_scoped_admin_financial_write_policies`
 - `20261122121219_f326e_partner_operations_fk_indexes`
 - `20261122121357_f326f_partner_campaign_bank_transfer_settlement`
-- `20261122121552_f326g_bind_optional_partner_portal_access`
+- `20261122121552_f326g_bind_optional_partner_portal_access`\n- `20261122121736_f326h_prevent_duplicate_partner_bank_transfers`\n- `20261122121823_f326i_reconcile_partner_invoices_on_bank_settlement`
