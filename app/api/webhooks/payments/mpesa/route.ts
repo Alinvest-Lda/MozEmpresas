@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { verifyMpesaWebhookSignature } from "@/lib/payments/mpesa-webhook";
+import { verifyMpesaWebhookSignature, classifyMpesaCallbackAuditError } from "@/lib/payments/mpesa-webhook";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -92,6 +92,10 @@ export async function POST(request: Request) {
   });
 
   if (auditError || !callbackEvent?.id) {
+    const auditCode = classifyMpesaCallbackAuditError(auditError?.message || "");
+    if (auditCode === "CALLBACK_TRANSACTION_CONFLICT") {
+      return NextResponse.json({ error: "O identificador da transacção já foi usado com dados de pagamento diferentes." }, { status: 409 });
+    }
     return NextResponse.json({ error: "Não foi possível registar o evento de pagamento." }, { status: 503 });
   }
 
