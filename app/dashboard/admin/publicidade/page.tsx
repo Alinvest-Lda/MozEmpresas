@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { Input, Select } from "@/components/ui";
-import { moderateBusinessPromotion, moderatePartnerCampaign, updateAdvertisingRequest, cancelBusinessPromotion, issuePartnerAdPayment } from "@/lib/admin/advertising-actions";
+import { moderateBusinessPromotion, moderatePartnerCampaign, updateAdvertisingRequest, cancelBusinessPromotion, issuePartnerAdPayment, cancelPartnerAdCampaign } from "@/lib/admin/advertising-actions";
 import styles from "./publicidade.module.css";
 
 type Campaign = {
@@ -20,10 +20,10 @@ type AdvertisingRequest = {
   starts_at: string | null; ends_at: string | null; created_at: string | null;
 };
 const promotionStatuses = ["PENDING", "ACTIVE", "PAUSED", "EXPIRED"];
-const partnerStatuses = ["REQUESTED", "PENDING", "UNDER_REVIEW", "ACTIVE", "RUNNING", "PUBLISHED"];
+const partnerStatuses = ["REQUESTED", "PENDING", "UNDER_REVIEW", "APPROVED", "ACTIVE", "PAUSED", "RUNNING", "PUBLISHED", "CANCELLED", "ENDED", "REJECTED"];
 const requestStatuses = ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT", "PAID", "APPROVED", "REJECTED", "CANCELLED"];
 const statusLabels: Record<string, string> = {
-  PENDING: "Pendente", REQUESTED: "Solicitada", UNDER_REVIEW: "Em análise", NEW: "Novo pedido",
+  PENDING: "Pendente", REQUESTED: "Solicitada", UNDER_REVIEW: "Em análise", NEW: "Novo pedido", CANCELLED: "Cancelada", PAUSED: "Pausada", ENDED: "Encerrada",
   ACTIVE: "Activa", RUNNING: "Em execução", PUBLISHED: "Publicada", PAUSED: "Pausada",
   EXPIRED: "Expirada", CANCELLED: "Cancelada", CONTACTED: "Contactado", PROPOSAL: "Proposta enviada",
   AWAITING_PAYMENT: "Aguarda pagamento", PAID: "Pago", APPROVED: "Aprovado", REJECTED: "Rejeitado",
@@ -112,7 +112,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
       <div className={styles.heroSummary}><span className={styles.summaryLabel}>A aguardar atenção</span><strong>{pendingCount}</strong><span className={styles.summaryCaption}>Pedidos e campanhas por rever</span><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Até 100 registos por origem em cada consulta.</span></div>
       <span className={styles.heroDecoration} aria-hidden="true">↗</span>
     </header>
-    {result ? <div className={`${styles.resultNotice} ${result === "error" ? styles.resultError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Estado actualizado com sucesso." : result === "payment-issued" ? "Cobrança emitida. Referência: " + (params.reference ?? "") + (params.method === "CREDITS" ? " · Créditos debitados e campanha activada." : " · Aguarda confirmação M-Pesa.") : result === "PARTNER_CREDIT_WALLET_NOT_LINKED" ? "Esta conta de parceiro ainda não está associada a uma empresa com carteira de créditos. Utilize M-Pesa ou configure a associação empresarial." : result === "INSUFFICIENT_CREDITS" ? "Saldo de créditos insuficiente para esta campanha." : result === "CAMPAIGN_PAYMENT_ALREADY_ISSUED" ? "Já existe uma cobrança activa para esta campanha." : result === "payment-error" ? "Não foi possível emitir a cobrança da campanha." : result === "cancel-success" ? "Campanha cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "mpesa-refund-required" ? "Campanha M-Pesa activa: o reembolso externo deve ser executado e registado antes do cancelamento." : result === "cancel-not-allowed" ? "Cancelamento não permitido: campanha já iniciada, expirada ou num estado não elegível." : "Não foi possível actualizar o estado. Confirme permissões e elegibilidade."}</div> : null}
+    {result ? <div className={`${styles.resultNotice} ${result === "error" ? styles.resultError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Estado actualizado com sucesso." : result === "payment-issued" ? "Cobrança emitida. Referência: " + (params.reference ?? "") + (params.method === "CREDITS" ? " · Créditos debitados e campanha activada." : " · Aguarda confirmação M-Pesa.") : result === "PARTNER_CREDIT_WALLET_NOT_LINKED" ? "Esta conta de parceiro ainda não está associada a uma empresa com carteira de créditos. Utilize M-Pesa ou configure a associação empresarial." : result === "INSUFFICIENT_CREDITS" ? "Saldo de créditos insuficiente para esta campanha." : result === "CAMPAIGN_PAYMENT_ALREADY_ISSUED" ? "Já existe uma cobrança activa para esta campanha." : result === "payment-error" ? "Não foi possível emitir a cobrança da campanha." : result === "partner-cancel-success" ? "Campanha de parceiro cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "MPESA_REFUND_REFERENCE_REQUIRED" ? "Introduza a referência do reembolso M-Pesa já executado fora da plataforma." : result === "CAMPAIGN_NOT_SETTLED" ? "Só é possível estornar campanhas efectivamente pagas." : result === "CAMPAIGN_ALREADY_REFUNDED" ? "Esta campanha já foi estornada." : result === "CANCELLATION_NOT_ALLOWED" ? "Só é possível cancelar campanhas futuras ainda não iniciadas." : result === "partner-cancel-error" ? "Não foi possível cancelar/estornar a campanha." : result === "cancel-success" ? "Campanha cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "mpesa-refund-required" ? "Campanha M-Pesa activa: o reembolso externo deve ser executado e registado antes do cancelamento." : result === "cancel-not-allowed" ? "Cancelamento não permitido: campanha já iniciada, expirada ou num estado não elegível." : "Não foi possível actualizar o estado. Confirme permissões e elegibilidade."}</div> : null}
     <section className={styles.metrics} aria-label="Resumo do módulo">
       <article className={styles.metric}><span>Campanhas empresariais</span><strong>{allBusiness.length}</strong><small>Até 100 registos carregados</small></article>
       <article className={styles.metric}><span>Campanhas de parceiros</span><strong>{allPartner.length}</strong><small>Até 100 registos carregados</small></article>
@@ -146,6 +146,13 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
                   <small>Por créditos, a conta Parceiro precisa de associação empresarial e saldo suficiente. Por M-Pesa, a campanha só activa após confirmação do operador.</small>
                 </form> : null;
           })() : null}
+          {c.table === "partner" && c.payment?.[0]?.status === "PAID" && c.starts_at && new Date(c.starts_at).getTime() > now.getTime() && ["APPROVED","ACTIVE","PAUSED"].includes(c.status ?? "") ? <form action={cancelPartnerAdCampaign} className={styles.cancelForm}>
+            <input type="hidden" name="id" value={c.id}/>
+            <label><span>Motivo do cancelamento</span><Input name="reason" minLength={8} maxLength={1000} required placeholder="Motivo (mín. 8 caracteres)"/></label>
+            {c.payment?.[0]?.payment_method === "MPESA" ? <label><span>Referência do reembolso M-Pesa</span><Input name="external_refund_reference" minLength={4} maxLength={160} required placeholder="Referência da transferência de reembolso"/></label> : null}
+            <button className="btn" type="submit">Cancelar campanha e estornar</button>
+            <small>Créditos são devolvidos automaticamente. Para M-Pesa, o reembolso externo deve ser executado antes de registar a referência.</small>
+          </form> : null}
           {c.table === "business" && ["PENDING","ACTIVE"].includes(c.status ?? "") && c.starts_at && new Date(c.starts_at).getTime() > now.getTime() ? <form action={cancelBusinessPromotion} className={styles.cancelForm}><input type="hidden" name="id" value={c.id}/><label><span>Motivo do cancelamento</span><Input name="reason" minLength={8} maxLength={500} required placeholder="Motivo (mín. 8 caracteres)"/></label><button className="btn" type="submit">Cancelar campanha e estornar créditos</button><small>Campanhas pagas por créditos serão estornadas automaticamente. Campanhas M-Pesa activas exigem reembolso externo prévio.</small></form> : null}
         {c.target_url ? <p className={styles.destination}>Destino: <a href={c.target_url} target="_blank" rel="noreferrer">{c.target_url}</a></p> : null}
           <form action={c.table === "business" ? moderateBusinessPromotion : moderatePartnerCampaign} className={styles.moderationForm}>
