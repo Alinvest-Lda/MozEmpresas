@@ -18,6 +18,23 @@ function value(data: FormData, key: string) {
   return String(data.get(key) ?? "").trim();
 }
 
+
+type PartnerLinkIds = { contractId?: string; engagementId?: string; campaignId?: string; documentId?: string };
+async function partnerLinksValid(supabase: any, accountId: string, links: PartnerLinkIds) {
+  const checks: Array<[string,string]> = [
+    ...(links.contractId ? [["partner_contracts",links.contractId] as [string,string]] : []),
+    ...(links.engagementId ? [["partner_service_engagements",links.engagementId] as [string,string]] : []),
+    ...(links.campaignId ? [["partner_ad_campaigns",links.campaignId] as [string,string]] : []),
+    ...(links.documentId ? [["financial_documents",links.documentId] as [string,string]] : []),
+  ];
+  for (const [table,id] of checks) {
+    const {data,error}=await supabase.from(table).select("partner_account_id,account_id").eq("id",id).maybeSingle();
+    const owner=data?.partner_account_id ?? data?.account_id;
+    if(error || owner!==accountId) return false;
+  }
+  return true;
+}
+
 export async function createInstitutionalPartner(formData: FormData) {
   const parsed = z.object({
     name: z.string().min(2).max(180),
@@ -86,6 +103,7 @@ export async function createPartnerEngagement(formData: FormData) {
   });
   if (!parsed.success || (parsed.data.contract_id && !uuid.safeParse(parsed.data.contract_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
   const { supabase,user } = await adminContext();
+  if(parsed.data.contract_id && !(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id}))) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
   const { error } = await supabase.from("partner_service_engagements").insert({
     account_id:parsed.data.account_id, contract_id:parsed.data.contract_id || null,
     service_type:parsed.data.service_type, request_source:parsed.data.request_source,
@@ -107,6 +125,7 @@ export async function issuePartnerInvoice(formData: FormData) {
   if (!parsed.success || (parsed.data.contract_id && !uuid.safeParse(parsed.data.contract_id).success) ||
       (parsed.data.engagement_id && !uuid.safeParse(parsed.data.engagement_id).success) || (parsed.data.campaign_id && !uuid.safeParse(parsed.data.campaign_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=invoice");
   const {supabase,user}=await adminContext();
+  if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id}))) redirect("/dashboard/admin/parceiros/gestao?error=invoice");
   const {error}=await supabase.from("financial_documents").insert({
     partner_account_id:parsed.data.account_id,business_id:null,user_id:user!.id,issued_by_internal_user_id:user!.id,
     contract_id:parsed.data.contract_id || null,engagement_id:parsed.data.engagement_id || null,campaign_id:parsed.data.campaign_id || null,
@@ -131,6 +150,7 @@ export async function recordPartnerBankTransfer(formData: FormData) {
   if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id,parsed.data.campaign_id,parsed.data.document_id].some(x=>x && !uuid.safeParse(x).success))
     redirect("/dashboard/admin/parceiros/gestao?error=transfer");
   const {supabase,user}=await adminContext();
+  if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id,documentId:parsed.data.document_id}))) redirect("/dashboard/admin/parceiros/gestao?error=transfer");
   const {error}=await supabase.from("financial_payments").insert({
     partner_account_id:parsed.data.account_id,business_id:null,user_id:user!.id,
     contract_id:parsed.data.contract_id || null,engagement_id:parsed.data.engagement_id || null,campaign_id:parsed.data.campaign_id || null,
@@ -196,6 +216,7 @@ export async function createPartnerReportDelivery(formData: FormData) {
     (["READY","DELIVERED"].includes(parsed.data.status)&&!parsed.data.storage_path&&!parsed.data.external_url))
     redirect("/dashboard/admin/parceiros/gestao?error=report");
   const {supabase,user}=await adminContext();
+  if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id}))) redirect("/dashboard/admin/parceiros/gestao?error=report");
   const recipients=(parsed.data.recipient_emails||"").split(/[;,\\n]/).map(x=>x.trim()).filter(Boolean);
   if(recipients.some(x=>!z.string().email().safeParse(x).success)) redirect("/dashboard/admin/parceiros/gestao?error=report");
   const {error}=await supabase.from("partner_report_deliveries").insert({
@@ -220,6 +241,7 @@ export async function createBackofficePartnerCampaign(formData: FormData) {
       ends_at:value(formData,"ends_at")||undefined,price_mzn:value(formData,"price_mzn")});
   if(!parsed.success || (parsed.data.contract_id&&!uuid.safeParse(parsed.data.contract_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
   const {supabase,user}=await adminContext();
+  if(parsed.data.contract_id && !(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id}))) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
   const {data:product,error:productError}=await supabase.from("partner_ad_products")
     .select("id,price_mzn,active,surface,slot,duration_days").eq("id",parsed.data.product_id).maybeSingle();
   if(productError||!product?.active) redirect("/dashboard/admin/parceiros/gestao?error=campaign-product");
