@@ -11,6 +11,7 @@ const errorMessages: Record<string, string> = {
   validation: "O email ou o prazo indicado não é válido. Reveja os campos e tente novamente.",
   forbidden: "Apenas o Super Admin pode criar acessos dedicados de parceiros.",
   create: "Não foi possível criar o acesso. Verifique as permissões e tente novamente.",
+  "portal-disabled": "A conta seleccionada não está activa ou não permite acesso ao portal.",
 };
 
 export default async function PartnerAccessAdmin({ searchParams }: { searchParams: Promise<{ created?: string; access?: string; error?: string; status?: string; billing?: string }> }) {
@@ -20,7 +21,7 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
   const supabase = await (await import("@/lib/supabase/server")).createClient();
   const { data: grantsData, error: grantsError } = await supabase.rpc("partner_access_list");
   const [{data: partnerAccounts},{data: businesses}] = await Promise.all([
-    supabase.from("partner_accounts").select("id,name,status,business_id").order("name").limit(200),
+    supabase.from("partner_accounts").select("id,name,status,business_id,portal_enabled").order("name").limit(200),
     supabase.from("businesses").select("id,name").is("archived_at",null).order("name").limit(500)
   ]);
   const grants = (Array.isArray(grantsData) ? grantsData : []) as Array<{
@@ -85,6 +86,14 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
               <p>Defina o email do parceiro e o prazo para activar a conta.</p>
             </div>
             <form action={createPartnerAccess} className={styles.form}>
+              <label className={styles.field} htmlFor="partner-account">
+                <span>Associar a uma entidade existente (opcional)</span>
+                <Select id="partner-account" name="accountId" defaultValue="">
+                  <option value="">Criar uma nova conta Parceiro de auto-serviço</option>
+                  {(partnerAccounts??[]).filter((account:any)=>account.portal_enabled && account.status==="ACTIVE").map((account:any)=><option key={account.id} value={account.id}>{account.name}</option>)}
+                </Select>
+                <small>Se seleccionar uma entidade, o utilizador será associado a essa conta. Entidades sem acesso ao portal não aparecem nesta lista.</small>
+              </label>
               <label className={styles.field} htmlFor="partner-email">
                 <span>Email do parceiro</span>
                 <Input id="partner-email" name="email" type="email" placeholder="nome@organizacao.co.mz" autoComplete="email" required />
