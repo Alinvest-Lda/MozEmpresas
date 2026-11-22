@@ -52,6 +52,7 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
             <p>Crie acessos dedicados para organizações parceiras e partilhe um convite seguro com prazo definido.</p>
           </div>
           <div className={styles.heroBadge}><span className={styles.badgeIcon} aria-hidden="true">↗</span><strong>Acesso controlado</strong><small>Convite individual por email</small></div>
+          <a className={styles.heroBadge} href="/dashboard/admin/parceiros/gestao"><strong>Gestão institucional</strong><small>Contratos · execução · facturação · relatórios →</small></a>
           <span className={styles.heroMark} aria-hidden="true">P</span>
         </header>
 
