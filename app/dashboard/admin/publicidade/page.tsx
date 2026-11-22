@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { Input, Select } from "@/components/ui";
 import { moderateBusinessPromotion, moderatePartnerCampaign, updateAdvertisingRequest, cancelBusinessPromotion, issuePartnerAdPayment, cancelPartnerAdCampaign } from "@/lib/admin/advertising-actions";
+import { updatePartnerAdCreditPrice } from "@/lib/admin/partner-billing-actions";
 import styles from "./publicidade.module.css";
 
 type Campaign = {
@@ -69,6 +70,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at").order("created_at", { ascending: false }).limit(100),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "IMPRESSION"),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "CLICK"),
+    supabase.from("partner_ad_products").select("id,name,price_mzn,credit_price,active").order("name").limit(100),
   ]);
 
   const allBusiness = (businessCampaigns ?? []) as Campaign[];
@@ -112,7 +114,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
       <div className={styles.heroSummary}><span className={styles.summaryLabel}>A aguardar atenção</span><strong>{pendingCount}</strong><span className={styles.summaryCaption}>Pedidos e campanhas por rever</span><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Até 100 registos por origem em cada consulta.</span></div>
       <span className={styles.heroDecoration} aria-hidden="true">↗</span>
     </header>
-    {result ? <div className={`${styles.resultNotice} ${result === "error" ? styles.resultError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Estado actualizado com sucesso." : result === "payment-issued" ? "Cobrança emitida. Referência: " + (params.reference ?? "") + (params.method === "CREDITS" ? " · Créditos debitados e campanha activada." : " · Aguarda confirmação M-Pesa.") : result === "PARTNER_CREDIT_WALLET_NOT_LINKED" ? "Esta conta de parceiro ainda não está associada a uma empresa com carteira de créditos. Utilize M-Pesa ou configure a associação empresarial." : result === "INSUFFICIENT_CREDITS" ? "Saldo de créditos insuficiente para esta campanha." : result === "CAMPAIGN_PAYMENT_ALREADY_ISSUED" ? "Já existe uma cobrança activa para esta campanha." : result === "payment-error" ? "Não foi possível emitir a cobrança da campanha." : result === "partner-cancel-success" ? "Campanha de parceiro cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "MPESA_REFUND_REFERENCE_REQUIRED" ? "Introduza a referência do reembolso M-Pesa já executado fora da plataforma." : result === "CAMPAIGN_NOT_SETTLED" ? "Só é possível estornar campanhas efectivamente pagas." : result === "CAMPAIGN_ALREADY_REFUNDED" ? "Esta campanha já foi estornada." : result === "CANCELLATION_NOT_ALLOWED" ? "Só é possível cancelar campanhas futuras ainda não iniciadas." : result === "partner-cancel-error" ? "Não foi possível cancelar/estornar a campanha." : result === "cancel-success" ? "Campanha cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "mpesa-refund-required" ? "Campanha M-Pesa activa: o reembolso externo deve ser executado e registado antes do cancelamento." : result === "cancel-not-allowed" ? "Cancelamento não permitido: campanha já iniciada, expirada ou num estado não elegível." : "Não foi possível actualizar o estado. Confirme permissões e elegibilidade."}</div> : null}
+    {result ? <div className={`${styles.resultNotice} ${result === "error" ? styles.resultError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Estado actualizado com sucesso." : result === "payment-issued" ? "Cobrança emitida. Referência: " + (params.reference ?? "") + (params.method === "CREDITS" ? " · Créditos debitados e campanha activada." : " · Aguarda confirmação M-Pesa.") : result === "PARTNER_CREDIT_WALLET_NOT_LINKED" ? "Esta conta de parceiro ainda não está associada a uma empresa com carteira de créditos. Utilize M-Pesa ou configure a associação empresarial." : result === "INSUFFICIENT_CREDITS" ? "Saldo de créditos insuficiente para esta campanha." : result === "CAMPAIGN_PAYMENT_ALREADY_ISSUED" ? "Já existe uma cobrança activa para esta campanha." : result === "payment-error" ? "Não foi possível emitir a cobrança da campanha." : result === "partner-cancel-success" ? "Campanha de parceiro cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "MPESA_REFUND_REFERENCE_REQUIRED" ? "Introduza a referência do reembolso M-Pesa já executado fora da plataforma." : result === "CAMPAIGN_NOT_SETTLED" ? "Só é possível estornar campanhas efectivamente pagas." : result === "CAMPAIGN_ALREADY_REFUNDED" ? "Esta campanha já foi estornada." : result === "CANCELLATION_NOT_ALLOWED" ? "Só é possível cancelar campanhas futuras ainda não iniciadas." : result === "partner-cancel-error" ? "Não foi possível cancelar/estornar a campanha." : result === "credit-price-saved" ? "Preço em créditos actualizado." : result === "credit-price-invalid" ? "Indique um preço em créditos inteiro e superior a zero, ou deixe vazio para desactivar." : result === "credit-price-error" ? "Não foi possível actualizar o preço em créditos." : result === "PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED" ? "Este formato ainda não tem preço em créditos configurado." : result === "cancel-success" ? "Campanha cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "mpesa-refund-required" ? "Campanha M-Pesa activa: o reembolso externo deve ser executado e registado antes do cancelamento." : result === "cancel-not-allowed" ? "Cancelamento não permitido: campanha já iniciada, expirada ou num estado não elegível." : "Não foi possível actualizar o estado. Confirme permissões e elegibilidade."}</div> : null}
     <section className={styles.metrics} aria-label="Resumo do módulo">
       <article className={styles.metric}><span>Campanhas empresariais</span><strong>{allBusiness.length}</strong><small>Até 100 registos carregados</small></article>
       <article className={styles.metric}><span>Campanhas de parceiros</span><strong>{allPartner.length}</strong><small>Até 100 registos carregados</small></article>
@@ -121,6 +123,21 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     </section>
     <p className={styles.dataNote}>Eventos registados na plataforma: {fmtNumber(impressionEvents)} impressões e {fmtNumber(clickEvents)} cliques. São contagens separadas dos contadores por campanha.</p>
     {error ? <div className={styles.resultNotice + " " + styles.resultError} role="alert">Uma ou mais consultas não foram concluídas. Os registos que não carregaram podem estar ocultos; confirme as permissões e a estrutura da base de dados.</div> : null}
+    <section className={styles.section}>
+      <div className={styles.sectionHead}><div><span className={styles.sectionKicker}>Catálogo comercial</span><h2>Preços de publicidade para parceiros</h2><p>O preço em créditos é independente do preço directo em MZN, seguindo a mesma lógica de preços diferenciados já usada nos produtos publicitários empresariais. Não se presume equivalência de 1 MZN por crédito.</p></div></div>
+      {partnerProductsError ? <div className={styles.resultNotice + " " + styles.resultError}>Não foi possível carregar o catálogo de espaços publicitários.</div> : <div className={styles.campaignList}>
+        {(partnerProducts??[]).map((product:any)=><article className={styles.campaignCard} key={product.id}>
+          <div className={styles.campaignTop}><div className={styles.campaignMain}><span className={styles.campaignKicker}>Produto Parceiro · {product.active?"Activo":"Inactivo"}</span><h3>{product.name}</h3></div><span className={styles.status}>{product.price_mzn==null?"Preço sob proposta":fmtNumber(product.price_mzn)+" MZN"}</span></div>
+          <form action={updatePartnerAdCreditPrice} className={styles.moderationForm}>
+            <input type="hidden" name="product_id" value={product.id}/>
+            <label><span>Preço em créditos</span><Input name="credit_price" type="number" min={1} step={1} defaultValue={product.credit_price??""} placeholder="Não configurado"/></label>
+            <button className="btn primary" type="submit">Guardar preço</button>
+          </form>
+          <small>Deixe vazio para impedir pagamentos deste formato por créditos. O pagamento M-Pesa continua disponível.</small>
+        </article>)}
+        {!partnerProducts?.length ? <div className={styles.emptyState}>Não existem produtos de publicidade para parceiros.</div> : null}
+      </div>}
+    </section>
     <section className={styles.section}>
       <div className={styles.sectionHead}><div><span className={styles.sectionKicker}>Gestão operacional</span><h2>Fila de publicidade</h2><p>Pesquise anunciantes, filtre por origem, estado e prazo e actualize os estados permitidos em cada fluxo.</p></div><span className={styles.resultsSummary}><strong>{filteredCampaigns.length + filteredRequests.length}</strong><span>resultados</span></span></div>
       <form className={styles.filters} method="get">
