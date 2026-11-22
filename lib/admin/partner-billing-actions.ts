@@ -25,3 +25,21 @@ export async function linkPartnerBusiness(formData: FormData) {
   revalidatePath("/dashboard/admin/publicidade");
   redirect("/dashboard/admin/parceiros?billing=success");
 }
+
+export async function updatePartnerAdCreditPrice(formData: FormData) {
+  const productId=String(formData.get("product_id")||"");
+  const raw=String(formData.get("credit_price")||"").trim();
+  const creditPrice=raw===""?null:Number(raw);
+  if(!z.string().uuid().safeParse(productId).success || (creditPrice!==null && (!Number.isInteger(creditPrice)||creditPrice<=0))) {
+    redirect("/dashboard/admin/publicidade?result=credit-price-invalid");
+  }
+  const {supabase,authorized}=await getSuperAdminContext();
+  if(!authorized) redirect("/login?next=/dashboard/admin/publicidade");
+  const {error}=await supabase.rpc("admin_update_partner_ad_product_credit_price",{
+    p_product_id:productId,p_credit_price:creditPrice,
+  });
+  if(error) redirect("/dashboard/admin/publicidade?result=credit-price-error");
+  revalidatePath("/dashboard/admin/publicidade");
+  revalidatePath("/parceiro/publicidade");
+  redirect("/dashboard/admin/publicidade?result=credit-price-saved");
+}
