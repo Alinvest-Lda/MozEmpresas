@@ -18,7 +18,7 @@ type AdvertisingRequest = {
   placement: string | null; package_name: string | null; status: string | null;
   starts_at: string | null; ends_at: string | null; created_at: string | null;
 };
-const promotionStatuses = ["PENDING", "ACTIVE", "PAUSED", "EXPIRED", "CANCELLED"];
+const promotionStatuses = ["PENDING", "ACTIVE", "PAUSED", "EXPIRED"];
 const partnerStatuses = ["REQUESTED", "PENDING", "UNDER_REVIEW", "ACTIVE", "RUNNING", "PUBLISHED"];
 const requestStatuses = ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT", "PAID", "APPROVED", "REJECTED", "CANCELLED"];
 const statusLabels: Record<string, string> = {
