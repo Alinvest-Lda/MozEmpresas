@@ -520,3 +520,13 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Migration aplicada no Supabase: `20261122110210_f322_harden_public_definer_search_paths`.
 - O advisor continua a listar as quatro funções por serem `SECURITY DEFINER` acessíveis a anon; esse alerta é esperado enquanto os endpoints públicos forem mantidos. O hardening reduz o risco de object shadowing, mas não substitui validação de parâmetros, rate limiting e testes de abuso.
 - Ainda não foi executado teste transaccional de compra, entrega ou cancelamento de campanha com pagamentos reais. A validação desta fase cobre configuração de segurança e metadados, não a operação ponta-a-ponta.
+
+## F3.23 — Concorrência e capacidade de campanhas de parceiros (22/11/2026)
+
+- Corrigida a verificação concorrente de capacidade em `partner_ad_request`: a função bloqueia agora a linha do produto com `FOR UPDATE` antes de contar reservas/campanhas sobrepostas e inserir o novo pedido.
+- Pedidos simultâneos para o mesmo produto passam a serializar no mesmo registo de produto, evitando ultrapassar a capacidade por corrida entre transacções.
+- O payload de segmentação passou a aceitar apenas arrays JSON com máximo de 20 elementos; os tipos permitidos e o limite de 160 caracteres por valor foram preservados.
+- Mantida a autorização por conta de parceiro e papel owner/manager, sem expor execução anónima.
+- Verificação pós-migration: definição contém o bloqueio de linha e limite de segmentação; `SECURITY DEFINER` mantido com `search_path=public, pg_temp`; EXECUTE anon=false e authenticated=true.
+- Migration aplicada no Supabase: `20261122111500_f323_partner_ad_capacity_lock_and_target_limits`.
+- Não foi simulada concorrência com múltiplas sessões reais; a correcção foi verificada por catálogo/definição da função. Teste de carga concorrente permanece na validação integrada.
