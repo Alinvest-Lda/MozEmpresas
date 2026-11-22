@@ -42,7 +42,7 @@ export default async function InstitutionalPartnersPage({searchParams}:{searchPa
     supabase.rpc("admin_list_platform_staff"),
   ]);
   const p=partners??[], c=contracts??[], e=engagements??[], pay=payments??[], docs=documents??[], contactsRows=contacts??[], reportRows=reports??[], financeRows=contractFinance??[], products=adProducts??[], campaignRows=campaigns??[];
-  const staffUsers=(staff??[]).map(x=>({id:x.user_id,name:x.full_name||"Utilizador interno",role:x.role}));
+  const staffUsers=(staff??[]).map((x:{user_id:string;full_name:string;role:string})=>({id:x.user_id,name:x.full_name||"Utilizador interno",role:x.role}));
   const partnerName=(id:string)=>p.find(x=>x.id===id)?.name??"Parceiro";
   const staffName=(id:string|null)=>staffUsers.find(x=>x.id===id)?.name??"Não atribuído";
   return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
