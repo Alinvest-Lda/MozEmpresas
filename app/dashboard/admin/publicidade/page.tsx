@@ -64,6 +64,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     { data: partnerCampaigns, error: partnerError },
     { data: requests, error: requestError },
     { count: impressionEvents }, { count: clickEvents },
+    { data: partnerProducts, error: partnerProductsError },
   ] = await Promise.all([
     supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,impressions_count,clicks_count,target_url,business:business_id(name)").order("created_at", { ascending: false }).limit(100),
     supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)").order("created_at", { ascending: false }).limit(100),
@@ -106,7 +107,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const totalImpressions = filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
   const totalClicks = filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
   const pendingCount = allBusiness.filter(c => c.status === "PENDING").length + allPartner.filter(c => ["REQUESTED", "PENDING", "UNDER_REVIEW"].includes(c.status ?? "")).length + allRequests.filter(r => ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT"].includes(r.status ?? "")).length;
-  const error = businessError || partnerError || requestError;
+  const error = businessError || partnerError || requestError || partnerProductsError;
 
   return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
     <header className={styles.hero}>
