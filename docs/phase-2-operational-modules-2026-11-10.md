@@ -448,3 +448,14 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 
 - F3.13 hardening adicional: removida a opção CANCELLED do selector de moderação e da allowlist da Server Action. Cancelamento não pode mais ser feito por alteração de estado simples, contornando o fluxo de estorno/auditoria; usa exclusivamente RPC de cancelamento.
 - Commits de hardening: `bebdf1f` e `698c152`.
+
+## F3.15 — Reconciliação financeira integrada (22/11/2026)
+
+- Criada a RPC `admin_financial_operations_overview()`, exclusivamente para consulta administrativa e com verificação server-side de membro activo `super_admin`.
+- O resumo consolida pagamentos por estado/método, documentos por estado/tipo, pedidos de créditos, campanhas publicitárias, saldos de carteiras e estornos registados.
+- Indicadores de divergência: saldo da carteira vs. ledger, pagamento/documento com estados incompatíveis, compra de créditos paga sem movimento PURCHASE, ordens de serviço com inconsistência de pagamento e callbacks que exigem revisão.
+- A RPC foi aplicada por migration, com EXECUTE revogado de PUBLIC/anon e concedido a authenticated/service_role; o corpo valida explicitamente o Super Admin.
+- A página `/dashboard/admin/monetizacao` consome a RPC e apresenta a reconciliação consolidada. Em caso de erro, não substitui dados por zeros: apresenta indisponibilidade.
+- Teste read-only executado em transacção com contexto de Super Admin e rollback: a RPC devolveu JSON válido. Resultado actual: sem carteiras, pagamentos, documentos, compras de créditos ou campanhas; zero divergências nos indicadores calculáveis. Isto não equivale a teste transaccional com movimentos reais.
+- Restrições confirmadas no schema: pagamentos aceitam `REFUNDED`, documentos aceitam `VOID`, ledger aceita `REFUND`. Não foi necessária alteração desses estados.
+- Deploy automático do commit da interface está em curso; só considerar publicado após estado Vercel `READY`.
