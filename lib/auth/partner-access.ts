@@ -25,6 +25,7 @@ export async function requireSuperAdmin(nextPath = "/admin/parceiros") {
 const accessSchema = z.object({
   email: z.string().trim().email(),
   expiresInDays: z.coerce.number().int().min(1).max(30),
+  accountId: z.string().uuid().optional().or(z.literal("")),
 });
 
 export async function createPartnerAccess(formData: FormData): Promise<void> {
@@ -32,6 +33,7 @@ export async function createPartnerAccess(formData: FormData): Promise<void> {
   const parsed = accessSchema.safeParse({
     email: formData.get("email"),
     expiresInDays: formData.get("expiresInDays") || 7,
+    accountId: String(formData.get("accountId") || ""),
   });
   if (!parsed.success) redirect("/admin/parceiros?error=validation");
 
@@ -43,10 +45,12 @@ export async function createPartnerAccess(formData: FormData): Promise<void> {
     p_email: parsed.data.email,
     p_token_hash: hashToken(token),
     p_expires_at: expiresAt,
+    p_account_id: parsed.data.accountId || null,
   });
 
   if (error) {
     if (error.message.includes("FORBIDDEN")) redirect("/admin/parceiros?error=forbidden");
+    if (error.message.includes("PARTNER_PORTAL_DISABLED_OR_UNAVAILABLE")) redirect("/admin/parceiros?error=portal-disabled");
     redirect("/admin/parceiros?error=create");
   }
 
