@@ -4,7 +4,7 @@ import { requirePartnerAccount } from "@/lib/auth/access";
 import { PartnerPage,PartnerSection,PartnerMetric,PartnerEmpty } from "@/components/partner-workspace";
 
 const statusLabel=(status:string)=>{
-  const map:Record<string,string>={ACTIVE:"Activa",RUNNING:"Em execução",PUBLISHED:"Publicada",REQUESTED:"Solicitada",PENDING:"Pendente",UNDER_REVIEW:"Em análise",COMPLETED:"Concluída",CLOSED:"Encerrada"};
+  const map:Record<string,string>={ACTIVE:"Activa",RUNNING:"Em execução",PUBLISHED:"Publicada",REQUESTED:"Solicitada",PENDING:"Pendente",UNDER_REVIEW:"Em análise",COMPLETED:"Concluída",CLOSED:"Encerrada",APPROVED:"Aprovada"};
   return map[status]||status||"—";
 };
 
@@ -23,7 +23,7 @@ export default async function PartnerAds(){
   const pending=(campaigns??[]).filter((x:any)=>["REQUESTED","PENDING","UNDER_REVIEW"].includes(x.status)).length;
   const impressions=measuredCampaigns.reduce((sum:number,x:any)=>sum+x.impressions,0);
   const clicks=measuredCampaigns.reduce((sum:number,x:any)=>sum+x.clicks,0);
-  const investment=(campaigns??[]).reduce((sum:number,x:any)=>sum+Number(x.price_mzn??0),0);
+  const investment=measuredCampaigns.reduce((sum:number,x:any)=>sum+(x.payment?.status==="PAID"?Number(x.payment.amount_mzn??0):0),0);
   const ctr=impressions>0?clicks/impressions*100:0;
   const money=(value:number)=>value.toLocaleString("pt-MZ",{maximumFractionDigits:2})+" MZN";
 
@@ -77,7 +77,7 @@ export default async function PartnerAds(){
       description="Acompanhe investimento contratado, exposição e interacções registadas. O retorno financeiro só será calculado quando a plataforma registar conversões atribuíveis."
     >
       <div className="partner-metrics-grid">
-        <PartnerMetric label="Investimento registado" value={money(investment)} detail="Soma dos valores das campanhas"/>
+        <PartnerMetric label="Investimento liquidado" value={money(investment)} detail="Pagamentos efectivamente confirmados"/>
         <PartnerMetric label="Impressões" value={impressions.toLocaleString("pt-MZ")} detail="Exibições contabilizadas"/>
         <PartnerMetric label="Cliques" value={clicks.toLocaleString("pt-MZ")} detail="Interacções contabilizadas"/>
         <PartnerMetric label="CTR" value={impressions>0?ctr.toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"} detail="Cliques ÷ impressões" featured/>
