@@ -89,7 +89,7 @@ export async function issuePartnerAdPayment(formData: FormData) {
       "PARTNER_CREDIT_WALLET_NOT_LINKED", "PARTNER_CREDIT_WALLET_NOT_FOUND",
       "INSUFFICIENT_CREDITS", "CAMPAIGN_PAYMENT_ALREADY_ISSUED",
       "CAMPAIGN_NOT_PAYABLE", "CAMPAIGN_PRICE_NOT_CONFIGURED",
-      "PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED", "INVALID_CAMPAIGN_PRICE",
+      "PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED", "INVALID_CAMPAIGN_PRICE", "FIXED_PRODUCT_PRICE_CANNOT_BE_OVERRIDDEN",
     ].find((code) => error.message.includes(code));
     redirect("/dashboard/admin/publicidade?result=" + (known || "payment-error"));
   }
