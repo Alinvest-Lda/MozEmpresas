@@ -1,0 +1,134 @@
+
+alter table public.partner_accounts
+  add column if not exists operating_model text not null default 'SELF_SERVICE',
+  add column if not exists portal_enabled boolean not null default true,
+  add column if not exists legal_name text,
+  add column if not exists tax_id text,
+  add column if not exists billing_address text,
+  add column if not exists billing_city text,
+  add column if not exists billing_country text not null default 'Moçambique',
+  add column if not exists internal_notes text;
+alter table public.partner_accounts drop constraint if exists partner_accounts_operating_model_check;
+alter table public.partner_accounts add constraint partner_accounts_operating_model_check check (operating_model in ('SELF_SERVICE','MANAGED','STRATEGIC','HYBRID'));
+
+create table if not exists public.partner_contacts (
+ id uuid primary key default gen_random_uuid(), account_id uuid not null references public.partner_accounts(id) on delete cascade,
+ full_name text not null, role_title text, email text, phone text, is_primary boolean not null default false,
+ is_billing_contact boolean not null default false, receives_reports boolean not null default true, active boolean not null default true,
+ notes text, created_by uuid not null references auth.users(id), created_at timestamptz not null default now(),
+ updated_at timestamptz not null default now(), constraint partner_contacts_name_check check(length(trim(full_name)) between 2 and 160),
+ constraint partner_contacts_reachability_check check(email is not null or phone is not null)
+);
+create unique index if not exists partner_contacts_one_primary_per_account on public.partner_contacts(account_id) where is_primary and active;
+create index if not exists partner_contacts_account_active_idx on public.partner_contacts(account_id,active);
+
+create table if not exists public.partner_contracts (
+ id uuid primary key default gen_random_uuid(), account_id uuid not null references public.partner_accounts(id) on delete restrict,
+ contract_code text not null, title text not null, contract_type text not null, status text not null default 'DRAFT',
+ starts_on date, ends_on date, contracted_amount_mzn numeric(14,2) not null default 0, currency text not null default 'MZN',
+ billing_frequency text not null default 'ONE_OFF', payment_terms text, billing_notes text, signed_document_path text,
+ created_by uuid not null references auth.users(id), approved_by uuid references auth.users(id), approved_at timestamptz,
+ created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
+ constraint partner_contracts_code_unique unique(account_id,contract_code),
+ constraint partner_contracts_type_check check(contract_type in ('STRATEGIC_PARTNERSHIP','CAMPAIGN_PACKAGE','SERVICE_ORDER','REPORTING','RETAINER','OTHER')),
+ constraint partner_contracts_status_check check(status in ('DRAFT','ACTIVE','SUSPENDED','COMPLETED','TERMINATED')),
+ constraint partner_contracts_billing_frequency_check check(billing_frequency in ('ONE_OFF','MONTHLY','QUARTERLY','SEMI_ANNUAL','ANNUAL','MILESTONE')),
+ constraint partner_contracts_amount_check check(contracted_amount_mzn>=0),
+ constraint partner_contracts_dates_check check(ends_on is null or starts_on is null or ends_on>=starts_on)
+);
+create index if not exists partner_contracts_account_status_idx on public.partner_contracts(account_id,status);
+create index if not exists partner_contracts_dates_idx on public.partner_contracts(starts_on,ends_on);
+
+create table if not exists public.partner_service_engagements (
+ id uuid primary key default gen_random_uuid(), account_id uuid not null references public.partner_accounts(id) on delete restrict,
+ contract_id uuid references public.partner_contracts(id) on delete set null,
+ campaign_id uuid references public.partner_ad_campaigns(id) on delete set null,
+ service_type text not null, request_source text not null default 'BACKOFFICE', title text not null, description text,
+ status text not null default 'RECEIVED', assigned_commercial_user_id uuid references auth.users(id),
+ assigned_operations_user_id uuid references auth.users(id), agreed_amount_mzn numeric(14,2), currency text not null default 'MZN',
+ received_at timestamptz not null default now(), due_at timestamptz, started_at timestamptz, delivered_at timestamptz,
+ closed_at timestamptz, created_by uuid not null references auth.users(id), created_at timestamptz not null default now(),
+ updated_at timestamptz not null default now(),
+ constraint partner_engagement_service_type_check check(service_type in ('ADVERTISING','CAMPAIGN_MANAGEMENT','MARKET_INTELLIGENCE','REPORTING','LEAD_GENERATION','PROMOTION','STRATEGIC_PARTNERSHIP','OTHER')),
+ constraint partner_engagement_source_check check(request_source in ('PORTAL','EMAIL','MEETING','CONTRACT','PHONE','BACKOFFICE','OTHER')),
+ constraint partner_engagement_status_check check(status in ('RECEIVED','SCOPING','AWAITING_APPROVAL','APPROVED','IN_PROGRESS','UNDER_REVIEW','DELIVERED','CLOSED','ON_HOLD','CANCELLED')),
+ constraint partner_engagement_amount_check check(agreed_amount_mzn is null or agreed_amount_mzn>=0),
+ constraint partner_engagement_dates_check check(due_at is null or due_at>=received_at)
+);
+create index if not exists partner_engagement_account_status_idx on public.partner_service_engagements(account_id,status,received_at desc);
+create index if not exists partner_engagement_contract_idx on public.partner_service_engagements(contract_id);
+create index if not exists partner_engagement_assignees_idx on public.partner_service_engagements(assigned_commercial_user_id,assigned_operations_user_id);
+
+create table if not exists public.partner_report_deliveries (
+ id uuid primary key default gen_random_uuid(), account_id uuid not null references public.partner_accounts(id) on delete restrict,
+ contract_id uuid references public.partner_contracts(id) on delete set null,
+ engagement_id uuid references public.partner_service_engagements(id) on delete set null,
+ campaign_id uuid references public.partner_ad_campaigns(id) on delete set null,
+ report_type text not null default 'PERFORMANCE', title text not null, period_start date, period_end date,
+ storage_path text, external_url text, recipient_emails text[] not null default '{}',
+ delivery_channel text not null default 'EMAIL', status text not null default 'DRAFT', delivered_at timestamptz,
+ delivered_by uuid references auth.users(id), delivery_reference text, notes text,
+ created_by uuid not null references auth.users(id), created_at timestamptz not null default now(),
+ constraint partner_report_type_check check(report_type in ('PERFORMANCE','FINANCIAL','MARKET_INTELLIGENCE','CAMPAIGN','EXECUTIVE','OTHER')),
+ constraint partner_report_channel_check check(delivery_channel in ('EMAIL','PORTAL','MEETING','SHARED_LINK','OTHER')),
+ constraint partner_report_status_check check(status in ('DRAFT','READY','DELIVERED','FAILED','WITHDRAWN')),
+ constraint partner_report_period_check check(period_end is null or period_start is null or period_end>=period_start),
+ constraint partner_report_asset_check check(storage_path is not null or external_url is not null or status in ('DRAFT','WITHDRAWN'))
+);
+create index if not exists partner_reports_account_delivered_idx on public.partner_report_deliveries(account_id,delivered_at desc);
+create index if not exists partner_reports_engagement_idx on public.partner_report_deliveries(engagement_id);
+
+alter table public.partner_ad_campaigns
+ add column if not exists contract_id uuid references public.partner_contracts(id) on delete set null,
+ add column if not exists request_source text not null default 'PORTAL',
+ add column if not exists created_by_internal_user_id uuid references auth.users(id),
+ add column if not exists assigned_operations_user_id uuid references auth.users(id),
+ add column if not exists internal_notes text;
+alter table public.partner_ad_campaigns drop constraint if exists partner_ad_campaigns_request_source_check;
+alter table public.partner_ad_campaigns add constraint partner_ad_campaigns_request_source_check check(request_source in ('PORTAL','EMAIL','MEETING','CONTRACT','PHONE','BACKOFFICE','OTHER'));
+create index if not exists partner_campaign_contract_idx on public.partner_ad_campaigns(contract_id);
+
+alter table public.financial_documents
+ add column if not exists contract_id uuid references public.partner_contracts(id) on delete set null,
+ add column if not exists engagement_id uuid references public.partner_service_engagements(id) on delete set null,
+ add column if not exists issued_by_internal_user_id uuid references auth.users(id);
+create index if not exists financial_documents_contract_idx on public.financial_documents(contract_id);
+create index if not exists financial_documents_engagement_idx on public.financial_documents(engagement_id);
+
+alter table public.financial_payments
+ add column if not exists contract_id uuid references public.partner_contracts(id) on delete set null,
+ add column if not exists engagement_id uuid references public.partner_service_engagements(id) on delete set null,
+ add column if not exists bank_name text, add column if not exists payer_name text, add column if not exists transfer_date date,
+ add column if not exists verified_by uuid references auth.users(id), add column if not exists verified_at timestamptz,
+ add column if not exists verification_notes text;
+create index if not exists financial_payments_contract_idx on public.financial_payments(contract_id);
+create index if not exists financial_payments_engagement_idx on public.financial_payments(engagement_id);
+create index if not exists financial_payments_partner_status_idx on public.financial_payments(partner_account_id,status,created_at desc);
+
+create or replace view public.partner_contract_financial_summary with (security_invoker=true) as
+select c.id contract_id,c.account_id,c.contract_code,c.title,c.contract_type,c.status,c.contracted_amount_mzn,
+ coalesce(sum(distinct d.amount_mzn),0)::numeric(14,2) invoiced_amount_mzn,
+ coalesce((select sum(p.amount_mzn) from public.financial_payments p where p.contract_id=c.id and p.status='CONFIRMED'),0)::numeric(14,2) received_amount_mzn,
+ (coalesce(sum(distinct d.amount_mzn),0)-coalesce((select sum(p.amount_mzn) from public.financial_payments p where p.contract_id=c.id and p.status='CONFIRMED'),0))::numeric(14,2) outstanding_amount_mzn
+from public.partner_contracts c left join public.financial_documents d on d.contract_id=c.id and d.status<>'VOID' group by c.id;
+
+alter table public.partner_contacts enable row level security;
+alter table public.partner_contracts enable row level security;
+alter table public.partner_service_engagements enable row level security;
+alter table public.partner_report_deliveries enable row level security;
+drop policy if exists partner_contacts_admin_all on public.partner_contacts;
+create policy partner_contacts_admin_all on public.partner_contacts for all to authenticated using(public.is_super_admin()) with check(public.is_super_admin());
+drop policy if exists partner_contracts_admin_all on public.partner_contracts;
+create policy partner_contracts_admin_all on public.partner_contracts for all to authenticated using(public.is_super_admin()) with check(public.is_super_admin());
+drop policy if exists partner_engagements_admin_all on public.partner_service_engagements;
+create policy partner_engagements_admin_all on public.partner_service_engagements for all to authenticated using(public.is_super_admin()) with check(public.is_super_admin());
+drop policy if exists partner_reports_admin_all on public.partner_report_deliveries;
+create policy partner_reports_admin_all on public.partner_report_deliveries for all to authenticated using(public.is_super_admin()) with check(public.is_super_admin());
+drop policy if exists partner_accounts_admin_manage_f326 on public.partner_accounts;
+create policy partner_accounts_admin_manage_f326 on public.partner_accounts for all to authenticated using(public.is_super_admin()) with check(public.is_super_admin());
+
+grant select,insert,update,delete on public.partner_contacts to authenticated;
+grant select,insert,update,delete on public.partner_contracts to authenticated;
+grant select,insert,update,delete on public.partner_service_engagements to authenticated;
+grant select,insert,update,delete on public.partner_report_deliveries to authenticated;
+grant select on public.partner_contract_financial_summary to authenticated;
