@@ -2,6 +2,7 @@ import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import {
   createInstitutionalPartner, createPartnerContract, createPartnerEngagement,
   issuePartnerInvoice, recordPartnerBankTransfer, verifyPartnerBankTransfer,
+  createPartnerContact, createPartnerReportDelivery,
 } from "@/lib/admin/partner-institutional-actions";
 import styles from "./gestao.module.css";
 
@@ -10,6 +11,8 @@ export const dynamic = "force-dynamic";
 const money = (n: number | string | null) => n == null ? "—" : `${Number(n).toLocaleString("pt-MZ",{maximumFractionDigits:2})} MZN`;
 const date = (s: string | null) => s ? new Date(s).toLocaleDateString("pt-MZ",{timeZone:"Africa/Maputo"}) : "—";
 const messages: Record<string,string> = {
+  contact:"Indique nome e pelo menos um meio de contacto.", "contact-save":"Não foi possível registar o contacto.",
+  report:"Revise o relatório, destinatários e ficheiro/link de entrega.", "report-save":"Não foi possível registar a entrega do relatório.",
   partner:"Revise os dados da entidade parceira.", "partner-save":"Não foi possível criar a entidade. Verifique os dados e permissões.",
   contract:"Revise os dados do contrato.", "contract-save":"Não foi possível registar o contrato. Verifique o código e a entidade.",
   engagement:"Revise os dados do serviço.", "engagement-save":"Não foi possível criar a ordem de execução.",
@@ -17,7 +20,7 @@ const messages: Record<string,string> = {
   transfer:"Revise os dados da transferência.", "transfer-save":"Não foi possível registar o pagamento.",
   verify:"Não foi possível confirmar o pagamento.", "payment-id":"Identificador de pagamento inválido.",
 };
-const saved: Record<string,string> = {partner:"Entidade parceira criada.",contract:"Contrato registado.",engagement:"Ordem de execução criada.",invoice:"Factura emitida.",transfer:"Transferência registada para verificação.",verified:"Transferência confirmada."};
+const saved: Record<string,string> = {contact:"Contacto registado.",report:"Relatório registado.",partner:"Entidade parceira criada.",contract:"Contrato registado.",engagement:"Ordem de execução criada.",invoice:"Factura emitida.",transfer:"Transferência registada para verificação.",verified:"Transferência confirmada."};
 
 export default async function InstitutionalPartnersPage({searchParams}:{searchParams:Promise<{error?:string;saved?:string}>}) {
   const {supabase,authorized}=await getSuperAdminContext();
@@ -69,6 +72,25 @@ export default async function InstitutionalPartnersPage({searchParams}:{searchPa
         <label>Entidade<select name="account_id" required>{p.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label><label>Contrato<select name="contract_id" defaultValue=""><option value="">Sem contrato</option>{c.map(x=><option key={x.id} value={x.id}>{x.contract_code} · {x.title}</option>)}</select></label>
         <div className={styles.two}><label>Valor recebido (MZN)<input name="amount_mzn" type="number" min=".01" step=".01" required/></label><label>Data da transferência<input name="transfer_date" type="date"/></label></div>
         <label>Referência bancária<input name="reference" required minLength={3} maxLength={180}/></label><div className={styles.two}><label>Banco<input name="bank_name"/></label><label>Ordenante<input name="payer_name"/></label></div><label>Link de comprovativo (opcional)<input name="proof_url" type="url"/></label><button type="submit" disabled={!p.length}>Registar pagamento pendente</button>
+      </form></article>
+    </section>
+    <section className={styles.grid}>
+      <article className={styles.panel}><h2>Contactos institucionais</h2><p>Registe interlocutores, responsáveis de facturação e destinatários dos relatórios, sem criar contas de utilizador.</p><form action={createPartnerContact} className={styles.form}>
+        <label>Entidade<select name="account_id" required>{p.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
+        <div className={styles.two}><label>Nome<input name="full_name" required minLength={2}/></label><label>Função<input name="role_title"/></label></div>
+        <div className={styles.two}><label>Email<input name="email" type="email"/></label><label>Telefone<input name="phone"/></label></div>
+        <div className={styles.two}><label>Contacto principal<select name="is_primary"><option value="true">Sim</option><option value="false">Não</option></select></label><label>Facturação<select name="is_billing_contact"><option value="false">Não</option><option value="true">Sim</option></select></label></div>
+        <label>Recebe relatórios?<select name="receives_reports"><option value="true">Sim</option><option value="false">Não</option></select></label><button type="submit" disabled={!p.length}>Registar contacto</button>
+      </form></article>
+      <article className={styles.panel}><h2>Entrega de relatório</h2><p>Registe relatórios periódicos ou entregas de campanha. A entrega pode ser feita por email ou link externo, sem login do parceiro.</p><form action={createPartnerReportDelivery} className={styles.form}>
+        <label>Entidade<select name="account_id" required>{p.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
+        <label>Contrato<select name="contract_id" defaultValue=""><option value="">Sem contrato</option>{c.map(x=><option key={x.id} value={x.id}>{x.contract_code} · {x.title}</option>)}</select></label>
+        <label>Título<input name="title" required/></label>
+        <div className={styles.two}><label>Tipo<select name="report_type"><option value="PERFORMANCE">Desempenho</option><option value="FINANCIAL">Financeiro</option><option value="MARKET_INTELLIGENCE">Inteligência de mercado</option><option value="CAMPAIGN">Campanha</option><option value="EXECUTIVE">Executivo</option><option value="OTHER">Outro</option></select></label><label>Canal<select name="delivery_channel"><option value="EMAIL">Email</option><option value="SHARED_LINK">Link partilhado</option><option value="MEETING">Reunião</option><option value="PORTAL">Portal</option><option value="OTHER">Outro</option></select></label></div>
+        <div className={styles.two}><label>Período inicial<input name="period_start" type="date"/></label><label>Período final<input name="period_end" type="date"/></label></div>
+        <label>Caminho do ficheiro no Storage<input name="storage_path" placeholder="reports/parceiro/relatorio.pdf"/></label><label>Link externo (opcional)<input name="external_url" type="url"/></label>
+        <label>Emails destinatários (separados por vírgula)<textarea name="recipient_emails" rows={2}/></label><label>Estado<select name="status"><option value="DRAFT">Rascunho</option><option value="READY">Pronto para envio</option><option value="DELIVERED">Entregue (registar evidência)</option></select></label>
+        <button type="submit" disabled={!p.length}>Registar relatório</button>
       </form></article>
     </section>
     <section className={styles.panel}><h2>Entidades e modelos de relacionamento</h2>{partnerError?<p className={styles.error}>Não foi possível carregar as entidades.</p>:<div className={styles.tableWrap}><table><thead><tr><th>Entidade</th><th>Modelo</th><th>Portal</th><th>Contacto</th><th>Estado</th></tr></thead><tbody>{p.map(x=><tr key={x.id}><td><strong>{x.name}</strong><small>{x.legal_name||"Sem denominação legal"}</small></td><td>{({MANAGED:"Gestão interna",STRATEGIC:"Estratégico",HYBRID:"Híbrido",SELF_SERVICE:"Auto-serviço"} as Record<string,string>)[x.operating_model]||x.operating_model}</td><td>{x.portal_enabled?"Disponível":"Não activo"}</td><td>{x.contact_email||x.contact_phone||"—"}</td><td>{x.status}</td></tr>)}</tbody></table></div>}</section>
