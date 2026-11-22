@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { Input, Select } from "@/components/ui";
-import { moderateBusinessPromotion, moderatePartnerCampaign, updateAdvertisingRequest } from "@/lib/admin/advertising-actions";
+import { moderateBusinessPromotion, moderatePartnerCampaign, updateAdvertisingRequest, cancelBusinessPromotion } from "@/lib/admin/advertising-actions";
 import styles from "./publicidade.module.css";
 
 type Campaign = {
@@ -50,7 +50,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const origin = ["empresarial", "parceiro", "pedido"].includes(params.origem ?? "") ? params.origem ?? "" : "";
   const status = [...new Set([...promotionStatuses, ...partnerStatuses, ...requestStatuses])].includes((params.estado ?? "").toUpperCase()) ? (params.estado ?? "").toUpperCase() : "";
   const deadline = ["expirado", "proximo", "futuro", "sem-prazo"].includes(params.prazo ?? "") ? params.prazo ?? "" : "";
-  const result = params.result === "success" || params.result === "error" ? params.result : "";
+  const result = params.result ?? "";
   const now = new Date();
   const nowIso = now.toISOString();
   const soonIso = new Date(now.getTime() + 7 * 86400000).toISOString();
@@ -111,7 +111,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
       <div className={styles.heroSummary}><span className={styles.summaryLabel}>A aguardar atenção</span><strong>{pendingCount}</strong><span className={styles.summaryCaption}>Pedidos e campanhas por rever</span><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Até 100 registos por origem em cada consulta.</span></div>
       <span className={styles.heroDecoration} aria-hidden="true">↗</span>
     </header>
-    {result ? <div className={`${styles.resultNotice} ${result === "error" ? styles.resultError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Estado actualizado com sucesso." : "Não foi possível actualizar o estado. Confirme as permissões e o estado permitido para este registo."}</div> : null}
+    {result ? <div className={`${styles.resultNotice} ${result === "error" ? styles.resultError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Estado actualizado com sucesso." : result === "cancel-success" ? "Campanha cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "mpesa-refund-required" ? "Campanha M-Pesa activa: o reembolso externo deve ser executado e registado antes do cancelamento." : result === "cancel-not-allowed" ? "Cancelamento não permitido: campanha já iniciada, expirada ou num estado não elegível." : "Não foi possível actualizar o estado. Confirme permissões e elegibilidade."}</div> : null}
     <section className={styles.metrics} aria-label="Resumo do módulo">
       <article className={styles.metric}><span>Campanhas empresariais</span><strong>{allBusiness.length}</strong><small>Até 100 registos carregados</small></article>
       <article className={styles.metric}><span>Campanhas de parceiros</span><strong>{allPartner.length}</strong><small>Até 100 registos carregados</small></article>
@@ -134,7 +134,8 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
         {filteredCampaigns.map((c) => <article className={styles.campaignCard} key={c.table + c.id}>
           <div className={styles.campaignTop}><div className={styles.campaignMain}><span className={styles.campaignKicker}>{c.origin} · {c.position}{c.slot ? " · " + c.slot : ""}</span><h3>{c.headline || c.title || "Campanha sem título"}</h3><p>{c.advertiser} · Registada {fmtDate(c.created_at)}</p></div><span className={styles.status}>{label(c.status)}</span></div>
           <div className={styles.campaignMeta}><span><small>Início</small><strong>{fmtDate(c.starts_at)}</strong></span><span><small>Fim</small><strong>{fmtDate(c.ends_at)}</strong></span><span><small>Impressões</small><strong>{fmtNumber(c.impressions_count)}</strong></span><span><small>Cliques / CTR</small><strong>{fmtNumber(c.clicks_count)} · {ctr(c.clicks_count,c.impressions_count)}</strong></span><span><small>Preço / orçamento</small><strong>{c.price}</strong></span></div>
-          {c.target_url ? <p className={styles.destination}>Destino: <a href={c.target_url} target="_blank" rel="noreferrer">{c.target_url}</a></p> : null}
+          {c.table === "business" && ["PENDING","ACTIVE"].includes(c.status ?? "") && c.starts_at && new Date(c.starts_at).getTime() > now.getTime() ? <form action={cancelBusinessPromotion} className={styles.cancelForm}><input type="hidden" name="id" value={c.id}/><label><span>Motivo do cancelamento</span><Input name="reason" minLength={8} maxLength={500} required placeholder="Motivo (mín. 8 caracteres)"/></label><button className="btn" type="submit">Cancelar campanha e estornar créditos</button><small>Campanhas pagas por créditos serão estornadas automaticamente. Campanhas M-Pesa activas exigem reembolso externo prévio.</small></form> : null}
+        {c.target_url ? <p className={styles.destination}>Destino: <a href={c.target_url} target="_blank" rel="noreferrer">{c.target_url}</a></p> : null}
           <form action={c.table === "business" ? moderateBusinessPromotion : moderatePartnerCampaign} className={styles.moderationForm}>
             <input type="hidden" name="id" value={c.id}/>
             <label><span>Actualizar estado</span><Select name="status" defaultValue={c.status ?? ""}>{c.allowed.map(s=><option key={s} value={s}>{label(s)}</option>)}</Select></label>
