@@ -8,7 +8,7 @@ import styles from "./publicidade.module.css";
 
 type Campaign = {
   id: string; title: string | null; headline: string | null; status: string | null;
-  starts_at: string | null; ends_at: string | null; created_at: string | null;
+  starts_at: string | null; ends_at: string | null; created_at: string | null; payment_method_preference?: string | null;
   surface?: string | null; placement?: string | null; slot?: string | null;
   price_mzn?: number | null; budget?: number | null; currency?: string | null;
   impressions_count?: number | null; clicks_count?: number | null; target_url?: string | null;
@@ -67,7 +67,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     { data: partnerProducts, error: partnerProductsError },
   ] = await Promise.all([
     supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,impressions_count,clicks_count,target_url,business:business_id(name)").order("created_at", { ascending: false }).limit(100),
-    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)").order("created_at", { ascending: false }).limit(100),
+    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)").order("created_at", { ascending: false }).limit(100),
     supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at").order("created_at", { ascending: false }).limit(100),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "IMPRESSION"),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "CLICK"),
@@ -160,7 +160,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
               {(!payment || payment.status === "FAILED") && ["REQUESTED","APPROVED"].includes(c.status ?? "") ? <form action={issuePartnerAdPayment} className={styles.moderationForm}>
                   <input type="hidden" name="id" value={c.id}/>
                   <label><span>Preço acordado (MZN)</span><Input name="price_mzn" type="number" min={1} step="0.01" defaultValue={c.price_mzn ?? ""} placeholder="Obrigatório se o formato tiver preço sob proposta"/></label>
-                  <label><span>Forma de pagamento</span><Select name="payment_method" defaultValue="MPESA"><option value="MPESA">M-Pesa (aguarda confirmação)</option><option value="CREDITS">Créditos (debita e activa)</option></Select></label>
+                  <label><span>Forma de pagamento</span><Select name="payment_method" defaultValue={c.payment_method_preference || "MPESA"}><option value="MPESA">M-Pesa (aguarda confirmação)</option><option value="CREDITS">Créditos (debita e activa)</option></Select></label>
                   <button className="btn primary" type="submit">{payment?.status === "FAILED" ? "Reemitir cobrança" : "Emitir cobrança"}</button>
                   <small>Por créditos, a conta Parceiro precisa de associação empresarial e saldo suficiente. Por M-Pesa, a campanha só activa após confirmação do operador.</small>
                 </form> : null}
