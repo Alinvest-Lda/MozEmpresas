@@ -459,3 +459,12 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Teste read-only executado em transacção com contexto de Super Admin e rollback: a RPC devolveu JSON válido. Resultado actual: sem carteiras, pagamentos, documentos, compras de créditos ou campanhas; zero divergências nos indicadores calculáveis. Isto não equivale a teste transaccional com movimentos reais.
 - Restrições confirmadas no schema: pagamentos aceitam `REFUNDED`, documentos aceitam `VOID`, ledger aceita `REFUND`. Não foi necessária alteração desses estados.
 - Deploy automático do commit da interface está em curso; só considerar publicado após estado Vercel `READY`.
+
+## F3.16 — Reconciliação financeira exaustiva (22/11/2026)
+
+- Actualizada a RPC `admin_financial_operations_overview()` para contar todas as ordens de serviço, sem depender do limite operacional de 500 linhas da consulta detalhada.
+- A reconciliação agora detecta pagamentos com `document_id` órfão (referência a documento inexistente), além de incompatibilidades entre estado do pagamento e estado do documento.
+- O resumo continua protegido por verificação explícita de membro activo `super_admin`; EXECUTE permanece revogado de PUBLIC/anon e concedido a authenticated/service_role para permitir a chamada da página administrativa com autorização interna.
+- Verificação de catálogo confirmou a assinatura, permissões e implementação da contagem integral. Consulta directa actual: 0 ordens de serviço; 0 divergências calculáveis. Sem movimentos reais, não é possível certificar cenários de estorno e liquidação ponta a ponta.
+- Migration aplicada em produção: `20261122103803_f316_exhaustive_financial_reconciliation`.
+- Deploy F3.15 confirmado READY antes desta alteração de base de dados. F3.16 não altera a interface; a RPC em produção foi actualizada directamente no Supabase.
