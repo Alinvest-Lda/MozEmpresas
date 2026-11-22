@@ -541,3 +541,5 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - A escrita directa continua bloqueada para anon/authenticated por privilégios de tabela; a política INSERT existente não concede privilégios por si só. service_role mantém INSERT.
 - Migrations no repositório: `20261122113000_f324_ad_delivery_event_integrity_and_campaign_reference_guard` e `20261122113100_f324b_remove_duplicate_ad_event_type_constraint`.
 - Limitação funcional identificada: ainda não existe relação financeira/documental persistida para campanhas de parceiros (`partner_ad_campaigns`), e a tabela de eventos não tem preço, custo ou referência de facturação. A medição de impressões/cliques é telemetria, não prova de cobrança. O fecho de monetização exige criar o fluxo de cobrança/recibo e reconciliação do parceiro antes de classificar métricas como facturáveis.
+
+- Testes negativos controlados executados em bloco transaccional: referência de campanha inexistente rejeitada com `AD_CAMPAIGN_NOT_FOUND`; origem inválida rejeitada com `INVALID_CAMPAIGN_SOURCE`. Nenhum evento de teste foi persistido.
