@@ -530,3 +530,14 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Verificação pós-migration: definição contém o bloqueio de linha e limite de segmentação; `SECURITY DEFINER` mantido com `search_path=public, pg_temp`; EXECUTE anon=false e authenticated=true.
 - Migration aplicada no Supabase: `20261122111500_f323_partner_ad_capacity_lock_and_target_limits`.
 - Não foi simulada concorrência com múltiplas sessões reais; a correcção foi verificada por catálogo/definição da função. Teste de carga concorrente permanece na validação integrada.
+
+## F3.24 — Integridade da telemetria publicitária (22/11/2026)
+
+- Reforçadas as constraints de `ad_delivery_events`: origem apenas `business|partner`, eventos apenas `IMPRESSION|CLICK`, visitor_key entre 16 e 200 caracteres e contexto JSON object.
+- Todas as constraints foram validadas no banco. Foi detectada uma constraint pré-existente para o tipo de evento; removi a duplicação criada na primeira aplicação e mantive apenas a constraint validada final.
+- Criada a função trigger `validate_ad_delivery_campaign_reference()` como SECURITY INVOKER, com `search_path=public,pg_temp`. Cada evento passa a exigir campanha existente e correspondência exacta de surface/slot com a campanha de negócio ou parceiro referenciada.
+- Trigger `ad_delivery_campaign_reference_guard` activo em INSERT e em alterações às colunas de referência/contexto.
+- Verificação pós-aplicação: quatro constraints relevantes validadas, trigger activo e sem registos históricos inválidos. A tabela ainda não contém campanhas/eventos em produção (0 campanhas de negócio, 0 campanhas de parceiros, 0 eventos), pelo que não foi possível executar um teste positivo de entrega com campanha real.
+- A escrita directa continua bloqueada para anon/authenticated por privilégios de tabela; a política INSERT existente não concede privilégios por si só. service_role mantém INSERT.
+- Migrations no repositório: `20261122113000_f324_ad_delivery_event_integrity_and_campaign_reference_guard` e `20261122113100_f324b_remove_duplicate_ad_event_type_constraint`.
+- Limitação funcional identificada: ainda não existe relação financeira/documental persistida para campanhas de parceiros (`partner_ad_campaigns`), e a tabela de eventos não tem preço, custo ou referência de facturação. A medição de impressões/cliques é telemetria, não prova de cobrança. O fecho de monetização exige criar o fluxo de cobrança/recibo e reconciliação do parceiro antes de classificar métricas como facturáveis.
