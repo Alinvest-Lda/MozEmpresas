@@ -99,17 +99,17 @@ export async function createPartnerEngagement(formData: FormData) {
 }
 
 export async function issuePartnerInvoice(formData: FormData) {
-  const parsed = z.object({ account_id:uuid, contract_id:z.string().optional(), engagement_id:z.string().optional(),
+  const parsed = z.object({ account_id:uuid, contract_id:z.string().optional(), engagement_id:z.string().optional(), campaign_id:z.string().optional(),
     document_number:z.string().min(3).max(100), amount_mzn:z.coerce.number().positive().max(100000000000) })
     .safeParse({account_id:value(formData,"account_id"),contract_id:value(formData,"contract_id") || undefined,
-      engagement_id:value(formData,"engagement_id") || undefined,document_number:value(formData,"document_number"),
+      engagement_id:value(formData,"engagement_id") || undefined,campaign_id:value(formData,"campaign_id") || undefined,document_number:value(formData,"document_number"),
       amount_mzn:value(formData,"amount_mzn")});
   if (!parsed.success || (parsed.data.contract_id && !uuid.safeParse(parsed.data.contract_id).success) ||
-      (parsed.data.engagement_id && !uuid.safeParse(parsed.data.engagement_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=invoice");
+      (parsed.data.engagement_id && !uuid.safeParse(parsed.data.engagement_id).success) || (parsed.data.campaign_id && !uuid.safeParse(parsed.data.campaign_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=invoice");
   const {supabase,user}=await adminContext();
   const {error}=await supabase.from("financial_documents").insert({
     partner_account_id:parsed.data.account_id,business_id:null,user_id:user!.id,issued_by_internal_user_id:user!.id,
-    contract_id:parsed.data.contract_id || null,engagement_id:parsed.data.engagement_id || null,
+    contract_id:parsed.data.contract_id || null,engagement_id:parsed.data.engagement_id || null,campaign_id:parsed.data.campaign_id || null,
     document_type:"INVOICE",document_number:parsed.data.document_number,status:"ISSUED",
     amount_mzn:parsed.data.amount_mzn,currency:"MZN",
   });
@@ -119,21 +119,21 @@ export async function issuePartnerInvoice(formData: FormData) {
 }
 
 export async function recordPartnerBankTransfer(formData: FormData) {
-  const parsed=z.object({account_id:uuid,contract_id:z.string().optional(),engagement_id:z.string().optional(),
+  const parsed=z.object({account_id:uuid,contract_id:z.string().optional(),engagement_id:z.string().optional(),campaign_id:z.string().optional(),
     document_id:z.string().optional(),amount_mzn:z.coerce.number().positive().max(100000000000),
     reference:z.string().min(3).max(180),bank_name:z.string().max(120).optional(),
     payer_name:z.string().max(180).optional(),transfer_date:z.string().optional(),proof_url:z.string().url().optional().or(z.literal(""))})
     .safeParse({account_id:value(formData,"account_id"),contract_id:value(formData,"contract_id") || undefined,
-      engagement_id:value(formData,"engagement_id") || undefined,document_id:value(formData,"document_id") || undefined,
+      engagement_id:value(formData,"engagement_id") || undefined,campaign_id:value(formData,"campaign_id") || undefined,document_id:value(formData,"document_id") || undefined,
       amount_mzn:value(formData,"amount_mzn"),reference:value(formData,"reference"),bank_name:value(formData,"bank_name") || undefined,
       payer_name:value(formData,"payer_name") || undefined,transfer_date:value(formData,"transfer_date") || undefined,
       proof_url:value(formData,"proof_url")});
-  if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id,parsed.data.document_id].some(x=>x && !uuid.safeParse(x).success))
+  if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id,parsed.data.campaign_id,parsed.data.document_id].some(x=>x && !uuid.safeParse(x).success))
     redirect("/dashboard/admin/parceiros/gestao?error=transfer");
   const {supabase,user}=await adminContext();
   const {error}=await supabase.from("financial_payments").insert({
     partner_account_id:parsed.data.account_id,business_id:null,user_id:user!.id,
-    contract_id:parsed.data.contract_id || null,engagement_id:parsed.data.engagement_id || null,
+    contract_id:parsed.data.contract_id || null,engagement_id:parsed.data.engagement_id || null,campaign_id:parsed.data.campaign_id || null,
     document_id:parsed.data.document_id || null,amount_mzn:parsed.data.amount_mzn,currency:"MZN",
     method:"BANK_TRANSFER",status:"PENDING",reference:parsed.data.reference,
     bank_name:parsed.data.bank_name || null,payer_name:parsed.data.payer_name || null,
@@ -147,11 +147,10 @@ export async function recordPartnerBankTransfer(formData: FormData) {
 export async function verifyPartnerBankTransfer(formData: FormData) {
   const paymentId=value(formData,"payment_id");
   if(!uuid.safeParse(paymentId).success) redirect("/dashboard/admin/parceiros/gestao?error=payment-id");
-  const {supabase,user}=await adminContext();
-  const {error}=await supabase.from("financial_payments").update({
-    status:"CONFIRMED",verified_by:user!.id,verified_at:new Date().toISOString(),
-    confirmed_at:new Date().toISOString(),verification_notes:value(formData,"verification_notes") || null,
-  }).eq("id",paymentId).eq("method","BANK_TRANSFER").eq("status","PENDING");
+  const {supabase}=await adminContext();
+  const {error}=await supabase.rpc("admin_confirm_partner_bank_transfer",{
+    p_payment_id:paymentId,p_notes:value(formData,"verification_notes") || null,
+  });
   if(error) redirect("/dashboard/admin/parceiros/gestao?error=verify");
   revalidatePath("/dashboard/admin/parceiros/gestao");
   redirect("/dashboard/admin/parceiros/gestao?saved=verified");
