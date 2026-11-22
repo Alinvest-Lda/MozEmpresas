@@ -22,6 +22,7 @@ declare v_definition text;
 begin
  select pg_get_functiondef('public.admin_issue_partner_ad_payment(uuid,text)'::regprocedure) into v_definition;
  v_definition:=replace(v_definition,'v_credits := ceil(v_amount)::integer;','if v_product.credit_price is null or v_product.credit_price<=0 then raise exception ''PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED''; end if; v_credits := v_product.credit_price;');
+ v_definition:=replace(v_definition,'v_credits:=ceil(v_amount)::integer;','if v_product.credit_price is null or v_product.credit_price<=0 then raise exception ''PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED''; end if; v_credits := v_product.credit_price;');
  if position('v_credits := v_product.credit_price;' in v_definition)=0 then raise exception 'F325G_CREDIT_PRICE_REWRITE_FAILED'; end if;
  execute v_definition;
 end
