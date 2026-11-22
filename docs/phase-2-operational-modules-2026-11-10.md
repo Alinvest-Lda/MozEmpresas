@@ -544,3 +544,43 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 
 - Testes negativos controlados executados em bloco transaccional: referência de campanha inexistente rejeitada com `AD_CAMPAIGN_NOT_FOUND`; origem inválida rejeitada com `INVALID_CAMPAIGN_SOURCE`. Nenhum evento de teste foi persistido.
 - Compatibilidade de migration revista antes do deploy: a migration versionada usa um nome temporário distinto da constraint já existente no schema base; a migration seguinte remove apenas a duplicação temporária criada durante a aplicação directa em produção. Assim evita-se colisão de nomes na sequência de migrations.
+
+## F3.25 — Ciclo financeiro de publicidade de parceiros (22/11/2026)
+
+**Modelo comercial aplicado**
+- A publicidade de parceiros é contratada pela conta Parceiro e facturada à própria conta Parceiro; a associação opcional a uma empresa serve exclusivamente para permitir a utilização da carteira de créditos dessa empresa, quando a relação jurídica/comercial é confirmada pelo Super Admin.
+- M-Pesa é um pagamento directo: a campanha fica aprovada/a aguardar liquidação e só activa após callback SUCCESS validado por assinatura, referência, transacção, moeda e montante.
+- Créditos são debitados da carteira empresarial associada no mesmo procedimento transaccional que cria o pagamento confirmado, documento AD_PURCHASE e activa a campanha.
+- Contas Parceiro sem associação empresarial continuam a poder contratar via M-Pesa. Não se cria carteira nem saldo fictício.
+- A associação conta Parceiro ↔ empresa é única e administrada exclusivamente pelo Super Admin. A factura/documento permanece em nome da conta Parceiro mesmo quando a carteira empresarial é a fonte dos créditos.
+
+**Implementação**
+- Criada `partner_ad_payment_orders`, com referência única por tentativa, ligação à campanha, conta Parceiro, eventual carteira empresarial, pagamento financeiro e documento.
+- `financial_documents` e `financial_payments` passam a suportar titularidade por empresa ou conta Parceiro, com constraint que exige exactamente um titular.
+- RPC `admin_issue_partner_ad_payment`: emite documento e cobrança; por créditos debita wallet + ledger e activa atomicamente; por M-Pesa mantém pendente e campanha apenas aprovada.
+- RPC `confirm_mpesa_partner_ad_payment`: confirma o pagamento, actualiza documento para PAID e activa campanha. Repetições idempotentes; transacção de provedor reutilizada é rejeitada.
+- RPC `fail_mpesa_partner_ad_payment`: falha o pagamento, anula o documento e permite reemissão de uma nova tentativa sem apagar o histórico anterior.
+- Webhook M-Pesa encaminha referências `PARTNER_AD:` para as RPCs próprias de campanha, sem as confundir com top-ups de créditos nem ordens de serviço.
+- Portal Parceiro mostra estado da cobrança e referência, e o indicador de investimento passou a somar apenas campanhas efectivamente liquidadas.
+- Criado fluxo Super Admin de associação empresarial da conta Parceiro para permitir créditos, com unicidade por empresa e sem auto-associação pelo parceiro.
+- Políticas RLS permitem ao membro activo da conta ler apenas os seus pagamentos, documentos e estornos; a policy usa os helpers seguros de identidade de parceiro, sem consultar directamente a tabela privada `partner_account_members`.
+
+**Cancelamento e estorno**
+- Campanhas futuras já pagas podem ser canceladas pelo Super Admin.
+- Pagamento por créditos: devolução da mesma quantidade de créditos e movimento compensatório `REFUND`, mantendo o consumo original no ledger.
+- Pagamento por M-Pesa: exige referência de reembolso externo previamente executado pelo operador; a plataforma não simula transferência bancária/M-Pesa.
+- Documento financeiro passa a VOID, pagamento e ordem a REFUNDED, campanha a CANCELLED e é criado registo imutável em `partner_ad_payment_adjustments`.
+- Cancelamento é bloqueado para campanhas iniciadas, não liquidadas ou já estornadas.
+
+**Migrations aplicadas**
+- `f325_partner_campaign_payment_and_financial_document_lifecycle`
+- `f325b_partner_ad_payment_attempts_and_mpesa_failure_recovery`
+- `f325c_super_admin_partner_business_wallet_link`
+- `f325d_partner_financial_record_read_policies`
+- `f325e_partner_campaign_cancellation_and_compensating_refunds`
+- `f325f_partner_financial_rls_private_membership_helpers`
+
+**Limitações de validação**
+- Não existem ainda campanhas nem ordens financeiras de parceiros em produção; por isso, não houve teste de liquidação real, débito de carteira, reembolso ou callback do operador.
+- As funções e permissões foram verificadas no catálogo. M-Pesa depende de credenciais e callback real do operador; reembolso M-Pesa é externo e referenciado, não automatizado.
+- A campanha por créditos exige associação empresarial explícita e saldo disponível. No momento da validação, nenhuma conta Parceiro estava associada a empresa; o fluxo de associação foi disponibilizado ao Super Admin, mas não se deve associar contas sem confirmar a titularidade.
