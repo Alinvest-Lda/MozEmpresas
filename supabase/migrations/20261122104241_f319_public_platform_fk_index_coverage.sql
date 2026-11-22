@@ -1,0 +1,19 @@
+-- F3.19: cover the remaining public-schema foreign keys across core platform modules.
+create index if not exists access_audit_log_actor_user_id_idx on public.access_audit_log (actor_user_id);
+create index if not exists access_audit_log_target_user_id_idx on public.access_audit_log (target_user_id);
+create index if not exists ad_visitor_profiles_user_id_idx on public.ad_visitor_profiles (user_id);
+create index if not exists audit_logs_actor_id_idx on public.audit_logs (actor_id);
+create index if not exists business_invitations_invited_by_idx on public.business_invitations (invited_by);
+create index if not exists business_partner_relationships_created_by_idx on public.business_partner_relationships (created_by);
+create index if not exists business_plan_subscriptions_plan_id_idx on public.business_plan_subscriptions (plan_id);
+create index if not exists commerce_order_events_actor_user_id_idx on public.commerce_order_events (actor_user_id);
+create index if not exists commerce_order_items_seller_business_id_idx on public.commerce_order_items (seller_business_id);
+create index if not exists listing_media_listing_id_idx on public.listing_media (listing_id);
+create index if not exists listings_category_id_idx on public.listings (category_id);
+create index if not exists notifications_user_id_idx on public.notifications (user_id);
+create index if not exists opportunity_applications_applicant_business_id_idx on public.opportunity_applications (applicant_business_id);
+create index if not exists opportunity_applications_applicant_user_id_idx on public.opportunity_applications (applicant_user_id);
+create index if not exists recommendation_events_business_id_idx on public.recommendation_events (business_id);
+create index if not exists recommendation_events_listing_id_idx on public.recommendation_events (listing_id);
+create index if not exists service_requests_service_id_idx on public.service_requests (service_id);
+create index if not exists support_messages_sender_user_id_idx on public.support_messages (sender_user_id);
