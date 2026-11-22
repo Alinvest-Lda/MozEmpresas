@@ -469,3 +469,18 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Migration aplicada em produção: `20261122103803_f316_exhaustive_financial_reconciliation`.
 - Deploy F3.15 confirmado READY antes desta alteração de base de dados. F3.16 não altera a interface; a RPC em produção foi actualizada directamente no Supabase.
 - A interface administrativa passou a mostrar também a quantidade total de ordens de serviço verificadas pela reconciliação integral (commit `a956149f`); a publicação desta actualização aguarda build Vercel.
+
+## F3.17–F3.19 — Cobertura de índices de relações e fecho de performance (22/11/2026)
+
+- Aplicadas três migrations de cobertura de índices para relações de chave estrangeira em fluxos financeiros, documentos, compras de créditos, estornos, ordens e subscrições de serviços, campanhas publicitárias, pedidos de publicidade, auditoria, notificações, oportunidades, comércio e suporte.
+- F3.17: 13 índices para relações financeiras, campanhas e ordens de serviço.
+- F3.18: 8 índices adicionais para pedidos e campanhas publicitárias, eventos de serviço, subscrições e trilhos de decisão/ajuste de créditos.
+- F3.19: 18 índices para as restantes relações de chave estrangeira no schema public.
+- Validação pós-migration: 39 índices novos verificados; zero relações FK sem índice de cobertura no schema public.
+- As migrations foram aplicadas no Supabase e os três ficheiros correspondentes foram registados no repositório:
+  - `20261122104213_f317_financial_ads_service_fk_indexes.sql`
+  - `20261122104224_f318_advertising_service_audit_indexes.sql`
+  - `20261122104241_f319_public_platform_fk_index_coverage.sql`
+- A auditoria Performance continua a sinalizar duas FKs no schema privado `private.partner_access_grants`, que ficam fora desta cobertura pública e serão tratadas com validação específica do schema privado.
+- Não foram removidos índices existentes, nem alteradas políticas RLS nesta intervenção. Os avisos de índices não utilizados não foram tratados como autorização para apagar índices, dado o baixo volume actual de dados e a ausência de tráfego representativo.
+- Estado dos módulos de dados: cobertura de FK no schema public concluída. Isto é melhoria de desempenho e integridade de relações, não prova isolada de que os fluxos de pagamento, estorno ou entrega de anúncios foram testados com transacções reais.
