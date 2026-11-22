@@ -24,7 +24,7 @@ const promotionStatuses = ["PENDING", "ACTIVE", "PAUSED", "EXPIRED"];
 const partnerStatuses = ["REQUESTED", "PENDING", "UNDER_REVIEW", "APPROVED", "ACTIVE", "PAUSED", "RUNNING", "PUBLISHED", "CANCELLED", "ENDED", "REJECTED"];
 const requestStatuses = ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT", "PAID", "APPROVED", "REJECTED", "CANCELLED"];
 const statusLabels: Record<string, string> = {
-  PENDING: "Pendente", REQUESTED: "Solicitada", UNDER_REVIEW: "Em análise", NEW: "Novo pedido", CANCELLED: "Cancelada", PAUSED: "Pausada", ENDED: "Encerrada",
+  PENDING: "Pendente", REQUESTED: "Solicitada", UNDER_REVIEW: "Em análise", NEW: "Novo pedido", ENDED: "Encerrada",
   ACTIVE: "Activa", RUNNING: "Em execução", PUBLISHED: "Publicada", PAUSED: "Pausada",
   EXPIRED: "Expirada", CANCELLED: "Cancelada", CONTACTED: "Contactado", PROPOSAL: "Proposta enviada",
   AWAITING_PAYMENT: "Aguarda pagamento", PAID: "Pago", APPROVED: "Aprovado", REJECTED: "Rejeitado",
