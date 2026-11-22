@@ -417,3 +417,13 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Commits: migração `8c81caf961e8ea3adb181d3771f217aa9fb1a8b1`; Server Action `cfcb56b356b973c25c49c9e17e5452b248845d0a`, `f4b63c5c5d948080e74a92c723505e736c746f17`; formulário `5ebdc8965e73a726abbbd26a13d6d8faa04c6487`; histórico cliente `528de19c980017ae265007f9cd3a454c1cd12e48`; acesso Super Admin `14e370cf7e0d5db452ffef26cec75fb95ea8750e`; painel de histórico `5b44c98bbb48b3f19e5008d9a7585143c1d55fb2`; CSS cliente `d02014eca0f84d4ee56d73cd80c87242908f8037`.
 - Limitação operacional: reembolso M-Pesa continua a depender da execução no operador e da introdução da referência externa pelo Super Admin. Sem API de operador configurada, não existe reembolso automático.
 - Não foram executados estornos reais nem testes com transacções reais, dado que o ambiente activo não tem ordens/pagamentos de serviço (a tabela de ajustamentos está vazia). As verificações de catálogo confirmam a RPC instalada, RLS activa e execução anónima bloqueada. O check Vercel dos commits desta intervenção está em falha por limite de builds da conta (build-rate-limit); não é possível declarar build/deploy validado.
+
+
+## F3.11 — Tratamento explícito de conflitos no callback M-Pesa (22/11/2026)
+
+- Corrigida a resposta HTTP do webhook quando a mesma transacção do operador chega com referência, montante, moeda ou comerciante divergentes: o recorder de auditoria devolve `CALLBACK_TRANSACTION_CONFLICT`, agora traduzido em HTTP 409 (conflito), em vez de 503 (indisponibilidade temporária).
+- Falhas de base de dados/serviço que não sejam conflito de integridade continuam a devolver 503, evitando classificar problemas transitórios como erros do cliente.
+- Criado helper puro `classifyMpesaCallbackAuditError`, evitando lógica de classificação duplicada no endpoint e sem expor mensagens de base de dados.
+- Adicionados testes unitários para conflito e falha transitória, além da suite de assinatura existente.
+- Commits: helper `14f7cf079c6fd5411acd1326dd4fc4c3aed08eeb`; endpoint `dd21696a86b2bbbea07b7a8bfa76ea0ab182df84`; testes `5f28f1e7e6fb24d6dfe4ed3a501917f0366ad146`.
+- Validação: alterações commitadas em `main`; testes CI/build não executados manualmente neste ambiente. Deploy de produção F3.10 verificado READY; F3.11 aguarda nova build/deploy.
