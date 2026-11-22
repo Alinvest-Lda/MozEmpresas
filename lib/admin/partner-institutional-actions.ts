@@ -177,6 +177,8 @@ export async function verifyPartnerBankTransfer(formData: FormData) {
   const {error}=await supabase.rpc("admin_confirm_partner_bank_transfer",{
     p_payment_id:paymentId,p_notes:value(formData,"verification_notes") || null,
   });
+  if(error?.message.includes("FINANCIAL_DOCUMENT_OVERPAID")) redirect("/dashboard/admin/parceiros/gestao?error=verify-overpayment");
+  if(error?.message.includes("FINANCIAL_DOCUMENT_NOT_PAYABLE")) redirect("/dashboard/admin/parceiros/gestao?error=verify-not-payable");
   if(error) redirect("/dashboard/admin/parceiros/gestao?error=verify");
   revalidatePath("/dashboard/admin/parceiros/gestao");
   redirect("/dashboard/admin/parceiros/gestao?saved=verified");
