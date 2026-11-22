@@ -27,3 +27,10 @@ export function verifyMpesaWebhookSignature(input: {
   const supplied = Buffer.from(suppliedHex, "hex");
   return supplied.length === expected.length && timingSafeEqual(supplied, expected);
 }
+
+
+export function classifyMpesaCallbackAuditError(message: string): "CALLBACK_TRANSACTION_CONFLICT" | "CALLBACK_AUDIT_UNAVAILABLE" {
+  return message.includes("CALLBACK_TRANSACTION_CONFLICT")
+    ? "CALLBACK_TRANSACTION_CONFLICT"
+    : "CALLBACK_AUDIT_UNAVAILABLE";
+}
