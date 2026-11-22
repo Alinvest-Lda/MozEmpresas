@@ -259,7 +259,8 @@ export async function createBackofficePartnerCampaign(formData: FormData) {
     assigned_operations_user_id:z.string().optional()})
     .safeParse({account_id:value(formData,"account_id"),product_id:value(formData,"product_id"),contract_id:value(formData,"contract_id")||undefined,
       title:value(formData,"title"),objective:value(formData,"objective")||undefined,starts_at:value(formData,"starts_at")||undefined,
-      ends_at:value(formData,"ends_at")||undefined,price_mzn:value(formData,"price_mzn")});
+      ends_at:value(formData,"ends_at")||undefined,price_mzn:value(formData,"price_mzn"),
+      assigned_operations_user_id:value(formData,"assigned_operations_user_id")||undefined});
   if(!parsed.success || (parsed.data.contract_id&&!uuid.safeParse(parsed.data.contract_id).success) ||
     (parsed.data.assigned_operations_user_id&&!uuid.safeParse(parsed.data.assigned_operations_user_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
   const {supabase,user}=await adminContext();
