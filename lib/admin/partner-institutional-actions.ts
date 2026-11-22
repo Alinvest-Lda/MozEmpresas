@@ -221,26 +221,26 @@ export async function createPartnerContact(formData: FormData) {
 }
 
 export async function createPartnerReportDelivery(formData: FormData) {
-  const parsed=z.object({account_id:uuid,contract_id:z.string().optional(),engagement_id:z.string().optional(),
+  const parsed=z.object({account_id:uuid,contract_id:z.string().optional(),engagement_id:z.string().optional(),campaign_id:z.string().optional(),
     title:z.string().min(2).max(180),report_type:z.enum(["PERFORMANCE","FINANCIAL","MARKET_INTELLIGENCE","CAMPAIGN","EXECUTIVE","OTHER"]),
     period_start:z.string().optional(),period_end:z.string().optional(),storage_path:z.string().max(500).optional(),
     external_url:z.string().url().optional().or(z.literal("")),recipient_emails:z.string().max(2000).optional(),
     delivery_channel:z.enum(["EMAIL","PORTAL","MEETING","SHARED_LINK","OTHER"]),status:z.enum(["DRAFT","READY","DELIVERED"])})
     .safeParse({account_id:value(formData,"account_id"),contract_id:value(formData,"contract_id")||undefined,
-      engagement_id:value(formData,"engagement_id")||undefined,title:value(formData,"title"),report_type:value(formData,"report_type"),
+      engagement_id:value(formData,"engagement_id")||undefined,campaign_id:value(formData,"campaign_id")||undefined,title:value(formData,"title"),report_type:value(formData,"report_type"),
       period_start:value(formData,"period_start")||undefined,period_end:value(formData,"period_end")||undefined,
       storage_path:value(formData,"storage_path")||undefined,external_url:value(formData,"external_url"),
       recipient_emails:value(formData,"recipient_emails")||undefined,delivery_channel:value(formData,"delivery_channel"),
       status:value(formData,"status")});
-  if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id].some(x=>x&&!uuid.safeParse(x).success) ||
+  if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id,parsed.data.campaign_id].some(x=>x&&!uuid.safeParse(x).success) ||
     (["READY","DELIVERED"].includes(parsed.data.status)&&!parsed.data.storage_path&&!parsed.data.external_url))
     redirect("/dashboard/admin/parceiros/gestao?error=report");
   const {supabase,user}=await adminContext();
-  if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id}))) redirect("/dashboard/admin/parceiros/gestao?error=report");
+  if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id}))) redirect("/dashboard/admin/parceiros/gestao?error=report");
   const recipients=(parsed.data.recipient_emails||"").split(/[;,\\n]/).map(x=>x.trim()).filter(Boolean);
   if(recipients.some(x=>!z.string().email().safeParse(x).success)) redirect("/dashboard/admin/parceiros/gestao?error=report");
   const {error}=await supabase.from("partner_report_deliveries").insert({
-    account_id:parsed.data.account_id,contract_id:parsed.data.contract_id||null,engagement_id:parsed.data.engagement_id||null,
+    account_id:parsed.data.account_id,contract_id:parsed.data.contract_id||null,engagement_id:parsed.data.engagement_id||null,campaign_id:parsed.data.campaign_id||null,
     title:parsed.data.title,report_type:parsed.data.report_type,period_start:parsed.data.period_start||null,
     period_end:parsed.data.period_end||null,storage_path:parsed.data.storage_path||null,external_url:parsed.data.external_url||null,
     recipient_emails:recipients,delivery_channel:parsed.data.delivery_channel,status:parsed.data.status,
