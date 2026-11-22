@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
+type AdminSupabase = Awaited<ReturnType<typeof getSuperAdminContext>>["supabase"];
 const uuid = z.string().uuid();
 const money = z.coerce.number().finite().nonnegative().max(100000000000);
 
@@ -20,7 +21,7 @@ function value(data: FormData, key: string) {
 
 
 type PartnerLinkIds = { contractId?: string; engagementId?: string; campaignId?: string; documentId?: string };
-async function partnerLinksValid(supabase: any, accountId: string, links: PartnerLinkIds) {
+async function partnerLinksValid(supabase: AdminSupabase, accountId: string, links: PartnerLinkIds) {
   const checks: Array<[string,string]> = [
     ...(links.contractId ? [["partner_contracts",links.contractId] as [string,string]] : []),
     ...(links.engagementId ? [["partner_service_engagements",links.engagementId] as [string,string]] : []),
@@ -39,7 +40,7 @@ async function partnerLinksValid(supabase: any, accountId: string, links: Partne
 async function isActivePlatformMember(supabase: any, userId?: string) {
   if (!userId) return true;
   const {data,error}=await supabase.rpc("admin_list_platform_staff");
-  return !error && Array.isArray(data) && data.some((member:any)=>member.user_id===userId);
+  return !error && Array.isArray(data) && data.some((member:{user_id:string})=>member.user_id===userId);
 }
 export async function createInstitutionalPartner(formData: FormData) {
   const parsed = z.object({
