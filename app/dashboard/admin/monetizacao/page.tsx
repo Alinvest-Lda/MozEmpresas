@@ -46,7 +46,7 @@ export default async function AdminMonetizationPage() {
     credit_purchases?: FinanceGroup[];
     promotions?: FinanceGroup[];
     wallets?: { wallet_count: number; wallet_balance: number; ledger_balance: number; mismatch_count: number };
-    reconciliation?: { wallet_balance_mismatches: number; payment_document_mismatches: number; paid_credit_purchases_missing_ledger: number; service_payment_issues: number; callbacks_needing_review: number };
+    reconciliation?: { wallet_balance_mismatches: number; payment_document_mismatches: number; paid_credit_purchases_missing_ledger: number; service_orders_checked?: number; service_payment_issues: number; callbacks_needing_review: number };
     promotion_cancellations?: { cancellation_count: number; credits_refunded: number };
   };
   const finance = (financeOverview ?? null) as FinanceOverview | null;
@@ -89,7 +89,7 @@ export default async function AdminMonetizationPage() {
               <article><span>Divergências de saldo</span><strong>{finance.reconciliation?.wallet_balance_mismatches ?? 0}</strong><small>Carteira versus ledger</small></article>
               <article><span>Pagamentos/documentos</span><strong>{finance.reconciliation?.payment_document_mismatches ?? 0}</strong><small>Estados incompatíveis</small></article>
               <article><span>Compras sem movimento</span><strong>{finance.reconciliation?.paid_credit_purchases_missing_ledger ?? 0}</strong><small>Compras pagas sem lançamento</small></article>
-              <article><span>Serviços por rever</span><strong>{finance.reconciliation?.service_payment_issues ?? 0}</strong><small>Conciliação de pagamentos</small></article>
+              <article><span>Serviços por rever</span><strong>{finance.reconciliation?.service_payment_issues ?? 0}</strong><small>{Number(finance.reconciliation?.service_orders_checked ?? 0).toLocaleString("pt-MZ")} ordens verificadas integralmente</small></article>
               <article><span>Callbacks por rever</span><strong>{finance.reconciliation?.callbacks_needing_review ?? 0}</strong><small>Eventos rejeitados ou em retry</small></article>
             </div>
             <div className={styles.productList}>
