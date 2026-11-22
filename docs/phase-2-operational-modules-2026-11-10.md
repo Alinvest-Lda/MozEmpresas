@@ -584,3 +584,10 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Não existem ainda campanhas nem ordens financeiras de parceiros em produção; por isso, não houve teste de liquidação real, débito de carteira, reembolso ou callback do operador.
 - As funções e permissões foram verificadas no catálogo. M-Pesa depende de credenciais e callback real do operador; reembolso M-Pesa é externo e referenciado, não automatizado.
 - A campanha por créditos exige associação empresarial explícita e saldo disponível. No momento da validação, nenhuma conta Parceiro estava associada a empresa; o fluxo de associação foi disponibilizado ao Super Admin, mas não se deve associar contas sem confirmar a titularidade.
+
+**Política de preços de parceiro (reforço F3.25g–F3.25i)**
+- Não foi assumida conversão 1 MZN = 1 crédito. O catálogo de publicidade empresarial já distingue preço directo e preço em créditos; o catálogo de parceiros passa agora a ter `credit_price` explícito e configurável por Super Admin.
+- Os nove formatos existentes estão inicialmente sem preço em créditos. Até à configuração, o pagamento por créditos é recusado com `PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED`; M-Pesa permanece disponível.
+- Produtos com preço MZN sob proposta podem receber o valor negociado pelo Super Admin ao emitir a cobrança. O valor acordado fica persistido na campanha e no documento/pagamento.
+- O RPC de emissão com preço negociado teve a execução PUBLIC/anon revogada; apenas authenticated pode chamar e o corpo valida Super Admin activo. O overload antigo sem preço foi revogado.
+- Migrations adicionais: `f325g_explicit_partner_ad_credit_pricing`, `f325h_partner_campaign_negotiated_price_override`, `f325i_restrict_partner_campaign_price_rpc_execution`.
