@@ -97,3 +97,23 @@ export async function issuePartnerAdPayment(formData: FormData) {
   revalidatePath("/parceiro/publicidade");
   redirect("/dashboard/admin/publicidade?result=payment-issued&method=" + method + "&reference=" + encodeURIComponent(String(data?.payment_reference || "")) + "&credits=" + String(data?.credits_charged || 0));
 }
+
+export async function cancelPartnerAdCampaign(formData: FormData) {
+  const id = String(formData.get("id") || "");
+  const reason = String(formData.get("reason") || "").trim();
+  const externalReference = String(formData.get("external_refund_reference") || "").trim();
+  if (!z.string().uuid().safeParse(id).success || reason.length < 8 || reason.length > 1000 || externalReference.length > 160) {
+    redirect("/dashboard/admin/publicidade?result=partner-cancel-error");
+  }
+  const { supabase, authorized } = await getSuperAdminContext();
+  if (!authorized) redirect("/login?next=/dashboard/admin/publicidade");
+  const { data, error } = await supabase.rpc("admin_cancel_partner_ad_campaign", {
+    p_campaign_id: id, p_reason: reason, p_external_refund_reference: externalReference || null,
+  });
+  if (error) {
+    const code = ["MPESA_REFUND_REFERENCE_REQUIRED","CANCELLATION_NOT_ALLOWED","CAMPAIGN_NOT_SETTLED","CAMPAIGN_ALREADY_REFUNDED","INVALID_MPESA_REFUND_REFERENCE"].find(x=>error.message.includes(x)) || "partner-cancel-error";
+    redirect("/dashboard/admin/publicidade?result="+code);
+  }
+  revalidatePath("/dashboard/admin/publicidade"); revalidatePath("/parceiro/publicidade"); revalidatePath("/dashboard/admin/monetizacao");
+  redirect("/dashboard/admin/publicidade?result=partner-cancel-success&refund="+String(data?.credits_refunded??0));
+}
