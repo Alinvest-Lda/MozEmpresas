@@ -155,15 +155,16 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
           <div className={styles.campaignMeta}><span><small>Início</small><strong>{fmtDate(c.starts_at)}</strong></span><span><small>Fim</small><strong>{fmtDate(c.ends_at)}</strong></span><span><small>Impressões</small><strong>{fmtNumber(c.impressions_count)}</strong></span><span><small>Cliques / CTR</small><strong>{fmtNumber(c.clicks_count)} · {ctr(c.clicks_count,c.impressions_count)}</strong></span><span><small>Preço / orçamento</small><strong>{c.price}</strong></span></div>
           {c.table === "partner" ? (() => {
             const payment = c.payment?.[0];
-            return payment
-              ? <div className={styles.destination}><strong>Cobrança: {label(payment.status)}</strong><p>{payment.payment_method} · {fmtNumber(payment.amount_mzn)} MZN · Referência {payment.payment_reference}</p></div>
-              : ["REQUESTED","APPROVED"].includes(c.status ?? "") ? <form action={issuePartnerAdPayment} className={styles.moderationForm}>
+            return <>
+              {payment ? <div className={styles.destination}><strong>Cobrança anterior: {label(payment.status)}</strong><p>{payment.payment_method} · {fmtNumber(payment.amount_mzn)} MZN · Referência {payment.payment_reference}</p></div> : null}
+              {(!payment || payment.status === "FAILED") && ["REQUESTED","APPROVED"].includes(c.status ?? "") ? <form action={issuePartnerAdPayment} className={styles.moderationForm}>
                   <input type="hidden" name="id" value={c.id}/>
                   <label><span>Preço acordado (MZN)</span><Input name="price_mzn" type="number" min={1} step="0.01" defaultValue={c.price_mzn ?? ""} placeholder="Obrigatório se o formato tiver preço sob proposta"/></label>
                   <label><span>Forma de pagamento</span><Select name="payment_method" defaultValue="MPESA"><option value="MPESA">M-Pesa (aguarda confirmação)</option><option value="CREDITS">Créditos (debita e activa)</option></Select></label>
-                  <button className="btn primary" type="submit">Emitir cobrança</button>
+                  <button className="btn primary" type="submit">{payment?.status === "FAILED" ? "Reemitir cobrança" : "Emitir cobrança"}</button>
                   <small>Por créditos, a conta Parceiro precisa de associação empresarial e saldo suficiente. Por M-Pesa, a campanha só activa após confirmação do operador.</small>
-                </form> : null;
+                </form> : null}
+            </>;
           })() : null}
           {c.table === "partner" && c.payment?.[0]?.status === "PAID" && c.starts_at && new Date(c.starts_at).getTime() > now.getTime() && ["APPROVED","ACTIVE","PAUSED"].includes(c.status ?? "") ? <form action={cancelPartnerAdCampaign} className={styles.cancelForm}>
             <input type="hidden" name="id" value={c.id}/>
