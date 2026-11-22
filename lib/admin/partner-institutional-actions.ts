@@ -143,12 +143,12 @@ export async function issuePartnerInvoice(formData: FormData) {
       (parsed.data.engagement_id && !uuid.safeParse(parsed.data.engagement_id).success) || (parsed.data.campaign_id && !uuid.safeParse(parsed.data.campaign_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=invoice");
   const {supabase,user}=await adminContext();
   if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id}))) redirect("/dashboard/admin/parceiros/gestao?error=invoice");
-  const {error}=await supabase.from("financial_documents").insert({
-    partner_account_id:parsed.data.account_id,business_id:null,user_id:user!.id,issued_by_internal_user_id:user!.id,
-    contract_id:parsed.data.contract_id || null,engagement_id:parsed.data.engagement_id || null,campaign_id:parsed.data.campaign_id || null,
-    document_type:"INVOICE",document_number:parsed.data.document_number,status:"ISSUED",
-    amount_mzn:parsed.data.amount_mzn,currency:"MZN",
+  const {error}=await supabase.rpc("admin_issue_partner_invoice",{
+    p_account_id:parsed.data.account_id,p_contract_id:parsed.data.contract_id||null,
+    p_engagement_id:parsed.data.engagement_id||null,p_campaign_id:parsed.data.campaign_id||null,
+    p_document_number:parsed.data.document_number,p_amount_mzn:parsed.data.amount_mzn,
   });
+  if(error?.message.includes("CAMPAIGN_INVOICE_AMOUNT_MISMATCH")) redirect("/dashboard/admin/parceiros/gestao?error=invoice-campaign-amount");
   if(error) redirect("/dashboard/admin/parceiros/gestao?error=invoice-save");
   revalidatePath("/dashboard/admin/parceiros/gestao");
   redirect("/dashboard/admin/parceiros/gestao?saved=invoice");
@@ -168,15 +168,15 @@ export async function recordPartnerBankTransfer(formData: FormData) {
     redirect("/dashboard/admin/parceiros/gestao?error=transfer");
   const {supabase,user}=await adminContext();
   if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id,documentId:parsed.data.document_id}))) redirect("/dashboard/admin/parceiros/gestao?error=transfer");
-  const {error}=await supabase.from("financial_payments").insert({
-    partner_account_id:parsed.data.account_id,business_id:null,user_id:user!.id,
-    contract_id:parsed.data.contract_id || null,engagement_id:parsed.data.engagement_id || null,campaign_id:parsed.data.campaign_id || null,
-    document_id:parsed.data.document_id || null,amount_mzn:parsed.data.amount_mzn,currency:"MZN",
-    method:"BANK_TRANSFER",status:"PENDING",reference:parsed.data.reference,
-    bank_name:parsed.data.bank_name || null,payer_name:parsed.data.payer_name || null,
-    transfer_date:parsed.data.transfer_date || null,proof_url:parsed.data.proof_url || null,
+  const {error}=await supabase.rpc("admin_record_partner_bank_transfer",{
+    p_account_id:parsed.data.account_id,p_amount_mzn:parsed.data.amount_mzn,p_reference:parsed.data.reference,
+    p_bank_name:parsed.data.bank_name||null,p_payer_name:parsed.data.payer_name||null,
+    p_transfer_date:parsed.data.transfer_date||null,p_proof_url:parsed.data.proof_url||null,
+    p_contract_id:parsed.data.contract_id||null,p_engagement_id:parsed.data.engagement_id||null,
+    p_campaign_id:parsed.data.campaign_id||null,p_document_id:parsed.data.document_id||null,
   });
   if(error?.code==="23505") redirect("/dashboard/admin/parceiros/gestao?error=transfer-duplicate");
+  if(error?.message.includes("CAMPAIGN_PAYMENT_MUST_BE_FULL")) redirect("/dashboard/admin/parceiros/gestao?error=transfer-campaign-amount");
   if(error) redirect("/dashboard/admin/parceiros/gestao?error=transfer-save");
   revalidatePath("/dashboard/admin/parceiros/gestao");
   redirect("/dashboard/admin/parceiros/gestao?saved=transfer");
@@ -255,31 +255,27 @@ export async function createPartnerReportDelivery(formData: FormData) {
 
 export async function createBackofficePartnerCampaign(formData: FormData) {
   const parsed=z.object({account_id:uuid,product_id:uuid,contract_id:z.string().optional(),title:z.string().min(2).max(180),
-    objective:z.string().max(1000).optional(),starts_at:z.string().optional(),ends_at:z.string().optional(),price_mzn:z.coerce.number().positive().max(100000000000),
-    assigned_operations_user_id:z.string().optional()})
+    objective:z.string().max(1000).optional(),starts_at:z.string().optional(),ends_at:z.string().optional(),
+    price_mzn:z.coerce.number().positive().max(100000000000),assigned_operations_user_id:z.string().optional()})
     .safeParse({account_id:value(formData,"account_id"),product_id:value(formData,"product_id"),contract_id:value(formData,"contract_id")||undefined,
       title:value(formData,"title"),objective:value(formData,"objective")||undefined,starts_at:value(formData,"starts_at")||undefined,
       ends_at:value(formData,"ends_at")||undefined,price_mzn:value(formData,"price_mzn"),
       assigned_operations_user_id:value(formData,"assigned_operations_user_id")||undefined});
   if(!parsed.success || (parsed.data.contract_id&&!uuid.safeParse(parsed.data.contract_id).success) ||
     (parsed.data.assigned_operations_user_id&&!uuid.safeParse(parsed.data.assigned_operations_user_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
-  const {supabase,user}=await adminContext();
+  const {supabase}=await adminContext();
   if(parsed.data.contract_id && !(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id}))) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
   if(!(await isActivePlatformMember(supabase,parsed.data.assigned_operations_user_id))) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
-  const {data:product,error:productError}=await supabase.from("partner_ad_products")
-    .select("id,price_mzn,active,surface,slot,duration_days").eq("id",parsed.data.product_id).maybeSingle();
-  if(productError||!product?.active) redirect("/dashboard/admin/parceiros/gestao?error=campaign-product");
-  if(product.price_mzn!=null && Number(product.price_mzn)!==parsed.data.price_mzn)
-    redirect("/dashboard/admin/parceiros/gestao?error=campaign-price");
-  const {error}=await supabase.from("partner_ad_campaigns").insert({
-    account_id:parsed.data.account_id,product_id:parsed.data.product_id,contract_id:parsed.data.contract_id||null,
-    title:parsed.data.title,objective:parsed.data.objective||null,starts_at:parsed.data.starts_at||null,ends_at:parsed.data.ends_at||null,
-    price_mzn:parsed.data.price_mzn,status:"REQUESTED",request_source:"BACKOFFICE",
-    created_by_internal_user_id:user!.id,assigned_operations_user_id:parsed.data.assigned_operations_user_id||null,surface:product.surface,slot:product.slot,
-    creative_type:"TEXT",campaign_mode:"GUARANTEED",priority:70,bid_mzn:0,frequency_cap:2,targeting:{},
-    impression_goal:null,impressions_count:0,clicks_count:0,campaign_kind:"GUARANTEED",bid_cpm:0,
-    target_interests:[],target_locations:[],payment_method_preference:"MPESA",
+  const {error}=await supabase.rpc("admin_create_partner_ad_campaign_bank_transfer",{
+    p_account_id:parsed.data.account_id,p_product_id:parsed.data.product_id,p_contract_id:parsed.data.contract_id||null,
+    p_title:parsed.data.title,p_objective:parsed.data.objective||null,
+    p_starts_at:parsed.data.starts_at||null,p_ends_at:parsed.data.ends_at||null,
+    p_price_mzn:parsed.data.price_mzn,p_assigned_operations_user_id:parsed.data.assigned_operations_user_id||null,
   });
+  if(error?.message.includes("FIXED_PRODUCT_PRICE_CANNOT_BE_OVERRIDDEN")) redirect("/dashboard/admin/parceiros/gestao?error=campaign-price");
+  if(error?.message.includes("AD_PRODUCT_NOT_AVAILABLE")) redirect("/dashboard/admin/parceiros/gestao?error=campaign-product");
+  if(error?.message.includes("AD_SPACE_UNAVAILABLE")) redirect("/dashboard/admin/parceiros/gestao?error=campaign-capacity");
+  if(error?.message.includes("CAMPAIGN_EXCEEDS_PRODUCT_DURATION")||error?.message.includes("INVALID_CAMPAIGN_DATES")) redirect("/dashboard/admin/parceiros/gestao?error=campaign-dates");
   if(error) redirect("/dashboard/admin/parceiros/gestao?error=campaign-save");
   revalidatePath("/dashboard/admin/parceiros/gestao");
   revalidatePath("/dashboard/admin/publicidade");
