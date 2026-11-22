@@ -3,6 +3,7 @@ import { PartnerAccessLink } from "@/components/partner-access-link";
 import { PartnerAccessSubmitButton } from "@/components/partner-access-submit-button";
 import styles from "./parceiros.module.css";
 import { Input, Select } from "@/components/ui";
+import { linkPartnerBusiness } from "@/lib/admin/partner-billing-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -12,12 +13,16 @@ const errorMessages: Record<string, string> = {
   create: "Não foi possível criar o acesso. Verifique as permissões e tente novamente.",
 };
 
-export default async function PartnerAccessAdmin({ searchParams }: { searchParams: Promise<{ created?: string; access?: string; error?: string; status?: string }> }) {
+export default async function PartnerAccessAdmin({ searchParams }: { searchParams: Promise<{ created?: string; access?: string; error?: string; status?: string; billing?: string }> }) {
   await requireSuperAdmin();
   const params = await searchParams;
   const inviteUrl = params.created === "1" && params.access ? params.access : "";
   const supabase = await (await import("@/lib/supabase/server")).createClient();
   const { data: grantsData, error: grantsError } = await supabase.rpc("partner_access_list");
+  const [{data: partnerAccounts},{data: businesses}] = await Promise.all([
+    supabase.from("partner_accounts").select("id,name,status,business_id").order("name").limit(200),
+    supabase.from("businesses").select("id,name").is("archived_at",null).order("name").limit(500)
+  ]);
   const grants = (Array.isArray(grantsData) ? grantsData : []) as Array<{
     id: string; email: string; status: string; created_at: string; expires_at: string; accepted_at: string | null;
   }>;
@@ -69,6 +74,7 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
         ) : null}
 
         {params.error ? <div className={styles.errorNotice} role="alert">{errorMessages[params.error] || "Não foi possível concluir a operação. Tente novamente."}</div> : null}
+        {params.billing ? <div className={params.billing==="success" ? styles.noticeInfo : styles.errorNotice} role={params.billing==="success"?"status":"alert"}>{params.billing==="success"?"Associação empresarial actualizada. A carteira de créditos dessa empresa poderá ser usada para campanhas da conta Parceiro.":params.billing==="BUSINESS_ALREADY_LINKED_TO_PARTNER"?"Esta empresa já está associada a outra conta Parceiro.":params.billing==="BUSINESS_NOT_AVAILABLE"?"A empresa seleccionada não está disponível.":params.billing==="invalid"?"Selecção inválida.": "Não foi possível actualizar a associação empresarial."}</div> : null}
 
         <div className={styles.mainGrid}>
           <section className={styles.formPanel} aria-labelledby="new-access-title">
@@ -107,6 +113,39 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
             <div className={styles.securityCallout}><strong>Nota de segurança</strong><p>O link expira automaticamente. Se o prazo terminar, será necessário criar um novo convite.</p></div>
           </aside>
         </div>
+
+        <section className={styles.invitesPanel} aria-labelledby="partner-billing-title">
+          <div className={styles.invitesHeader}>
+            <div>
+              <span className={styles.kicker}>Facturação e carteira</span>
+              <h2 id="partner-billing-title">Associação empresarial das contas Parceiro</h2>
+              <p>Associe uma conta Parceiro a uma empresa existente apenas quando a relação jurídica/comercial estiver confirmada. Esta associação permite utilizar a carteira de créditos da empresa; não transfere a titularidade da conta nem mistura os registos financeiros: a factura publicitária continua emitida à conta Parceiro.</p>
+            </div>
+          </div>
+          {!partnerAccounts?.length ? <div className={styles.emptyState}>Ainda não existem contas Parceiro activas.</div> : <div className={styles.tableWrap}>
+            <table className={styles.invitesTable}>
+              <thead><tr><th>Conta Parceiro</th><th>Estado</th><th>Empresa associada / carteira</th><th>Acção</th></tr></thead>
+              <tbody>
+                {(partnerAccounts??[]).map((account:any)=><tr key={account.id}>
+                  <td data-label="Conta Parceiro"><strong>{account.name}</strong></td>
+                  <td data-label="Estado">{account.status}</td>
+                  <td data-label="Empresa associada">
+                    <form action={linkPartnerBusiness} className={styles.statusFilter}>
+                      <input type="hidden" name="account_id" value={account.id}/>
+                      <Select name="business_id" defaultValue={account.business_id||""}>
+                        <option value="">Sem associação (M-Pesa)</option>
+                        {(businesses??[]).map((business:any)=><option key={business.id} value={business.id}>{business.name}</option>)}
+                      </Select>
+                      <button type="submit">Guardar</button>
+                    </form>
+                  </td>
+                  <td data-label="Carteira">{account.business_id?"Créditos elegíveis após verificação de saldo":"Apenas M-Pesa"}</td>
+                </tr>)}
+              </tbody>
+            </table>
+          </div>}
+          <p className={styles.tableNote}>A associação é única por empresa. O Super Admin deve confirmar previamente que a conta Parceiro representa a mesma entidade empresarial. A cobrança por M-Pesa continua disponível sem associação.</p>
+        </section>
 
         <section className={styles.invitesPanel} aria-labelledby="invites-title">
           <div className={styles.invitesHeader}>
