@@ -207,3 +207,48 @@ export async function createPartnerReportDelivery(formData: FormData) {
   revalidatePath("/dashboard/admin/parceiros/gestao");
   redirect("/dashboard/admin/parceiros/gestao?saved=report");
 }
+
+
+export async function createBackofficePartnerCampaign(formData: FormData) {
+  const parsed=z.object({account_id:uuid,product_id:uuid,contract_id:z.string().optional(),title:z.string().min(2).max(180),
+    objective:z.string().max(1000).optional(),starts_at:z.string().optional(),ends_at:z.string().optional(),price_mzn:z.coerce.number().positive().max(100000000000)})
+    .safeParse({account_id:value(formData,"account_id"),product_id:value(formData,"product_id"),contract_id:value(formData,"contract_id")||undefined,
+      title:value(formData,"title"),objective:value(formData,"objective")||undefined,starts_at:value(formData,"starts_at")||undefined,
+      ends_at:value(formData,"ends_at")||undefined,price_mzn:value(formData,"price_mzn")});
+  if(!parsed.success || (parsed.data.contract_id&&!uuid.safeParse(parsed.data.contract_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
+  const {supabase,user}=await adminContext();
+  const {data:product,error:productError}=await supabase.from("partner_ad_products")
+    .select("id,price_mzn,active,surface,slot,duration_days").eq("id",parsed.data.product_id).maybeSingle();
+  if(productError||!product?.active) redirect("/dashboard/admin/parceiros/gestao?error=campaign-product");
+  if(product.price_mzn!=null && Number(product.price_mzn)!==parsed.data.price_mzn)
+    redirect("/dashboard/admin/parceiros/gestao?error=campaign-price");
+  const {error}=await supabase.from("partner_ad_campaigns").insert({
+    account_id:parsed.data.account_id,product_id:parsed.data.product_id,contract_id:parsed.data.contract_id||null,
+    title:parsed.data.title,objective:parsed.data.objective||null,starts_at:parsed.data.starts_at||null,ends_at:parsed.data.ends_at||null,
+    price_mzn:parsed.data.price_mzn,status:"REQUESTED",request_source:"BACKOFFICE",
+    created_by_internal_user_id:user!.id,surface:product.surface,slot:product.slot,
+    creative_type:"TEXT",campaign_mode:"GUARANTEED",priority:70,bid_mzn:0,frequency_cap:2,targeting:{},
+    impression_goal:null,impressions_count:0,clicks_count:0,campaign_kind:"GUARANTEED",bid_cpm:0,
+    target_interests:[],target_locations:[],payment_method_preference:"MPESA",
+  });
+  if(error) redirect("/dashboard/admin/parceiros/gestao?error=campaign-save");
+  revalidatePath("/dashboard/admin/parceiros/gestao");
+  revalidatePath("/dashboard/admin/publicidade");
+  redirect("/dashboard/admin/parceiros/gestao?saved=campaign");
+}
+
+export async function updatePartnerEngagementStatus(formData: FormData) {
+  const id=value(formData,"engagement_id");
+  const status=value(formData,"status");
+  if(!uuid.safeParse(id).success || !["RECEIVED","SCOPING","AWAITING_APPROVAL","APPROVED","IN_PROGRESS","UNDER_REVIEW","DELIVERED","CLOSED","ON_HOLD","CANCELLED"].includes(status))
+    redirect("/dashboard/admin/parceiros/gestao?error=engagement-status");
+  const {supabase}=await adminContext();
+  const updates:Record<string,unknown>={status};
+  if(status==="IN_PROGRESS") updates.started_at=new Date().toISOString();
+  if(status==="DELIVERED") updates.delivered_at=new Date().toISOString();
+  if(status==="CLOSED") updates.closed_at=new Date().toISOString();
+  const {error}=await supabase.from("partner_service_engagements").update(updates).eq("id",id);
+  if(error) redirect("/dashboard/admin/parceiros/gestao?error=engagement-status");
+  revalidatePath("/dashboard/admin/parceiros/gestao");
+  redirect("/dashboard/admin/parceiros/gestao?saved=engagement-status");
+}
