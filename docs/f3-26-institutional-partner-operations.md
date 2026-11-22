@@ -53,9 +53,9 @@ O claim do convite cria a associação de utilizador à conta indicada. As funç
 
 ## Limitações ainda explícitas
 
-- O registo de relatório documenta a entrega, mas não envia emails automaticamente nem faz upload do ficheiro; o operador indica caminho no Storage ou link externo e regista a evidência.
+- O registo de relatório documenta a entrega, mas não envia emails automaticamente, não agenda relatórios periódicos nem faz upload do ficheiro; o operador indica caminho no Storage ou link externo e regista a evidência.
 - O comprovativo bancário é opcional por URL nesta primeira versão; o upload de comprovativo para Storage e a validação bancária via integração externa não estão automatizados.
-- A factura é registada na estrutura financeira existente; geração de PDF, assinatura, envio e numeração fiscal automatizada não fazem parte desta intervenção.
+- A factura é registada na estrutura financeira existente; geração de PDF, assinatura, envio e numeração fiscal automatizada não fazem parte desta intervenção. A frequência contratual é registada, mas a emissão recorrente automática de facturas ainda não está agendada.
 - A confirmação de pagamento aprova a campanha quando totalmente liquidada, mas a activação operacional continua a exigir revisão no módulo de publicidade.
 - Não foram criados dados fictícios para simular contratos ou pagamentos reais. A base actual contém uma conta Parceiro preexistente; não existem ainda contratos, contactos, execuções, relatórios ou transferências desta nova estrutura.
 
@@ -67,4 +67,4 @@ O claim do convite cria a associação de utilizador à conta indicada. As funç
 - `20261122121114_f326d_scoped_admin_financial_write_policies`
 - `20261122121219_f326e_partner_operations_fk_indexes`
 - `20261122121357_f326f_partner_campaign_bank_transfer_settlement`
-- `20261122121552_f326g_bind_optional_partner_portal_access`\n- `20261122121736_f326h_prevent_duplicate_partner_bank_transfers`\n- `20261122121823_f326i_reconcile_partner_invoices_on_bank_settlement`\n- `20261122121857_f326j_guard_invoice_overpayment_and_void_settlement`
+- `20261122121552_f326g_bind_optional_partner_portal_access`\n- `20261122121736_f326h_prevent_duplicate_partner_bank_transfers`\n- `20261122121823_f326i_reconcile_partner_invoices_on_bank_settlement`\n- `20261122121857_f326j_guard_invoice_overpayment_and_void_settlement`\n- `20261122122107_f326k_secure_internal_staff_directory`
