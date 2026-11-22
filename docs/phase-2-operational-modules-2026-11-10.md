@@ -484,3 +484,15 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - A auditoria Performance continua a sinalizar duas FKs no schema privado `private.partner_access_grants`, que ficam fora desta cobertura pública e serão tratadas com validação específica do schema privado.
 - Não foram removidos índices existentes, nem alteradas políticas RLS nesta intervenção. Os avisos de índices não utilizados não foram tratados como autorização para apagar índices, dado o baixo volume actual de dados e a ausência de tráfego representativo.
 - Estado dos módulos de dados: cobertura de FK no schema public concluída. Isto é melhoria de desempenho e integridade de relações, não prova isolada de que os fluxos de pagamento, estorno ou entrega de anúncios foram testados com transacções reais.
+
+## F3.20 — Isolamento por empresa e hardening RLS (22/11/2026)
+
+- Corrigida a política de leitura de `business_promotion_cancellations`: a condição de associação compara agora `business_members.business_id` com o `business_id` do registo, eliminando a comparação tautológica anterior que podia permitir leitura cruzada entre empresas.
+- O acesso de leitura permanece limitado ao proprietário da empresa, membros com papel owner/admin/operator e Super Admin activo.
+- Optimizadas as políticas de leitura e actualização de `platform_service_subscriptions`: chamadas a `auth.uid()` passaram a subconsultas estáveis, preservando a verificação de proprietário/membro e o acesso administrativo activo. UPDATE mantém `USING` e `WITH CHECK`.
+- Criados índices para as duas FKs privadas de `private.partner_access_grants`; a consulta de catálogo confirmou zero FKs sem índice nesse schema.
+- Verificação pós-migration confirmou as expressões das três políticas, o escopo por empresa e os dois índices privados.
+- Migration aplicada em produção: `20261122104536_f320_tenant_scoped_cancellation_rls_and_private_fk_indexes`.
+- O advisor de segurança continua a listar 4 RPCs SECURITY DEFINER acessíveis a anon para decisões públicas de publicidade e validação de convite, e 29 acessíveis a authenticated. A maioria são operações de negócio intencionais com autorização interna; continuam a exigir revisão função a função. Não foram revogados acessos em massa para evitar quebrar o portal, a publicidade pública, os parceiros ou os checkouts.
+- O advisor ainda sinaliza tabelas com RLS sem políticas; os privilégios directos permanecem bloqueados a anon/authenticated em tabelas internas de eventos, contacto, parceiros e rate-limit. Não foram adicionadas políticas de leitura/escrita genéricas.
+- A auditoria de performance ainda identifica 27 pares/grupos de políticas permissivas sobrepostas e 6 casos de auth initplan. F3.20 corrigiu os três casos identificados nesta intervenção; a consolidação dos restantes requer análise por tabela e teste de isolamento multi-tenant.
