@@ -2,7 +2,7 @@
 alter table public.ad_delivery_events
   add constraint ad_delivery_events_source_check
     check (campaign_source in ('business','partner')) not valid,
-  add constraint ad_delivery_events_event_type_check
+  add constraint ad_delivery_events_type_check
     check (event_type in ('IMPRESSION','CLICK')) not valid,
   add constraint ad_delivery_events_visitor_key_check
     check (length(visitor_key) between 16 and 200) not valid,
@@ -12,7 +12,7 @@ alter table public.ad_delivery_events
 alter table public.ad_delivery_events
   validate constraint ad_delivery_events_source_check;
 alter table public.ad_delivery_events
-  validate constraint ad_delivery_events_event_type_check;
+  validate constraint ad_delivery_events_type_check;
 alter table public.ad_delivery_events
   validate constraint ad_delivery_events_visitor_key_check;
 alter table public.ad_delivery_events
