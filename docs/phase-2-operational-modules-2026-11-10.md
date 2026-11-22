@@ -468,3 +468,4 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Verificação de catálogo confirmou a assinatura, permissões e implementação da contagem integral. Consulta directa actual: 0 ordens de serviço; 0 divergências calculáveis. Sem movimentos reais, não é possível certificar cenários de estorno e liquidação ponta a ponta.
 - Migration aplicada em produção: `20261122103803_f316_exhaustive_financial_reconciliation`.
 - Deploy F3.15 confirmado READY antes desta alteração de base de dados. F3.16 não altera a interface; a RPC em produção foi actualizada directamente no Supabase.
+- A interface administrativa passou a mostrar também a quantidade total de ordens de serviço verificadas pela reconciliação integral (commit `a956149f`); a publicação desta actualização aguarda build Vercel.
