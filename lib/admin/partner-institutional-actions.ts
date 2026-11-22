@@ -28,8 +28,9 @@ async function partnerLinksValid(supabase: any, accountId: string, links: Partne
     ...(links.documentId ? [["financial_documents",links.documentId] as [string,string]] : []),
   ];
   for (const [table,id] of checks) {
-    const {data,error}=await supabase.from(table).select("partner_account_id,account_id").eq("id",id).maybeSingle();
-    const owner=data?.partner_account_id ?? data?.account_id;
+    const ownerColumn=table==="financial_documents"?"partner_account_id":"account_id";
+    const {data,error}=await supabase.from(table).select(ownerColumn).eq("id",id).maybeSingle();
+    const owner=data?.[ownerColumn];
     if(error || owner!==accountId) return false;
   }
   return true;
