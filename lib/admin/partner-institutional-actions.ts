@@ -156,3 +156,54 @@ export async function verifyPartnerBankTransfer(formData: FormData) {
   revalidatePath("/dashboard/admin/parceiros/gestao");
   redirect("/dashboard/admin/parceiros/gestao?saved=verified");
 }
+
+
+export async function createPartnerContact(formData: FormData) {
+  const parsed=z.object({account_id:uuid,full_name:z.string().min(2).max(160),role_title:z.string().max(120).optional(),
+    email:z.string().email().optional().or(z.literal("")),phone:z.string().max(60).optional(),
+    is_primary:z.enum(["true","false"]),is_billing_contact:z.enum(["true","false"]),receives_reports:z.enum(["true","false"])})
+    .safeParse({account_id:value(formData,"account_id"),full_name:value(formData,"full_name"),role_title:value(formData,"role_title")||undefined,
+      email:value(formData,"email"),phone:value(formData,"phone"),is_primary:value(formData,"is_primary"),
+      is_billing_contact:value(formData,"is_billing_contact"),receives_reports:value(formData,"receives_reports")});
+  if(!parsed.success || (!parsed.data.email && !parsed.data.phone)) redirect("/dashboard/admin/parceiros/gestao?error=contact");
+  const {supabase,user}=await adminContext();
+  const {error}=await supabase.from("partner_contacts").insert({
+    account_id:parsed.data.account_id,full_name:parsed.data.full_name,role_title:parsed.data.role_title||null,
+    email:parsed.data.email||null,phone:parsed.data.phone||null,is_primary:parsed.data.is_primary==="true",
+    is_billing_contact:parsed.data.is_billing_contact==="true",receives_reports:parsed.data.receives_reports==="true",created_by:user!.id,
+  });
+  if(error) redirect("/dashboard/admin/parceiros/gestao?error=contact-save");
+  revalidatePath("/dashboard/admin/parceiros/gestao");
+  redirect("/dashboard/admin/parceiros/gestao?saved=contact");
+}
+
+export async function createPartnerReportDelivery(formData: FormData) {
+  const parsed=z.object({account_id:uuid,contract_id:z.string().optional(),engagement_id:z.string().optional(),
+    title:z.string().min(2).max(180),report_type:z.enum(["PERFORMANCE","FINANCIAL","MARKET_INTELLIGENCE","CAMPAIGN","EXECUTIVE","OTHER"]),
+    period_start:z.string().optional(),period_end:z.string().optional(),storage_path:z.string().max(500).optional(),
+    external_url:z.string().url().optional().or(z.literal("")),recipient_emails:z.string().max(2000).optional(),
+    delivery_channel:z.enum(["EMAIL","PORTAL","MEETING","SHARED_LINK","OTHER"]),status:z.enum(["DRAFT","READY","DELIVERED"])})
+    .safeParse({account_id:value(formData,"account_id"),contract_id:value(formData,"contract_id")||undefined,
+      engagement_id:value(formData,"engagement_id")||undefined,title:value(formData,"title"),report_type:value(formData,"report_type"),
+      period_start:value(formData,"period_start")||undefined,period_end:value(formData,"period_end")||undefined,
+      storage_path:value(formData,"storage_path")||undefined,external_url:value(formData,"external_url"),
+      recipient_emails:value(formData,"recipient_emails")||undefined,delivery_channel:value(formData,"delivery_channel"),
+      status:value(formData,"status")});
+  if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id].some(x=>x&&!uuid.safeParse(x).success) ||
+    (parsed.data.status==="DELIVERED"&&!parsed.data.storage_path&&!parsed.data.external_url))
+    redirect("/dashboard/admin/parceiros/gestao?error=report");
+  const {supabase,user}=await adminContext();
+  const recipients=(parsed.data.recipient_emails||"").split(/[;,\\n]/).map(x=>x.trim()).filter(Boolean);
+  if(recipients.some(x=>!z.string().email().safeParse(x).success)) redirect("/dashboard/admin/parceiros/gestao?error=report");
+  const {error}=await supabase.from("partner_report_deliveries").insert({
+    account_id:parsed.data.account_id,contract_id:parsed.data.contract_id||null,engagement_id:parsed.data.engagement_id||null,
+    title:parsed.data.title,report_type:parsed.data.report_type,period_start:parsed.data.period_start||null,
+    period_end:parsed.data.period_end||null,storage_path:parsed.data.storage_path||null,external_url:parsed.data.external_url||null,
+    recipient_emails:recipients,delivery_channel:parsed.data.delivery_channel,status:parsed.data.status,
+    delivered_at:parsed.data.status==="DELIVERED"?new Date().toISOString():null,
+    delivered_by:parsed.data.status==="DELIVERED"?user!.id:null,created_by:user!.id,
+  });
+  if(error) redirect("/dashboard/admin/parceiros/gestao?error=report-save");
+  revalidatePath("/dashboard/admin/parceiros/gestao");
+  redirect("/dashboard/admin/parceiros/gestao?saved=report");
+}
