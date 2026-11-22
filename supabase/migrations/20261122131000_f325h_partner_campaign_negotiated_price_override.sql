@@ -12,4 +12,5 @@ begin
 end
 $migration$;
 revoke all on function public.admin_issue_partner_ad_payment(uuid,text) from public,anon,authenticated;
+revoke all on function public.admin_issue_partner_ad_payment(uuid,text,numeric) from public,anon,authenticated;
 grant execute on function public.admin_issue_partner_ad_payment(uuid,text,numeric) to authenticated;
