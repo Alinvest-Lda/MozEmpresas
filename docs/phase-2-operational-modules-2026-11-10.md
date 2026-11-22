@@ -496,3 +496,13 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - O advisor de segurança continua a listar 4 RPCs SECURITY DEFINER acessíveis a anon para decisões públicas de publicidade e validação de convite, e 29 acessíveis a authenticated. A maioria são operações de negócio intencionais com autorização interna; continuam a exigir revisão função a função. Não foram revogados acessos em massa para evitar quebrar o portal, a publicidade pública, os parceiros ou os checkouts.
 - O advisor ainda sinaliza tabelas com RLS sem políticas; os privilégios directos permanecem bloqueados a anon/authenticated em tabelas internas de eventos, contacto, parceiros e rate-limit. Não foram adicionadas políticas de leitura/escrita genéricas.
 - A auditoria de performance ainda identifica 27 pares/grupos de políticas permissivas sobrepostas e 6 casos de auth initplan. F3.20 corrigiu os três casos identificados nesta intervenção; a consolidação dos restantes requer análise por tabela e teste de isolamento multi-tenant.
+
+## F3.21 — Integridade do ciclo de compras de créditos (22/11/2026)
+
+- Consolidada a política SELECT de `credit_purchase_requests`: requerente, proprietário da empresa e membros activos da plataforma passam a partilhar uma única política explícita.
+- Removida a política de UPDATE administrativo directo e revogado UPDATE a `PUBLIC`, `anon` e `authenticated`. As decisões de aprovação/rejeição passam exclusivamente por `admin_decide_credit_purchase()`, que verifica Super Admin activo, bloqueia a requisição e actualiza carteira + ledger de forma transaccional.
+- Consolidada a leitura de `platform_service_adjustments` numa política que cobre proprietário, membros autorizados e Super Admin activo.
+- Verificação pós-migration: `authenticated UPDATE=false`, `anon UPDATE=false`, `service_role UPDATE=true`, `authenticated SELECT=true`. A RPC de decisão permanece executável por authenticated, mas valida Super Admin no corpo; anon EXECUTE=false.
+- Migration aplicada no Supabase: `20261122105012_f321_credit_purchase_write_lockdown_and_rls_consolidation`.
+- A interface Super Admin já usa a RPC `admin_decide_credit_purchase`; a compra por webhook continua a usar RPC separada de service_role. Não foram alterados os fluxos de checkout do cliente.
+- A auditoria continua a exigir análise das políticas de publicidade e das RPCs SECURITY DEFINER restantes. Não foram aplicadas revogações generalizadas.
