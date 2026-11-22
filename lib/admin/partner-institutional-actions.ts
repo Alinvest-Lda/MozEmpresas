@@ -41,6 +41,8 @@ export async function createInstitutionalPartner(formData: FormData) {
     name: z.string().min(2).max(180),
     legal_name: z.string().max(180).optional(),
     tax_id: z.string().max(80).optional(),
+    billing_address: z.string().max(300).optional(),
+    billing_city: z.string().max(120).optional(),
     contact_email: z.string().email().optional().or(z.literal("")),
     contact_phone: z.string().max(60).optional(),
     operating_model: z.enum(["MANAGED", "STRATEGIC", "HYBRID", "SELF_SERVICE"]),
@@ -48,7 +50,8 @@ export async function createInstitutionalPartner(formData: FormData) {
     description: z.string().max(2000).optional(),
   }).safeParse({
     name: value(formData,"name"), legal_name: value(formData,"legal_name") || undefined,
-    tax_id: value(formData,"tax_id") || undefined, contact_email: value(formData,"contact_email"),
+    tax_id: value(formData,"tax_id") || undefined, billing_address: value(formData,"billing_address") || undefined,
+    billing_city: value(formData,"billing_city") || undefined, contact_email: value(formData,"contact_email"),
     contact_phone: value(formData,"contact_phone"), operating_model: value(formData,"operating_model"),
     portal_enabled: value(formData,"portal_enabled"), description: value(formData,"description") || undefined,
   });
@@ -56,6 +59,7 @@ export async function createInstitutionalPartner(formData: FormData) {
   const { supabase } = await adminContext();
   const { error } = await supabase.from("partner_accounts").insert({
     name: parsed.data.name, legal_name: parsed.data.legal_name ?? null, tax_id: parsed.data.tax_id ?? null,
+    billing_address: parsed.data.billing_address ?? null, billing_city: parsed.data.billing_city ?? null,
     contact_email: parsed.data.contact_email || null, contact_phone: parsed.data.contact_phone || null,
     operating_model: parsed.data.operating_model, portal_enabled: parsed.data.portal_enabled === "true",
     description: parsed.data.description ?? null, business_id: null, status: "ACTIVE",
@@ -160,6 +164,7 @@ export async function recordPartnerBankTransfer(formData: FormData) {
     bank_name:parsed.data.bank_name || null,payer_name:parsed.data.payer_name || null,
     transfer_date:parsed.data.transfer_date || null,proof_url:parsed.data.proof_url || null,
   });
+  if(error?.code==="23505") redirect("/dashboard/admin/parceiros/gestao?error=transfer-duplicate");
   if(error) redirect("/dashboard/admin/parceiros/gestao?error=transfer-save");
   revalidatePath("/dashboard/admin/parceiros/gestao");
   redirect("/dashboard/admin/parceiros/gestao?saved=transfer");
