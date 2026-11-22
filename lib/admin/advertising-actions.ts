@@ -111,9 +111,9 @@ export async function cancelPartnerAdCampaign(formData: FormData) {
     p_campaign_id: id, p_reason: reason, p_external_refund_reference: externalReference || null,
   });
   if (error) {
-    const code = ["MPESA_REFUND_REFERENCE_REQUIRED","CANCELLATION_NOT_ALLOWED","CAMPAIGN_NOT_SETTLED","CAMPAIGN_ALREADY_REFUNDED","INVALID_MPESA_REFUND_REFERENCE"].find(x=>error.message.includes(x)) || "partner-cancel-error";
+    const code = ["MPESA_REFUND_REFERENCE_REQUIRED","EXTERNAL_REFUND_REFERENCE_REQUIRED","CANCELLATION_NOT_ALLOWED","CAMPAIGN_NOT_SETTLED","CAMPAIGN_ALREADY_REFUNDED","INVALID_MPESA_REFUND_REFERENCE","INVALID_EXTERNAL_REFUND_REFERENCE"].find(x=>error.message.includes(x)) || "partner-cancel-error";
     redirect("/dashboard/admin/publicidade?result="+code);
   }
   revalidatePath("/dashboard/admin/publicidade"); revalidatePath("/parceiro/publicidade"); revalidatePath("/dashboard/admin/monetizacao");
-  redirect("/dashboard/admin/publicidade?result=partner-cancel-success&refund="+String(data?.credits_refunded??0));
+  redirect("/dashboard/admin/publicidade?result=partner-cancel-success&refund="+String(data?.credits_refunded??0)+"&refundType="+encodeURIComponent(String(data?.refund_type??""))+"&reference="+encodeURIComponent(String(data?.external_reference??"")));
 }
