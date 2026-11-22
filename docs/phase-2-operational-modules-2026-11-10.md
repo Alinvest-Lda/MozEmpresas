@@ -591,3 +591,4 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Produtos com preço MZN sob proposta podem receber o valor negociado pelo Super Admin ao emitir a cobrança. O valor acordado fica persistido na campanha e no documento/pagamento.
 - O RPC de emissão com preço negociado teve a execução PUBLIC/anon revogada; apenas authenticated pode chamar e o corpo valida Super Admin activo. O overload antigo sem preço foi revogado.
 - Migrations adicionais: `f325g_explicit_partner_ad_credit_pricing`, `f325h_partner_campaign_negotiated_price_override`, `f325i_restrict_partner_campaign_price_rpc_execution`.
+- F3.25j: indexadas as novas chaves estrangeiras dos pagamentos, documentos e estornos de campanhas Parceiro, eliminando os novos avisos de FK sem índice no advisor de performance.
