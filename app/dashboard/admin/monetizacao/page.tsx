@@ -19,6 +19,7 @@ export default async function AdminMonetizationPage() {
     { data: partnerAdProducts, error: partnerProductsError },
     { count: impressions, error: impressionsError },
     { count: clicks, error: clicksError },
+    { data: financeOverview, error: financeOverviewError },
   ] = await Promise.all([
     supabase.from("platform_plans").select("id,code,name,description,monthly_price,currency,active").order("monthly_price"),
     supabase.from("business_promotions").select("id,title,placement,status,budget,currency,starts_at,ends_at,created_at,businesses:business_id(name)").order("created_at", { ascending: false }).limit(30),
@@ -27,6 +28,7 @@ export default async function AdminMonetizationPage() {
     supabase.from("partner_ad_products").select("id,code,name,placement,surface,slot,description,duration_days,price_mzn,capacity,active").order("surface").order("placement"),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "IMPRESSION"),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "CLICK"),
+    supabase.rpc("admin_financial_operations_overview"),
   ]);
 
   const planRows = plans ?? [];
@@ -35,7 +37,20 @@ export default async function AdminMonetizationPage() {
   const promotionRows = promotions ?? [];
   const activePlans = planRows.filter(p => p.active).length;
   const activeProducts = [...businessProducts, ...partnerProducts].filter(p => p.active).length;
-  const queryErrors = [plansError, promotionsError, subscriptionsError, businessProductsError, partnerProductsError, impressionsError, clicksError].filter(Boolean).length;
+  const queryErrors = [plansError, promotionsError, subscriptionsError, businessProductsError, partnerProductsError, impressionsError, clicksError, financeOverviewError].filter(Boolean).length;
+  type FinanceGroup = { status: string; method?: string; type?: string; payment_method?: string; count: number; amount_mzn?: number; credits?: number; budget_mzn?: number; credits_charged?: number };
+  type FinanceOverview = {
+    generated_at?: string;
+    payments?: FinanceGroup[];
+    documents?: FinanceGroup[];
+    credit_purchases?: FinanceGroup[];
+    promotions?: FinanceGroup[];
+    wallets?: { wallet_count: number; wallet_balance: number; ledger_balance: number; mismatch_count: number };
+    reconciliation?: { wallet_balance_mismatches: number; payment_document_mismatches: number; paid_credit_purchases_missing_ledger: number; service_payment_issues: number; callbacks_needing_review: number };
+    promotion_cancellations?: { cancellation_count: number; credits_refunded: number };
+  };
+  const finance = (financeOverview ?? null) as FinanceOverview | null;
+  const financeMoney = (value?: number) => formatMoney(value ?? 0);
 
   const products = [
     ...businessProducts.map(x => ({ id: x.id, experience: "Empresarial", surface: "Área empresarial", code: x.code, name: x.name, placement: x.placement, slot: x.slot, description: x.description, duration: x.duration_days, capacity: x.capacity, active: x.active, price: x.direct_price_mzn != null ? formatMoney(x.direct_price_mzn) : x.credit_price != null ? `${x.credit_price} créditos` : "Preço não definido" })),
@@ -64,6 +79,26 @@ export default async function AdminMonetizationPage() {
           <article><span>Impressões</span><strong>{impressions == null ? "—" : impressions.toLocaleString("pt-MZ")}</strong><small>Eventos de exibição registados</small></article>
           <article><span>Cliques</span><strong>{clicks == null ? "—" : clicks.toLocaleString("pt-MZ")}</strong><small>Interacções registadas</small></article>
           <article><span>Produtos activos</span><strong>{activeProducts}</strong><small>Inventário empresarial e parceiro</small></article>
+        </section>
+
+        <section className={styles.panel} aria-labelledby="finance-reconciliation-title">
+          <div className={styles.panelHead}><div><span className={styles.kicker}>00 · Controlo financeiro integrado</span><h2 id="finance-reconciliation-title">Reconciliação operacional</h2><p>Resumo conjunto de pagamentos, documentos, créditos, campanhas e serviços, calculado no PostgreSQL e protegido por autorização Super Admin.</p></div><span className={styles.counter}>{finance?.generated_at ? formatDate(finance.generated_at) : "Sem leitura"}</span></div>
+          {financeOverviewError || !finance ? <div className={styles.empty}><strong>Reconciliação indisponível.</strong><p>Não foi possível obter o resumo financeiro. Os restantes módulos continuam disponíveis; não são apresentados valores presumidos.</p></div> : <>
+            <div className={styles.metrics}>
+              <article><span>Carteiras</span><strong>{finance.wallets?.wallet_count ?? 0}</strong><small>{Number(finance.wallets?.wallet_balance ?? 0).toLocaleString("pt-MZ")} créditos disponíveis</small></article>
+              <article><span>Divergências de saldo</span><strong>{finance.reconciliation?.wallet_balance_mismatches ?? 0}</strong><small>Carteira versus ledger</small></article>
+              <article><span>Pagamentos/documentos</span><strong>{finance.reconciliation?.payment_document_mismatches ?? 0}</strong><small>Estados incompatíveis</small></article>
+              <article><span>Compras sem movimento</span><strong>{finance.reconciliation?.paid_credit_purchases_missing_ledger ?? 0}</strong><small>Compras pagas sem lançamento</small></article>
+              <article><span>Serviços por rever</span><strong>{finance.reconciliation?.service_payment_issues ?? 0}</strong><small>Conciliação de pagamentos</small></article>
+              <article><span>Callbacks por rever</span><strong>{finance.reconciliation?.callbacks_needing_review ?? 0}</strong><small>Eventos rejeitados ou em retry</small></article>
+            </div>
+            <div className={styles.productList}>
+              <article className={styles.product}><div className={styles.productMain}><h3>Pagamentos</h3><p>Estado e método de cobrança</p>{(finance.payments ?? []).map((x,i)=><small key={x.status + (x.method ?? "") + i}>{x.status} · {x.method} · {x.count} · {financeMoney(x.amount_mzn)}</small>)}</div></article>
+              <article className={styles.product}><div className={styles.productMain}><h3>Documentos financeiros</h3><p>Facturas, recibos e documentos de compra</p>{(finance.documents ?? []).map((x,i)=><small key={x.status + (x.type ?? "") + i}>{x.status} · {x.type} · {x.count} · {financeMoney(x.amount_mzn)}</small>)}</div></article>
+              <article className={styles.product}><div className={styles.productMain}><h3>Compras de créditos</h3><p>Pedidos, pagamentos e créditos atribuídos</p>{(finance.credit_purchases ?? []).map(x=><small key={x.status}>{x.status} · {x.count} pedidos · {financeMoney(x.amount_mzn)} · {Number(x.credits ?? 0).toLocaleString("pt-MZ")} créditos</small>)}</div></article>
+              <article className={styles.product}><div className={styles.productMain}><h3>Publicidade e estornos</h3><p>Campanhas por estado e método de pagamento</p>{(finance.promotions ?? []).map((x,i)=><small key={x.status + (x.payment_method ?? "") + i}>{x.status} · {x.payment_method} · {x.count} campanhas · {financeMoney(x.budget_mzn)} · {Number(x.credits_charged ?? 0).toLocaleString("pt-MZ")} créditos</small>)}<small>Cancelamentos: {finance.promotion_cancellations?.cancellation_count ?? 0} · Créditos devolvidos: {Number(finance.promotion_cancellations?.credits_refunded ?? 0).toLocaleString("pt-MZ")}</small></div></article>
+            </div>
+          </>}
         </section>
 
         <section className={styles.panel} aria-labelledby="plans-title">
