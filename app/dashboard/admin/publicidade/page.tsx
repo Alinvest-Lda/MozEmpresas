@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { Input, Select } from "@/components/ui";
-import { moderateBusinessPromotion, moderatePartnerCampaign, updateAdvertisingRequest, cancelBusinessPromotion } from "@/lib/admin/advertising-actions";
+import { moderateBusinessPromotion, moderatePartnerCampaign, updateAdvertisingRequest, cancelBusinessPromotion, issuePartnerAdPayment } from "@/lib/admin/advertising-actions";
 import styles from "./publicidade.module.css";
 
 type Campaign = {
@@ -12,6 +12,7 @@ type Campaign = {
   price_mzn?: number | null; budget?: number | null; currency?: string | null;
   impressions_count?: number | null; clicks_count?: number | null; target_url?: string | null;
   business?: { name?: string | null } | { name?: string | null }[] | null;
+  payment?: { id: string; status: string; payment_method: string; payment_reference: string; amount_mzn: number }[] | null;
 };
 type AdvertisingRequest = {
   id: string; company_name: string; contact_name: string; email: string; phone: string | null;
@@ -64,7 +65,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     { count: impressionEvents }, { count: clickEvents },
   ] = await Promise.all([
     supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,impressions_count,clicks_count,target_url,business:business_id(name)").order("created_at", { ascending: false }).limit(100),
-    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,impressions_count,clicks_count,target_url").order("created_at", { ascending: false }).limit(100),
+    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)").order("created_at", { ascending: false }).limit(100),
     supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at").order("created_at", { ascending: false }).limit(100),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "IMPRESSION"),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "CLICK"),
@@ -111,7 +112,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
       <div className={styles.heroSummary}><span className={styles.summaryLabel}>A aguardar atenção</span><strong>{pendingCount}</strong><span className={styles.summaryCaption}>Pedidos e campanhas por rever</span><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Até 100 registos por origem em cada consulta.</span></div>
       <span className={styles.heroDecoration} aria-hidden="true">↗</span>
     </header>
-    {result ? <div className={`${styles.resultNotice} ${result === "error" ? styles.resultError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Estado actualizado com sucesso." : result === "cancel-success" ? "Campanha cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "mpesa-refund-required" ? "Campanha M-Pesa activa: o reembolso externo deve ser executado e registado antes do cancelamento." : result === "cancel-not-allowed" ? "Cancelamento não permitido: campanha já iniciada, expirada ou num estado não elegível." : "Não foi possível actualizar o estado. Confirme permissões e elegibilidade."}</div> : null}
+    {result ? <div className={`${styles.resultNotice} ${result === "error" ? styles.resultError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Estado actualizado com sucesso." : result === "payment-issued" ? "Cobrança emitida. Referência: " + (params.reference ?? "") + (params.method === "CREDITS" ? " · Créditos debitados e campanha activada." : " · Aguarda confirmação M-Pesa.") : result === "PARTNER_CREDIT_WALLET_NOT_LINKED" ? "Esta conta de parceiro ainda não está associada a uma empresa com carteira de créditos. Utilize M-Pesa ou configure a associação empresarial." : result === "INSUFFICIENT_CREDITS" ? "Saldo de créditos insuficiente para esta campanha." : result === "CAMPAIGN_PAYMENT_ALREADY_ISSUED" ? "Já existe uma cobrança activa para esta campanha." : result === "payment-error" ? "Não foi possível emitir a cobrança da campanha." : result === "cancel-success" ? "Campanha cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "mpesa-refund-required" ? "Campanha M-Pesa activa: o reembolso externo deve ser executado e registado antes do cancelamento." : result === "cancel-not-allowed" ? "Cancelamento não permitido: campanha já iniciada, expirada ou num estado não elegível." : "Não foi possível actualizar o estado. Confirme permissões e elegibilidade."}</div> : null}
     <section className={styles.metrics} aria-label="Resumo do módulo">
       <article className={styles.metric}><span>Campanhas empresariais</span><strong>{allBusiness.length}</strong><small>Até 100 registos carregados</small></article>
       <article className={styles.metric}><span>Campanhas de parceiros</span><strong>{allPartner.length}</strong><small>Até 100 registos carregados</small></article>
@@ -134,6 +135,17 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
         {filteredCampaigns.map((c) => <article className={styles.campaignCard} key={c.table + c.id}>
           <div className={styles.campaignTop}><div className={styles.campaignMain}><span className={styles.campaignKicker}>{c.origin} · {c.position}{c.slot ? " · " + c.slot : ""}</span><h3>{c.headline || c.title || "Campanha sem título"}</h3><p>{c.advertiser} · Registada {fmtDate(c.created_at)}</p></div><span className={styles.status}>{label(c.status)}</span></div>
           <div className={styles.campaignMeta}><span><small>Início</small><strong>{fmtDate(c.starts_at)}</strong></span><span><small>Fim</small><strong>{fmtDate(c.ends_at)}</strong></span><span><small>Impressões</small><strong>{fmtNumber(c.impressions_count)}</strong></span><span><small>Cliques / CTR</small><strong>{fmtNumber(c.clicks_count)} · {ctr(c.clicks_count,c.impressions_count)}</strong></span><span><small>Preço / orçamento</small><strong>{c.price}</strong></span></div>
+          {c.table === "partner" ? (() => {
+            const payment = c.payment?.[0];
+            return payment
+              ? <div className={styles.destination}><strong>Cobrança: {label(payment.status)}</strong><p>{payment.payment_method} · {fmtNumber(payment.amount_mzn)} MZN · Referência {payment.payment_reference}</p></div>
+              : ["REQUESTED","APPROVED"].includes(c.status ?? "") ? <form action={issuePartnerAdPayment} className={styles.moderationForm}>
+                  <input type="hidden" name="id" value={c.id}/>
+                  <label><span>Forma de pagamento</span><Select name="payment_method" defaultValue="MPESA"><option value="MPESA">M-Pesa (aguarda confirmação)</option><option value="CREDITS">Créditos (debita e activa)</option></Select></label>
+                  <button className="btn primary" type="submit">Emitir cobrança</button>
+                  <small>Por créditos, a conta Parceiro precisa de associação empresarial e saldo suficiente. Por M-Pesa, a campanha só activa após confirmação do operador.</small>
+                </form> : null;
+          })() : null}
           {c.table === "business" && ["PENDING","ACTIVE"].includes(c.status ?? "") && c.starts_at && new Date(c.starts_at).getTime() > now.getTime() ? <form action={cancelBusinessPromotion} className={styles.cancelForm}><input type="hidden" name="id" value={c.id}/><label><span>Motivo do cancelamento</span><Input name="reason" minLength={8} maxLength={500} required placeholder="Motivo (mín. 8 caracteres)"/></label><button className="btn" type="submit">Cancelar campanha e estornar créditos</button><small>Campanhas pagas por créditos serão estornadas automaticamente. Campanhas M-Pesa activas exigem reembolso externo prévio.</small></form> : null}
         {c.target_url ? <p className={styles.destination}>Destino: <a href={c.target_url} target="_blank" rel="noreferrer">{c.target_url}</a></p> : null}
           <form action={c.table === "business" ? moderateBusinessPromotion : moderatePartnerCampaign} className={styles.moderationForm}>
