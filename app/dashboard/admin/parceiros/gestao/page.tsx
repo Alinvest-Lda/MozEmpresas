@@ -11,15 +11,15 @@ export const dynamic = "force-dynamic";
 const money = (n: number | string | null) => n == null ? "—" : `${Number(n).toLocaleString("pt-MZ",{maximumFractionDigits:2})} MZN`;
 const date = (s: string | null) => s ? new Date(s).toLocaleDateString("pt-MZ",{timeZone:"Africa/Maputo"}) : "—";
 const messages: Record<string,string> = {
-  campaign:"Revise os dados da campanha e o preço.", "campaign-product":"O formato publicitário não está activo.", "campaign-price":"O preço fixo do catálogo não pode ser alterado. Para formatos sob proposta, indique o preço negociado.", "campaign-save":"Não foi possível criar a campanha.",
+  campaign:"Revise os dados da campanha e o preço.", "campaign-product":"O formato publicitário não está activo.", "campaign-price":"O preço fixo do catálogo não pode ser alterado. Para formatos sob proposta, indique o preço negociado.", "campaign-capacity":"Não há disponibilidade para este formato no período escolhido.", "campaign-dates":"Verifique as datas e a duração máxima do formato.", "campaign-save":"Não foi possível criar a campanha.",
   "engagement-status":"Não foi possível actualizar o estado da execução.",
   contact:"Indique nome e pelo menos um meio de contacto.", "contact-save":"Não foi possível registar o contacto.",
   report:"Revise o relatório, destinatários e ficheiro/link de entrega.", "report-save":"Não foi possível registar a entrega do relatório.",
   partner:"Revise os dados da entidade parceira.", "partner-save":"Não foi possível criar a entidade. Verifique os dados e permissões.",
   contract:"Revise os dados do contrato.", "contract-save":"Não foi possível registar o contrato. Verifique o código e a entidade.",
   engagement:"Revise os dados do serviço.", "engagement-save":"Não foi possível criar a ordem de execução.",
-  invoice:"Revise os dados da factura.", "invoice-save":"Não foi possível emitir o documento.",
-  transfer:"Revise os dados da transferência.", "transfer-save":"Não foi possível registar o pagamento.", "transfer-duplicate":"Esta referência bancária já foi registada para esta entidade.",
+  invoice:"Revise os dados da factura.", "invoice-save":"Não foi possível emitir o documento.", "invoice-campaign-amount":"O valor da factura tem de corresponder ao valor da campanha contratada.",
+  transfer:"Revise os dados da transferência.", "transfer-save":"Não foi possível registar o pagamento.", "transfer-duplicate":"Esta referência bancária já foi registada para esta entidade.", "transfer-campaign-amount":"Para campanhas, o pagamento bancário deve liquidar o valor integral numa única transferência.",
   verify:"Não foi possível confirmar o pagamento.", "verify-overpayment":"O valor acumulado ultrapassa o saldo da factura. Corrija a alocação antes de confirmar.", "verify-not-payable":"A factura está anulada, em rascunho ou já liquidada e não aceita mais pagamentos.", "payment-id":"Identificador de pagamento inválido.",
 };
 const saved: Record<string,string> = {"engagement-status":"Estado da execução actualizado.",campaign:"Campanha criada no backoffice.",contact:"Contacto registado.",report:"Relatório registado.",partner:"Entidade parceira criada.",contract:"Contrato registado.",engagement:"Ordem de execução criada.",invoice:"Factura emitida.",transfer:"Transferência registada para verificação.",verified:"Transferência confirmada."};
@@ -91,7 +91,7 @@ export default async function InstitutionalPartnersPage({searchParams}:{searchPa
         <div className={styles.two}><label>Entidade<select name="account_id" required>{p.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label><label>Formato publicitário<select name="product_id" required>{products.map(x=><option key={x.id} value={x.id}>{x.name} · {x.duration_days} dias · {x.price_mzn==null?"Sob proposta":money(x.price_mzn)}</option>)}</select></label></div>
         <label>Contrato associado<select name="contract_id" defaultValue=""><option value="">Sem contrato</option>{c.map(x=><option key={x.id} value={x.id}>{x.contract_code} · {x.title}</option>)}</select></label>
         <div className={styles.two}><label>Título da campanha<input name="title" required/></label><label>Preço acordado (MZN)<input name="price_mzn" type="number" min=".01" step=".01" required/></label></div>
-        <label>Objectivo / briefing<textarea name="objective" rows={2}/></label><div className={styles.two}><label>Início previsto<input name="starts_at" type="datetime-local"/></label><label>Fim previsto<input name="ends_at" type="datetime-local"/></label></div>
+        <label>Objectivo / briefing<textarea name="objective" rows={2}/></label><div className={styles.two}><label>Início previsto<input name="starts_at" type="datetime-local" required/></label><label>Fim previsto<input name="ends_at" type="datetime-local" required/></label></div>
         <label>Responsável de operações<select name="assigned_operations_user_id" defaultValue=""><option value="">Não atribuído</option>{staffUsers.map(x=><option key={x.id} value={x.id}>{x.name} · {x.role}</option>)}</select></label>
         <button type="submit" disabled={!p.length||!products.length}>Criar campanha no backoffice</button>
       </form></article>
