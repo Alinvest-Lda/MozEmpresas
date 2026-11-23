@@ -21,6 +21,7 @@ export default async function AdminMonetizationPage() {
     { count: clicks, error: clicksError },
     { data: financeOverview, error: financeOverviewError },
     { data: transversalReconciliation, error: transversalReconciliationError },
+    { data: financialAudit, error: financialAuditError },
   ] = await Promise.all([
     supabase.from("platform_plans").select("id,code,name,description,monthly_price,currency,active").order("monthly_price"),
     supabase.from("business_promotions").select("id,title,placement,status,budget,currency,starts_at,ends_at,created_at,businesses:business_id(name)").order("created_at", { ascending: false }).limit(30),
@@ -31,6 +32,7 @@ export default async function AdminMonetizationPage() {
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "CLICK"),
     supabase.rpc("admin_financial_operations_overview"),
     supabase.rpc("admin_financial_reconciliation_f327"),
+    supabase.rpc("admin_financial_audit_f328"),
   ]);
 
   const planRows = plans ?? [];
@@ -39,7 +41,7 @@ export default async function AdminMonetizationPage() {
   const promotionRows = promotions ?? [];
   const activePlans = planRows.filter(p => p.active).length;
   const activeProducts = [...businessProducts, ...partnerProducts].filter(p => p.active).length;
-  const queryErrors = [plansError, promotionsError, subscriptionsError, businessProductsError, partnerProductsError, impressionsError, clicksError, financeOverviewError, transversalReconciliationError].filter(Boolean).length;
+  const queryErrors = [plansError, promotionsError, subscriptionsError, businessProductsError, partnerProductsError, impressionsError, clicksError, financeOverviewError, transversalReconciliationError, financialAuditError].filter(Boolean).length;
   type FinanceGroup = { status: string; method?: string; type?: string; payment_method?: string; count: number; amount_mzn?: number; credits?: number; budget_mzn?: number; credits_charged?: number };
   type FinanceOverview = {
     generated_at?: string;
@@ -53,6 +55,9 @@ export default async function AdminMonetizationPage() {
   };
   const finance = (financeOverview ?? null) as FinanceOverview | null;
   const financeMoney = (value?: number) => formatMoney(value ?? 0);
+  type F328Issue = {record_id:string;module:string;issue_code:string;severity:string;summary:string;details:Record<string,unknown>;occurred_at:string|null};
+  type F328Audit = {generated_at:string;total_issues:number;error_count:number;warning_count:number;issue_codes:Record<string,number>;sample_limit:number;issues:F328Issue[]};
+  const audit328 = (financialAudit ?? null) as F328Audit | null;
   type F327 = {partner_ad_orders_checked:number;partner_ad_order_issues:number;partner_ad_issue_codes:Record<string,number>;partner_documents_checked:number;partner_document_issues:number;partner_document_issue_codes:Record<string,number>;bank_transfers_checked:number;bank_transfer_issues:number;bank_transfer_issue_codes:Record<string,number>;wallet_balance_mismatches:number};
   const f327 = (transversalReconciliation ?? null) as F327 | null;
 
@@ -109,6 +114,10 @@ export default async function AdminMonetizationPage() {
         </section>
         </section>
 
+        <section className={styles.panel} aria-labelledby="f328-title">
+          <div className={styles.panelHead}><div><span className={styles.kicker}>02 · F3.28 auditoria de integridade</span><h2 id="f328-title">Divergências financeiras com detalhe de registo</h2><p>Auditoria de pagamentos, facturas, créditos, callbacks, serviços, estornos e saldo de carteiras. Não executa correcções automáticas.</p></div></div>
+          {financialAuditError || !audit328 ? <div className={styles.empty}><strong>Auditoria detalhada indisponível.</strong><p>O RPC F3.28 não retornou dados; não apresentamos contagens presumidas.</p></div> : <><div className={styles.metrics}><article><span>Divergências totais</span><strong>{audit328.total_issues ?? 0}</strong><small>Registos identificados</small></article><article><span>Erros</span><strong>{audit328.error_count ?? 0}</strong><small>Requerem intervenção</small></article><article><span>Avisos</span><strong>{audit328.warning_count ?? 0}</strong><small>Requerem revisão</small></article><article><span>Linhas de detalhe</span><strong>{(audit328.issues ?? []).length}</strong><small>Máximo 100 amostras</small></article></div><div className={styles.auditCodes}>{Object.entries(audit328.issue_codes ?? {}).map(([code,count])=><div className={styles.auditCode} key={code}><strong>{code}</strong><span>{count}</span></div>)}</div><div className={styles.auditSamples}>{(audit328.issues ?? []).slice(0,25).map((issue,i)=><article className={styles.auditSample} key={issue.record_id+issue.issue_code+i}><div><span className={styles.auditModule}>{issue.module} · {issue.severity}</span><strong>{issue.issue_code}</strong><p>{issue.summary}</p><small>{issue.record_id} · {issue.occurred_at ? formatDate(issue.occurred_at) : "Sem data"}</small></div></article>)}</div></>}
+        </section>
         <section className={styles.panel} aria-labelledby="plans-title">
           <div className={styles.panelHead}><div><span className={styles.kicker}>01 · Planos empresariais</span><h2 id="plans-title">Estrutura comercial</h2><p>Consulta dos preços e da disponibilidade configurados para cada plano.</p></div><span className={styles.counter}>{planRows.length} planos</span></div>
           {planRows.length ? <div className={styles.planGrid}>{planRows.map(plan => <article className={styles.planCard} key={plan.id}>
