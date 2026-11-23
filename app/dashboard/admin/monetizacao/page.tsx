@@ -19,7 +19,8 @@ export default async function AdminMonetizationPage() {
     { data: partnerAdProducts, error: partnerProductsError },
     { count: impressions, error: impressionsError },
     { count: clicks, error: clicksError },
-    { data: financeOverview, error: financeOverviewError },\n    { data: transversalReconciliation, error: transversalReconciliationError },
+    { data: financeOverview, error: financeOverviewError },
+    { data: transversalReconciliation, error: transversalReconciliationError },
   ] = await Promise.all([
     supabase.from("platform_plans").select("id,code,name,description,monthly_price,currency,active").order("monthly_price"),
     supabase.from("business_promotions").select("id,title,placement,status,budget,currency,starts_at,ends_at,created_at,businesses:business_id(name)").order("created_at", { ascending: false }).limit(30),
@@ -28,7 +29,8 @@ export default async function AdminMonetizationPage() {
     supabase.from("partner_ad_products").select("id,code,name,placement,surface,slot,description,duration_days,price_mzn,capacity,active").order("surface").order("placement"),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "IMPRESSION"),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "CLICK"),
-    supabase.rpc("admin_financial_operations_overview"),\n    supabase.rpc("admin_financial_reconciliation_f327"),
+    supabase.rpc("admin_financial_operations_overview"),
+    supabase.rpc("admin_financial_reconciliation_f327"),
   ]);
 
   const planRows = plans ?? [];
@@ -50,7 +52,9 @@ export default async function AdminMonetizationPage() {
     promotion_cancellations?: { cancellation_count: number; credits_refunded: number };
   };
   const finance = (financeOverview ?? null) as FinanceOverview | null;
-  const financeMoney = (value?: number) => formatMoney(value ?? 0);\n  type F327 = {partner_ad_orders_checked:number;partner_ad_order_issues:number;partner_ad_issue_codes:Record<string,number>;partner_documents_checked:number;partner_document_issues:number;partner_document_issue_codes:Record<string,number>;bank_transfers_checked:number;bank_transfer_issues:number;bank_transfer_issue_codes:Record<string,number>;wallet_balance_mismatches:number};\n  const f327 = (transversalReconciliation ?? null) as F327 | null;
+  const financeMoney = (value?: number) => formatMoney(value ?? 0);
+  type F327 = {partner_ad_orders_checked:number;partner_ad_order_issues:number;partner_ad_issue_codes:Record<string,number>;partner_documents_checked:number;partner_document_issues:number;partner_document_issue_codes:Record<string,number>;bank_transfers_checked:number;bank_transfer_issues:number;bank_transfer_issue_codes:Record<string,number>;wallet_balance_mismatches:number};
+  const f327 = (transversalReconciliation ?? null) as F327 | null;
 
   const products = [
     ...businessProducts.map(x => ({ id: x.id, experience: "Empresarial", surface: "Área empresarial", code: x.code, name: x.name, placement: x.placement, slot: x.slot, description: x.description, duration: x.duration_days, capacity: x.capacity, active: x.active, price: x.direct_price_mzn != null ? formatMoney(x.direct_price_mzn) : x.credit_price != null ? `${x.credit_price} créditos` : "Preço não definido" })),
@@ -99,7 +103,11 @@ export default async function AdminMonetizationPage() {
               <article className={styles.product}><div className={styles.productMain}><h3>Publicidade e estornos</h3><p>Campanhas por estado e método de pagamento</p>{(finance.promotions ?? []).map((x,i)=><small key={x.status + (x.payment_method ?? "") + i}>{x.status} · {x.payment_method} · {x.count} campanhas · {financeMoney(x.budget_mzn)} · {Number(x.credits_charged ?? 0).toLocaleString("pt-MZ")} créditos</small>)}<small>Cancelamentos: {finance.promotion_cancellations?.cancellation_count ?? 0} · Créditos devolvidos: {Number(finance.promotion_cancellations?.credits_refunded ?? 0).toLocaleString("pt-MZ")}</small></div></article>
             </div>
           </>}
-        <section className={styles.panel} aria-labelledby="f327-title">\n          <div className={styles.panelHead}><div><span className={styles.kicker}>01 · F3.27 reconciliação transversal</span><h2 id="f327-title">Integridade de parceiros, facturas e transferências</h2><p>Validação cruzada entre ordens publicitárias, pagamentos, documentos e estornos. Sem presumir correcções automáticas.</p></div></div>\n          {transversalReconciliationError || !f327 ? <div className={styles.empty}><strong>Reconciliação transversal indisponível.</strong><p>O RPC F3.27 não retornou dados; não apresentamos números fictícios.</p></div> : <div className={styles.metrics}><article><span>Ordens de parceiros</span><strong>{f327.partner_ad_orders_checked}</strong><small>{f327.partner_ad_order_issues} divergências</small></article><article><span>Documentos parceiros</span><strong>{f327.partner_documents_checked}</strong><small>{f327.partner_document_issues} divergências</small></article><article><span>Transferências bancárias</span><strong>{f327.bank_transfers_checked}</strong><small>{f327.bank_transfer_issues} divergências</small></article><article><span>Carteiras</span><strong>{f327.wallet_balance_mismatches}</strong><small>Saldo versus ledger</small></article></div>}\n        </section>\n        </section>
+        <section className={styles.panel} aria-labelledby="f327-title">
+          <div className={styles.panelHead}><div><span className={styles.kicker}>01 · F3.27 reconciliação transversal</span><h2 id="f327-title">Integridade de parceiros, facturas e transferências</h2><p>Validação cruzada entre ordens publicitárias, pagamentos, documentos e estornos. Sem presumir correcções automáticas.</p></div></div>
+          {transversalReconciliationError || !f327 ? <div className={styles.empty}><strong>Reconciliação transversal indisponível.</strong><p>O RPC F3.27 não retornou dados; não apresentamos números fictícios.</p></div> : <div className={styles.metrics}><article><span>Ordens de parceiros</span><strong>{f327.partner_ad_orders_checked}</strong><small>{f327.partner_ad_order_issues} divergências</small></article><article><span>Documentos parceiros</span><strong>{f327.partner_documents_checked}</strong><small>{f327.partner_document_issues} divergências</small></article><article><span>Transferências bancárias</span><strong>{f327.bank_transfers_checked}</strong><small>{f327.bank_transfer_issues} divergências</small></article><article><span>Carteiras</span><strong>{f327.wallet_balance_mismatches}</strong><small>Saldo versus ledger</small></article></div>}
+        </section>
+        </section>
 
         <section className={styles.panel} aria-labelledby="plans-title">
           <div className={styles.panelHead}><div><span className={styles.kicker}>01 · Planos empresariais</span><h2 id="plans-title">Estrutura comercial</h2><p>Consulta dos preços e da disponibilidade configurados para cada plano.</p></div><span className={styles.counter}>{planRows.length} planos</span></div>
