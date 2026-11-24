@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { Input, Select } from "@/components/ui";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { getSupportTicketTransitions } from "@/lib/support/state-machine";
-import { replySupportAsStaff, updateSupportTicketStatus } from "@/lib/support/admin-actions";
+import { assignSupportTicket, replySupportAsStaff, updateSupportTicketStatus } from "@/lib/support/admin-actions";
 import styles from "./suporte.module.css";
 
 const areas = ["", "Técnico", "Comercial", "Conta e acessos", "Pagamentos e créditos", "Publicidade", "Serviços MozEmpresas"];
@@ -22,7 +22,7 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
 
-  let query = supabase.from("support_tickets").select("id,user_id,business_id,area,subject,status,priority,created_at,updated_at").order("updated_at", { ascending: false }).limit(100);
+  let query = supabase.from("support_tickets").select("id,user_id,business_id,area,subject,status,priority,assigned_to,created_at,updated_at").order("updated_at", { ascending: false }).limit(100);
   if (area) query = query.eq("area", area);
   if (status) query = query.eq("status", status);
   if (p.business) query = query.eq("business_id", p.business);
@@ -36,6 +36,13 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
     userIds.length ? supabase.from("profiles").select("id,full_name").in("id", userIds) : Promise.resolve({ data: [] }),
   ]);
   const ids = rows.map(t => t.id);
+  const [{ data: events }, { data: staffRows }] = await Promise.all([
+    ids.length ? supabase.from("support_ticket_events").select("id,ticket_id,event_type,old_status,new_status,old_priority,new_priority,old_assigned_to,new_assigned_to,created_at").in("ticket_id", ids).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    supabase.from("platform_members").select("user_id").eq("active", true).eq("role", "super_admin"),
+  ]);
+  const staffIds = [...new Set((staffRows ?? []).map(x => x.user_id))];
+  const { data: staffProfiles } = staffIds.length ? await supabase.from("profiles").select("id,full_name").in("id", staffIds) : { data: [] };
+  const staff = staffProfiles ?? [];
   const { data: messages } = ids.length ? await supabase.from("support_messages").select("id,ticket_id,sender_role,body,created_at").in("ticket_id", ids).order("created_at", { ascending: true }) : { data: [] };
   const openCount = rows.filter(t => t.status === "OPEN").length;
   const activeCount = rows.filter(t => t.status === "IN_PROGRESS").length;
@@ -87,6 +94,8 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
                 <div className={styles.badges}><span className={`${styles.status} ${styles["status" + statusKey] || ""}`}>{statusLabels[statusKey] || statusKey || "Sem estado"}</span><span className={`${styles.priority} ${["HIGH", "URGENT"].includes(priorityKey) ? styles.priorityHigh : ""}`}>{priorityLabels[priorityKey] || priorityKey}</span></div>
               </div>
               <details className={styles.conversation} open={thread.length > 0}><summary>{thread.length} {thread.length === 1 ? "mensagem" : "mensagens"} no histórico <span>Ver conversa</span></summary><div className={styles.thread}>{thread.length ? thread.map(m => { const isUser = m.sender_role === "USER"; return <div className={`${styles.message} ${isUser ? styles.messageUser : styles.messageStaff}`} key={m.id}><div className={styles.messageMeta}><strong>{isUser ? "Utilizador" : "Backoffice"}</strong><time>{new Date(m.created_at).toLocaleString("pt-MZ", { dateStyle: "medium", timeStyle: "short" })}</time></div><p>{m.body}</p></div>; }) : <p className={styles.noMessages}>Ainda não existem mensagens neste atendimento.</p>}</div></details>
+              <form action={assignSupportTicket} className={styles.moderationForm}><input type="hidden" name="ticket_id" value={t.id} /><label><span>Responsável interno</span><Select name="assigned_to" defaultValue={t.assigned_to || ""}><option value="">Sem responsável atribuído</option>{staff.map(person => <option key={person.id} value={person.id}>{person.full_name || person.id.slice(0,8)}</option>)}</Select></label><button className="btn secondary" type="submit">Guardar responsável</button></form>
+              <details className={styles.conversation}><summary>Histórico de alterações <span>{(events ?? []).filter(e => e.ticket_id === t.id).length} evento(s)</span></summary><div className={styles.thread}>{(events ?? []).filter(e => e.ticket_id === t.id).map(e => <div className={styles.message} key={e.id}><div className={styles.messageMeta}><strong>{e.event_type === "CREATED" ? "Atendimento criado" : e.event_type === "STATUS_CHANGED" ? "Estado alterado" : e.event_type === "PRIORITY_CHANGED" ? "Prioridade alterada" : e.event_type === "ASSIGNED" ? "Responsável atribuído" : "Responsável removido"}</strong><time>{new Date(e.created_at).toLocaleString("pt-MZ", { dateStyle: "medium", timeStyle: "short" })}</time></div><p>{e.event_type === "STATUS_CHANGED" ? (statusLabels[e.old_status] || e.old_status) + " → " + (statusLabels[e.new_status] || e.new_status) : e.event_type === "ASSIGNED" || e.event_type === "UNASSIGNED" ? (staff.find(s => s.id === (e.new_assigned_to || e.old_assigned_to))?.full_name || "Equipa interna") : e.event_type === "PRIORITY_CHANGED" ? (priorityLabels[e.old_priority] || e.old_priority) + " → " + (priorityLabels[e.new_priority] || e.new_priority) : "Registo inicial"}</p></div>)}</div></details>
               {getSupportTicketTransitions(statusKey).length ? <form action={updateSupportTicketStatus} className={styles.moderationForm}>
                 <input type="hidden" name="ticket_id" value={t.id} />
                 <label><span>Estado do atendimento</span><Select name="status" defaultValue=""><option value="" disabled>Escolher novo estado</option>{getSupportTicketTransitions(statusKey).map(nextStatus => <option key={nextStatus} value={nextStatus}>{statusLabels[nextStatus] || nextStatus}</option>)}</Select></label>

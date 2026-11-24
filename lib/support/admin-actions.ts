@@ -9,6 +9,25 @@ import { canTransitionSupportTicket, isSupportTicketStatus } from "@/lib/support
 const replySchema = z.object({ ticketId: z.string().uuid(), body: z.string().trim().min(1).max(5000) });
 const statusSchema = z.object({ ticketId: z.string().uuid(), status: z.string().min(1) });
 
+export async function assignSupportTicket(formData: FormData): Promise<void> {
+  const ticketId = String(formData.get("ticket_id") || "");
+  const assignee = String(formData.get("assigned_to") || "").trim() || null;
+  if (!z.string().uuid().safeParse(ticketId).success || (assignee && !z.string().uuid().safeParse(assignee).success)) redirect("/dashboard/admin/suporte?result=error");
+  const { supabase, authorized } = await getSuperAdminContext();
+  if (!authorized) redirect("/login?next=/dashboard/admin/suporte");
+  if (assignee) {
+    const { data: member, error: memberError } = await supabase.from("platform_members").select("user_id")
+      .eq("user_id", assignee).eq("active", true).eq("role", "super_admin").maybeSingle();
+    if (memberError || !member) redirect("/dashboard/admin/suporte?result=error");
+  }
+  const { data: updated, error } = await supabase.from("support_tickets")
+    .update({ assigned_to: assignee, updated_at: new Date().toISOString() }).eq("id", ticketId).select("id").maybeSingle();
+  if (error || !updated) redirect("/dashboard/admin/suporte?result=error");
+  revalidatePath("/dashboard/admin/suporte");
+  revalidatePath("/dashboard/suporte");
+  redirect("/dashboard/admin/suporte?result=success");
+}
+
 export async function updateSupportTicketStatus(formData: FormData): Promise<void> {
   const parsed = statusSchema.safeParse({ ticketId: formData.get("ticket_id"), status: formData.get("status") });
   if (!parsed.success || !isSupportTicketStatus(parsed.data.status)) redirect("/dashboard/admin/suporte?result=error");
