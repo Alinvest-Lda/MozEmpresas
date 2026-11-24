@@ -68,3 +68,10 @@ Ordem prevista:
 **Nota:** o workspace de parceiro actualmente existente é protótipo estrutural e não deve ser tomado como referência final de produto.
 
 Cada módulo só é considerado concluído quando possuir database, regras, acções/API, UI, permissões, validação, estados de erro, testes e documentação.
+
+
+## Actualização de implementação — 24/11/2026
+
+O acesso Parceiro foi consolidado para um utilizador activo por organização. O ciclo estrutural cobre criação do convite pelo Super Admin, activação como owner, bloqueio de perfis inactivos, listagem de memberships activas, revogação com motivo e histórico, e elegibilidade para substituição sequencial do responsável. Ver `docs/architecture/partner-manager-invitations.md` e a tranche F3.34–F3.36 em `docs/phase-2-operational-modules-2026-11-10.md`.
+
+O fecho de implementação continua em curso. A validação integrada e os testes finais não estão a ser usados como critério intermédio de avanço nesta etapa; serão executados após a implementação global atingir 100%.
