@@ -1,5 +1,8 @@
 "use server";
 
+import { createHash, randomUUID } from "node:crypto";
+import { sendPartnerReportEmail } from "@/lib/email/resend";
+
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -230,6 +233,11 @@ export async function createPartnerReportDelivery(formData: FormData) {
  if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id,parsed.data.campaign_id].some(x=>x&&!uuid.safeParse(x).success) || (parsed.data.period_start&&parsed.data.period_end&&parsed.data.period_end<parsed.data.period_start)) redirect("/dashboard/admin/parceiros/gestao?error=report");
  const {supabase,user}=await adminContext();
  if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id}))) redirect("/dashboard/admin/parceiros/gestao?error=report");
+ if(parsed.data.storage_path) {
+  const {data:attached,error:attachedError}=await supabase.from("partner_documents").select("id,document_type").eq("account_id",parsed.data.account_id).eq("storage_path",parsed.data.storage_path).maybeSingle();
+  if(attachedError || !attached || !["REPORT","SUPPORTING","OTHER"].includes(attached.document_type)) redirect("/dashboard/admin/parceiros/gestao?error=report");
+ }
+ if(parsed.data.external_url && !/^https:\/\//i.test(parsed.data.external_url)) redirect("/dashboard/admin/parceiros/gestao?error=report");
  const recipients=(parsed.data.recipient_emails||"").split(/[;,\\n]/).map(x=>x.trim()).filter(Boolean);
  if(recipients.some(x=>!z.string().email().safeParse(x).success)) redirect("/dashboard/admin/parceiros/gestao?error=report");
  const {error}=await supabase.from("partner_report_deliveries").insert({account_id:parsed.data.account_id,contract_id:parsed.data.contract_id||null,engagement_id:parsed.data.engagement_id||null,campaign_id:parsed.data.campaign_id||null,title:parsed.data.title,report_type:parsed.data.report_type,period_start:parsed.data.period_start||null,period_end:parsed.data.period_end||null,storage_path:parsed.data.storage_path||null,external_url:parsed.data.external_url||null,recipient_emails:recipients,delivery_channel:parsed.data.delivery_channel,status:"DRAFT",created_by:user!.id});
@@ -348,6 +356,11 @@ export async function transitionPartnerContract(formData: FormData) {
  const id=value(formData,"contract_id"),status=value(formData,"status"),signed=value(formData,"signed_document_path"),reason=value(formData,"reason");
  if(!uuid.safeParse(id).success || reason.length<8 || reason.length>500 || signed.length>500) redirect("/dashboard/admin/parceiros/gestao?error=contract-transition");
  const {supabase}=await adminContext();
+ if(signed) {
+  const {data:contract,error:contractError}=await supabase.from("partner_contracts").select("account_id").eq("id",id).maybeSingle();
+  const {data:document,error:documentError}=await supabase.from("partner_documents").select("id").eq("account_id",contract?.account_id??"").eq("storage_path",signed).eq("document_type","SIGNED_CONTRACT").eq("parent_type","CONTRACT").eq("parent_id",id).maybeSingle();
+  if(contractError || documentError || !contract || !document) redirect("/dashboard/admin/parceiros/gestao?error=contract-transition");
+ }
  const {error}=await supabase.rpc("admin_transition_partner_contract",{p_contract_id:id,p_status:status,p_signed_document_path:signed||null,p_reason:reason});
  if(error) redirect("/dashboard/admin/parceiros/gestao?error=contract-transition");
  revalidatePath("/dashboard/admin/parceiros/gestao");redirect("/dashboard/admin/parceiros/gestao?saved=contract-transition");
@@ -359,4 +372,137 @@ export async function transitionPartnerReport(formData: FormData) {
  const {error}=await supabase.rpc("admin_update_partner_report_delivery",{p_report_id:id,p_status:status,p_delivery_reference:reference||null,p_reason:reason});
  if(error) redirect("/dashboard/admin/parceiros/gestao?error=report-transition");
  revalidatePath("/dashboard/admin/parceiros/gestao");redirect("/dashboard/admin/parceiros/gestao?saved=report-transition");
+}
+
+
+const partnerDocumentMimeTypes = new Set([
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
+function documentExtension(mime: string) {
+  return ({
+    "application/pdf":"pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document":"docx",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":"xlsx",
+    "image/jpeg":"jpg",
+    "image/png":"png",
+    "image/webp":"webp",
+  } as Record<string,string>)[mime] ?? null;
+}
+function validDocumentSignature(bytes: Uint8Array, mime: string) {
+  if (mime === "application/pdf") return new TextDecoder().decode(bytes.slice(0,5)) === "%PDF-";
+  if (mime === "image/jpeg") return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (mime === "image/png") return [137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v);
+  if (mime === "image/webp") return new TextDecoder().decode(bytes.slice(0,4)) === "RIFF" && new TextDecoder().decode(bytes.slice(8,12)) === "WEBP";
+  if (mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || mime === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") return bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04;
+  return false;
+}
+
+export async function createPartnerDocument(formData: FormData) {
+  const accountId=value(formData,"account_id");
+  const documentType=value(formData,"document_type");
+  const parentRef=value(formData,"parent_ref") || "GENERAL";
+  const title=value(formData,"title");
+  const notes=value(formData,"notes");
+  const file=formData.get("file");
+  if(!uuid.safeParse(accountId).success || !["SIGNED_CONTRACT","REPORT","SUPPORTING","OTHER"].includes(documentType) ||
+    title.length<2 || title.length>180 || notes.length>1000 || !(file instanceof File) ||
+    file.size<1 || file.size>10*1024*1024 || !partnerDocumentMimeTypes.has(file.type)) {
+    redirect("/dashboard/admin/parceiros/gestao?error=document");
+  }
+  let parentType="GENERAL",parentId:string|null=null;
+  if(parentRef!=="GENERAL") {
+    const separator=parentRef.indexOf(":");
+    parentType=parentRef.slice(0,separator);
+    parentId=parentRef.slice(separator+1);
+    if(!["CONTRACT","ENGAGEMENT","REPORT","CAMPAIGN"].includes(parentType) || !uuid.safeParse(parentId).success) redirect("/dashboard/admin/parceiros/gestao?error=document");
+  }
+  if(documentType==="SIGNED_CONTRACT" && parentType!=="CONTRACT") redirect("/dashboard/admin/parceiros/gestao?error=document");
+  const {supabase}=await adminContext();
+  const extension=documentExtension(file.type);
+  if(!extension) redirect("/dashboard/admin/parceiros/gestao?error=document");
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  if(!validDocumentSignature(bytes,file.type)) redirect("/dashboard/admin/parceiros/gestao?error=document-type");
+  const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(-100) || `document.${extension}`;
+  const storagePath=`${accountId}/${parentType.toLowerCase()}/${parentId ?? "general"}/${randomUUID()}.${extension}`;
+  const {error:uploadError}=await supabase.storage.from("partner-documents").upload(storagePath,bytes,{
+    contentType:file.type,cacheControl:"3600",upsert:false,
+  });
+  if(uploadError) redirect("/dashboard/admin/parceiros/gestao?error=document-upload");
+  const digest=createHash("sha256").update(bytes).digest("hex");
+  const {error:registerError}=await supabase.from("partner_documents").insert({
+    account_id:accountId,document_type:documentType,parent_type:parentType,parent_id:parentId,
+    title,original_filename:safeName,storage_path:storagePath,mime_type:file.type,
+    size_bytes:file.size,sha256_hash:digest,notes:notes||null,
+  });
+  if(registerError) {
+    await supabase.storage.from("partner-documents").remove([storagePath]);
+    redirect("/dashboard/admin/parceiros/gestao?error=document-register");
+  }
+  revalidatePath("/dashboard/admin/parceiros/gestao");
+  redirect("/dashboard/admin/parceiros/gestao?saved=document");
+}
+
+export async function openPartnerDocument(formData: FormData) {
+  const id=value(formData,"document_id");
+  if(!uuid.safeParse(id).success) redirect("/dashboard/admin/parceiros/gestao?error=document-open");
+  const {supabase}=await adminContext();
+  const {data,error}=await supabase.from("partner_documents").select("storage_path,original_filename").eq("id",id).maybeSingle();
+  if(error || !data) redirect("/dashboard/admin/parceiros/gestao?error=document-open");
+  const {data:signed,error:signedError}=await supabase.storage.from("partner-documents").createSignedUrl(data.storage_path,600,{download:data.original_filename});
+  if(signedError || !signed?.signedUrl) redirect("/dashboard/admin/parceiros/gestao?error=document-open");
+  redirect(signed.signedUrl);
+}
+
+export async function sendPartnerReportEmail(formData: FormData) {
+  const reportId=value(formData,"report_id");
+  if(!uuid.safeParse(reportId).success) redirect("/dashboard/admin/parceiros/gestao?error=email-report");
+  const {supabase}=await adminContext();
+  const {data:report,error}=await supabase.from("partner_report_deliveries")
+    .select("id,account_id,title,status,delivery_channel,recipient_emails,storage_path,external_url,period_start,period_end")
+    .eq("id",reportId).maybeSingle();
+  if(error || !report || report.status!=="READY" || report.delivery_channel!=="EMAIL" || !report.recipient_emails?.length)
+    redirect("/dashboard/admin/parceiros/gestao?error=email-report");
+  let reportUrl=report.external_url as string|null;
+  if(report.storage_path) {
+    const {data:document,error:documentError}=await supabase.from("partner_documents")
+      .select("id").eq("account_id",report.account_id).eq("storage_path",report.storage_path).maybeSingle();
+    if(documentError || !document) redirect("/dashboard/admin/parceiros/gestao?error=email-report-file");
+    const {data:signed,error:signedError}=await supabase.storage.from("partner-documents").createSignedUrl(report.storage_path,60*60*24*3);
+    if(signedError || !signed?.signedUrl) redirect("/dashboard/admin/parceiros/gestao?error=email-report-file");
+    reportUrl=signed.signedUrl;
+  }
+  if(!reportUrl || !/^https:\/\//i.test(reportUrl)) redirect("/dashboard/admin/parceiros/gestao?error=email-report-file");
+  const esc=(input:string)=>input.replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]!));
+  const period=report.period_start || report.period_end
+    ? `<p>Período: ${esc(report.period_start ?? "—")} a ${esc(report.period_end ?? "—")}</p>`
+    : "";
+  let providerId:string;
+  try {
+    providerId=await sendPartnerReportEmail({
+      to:report.recipient_emails as string[],
+      subject:`MozEmpresas | ${report.title}`,
+      html:`<div style="font-family:Arial,sans-serif;color:#172033;line-height:1.6"><h2>${esc(report.title)}</h2>${period}<p>O relatório institucional está disponível através do endereço seguro abaixo:</p><p><a href="${esc(reportUrl)}">Consultar relatório</a></p><p style="font-size:12px;color:#687386">Este endereço temporário expira em 72 horas. Se necessitar de novo acesso, contacte a equipa responsável.</p></div>`,
+      idempotencyKey:`partner-report-${report.id}`,
+    });
+  } catch(error) {
+    const message=error instanceof Error?error.message:"EMAIL_PROVIDER_UNAVAILABLE";
+    if(message==="EMAIL_PROVIDER_NOT_CONFIGURED") redirect("/dashboard/admin/parceiros/gestao?error=email-config");
+    await supabase.rpc("admin_update_partner_report_delivery",{
+      p_report_id:report.id,p_status:"FAILED",p_delivery_reference:"RESEND_FAILURE",
+      p_reason:"Falha no envio de email pelo fornecedor configurado.",
+    });
+    redirect("/dashboard/admin/parceiros/gestao?error=email-send");
+  }
+  const {error:deliveryError}=await supabase.rpc("admin_update_partner_report_delivery",{
+    p_report_id:report.id,p_status:"DELIVERED",p_delivery_reference:`resend:${providerId}`,
+    p_reason:"Email enviado pelo fornecedor transaccional; referência do fornecedor registada.",
+  });
+  if(deliveryError) redirect("/dashboard/admin/parceiros/gestao?error=email-audit");
+  revalidatePath("/dashboard/admin/parceiros/gestao");
+  redirect("/dashboard/admin/parceiros/gestao?saved=report-sent");
 }
