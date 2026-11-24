@@ -76,11 +76,20 @@ export async function purchasePlatformService(formData: FormData) {
     return { error: "Introduza um número M-Pesa moçambicano válido no formato 258XXXXXXXXX." };
   }
 
-  let mpesaConfig;
+  let mpesaConfig: ReturnType<typeof getMpesaConfigFromEnv>;
+  let privileged: ReturnType<typeof createServiceRoleClient>;
   try {
     mpesaConfig = getMpesaConfigFromEnv();
+    privileged = createServiceRoleClient();
   } catch {
     return { error: "O ambiente M-Pesa Sandbox ainda não está totalmente configurado. Contacte o suporte." };
+  }
+
+  const { error: profileUpdateError } = await s
+    .from("user_payment_settings")
+    .upsert({ user_id: user.id, mpesa_msisdn: customerMsisdn }, { onConflict: "user_id" });
+  if (profileUpdateError) {
+    return { error: "Não foi possível guardar o número M-Pesa na sua conta." };
   }
 
   const { data: pendingOrder, error: pendingOrderError } = await s.rpc("create_mpesa_platform_service_order", {
@@ -104,14 +113,6 @@ export async function purchasePlatformService(formData: FormData) {
 
   const thirdPartyReference = "ME" + randomBytes(9).toString("hex");
   const transactionReference = "SVC" + orderId.replace(/-/g, "").slice(-17);
-  const privileged = createServiceRoleClient();
-
-  const { error: profileUpdateError } = await s
-    .from("user_payment_settings")
-    .upsert({ user_id: user.id, mpesa_msisdn: customerMsisdn }, { onConflict: "user_id" });
-  if (profileUpdateError) {
-    return { error: "Não foi possível guardar o número M-Pesa na sua conta." };
-  }
 
   const { data: payment, error: paymentUpdateError } = await privileged
     .from("financial_payments")
