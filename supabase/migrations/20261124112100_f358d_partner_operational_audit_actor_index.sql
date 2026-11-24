@@ -1,0 +1,1 @@
+create index if not exists partner_operational_audit_actor_created_idx on public.partner_operational_audit(actor_user_id,created_at desc) where actor_user_id is not null;
