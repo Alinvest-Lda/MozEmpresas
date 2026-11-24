@@ -11,7 +11,7 @@ begin
    raise exception 'FORBIDDEN' using errcode='42501'; end if;
  return query
  with base as (
-  select p.id,u.email,p.full_name,p.user_type,p.account_status,p.created_at,p.deactivated_at,p.deletion_requested_at,
+  select p.id,u.email::text as email,p.full_name,p.user_type,p.account_status,p.created_at,p.deactivated_at,p.deletion_requested_at,
    pm.role as platform_role,pm.active as platform_active,
    coalesce((select jsonb_agg(jsonb_build_object('name',x.name,'role',x.role) order by x.name) from (
     select b.name,'owner'::text role from public.businesses b where b.owner_id=p.id and b.archived_at is null
