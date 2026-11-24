@@ -223,7 +223,7 @@ export async function reconcileMpesaServicePayment(formData: FormData) {
     const returnedReference = response.output_ThirdPartyReference?.trim();
     const transactionStatus = response.output_ResponseTransactionStatus;
     const validStatus = transactionStatus && ["Completed", "Cancelled", "Expired", "N/A"].includes(transactionStatus);
-    if ((!returnedReference || returnedReference === visiblePayment.mpesa_third_party_reference) && validStatus) {
+    if (returnedReference === visiblePayment.mpesa_third_party_reference && validStatus) {
       await privileged.rpc("record_mpesa_platform_service_status", {
         p_payment_reference: visiblePayment.reference,
         p_third_party_reference: visiblePayment.mpesa_third_party_reference,
