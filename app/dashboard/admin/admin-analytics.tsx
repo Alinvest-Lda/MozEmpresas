@@ -1,5 +1,6 @@
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import styles from "./admin-analytics.module.css";
+import { createAdminClient } from "@/lib/security/rate-limit";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAPUTO_TIME_ZONE = "Africa/Maputo";
@@ -58,21 +59,39 @@ export default async function AdminAnalytics() {
   ]);
 
   const since30Days = new Date(now.getTime() - 30 * DAY_MS).toISOString();
-  const [
-    { count: profileViews },
-    { count: contactClicks },
-    { count: searchSubmissions },
-    { count: opportunityApplications },
-    { count: adImpressions },
-    { count: adClicks },
-  ] = await Promise.all([
-    supabase.from("platform_conversion_events").select("id", { count: "exact", head: true }).eq("event_type", "PROFILE_VIEW").gte("created_at", since30Days),
-    supabase.from("platform_conversion_events").select("id", { count: "exact", head: true }).eq("event_type", "CONTACT_CLICK").gte("created_at", since30Days),
-    supabase.from("platform_conversion_events").select("id", { count: "exact", head: true }).eq("event_type", "SEARCH_SUBMITTED").gte("created_at", since30Days),
-    supabase.from("opportunity_applications").select("id", { count: "exact", head: true }).gte("submitted_at", since30Days),
-    supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "IMPRESSION").gte("created_at", since30Days),
-    supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "CLICK").gte("created_at", since30Days),
-  ]);
+  // This dashboard is already gated by getSuperAdminContext. Use a server-only
+  // service client for aggregate counts because several source tables intentionally
+  // do not expose raw rows to authenticated users through RLS.
+  const metricsClient = createAdminClient();
+  let profileViews: number | null = null;
+  let contactClicks: number | null = null;
+  let searchSubmissions: number | null = null;
+  let opportunityApplications: number | null = null;
+  let adImpressions: number | null = null;
+  let adClicks: number | null = null;
+  if (metricsClient) {
+    const [
+      profileViewsResult,
+      contactClicksResult,
+      searchSubmissionsResult,
+      opportunityApplicationsResult,
+      adImpressionsResult,
+      adClicksResult,
+    ] = await Promise.all([
+      metricsClient.from("platform_conversion_events").select("id", { count: "exact", head: true }).eq("event_type", "PROFILE_VIEW").gte("created_at", since30Days),
+      metricsClient.from("platform_conversion_events").select("id", { count: "exact", head: true }).eq("event_type", "CONTACT_CLICK").gte("created_at", since30Days),
+      metricsClient.from("platform_conversion_events").select("id", { count: "exact", head: true }).eq("event_type", "SEARCH_SUBMITTED").gte("created_at", since30Days),
+      metricsClient.from("opportunity_applications").select("id", { count: "exact", head: true }).gte("submitted_at", since30Days),
+      metricsClient.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "IMPRESSION").gte("created_at", since30Days),
+      metricsClient.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "CLICK").gte("created_at", since30Days),
+    ]);
+    profileViews = profileViewsResult.error ? null : profileViewsResult.count;
+    contactClicks = contactClicksResult.error ? null : contactClicksResult.count;
+    searchSubmissions = searchSubmissionsResult.error ? null : searchSubmissionsResult.count;
+    opportunityApplications = opportunityApplicationsResult.error ? null : opportunityApplicationsResult.count;
+    adImpressions = adImpressionsResult.error ? null : adImpressionsResult.count;
+    adClicks = adClicksResult.error ? null : adClicksResult.count;
+  }
   const performanceMetrics = [
     { label: "Visualizações de perfis", value: profileViews, hint: "eventos registados" },
     { label: "Cliques de contacto", value: contactClicks, hint: "telefone, email ou website" },
