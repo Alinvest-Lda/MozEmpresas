@@ -21,6 +21,7 @@ const config: MpesaConfig = {
   origin: "developer.mpesa.vm.co.mz",
   c2bPort: "18352",
   statusPort: "18353",
+  serviceProviderCode: "902809",
   timeoutMs: 2_000,
 };
 
