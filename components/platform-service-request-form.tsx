@@ -52,7 +52,7 @@ export function PlatformServiceRequestForm({
             {state.requested
               ? "A equipa MozEmpresas irá analisar a necessidade e actualizar o estado do pedido no seu espaço."
               : state.pending
-                ? "O pedido foi enviado à M-Pesa e aguarda confirmação. Não repita o pagamento; consulte a gestão financeira para acompanhar o estado."
+                ? "A contratação ficou registada e o pagamento está pendente de confirmação. Não repita o pedido; consulte a gestão financeira para acompanhar o estado."
                 : "O serviço, prazo e valor foram registados na gestão financeira."}{" "}
             {!state.requested && <Link href="/dashboard/financeiro">Ver gestão financeira</Link>}
           </p>
