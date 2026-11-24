@@ -75,3 +75,14 @@ Cada módulo só é considerado concluído quando possuir database, regras, acç
 O acesso Parceiro foi consolidado para um utilizador activo por organização. O ciclo estrutural cobre criação do convite pelo Super Admin, activação como owner, bloqueio de perfis inactivos, listagem de memberships activas, revogação com motivo e histórico, e elegibilidade para substituição sequencial do responsável. Ver `docs/architecture/partner-manager-invitations.md` e a tranche F3.34–F3.36 em `docs/phase-2-operational-modules-2026-11-10.md`.
 
 O fecho de implementação continua em curso. A validação integrada e os testes finais não estão a ser usados como critério intermédio de avanço nesta etapa; serão executados após a implementação global atingir 100%.
+
+
+## Reconciliação de sequência funcional e notificações (25/11/2026)
+
+A sequência funcional histórica já tinha alcançado **F3.73** (notificações bilaterais da Central de Suporte), seguindo-se F3.74/F3.75 e outras intervenções com numeração própria. Os sufixos `f337`–`f341` presentes em cinco ficheiros de migração posteriores são identificadores/nomes técnicos desses ficheiros e **não** representam uma reinicialização da sequência funcional em F3.37. Não usar esses sufixos para medir progresso ou propor novas intervenções.
+
+Reconciliação read-only do Supabase confirmou que a F3.73 deixou a funcionalidade coberta pelo trigger anterior `notify_support_message_recipient_trigger`, cuja função `notify_support_message_recipient()` já trata respostas do backoffice ao utilizador e mensagens do utilizador ao responsável activo ou aos Super Admins. O trigger adicional criado pela F3.73 foi removido pela migração posterior; não deve ser recriado, pois duplicaria notificações. A lógica actualmente activa foi preservada.
+
+Foi identificada uma sobreposição real em `service_requests`: a F3.72 já grava o histórico de estado e a notificação na mesma transacção (`trg_capture_service_request_status_event_f372`), enquanto uma migração posterior adicionou também `service_request_status_notification` usando a função genérica de ciclo de vida. Foi removido apenas esse segundo trigger. A função genérica foi preservada porque continua a servir os pedidos de créditos, ordens de serviço e campanhas/cobranças de parceiros.
+
+A migração correctiva está em `supabase/migrations/20261125004500_reconcile_service_request_notification_ownership.sql` e foi aplicada ao projecto Supabase. Não foram executados testes, validações finais ou deploy. O progresso global mantém-se em **89% (referência provisória anterior, não recalculada)** até reconciliação integral dos módulos; esta correcção não aumenta por si só a percentagem.
