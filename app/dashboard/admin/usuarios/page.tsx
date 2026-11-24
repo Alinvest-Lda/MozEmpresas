@@ -1,84 +1,241 @@
 export const dynamic = "force-dynamic";
 
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { createAdminClient } from "@/lib/security/rate-limit";
 import { setManagedAccountStatus, sendManagedPasswordRecovery } from "@/lib/admin/account-management-actions";
+import { Input, Select } from "@/components/ui";
+import styles from "./usuarios.module.css";
+import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
-const statusLabels: Record<string,string> = { ACTIVE: "Activa", INACTIVE: "Suspensa", DELETED: "Eliminação solicitada" };
-const resultMessages: Record<string,string> = {
-  updated: "Estado da conta actualizado. O acesso de autenticação foi actualizado e a operação ficou registada.",
-  "recovery-sent": "Instruções de recuperação enviadas para o email da conta e evento registado.",
-  "recovery-audit-warning": "O pedido de recuperação foi enviado, mas o registo de auditoria falhou. Verifique o histórico.",
-  invalid: "Dados inválidos. Indique uma justificação com pelo menos 8 caracteres.",
-  self: "Não pode suspender, reactivar ou encerrar a sua própria conta administrativa.",
-  "last-admin": "A operação foi bloqueada para proteger o último Super Admin activo.",
-  forbidden: "Não tem autorização para esta operação.",
-  "not-found": "A conta indicada não foi encontrada.",
-  unchanged: "A conta já se encontra nesse estado.",
-  "service-unavailable": "O serviço administrativo de autenticação não está configurado. Nenhuma alteração foi feita.",
-  "auth-update-failed": "Não foi possível actualizar o estado de autenticação. Nenhuma alteração de perfil foi confirmada.",
-  "update-failed": "A alteração falhou. O estado de autenticação anterior foi restaurado quando possível.",
-  "recovery-failed": "Não foi possível iniciar a recuperação de password.",
+type SearchParams = Promise<{ q?: string; tipo?: string; estado?: string; acesso?: string; associacao?: string; page?: string }>;
+
+const userTypes: Record<string, string> = {
+  empresa: "Empresa",
+  parceiro: "Parceiro",
+  profissional: "Profissional",
+};
+const accountStatuses: Record<string, string> = {
+  ACTIVE: "Activa",
+  INACTIVE: "Suspensa",
+  SUSPENDED: "Suspensa",
+  DELETED: "Eliminação solicitada",
 };
 
-export default async function AdminUsersPage({searchParams}:{searchParams:Promise<{result?:string}>}) {
+export default async function AdminUsersPage({ searchParams }: { searchParams?: SearchParams }) {
   const params = await searchParams;
+  const q = (params?.q ?? "").trim().slice(0, 120);
+  const type = ["empresa", "parceiro", "profissional"].includes(params?.tipo ?? "") ? params?.tipo ?? "" : "";
+  const status = ["ACTIVE", "INACTIVE", "SUSPENDED", "DELETED"].includes(params?.estado ?? "") ? params?.estado ?? "" : "";
+  const access = ["admin_activo", "admin_inactivo", "sem_admin"].includes(params?.acesso ?? "") ? params?.acesso ?? "" : "";
+  const association = ["com_empresa", "sem_empresa"].includes(params?.associacao ?? "") ? params?.associacao ?? "" : "";
+  const pageNumber = Math.max(1, Math.min(10000, Number.parseInt(params?.page ?? "1", 10) || 1));
+  const pageSize = 30;
   const { supabase, authorized, user } = await getSuperAdminContext();
   if (!authorized || !user) redirect("/login?next=/dashboard/admin/usuarios");
   const admin = createAdminClient();
-  if (!admin) return <main className="dashboard-main"><div className="dashboard-content"><h1>Utilizadores e acessos</h1><p role="alert" className="notice">O acesso administrativo à autenticação não está configurado. A listagem e as alterações foram bloqueadas por segurança.</p></div></main>;
-
-  const users: Array<{id:string;email:string;created_at:string;last_sign_in_at:string|null}> = [];
-  for (let page = 1; page <= 10; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
-    if (error) return <main className="dashboard-main"><div className="dashboard-content"><h1>Utilizadores e acessos</h1><p role="alert" className="notice">Não foi possível consultar o serviço de autenticação. Nenhuma lista parcial será apresentada.</p></div></main>;
-    users.push(...data.users.map(u=>({id:u.id,email:u.email||"Sem email",created_at:u.created_at,last_sign_in_at:u.last_sign_in_at||null})));
-    if (data.users.length < 1000) break;
+  const authUsers = new Map<string, string>();
+  if (admin) {
+    const { data: authPage, error: authError } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (!authError) for (const authUser of authPage.users) authUsers.set(authUser.id, authUser.email || "");
   }
+  const { data: accountAudit, error: accountAuditError } = await supabase.from("platform_account_audit_log").select("id,actor_user_id,target_user_id,action,previous_status,new_status,reason,created_at").order("created_at", { ascending: false }).limit(50);
 
-  const [{data:profiles,error:profilesError},{data:platformMembers},{data:businessMembers},{data:partnerMembers},{data:audit,error:auditError}] = await Promise.all([
-    admin.from("profiles").select("id,full_name,user_type,account_status,created_at,deactivated_at,deletion_requested_at"),
-    admin.from("platform_members").select("user_id,role,active"),
-    admin.from("business_members").select("user_id,role"),
-    admin.from("partner_account_members").select("user_id,role,active"),
-    supabase.from("platform_account_audit_log").select("id,actor_user_id,target_user_id,action,previous_status,new_status,reason,created_at").order("created_at",{ascending:false}).limit(100),
+  const [{ data: allPlatformMembers }, { data: allBusinessMembers }] = await Promise.all([
+    supabase.from("platform_members").select("user_id,active"),
+    supabase.from("business_members").select("user_id"),
   ]);
-  if (profilesError) return <main className="dashboard-main"><div className="dashboard-content"><h1>Utilizadores e acessos</h1><p role="alert" className="notice">Não foi possível consultar os perfis. Não serão apresentados dados incompletos.</p></div></main>;
-  const profileMap = new Map((profiles||[]).map(p=>[p.id,p]));
-  const platformMap = new Map((platformMembers||[]).map(m=>[m.user_id,m]));
-  const emailById = new Map(users.map(u=>[u.id,u.email]));
-  const nameById = new Map((profiles||[]).map(p=>[p.id,p.full_name]));
-  const rows = users.map(u=>({ ...u, profile:profileMap.get(u.id), platform:platformMap.get(u.id),
-    businessCount:(businessMembers||[]).filter(m=>m.user_id===u.id).length,
-    partnerCount:(partnerMembers||[]).filter(m=>m.user_id===u.id && m.active).length,
-  }));
-  const result = params?.result && resultMessages[params.result] ? params.result : "";
-  return <main className="dashboard-main"><div className="dashboard-content">
-    <header className="dashboard-topbar"><div><span className="dashboard-kicker">Administração global · Pessoas</span><h1>Utilizadores e acessos</h1><p>Gerir contas, recuperar acessos e acompanhar decisões administrativas com histórico verificável.</p></div></header>
-    {result && <p role="status" className="notice">{resultMessages[result]}</p>}
-    <section className="admin-control-stats">
-      <article className="admin-control-stat"><span className="admin-control-stat-label">Contas de autenticação</span><strong>{users.length}</strong><span>Utilizadores registados</span></article>
-      <article className="admin-control-stat"><span className="admin-control-stat-label">Activas</span><strong>{rows.filter(r=>(r.profile?.account_status||"ACTIVE")==="ACTIVE").length}</strong><span>Com acesso normal</span></article>
-      <article className="admin-control-stat"><span className="admin-control-stat-label">Suspensas / encerramento</span><strong>{rows.filter(r=>["INACTIVE","DELETED"].includes(r.profile?.account_status||"")).length}</strong><span>Exigem revisão ou recuperação</span></article>
-      <article className="admin-control-stat"><span className="admin-control-stat-label">Eventos de auditoria</span><strong>{auditError?"—":audit?.length||0}</strong><span>Últimos 100 eventos</span></article>
-    </section>
-    <section className="dashboard-section"><div className="dashboard-section-head"><div><span className="dashboard-kicker">Contas registadas</span><h2>Estado e operações</h2><p>Suspender bloqueia a autenticação; reactivar repõe o acesso. Encerrar regista um pedido de eliminação e bloqueia a conta, sem apagar imediatamente dados sujeitos a retenção legal ou financeira.</p></div></div>
-      <div className="access-table-wrap"><table className="access-table"><thead><tr><th>Utilizador</th><th>Perfil / papel</th><th>Associações</th><th>Estado</th><th>Operações</th></tr></thead><tbody>
-      {rows.map(row=>{const status=row.profile?.account_status||"ACTIVE";return <tr key={row.id}>
-        <td><strong>{row.profile?.full_name||"Utilizador"}</strong><small>{row.email}</small><small>Criada {new Date(row.created_at).toLocaleDateString("pt-MZ")} · último acesso {row.last_sign_in_at?new Date(row.last_sign_in_at).toLocaleDateString("pt-MZ"):"nunca"}</small></td>
-        <td>{row.profile?.user_type||"—"}{row.platform?.active?<small>Super Admin · {row.platform.role}</small>:null}</td>
-        <td>{row.businessCount} empresa(s)<small>{row.partnerCount} parceria(s)</small></td>
-        <td><strong>{statusLabels[status]||status}</strong></td>
-        <td><div className="admin-request-list">
-          {row.id!==user.id && <form action={setManagedAccountStatus} className="admin-request-form"><input type="hidden" name="userId" value={row.id}/><select name="status" defaultValue={status}><option value="ACTIVE">Reactivar</option><option value="INACTIVE">Suspender</option><option value="DELETED">Encerrar / pedido de eliminação</option></select><input name="reason" minLength={8} maxLength={500} required placeholder="Justificação (mín. 8 caracteres)"/><button className="btn primary" type="submit">Aplicar</button></form>}
-          <form action={sendManagedPasswordRecovery}><input type="hidden" name="userId" value={row.id}/><input type="hidden" name="email" value={row.email}/><button className="btn" type="submit">Enviar recuperação</button></form>
-        </div></td>
-      </tr>})}
-      </tbody></table></div>
-    </section>
-    <section className="dashboard-section"><div className="dashboard-section-head"><div><span className="dashboard-kicker">Rastreabilidade</span><h2>Histórico de acessos e contas</h2><p>Eventos administrativos recentes, com responsável, conta afectada, decisão e justificação.</p></div></div>
-      {auditError?<p role="alert" className="notice">Histórico temporariamente indisponível. Não será apresentado como vazio.</p>:audit?.length?<div className="admin-request-list">{audit.map(event=><article className="admin-request-card" key={event.id}><div className="admin-request-head"><div><strong>{event.action}</strong><small>{emailById.get(event.target_user_id||"")||event.target_user_id||"Conta não identificada"} · por {emailById.get(event.actor_user_id||"")||event.actor_user_id||"Sistema"}</small></div><span className="tag">{event.previous_status||"—"} → {event.new_status||"—"}</span></div><p>{event.reason||"Sem justificação adicional."}</p><small>{new Date(event.created_at).toLocaleString("pt-MZ")}</small></article>)}</div>:<p className="muted">Ainda não existem eventos de gestão de contas.</p>}
-    </section>
-  </div></main>;
+  const platformRows = allPlatformMembers ?? [];
+  const businessUserIds = [...new Set((allBusinessMembers ?? []).map((row) => row.user_id))];
+  const platformUserIds = [...new Set(platformRows.map((row) => row.user_id))];
+  const activePlatformIds = [...new Set(platformRows.filter((row) => row.active).map((row) => row.user_id))];
+  const inactivePlatformIds = [...new Set(platformRows.filter((row) => !row.active).map((row) => row.user_id))];
+
+  let usersQuery = supabase
+    .from("profiles")
+    .select("id,full_name,user_type,account_status,created_at,deactivated_at,deletion_requested_at", { count: "exact" })
+    .order("created_at", { ascending: false });
+
+  if (q) {
+    const safeQuery = q.replace(/[%,_]/g, " ").trim();
+    if (safeQuery) usersQuery = usersQuery.ilike("full_name", `%${safeQuery}%`);
+  }
+  if (type) usersQuery = usersQuery.eq("user_type", type);
+  if (status) usersQuery = usersQuery.eq("account_status", status);
+  if (access === "admin_activo") usersQuery = activePlatformIds.length ? usersQuery.in("id", activePlatformIds) : usersQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+  if (access === "admin_inactivo") usersQuery = inactivePlatformIds.length ? usersQuery.in("id", inactivePlatformIds) : usersQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+  if (access === "sem_admin" && platformUserIds.length) usersQuery = usersQuery.not("id", "in", `(${platformUserIds.join(",")})`);
+  if (association === "com_empresa") usersQuery = businessUserIds.length ? usersQuery.in("id", businessUserIds) : usersQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+  if (association === "sem_empresa" && businessUserIds.length) usersQuery = usersQuery.not("id", "in", `(${businessUserIds.join(",")})`);
+
+  let currentPage = pageNumber;
+  let from = (currentPage - 1) * pageSize;
+  let { data: users, count, error } = await usersQuery.range(from, from + pageSize - 1);
+  const total = count ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  if (currentPage > pageCount) {
+    currentPage = pageCount;
+    from = (currentPage - 1) * pageSize;
+    ({ data: users, count, error } = await usersQuery.range(from, from + pageSize - 1));
+  }
+  const userIds = (users ?? []).map((profile) => profile.id);
+  const [{ data: memberships }, { data: platformMembers }] = userIds.length ? await Promise.all([
+    supabase.from("business_members").select("user_id,business_id,role,businesses:business_id(name)").in("user_id", userIds),
+    supabase.from("platform_members").select("user_id,role,active").in("user_id", userIds),
+  ]) : [{ data: [] }, { data: [] }];
+
+  const filterParams = new URLSearchParams();
+  if (q) filterParams.set("q", q);
+  if (type) filterParams.set("tipo", type);
+  if (status) filterParams.set("estado", status);
+  if (access) filterParams.set("acesso", access);
+  if (association) filterParams.set("associacao", association);
+  const queryString = filterParams.toString();
+  const pageHref = (number: number) => "/dashboard/admin/usuarios?" + [queryString, "page=" + number].filter(Boolean).join("&");
+
+  const activeCount = (users ?? []).filter((profile) => profile.account_status === "ACTIVE").length;
+  const deletionRequests = (users ?? []).filter((profile) => Boolean(profile.deletion_requested_at)).length;
+
+  return (
+    <main className={`dashboard-main admin-workspace ${styles.page}`}>
+      <div className={`dashboard-content ${styles.content}`}>
+        <header className={styles.header}>
+          <div>
+            <span className={styles.eyebrow}>Administração global</span>
+            <h1>Utilizadores e acessos</h1>
+            <p>Pesquise perfis, faça gestão controlada do acesso e acompanhe as decisões administrativas com histórico verificável.</p>
+          </div>
+          <div className={styles.resultCount}>
+            <strong>{error ? "—" : (count ?? users?.length ?? 0).toLocaleString("pt-MZ")}</strong>
+            <span>perfis encontrados</span>
+          </div>
+        </header>
+
+        <section className={styles.directory} aria-labelledby="users-directory-title">
+          <div className={styles.sectionHead}>
+            <div>
+              <h2 id="users-directory-title">Directório de utilizadores</h2>
+              <p>Consulte os perfis por páginas, dos mais recentes para os mais antigos. Não altera contas nem permissões.</p>
+            </div>
+          </div>
+
+          <form className={styles.filters} method="get">
+            <label className={styles.searchField}>
+              <span>Pesquisar utilizador</span>
+              <Input name="q" defaultValue={q} maxLength={120} placeholder="Nome do utilizador" />
+            </label>
+            <label>
+              <span>Tipo de conta</span>
+              <Select name="tipo" defaultValue={type}>
+                <option value="">Todos os tipos</option>
+                <option value="empresa">Empresa</option>
+                <option value="parceiro">Parceiro</option>
+                <option value="profissional">Profissional</option>
+              </Select>
+            </label>
+            <label>
+              <span>Estado da conta</span>
+              <Select name="estado" defaultValue={status}>
+                <option value="">Todos os estados</option>
+                <option value="ACTIVE">Activo</option>
+                <option value="INACTIVE">Inactivo</option>
+                <option value="SUSPENDED">Suspenso</option>
+                <option value="DELETED">Eliminado</option>
+              </Select>
+            </label>
+            <label>
+              <span>Acesso administrativo</span>
+              <Select name="acesso" defaultValue={access}>
+                <option value="">Todos os acessos</option>
+                <option value="admin_activo">Activo</option>
+                <option value="admin_inactivo">Inactivo</option>
+                <option value="sem_admin">Sem acesso global</option>
+              </Select>
+            </label>
+            <label>
+              <span>Associação empresarial</span>
+              <Select name="associacao" defaultValue={association}>
+                <option value="">Todas</option>
+                <option value="com_empresa">Com empresa</option>
+                <option value="sem_empresa">Sem empresa</option>
+              </Select>
+            </label>
+            <div className={styles.filterActions}>
+              <button className="btn primary" type="submit">Pesquisar</button>
+              {q || type || status || access || association ? <Link className="btn" href="/dashboard/admin/usuarios">Limpar filtros</Link> : null}
+            </div>
+          </form>
+
+          {error ? <div className="notice" role="alert">Não foi possível carregar os perfis. Verifique as permissões da base de dados e tente novamente.</div> : users?.length ? (
+            <>
+              <div className={styles.tableMeta}>
+                <span>A mostrar <strong>{from + 1}–{from + users.length}</strong> de <strong>{total.toLocaleString("pt-MZ")}</strong> perfis correspondentes</span>
+                <span>{pageSize} perfis por página</span>
+              </div>
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead><tr>
+                    <th>Utilizador</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Acesso global</th>
+                    <th>Empresas associadas</th>
+                    <th>Registo</th>
+                    <th>Operações</th>
+                  </tr></thead>
+                  <tbody>
+                    {users.map((profile) => {
+                      const profileMemberships = (memberships ?? []).filter((membership) => membership.user_id === profile.id);
+                      const platformRole = (platformMembers ?? []).find((member) => member.user_id === profile.id);
+                      const businesses = profileMemberships.map((membership) => {
+                        const business = Array.isArray(membership.businesses) ? membership.businesses[0] : membership.businesses;
+                        return business?.name ? { name: business.name, role: membership.role } : { name: membership.role, role: "" };
+                      });
+                      const statusClass = profile.account_status === "ACTIVE" ? styles.statusActive : profile.account_status === "SUSPENDED" || profile.account_status === "INACTIVE" || profile.account_status === "DELETED" ? styles.statusCritical : styles.statusNeutral;
+                      const accountEmail = authUsers.get(profile.id) || "";
+                      return <tr key={profile.id}>
+                        <td>
+                          <div className={styles.userCell}>
+                            <span className={styles.avatar}>{(profile.full_name?.trim() || "?").slice(0, 1).toLocaleUpperCase("pt-MZ")}</span>
+                            <span className={styles.userInfo}>
+                              <strong>{profile.full_name?.trim() || "Nome não indicado"}</strong>
+                              <small>{profile.id}</small>
+                              {accountEmail ? <small>{accountEmail}</small> : null}
+                              {profile.deletion_requested_at ? <em>Pedido de eliminação registado</em> : null}
+                            </span>
+                          </div>
+                        </td>
+                        <td><span className={styles.typeLabel}>{userTypes[profile.user_type] || profile.user_type || "Não indicado"}</span></td>
+                        <td><span className={`${styles.status} ${statusClass}`}>{accountStatuses[profile.account_status] || profile.account_status || "Não indicado"}</span></td>
+                        <td>
+                          {platformRole ? <div className={styles.accessCell}><strong>{platformRole.role}</strong><span className={`${styles.status} ${platformRole.active ? styles.statusActive : styles.statusNeutral}`}>{platformRole.active ? "Activo" : "Inactivo"}</span></div> : <span className={styles.secondary}>Sem acesso global</span>}
+                        </td>
+                        <td>
+                          {businesses.length ? <div className={styles.businessList}>{businesses.slice(0, 2).map((business, index) => <span key={`${profile.id}-${index}`}>{business.name}{business.role ? <small> · {business.role}</small> : null}</span>)}{businesses.length > 2 ? <small>+{businesses.length - 2} outras</small> : null}</div> : <span className={styles.secondary}>Sem associação</span>}
+                        </td>
+                        <td><span className={styles.date}>{new Date(profile.created_at).toLocaleDateString("pt-MZ")}</span>{profile.deactivated_at ? <small className={styles.subDate}>Desactivado: {new Date(profile.deactivated_at).toLocaleDateString("pt-MZ")}</small> : null}</td><td><div className={styles.operations}>{admin && profile.id !== user.id ? <form action={setManagedAccountStatus}><input type="hidden" name="userId" value={profile.id}/><select name="status" defaultValue={profile.account_status || "ACTIVE"} aria-label="Novo estado da conta"><option value="ACTIVE">Reactivar</option><option value="INACTIVE">Suspender</option><option value="DELETED">Encerrar / pedido de eliminação</option></select><input name="reason" minLength={8} maxLength={500} required placeholder="Justificação (mín. 8 caracteres)" aria-label="Justificação da alteração"/><button className="btn primary" type="submit">Aplicar</button></form> : <span className={styles.secondary}>{profile.id === user.id ? "Conta administrativa actual" : "Gestão indisponível"}</span>}{admin && accountEmail ? <form action={sendManagedPasswordRecovery}><input type="hidden" name="userId" value={profile.id}/><input type="hidden" name="email" value={accountEmail}/><button className="btn" type="submit">Enviar recuperação</button></form> : null}</div></td>
+                      </tr>;
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <nav className={styles.pagination} aria-label="Paginação">
+                <span>Página {currentPage} de {pageCount}</span>
+                <div>
+                  {currentPage > 1 ? <Link className="btn" href={pageHref(currentPage - 1)}>← Anterior</Link> : <span className={styles.secondary}>← Anterior</span>}
+                  {currentPage < pageCount ? <Link className="btn" href={pageHref(currentPage + 1)}>Seguinte →</Link> : <span className={styles.secondary}>Seguinte →</span>}
+                </div>
+              </nav>
+            </>
+          ) : <div className={styles.emptyState}><strong>{q || type || status || access || association ? "Nenhum perfil corresponde aos filtros." : "Não existem perfis para apresentar."}</strong><span>Experimente alterar ou limpar os filtros de pesquisa.</span></div>}
+        </section>
+        <section className={styles.directory} aria-labelledby="account-audit-title">
+          <div className={styles.sectionHead}><div><h2 id="account-audit-title">Histórico administrativo de contas</h2><p>Suspensões, reativações, pedidos de eliminação e recuperações de password. Registos imutáveis.</p></div></div>
+          {accountAuditError ? <div className="notice" role="alert">Não foi possível carregar o histórico. Não será apresentado como vazio.</div> : accountAudit?.length ? <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Data</th><th>Acção</th><th>Conta afectada</th><th>Responsável</th><th>Estado</th><th>Justificação</th></tr></thead><tbody>
+            {accountAudit.map(event=><tr key={event.id}><td>{new Date(event.created_at).toLocaleString("pt-MZ")}</td><td>{event.action}</td><td>{authUsers.get(event.target_user_id || "") || event.target_user_id || "—"}</td><td>{authUsers.get(event.actor_user_id || "") || event.actor_user_id || "Sistema"}</td><td>{event.previous_status || "—"} → {event.new_status || "—"}</td><td>{event.reason || "—"}</td></tr>)}
+          </tbody></table></div> : <div className={styles.emptyState}><strong>Ainda não existem decisões administrativas de conta.</strong><span>As próximas operações serão registadas automaticamente.</span></div>}
+        </section>
+      </div>
+    </main>
+  );
 }

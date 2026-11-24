@@ -58,3 +58,5 @@
 .pagination>div{display:flex;align-items:center;gap:8px}
 .pagination :global(.btn){min-height:34px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
 @media(max-width:640px){.pagination{padding:13px 16px;align-items:flex-start;flex-direction:column}.pagination>div{width:100%;justify-content:space-between}}
+
+.operations{display:grid;gap:8px;min-width:245px}.operations form{display:grid;gap:6px}.operations input,.operations select{width:100%;min-width:0;min-height:34px;padding:7px 9px;border:1px solid var(--palette-dce7e2);border-radius:8px;background:#fff;color:var(--palette-23423d);font:inherit;font-size:11px}.operations button{justify-self:start;min-height:32px}.table{min-width:1160px}
