@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Input, Select } from "@/components/ui";
 import styles from "./empresas.module.css";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
-import { moderateBusiness } from "@/lib/admin/actions";
+import { archiveBusiness, restoreBusiness, setBusinessVisibility, transferBusinessOwnership } from "@/lib/admin/business-governance-actions";
 import { redirect } from "next/navigation";
 
 type SearchParams = Promise<{ q?: string; visibilidade?: string; result?: string; page?: string }>;
@@ -15,15 +15,17 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
   const visibility = ["publica", "privada", "arquivada"].includes(params?.visibilidade ?? "")
     ? params?.visibilidade ?? ""
     : "";
-  const result = params?.result === "success" || params?.result === "error" ? params.result : "";
+  const result = params?.result ?? "";
   const pageNumber = Math.max(1, Math.min(10000, Number.parseInt(params?.page ?? "1", 10) || 1));
   const pageSize = 30;
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
 
+  const [{ data: adminUsers }, { data: auditRows, error: auditError }] = await Promise.all([supabase.rpc("admin_list_platform_users", { p_search:null,p_user_type:null,p_status:"ACTIVE",p_access:null,p_association:null,p_limit:100,p_offset:0 }),supabase.rpc("admin_list_business_audit", { p_business_id:null,p_limit:100 })]);
+  const resultMessages:Record<string,string>={ "ownership-transferred":"Titularidade transferida e registada.","visibility-updated":"Visibilidade actualizada e registada.",archived:"Empresa arquivada; histórico preservado.",restored:"Empresa restaurada como privada.",invalid:"Dados inválidos ou justificação insuficiente.",forbidden:"Operação não autorizada.","not-found":"Empresa não encontrada.","owner-inactive":"O novo titular deve ter conta activa.",unchanged:"Não houve alteração.","operation-failed":"Não foi possível concluir a operação." };
   let query = supabase
     .from("businesses")
-    .select("id,name,slug,location,phone,email,is_public,created_at,archived_at,business_categories(name)", { count: "exact" })
+    .select("id,name,slug,location,phone,email,is_public,created_at,archived_at,owner_id,business_categories(name)", { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (q) {
@@ -69,9 +71,7 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
           <span className={styles.heroDecoration} aria-hidden="true">M</span>
         </header>
 
-        {result ? <div className={styles.notice} role={result === "error" ? "alert" : "status"}>
-          {result === "success" ? "Visibilidade da empresa actualizada." : "Não foi possível actualizar a empresa. Confirme se existe, não está arquivada e se tem autorização."}
-        </div> : null}
+        {result && resultMessages[result] ? <div className={styles.notice} role="status">{resultMessages[result]}</div> : null}
 
         <section className={styles.directory} aria-labelledby="business-directory-title">
           <div className={styles.sectionHead}>
@@ -111,6 +111,7 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
                 <table className={styles.table}>
                   <thead><tr>
                     <th>Empresa</th>
+                    <th>Titular</th>
                     <th>Categoria</th>
                     <th>Visibilidade</th>
                     <th>Localização e contactos</th>
@@ -132,6 +133,7 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
                           </div>
                         </td>
                         <td><span className={styles.typeLabel}>{category?.name || "Não indicada"}</span></td>
+                        <td><span className={styles.contactCell}><strong>{adminUsers?.find((u:any)=>u.id===business.owner_id)?.full_name || "Titular não identificado"}</strong><small>{adminUsers?.find((u:any)=>u.id===business.owner_id)?.email || business.owner_id}</small></span></td>
                         <td><span className={`${styles.status} ${archived ? styles.statusCritical : business.is_public ? styles.statusActive : styles.statusNeutral}`}>{archived ? "Arquivada" : business.is_public ? "Pública" : "Privada"}</span></td>
                         <td>
                           <div className={styles.contactCell}>
@@ -141,16 +143,11 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
                           </div>
                         </td>
                         <td><span className={styles.date}>{new Date(business.created_at).toLocaleDateString("pt-MZ")}</span></td>
-                        <td>
-                          {archived ? <span className={styles.secondary}>Consulta apenas</span> : <form action={async (formData) => { "use server"; const outcome = await moderateBusiness(formData); const next = new URLSearchParams(); if (q) next.set("q", q); if (visibility) next.set("visibilidade", visibility); next.set("result", "error" in outcome ? "error" : "success"); redirect(`/dashboard/admin/empresas?${next.toString()}`); }} className={styles.visibilityForm}>
-                            <input type="hidden" name="businessId" value={business.id} />
-                            <Select name="isPublic" defaultValue={business.is_public ? "true" : "false"} aria-label={`Visibilidade de ${business.name}`}>
-                              <option value="true">Pública</option>
-                              <option value="false">Privada</option>
-                            </Select>
-                            <button className="btn primary" type="submit">Guardar</button>
-                          </form>}
-                        </td>
+                        <td><div className={styles.operations}>
+<form action={setBusinessVisibility}><input type="hidden" name="businessId" value={business.id}/><Select name="isPublic" defaultValue={business.is_public?"true":"false"}><option value="true">Pública</option><option value="false">Privada</option></Select><input name="reason" minLength={8} maxLength={500} required placeholder="Justificação da visibilidade"/><button className="btn primary" type="submit" disabled={archived}>Guardar visibilidade</button></form>
+<form action={transferBusinessOwnership}><input type="hidden" name="businessId" value={business.id}/><Select name="newOwnerId" defaultValue={business.owner_id}>{(adminUsers??[]).map((u:any)=><option key={u.id} value={u.id} disabled={u.id===business.owner_id}>{u.full_name||u.email} · {u.email}</option>)}</Select><input name="reason" minLength={8} maxLength={500} required placeholder="Justificação da transferência"/><button className="btn" type="submit" disabled={archived}>Transferir titularidade</button></form>
+{archived?<form action={restoreBusiness}><input type="hidden" name="businessId" value={business.id}/><input name="reason" minLength={8} maxLength={500} required placeholder="Justificação da restauração"/><button className="btn" type="submit">Restaurar empresa</button></form>:<form action={archiveBusiness}><input type="hidden" name="businessId" value={business.id}/><input name="reason" minLength={8} maxLength={500} required placeholder="Justificação do arquivo"/><button className="btn" type="submit">Arquivar empresa</button></form>}
+</div></td>
                       </tr>;
                     })}
                   </tbody>
@@ -166,6 +163,10 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
             </>
           ) : <div className={styles.emptyState}><strong>{q || visibility ? "Nenhuma empresa corresponde aos filtros." : "Ainda não existem empresas para apresentar."}</strong><span>Experimente alterar ou limpar os filtros de pesquisa.</span></div>}
         </section>
+        <section className={styles.directory} aria-labelledby="business-audit-title">
+<div className={styles.sectionHead}><div><h2 id="business-audit-title">Histórico de governação empresarial</h2><p>Transferências, visibilidade, arquivos e restaurações.</p></div></div>
+{auditError?<div className="notice" role="alert">Não foi possível carregar o histórico.</div>:auditRows?.length?<div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Data</th><th>Empresa</th><th>Acção</th><th>Responsável</th><th>Alteração</th><th>Justificação</th></tr></thead><tbody>{auditRows.map((e:any)=><tr key={e.id}><td>{new Date(e.created_at).toLocaleString("pt-MZ")}</td><td>{e.business_name}</td><td>{e.action}</td><td>{e.actor_user_id}</td><td>{e.action==="OWNERSHIP_TRANSFERRED"?e.old_owner_id+" → "+e.new_owner_id:e.action==="VISIBILITY_CHANGED"?(e.old_is_public?"Pública":"Privada")+" → "+(e.new_is_public?"Pública":"Privada"):e.action==="BUSINESS_ARCHIVED"?"Arquivada":"Restaurada"}</td><td>{e.reason}</td></tr>)}</tbody></table></div>:<div className={styles.emptyState}><strong>Sem operações administrativas registadas.</strong><span>As próximas alterações serão registadas aqui.</span></div>}
+</section>
       </div>
     </main>
   );
