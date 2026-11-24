@@ -87,7 +87,7 @@ export default async function ServiceDetail({
   if (!user) redirect("/login");
 
   const managedBusinessIds = await getManagedBusinessIds(supabase, user.id);
-  const [{ data: service }, { data: businesses }] = await Promise.all([
+  const [{ data: service }, { data: businesses }, { data: profile }] = await Promise.all([
     supabase
       .from("platform_services")
       .select("id,slug,name,description,category,price,currency,billing,default_term_days")
@@ -97,6 +97,7 @@ export default async function ServiceDetail({
     managedBusinessIds.length
       ? supabase.from("businesses").select("id,name").in("id", managedBusinessIds).is("archived_at", null).order("name")
       : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    supabase.from("profiles").select("mpesa_msisdn").eq("id", user.id).maybeSingle(),
   ]);
 
   if (!service) notFound();
@@ -200,7 +201,7 @@ export default async function ServiceDetail({
           </div>
 
           <aside id="contratar" className="service-request-panel">
-            <PlatformServiceRequestForm serviceId={service.id} businesses={businesses ?? []} price={service.price} billing={service.billing} defaultTermDays={service.default_term_days} />
+            <PlatformServiceRequestForm serviceId={service.id} businesses={businesses ?? []} price={service.price} billing={service.billing} defaultTermDays={service.default_term_days} savedMsisdn={profile?.mpesa_msisdn || ""} />
           </aside>
         </section>
 
