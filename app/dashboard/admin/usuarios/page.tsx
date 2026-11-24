@@ -39,7 +39,9 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
     const { data: authPage, error: authError } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (!authError) for (const authUser of authPage.users) authUsers.set(authUser.id, authUser.email || "");
   }
-  const { data: accountAudit, error: accountAuditError } = await supabase.from("platform_account_audit_log").select("id,actor_user_id,target_user_id,action,previous_status,new_status,reason,created_at").order("created_at", { ascending: false }).limit(50);
+  const { data: accountAudit, error: accountAuditError } = admin
+    ? await admin.from("account_admin_audit_log").select("id,actor_user_id,target_user_id,action,status_from,status_to,metadata,created_at").order("created_at", { ascending: false }).limit(50)
+    : { data: null, error: new Error("Admin client unavailable") };
 
   const [{ data: allPlatformMembers }, { data: allBusinessMembers }] = await Promise.all([
     supabase.from("platform_members").select("user_id,active"),
@@ -232,7 +234,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
         <section className={styles.directory} aria-labelledby="account-audit-title">
           <div className={styles.sectionHead}><div><h2 id="account-audit-title">Histórico administrativo de contas</h2><p>Suspensões, reativações, pedidos de eliminação e recuperações de password. Registos imutáveis.</p></div></div>
           {accountAuditError ? <div className="notice" role="alert">Não foi possível carregar o histórico. Não será apresentado como vazio.</div> : accountAudit?.length ? <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Data</th><th>Acção</th><th>Conta afectada</th><th>Responsável</th><th>Estado</th><th>Justificação</th></tr></thead><tbody>
-            {accountAudit.map(event=><tr key={event.id}><td>{new Date(event.created_at).toLocaleString("pt-MZ")}</td><td>{event.action}</td><td>{authUsers.get(event.target_user_id || "") || event.target_user_id || "—"}</td><td>{authUsers.get(event.actor_user_id || "") || event.actor_user_id || "Sistema"}</td><td>{event.previous_status || "—"} → {event.new_status || "—"}</td><td>{event.reason || "—"}</td></tr>)}
+            {accountAudit.map(event=><tr key={event.id}><td>{new Date(event.created_at).toLocaleString("pt-MZ")}</td><td>{event.action}</td><td>{authUsers.get(event.target_user_id || "") || event.target_user_id || "—"}</td><td>{authUsers.get(event.actor_user_id || "") || event.actor_user_id || "Sistema"}</td><td>{event.status_from || "—"} → {event.status_to || "—"}</td><td>{event.metadata?.reason || "—"}</td></tr>)}
           </tbody></table></div> : <div className={styles.emptyState}><strong>Ainda não existem decisões administrativas de conta.</strong><span>As próximas operações serão registadas automaticamente.</span></div>}
         </section>
       </div>
