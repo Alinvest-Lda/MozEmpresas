@@ -48,3 +48,18 @@ Obtain/export from the authenticated Vodacom developer portal:
 6. Confirmed Service Provider Code and whether the production application is approved/live.
 
 Once these are available, implement the server-only client, connect checkout to C2B initiation, reconcile status before settlement, adapt the callback to the documented payload, add mocked tests and run CI. Sandbox/UAT testing should precede any production enablement. No production charge should be triggered without explicit approval.
+
+
+## Follow-up configuration attempt — 24 November 2026
+
+The following Production variables were added to Vercel as encrypted values, without exposing credentials:
+
+- `MPESA_SERVICE_PROVIDER_CODE=902809` — provisional mapping from the Organization Shortcode supplied by the account owner; must be confirmed as the Service Provider Code in the Vodacom portal.
+- `MPESA_ORIGIN=developer.mpesa.vm.co.mz` — provisional Origin header value.
+- `MPESA_C2B_PORT=18352` — commonly documented C2B port; confirm for this account.
+- `MPESA_STATUS_PORT=18353` — commonly documented transaction-status port; confirm for this account.
+- `MPESA_API_BASE_URL` was normalized to `https://api.vm.co.mz`.
+
+The Vercel environment metadata confirms the API key remains a protected Secret and the other named variables are present in Production. No values were decrypted for inspection. Environment-variable presence is not proof of credential validity or network reachability.
+
+**Important:** The application code has not yet been switched to these provisional parameters. The current checkout still only creates a pending order; it does not initiate a C2B request. The webhook still expects a custom HMAC format. Do not enable real payments until the authenticated portal confirms the authentication exchange, operation URLs/ports, Service Provider Code, request/response schema, and callback rules. A redeployment is required for changed Production environment variables to enter a running deployment.
