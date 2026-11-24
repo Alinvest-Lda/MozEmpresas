@@ -195,3 +195,6 @@ Implementação adicional no Supabase:
 Migrations: `f337_account_governance_and_partner_revocation_notifications`, `f338_remove_duplicate_support_message_notifications`, `f339_business_service_and_partner_lifecycle_notifications`, `f340_use_canonical_account_audit_for_notifications`.
 
 Esta tranche é implementação estrutural. Não foram executados testes integrados ou validações finais.
+
+
+A cobertura de oportunidades foi ampliada: a alteração do estado de uma candidatura notifica o candidato, e a alteração do estado de uma oportunidade notifica o respectivo titular. O evento de submissão de candidatura já tinha notificação própria para o titular, pelo que esta tranche cobre a fase posterior de acompanhamento.
