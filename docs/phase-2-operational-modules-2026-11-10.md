@@ -594,3 +594,16 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - F3.25j: indexadas as novas chaves estrangeiras dos pagamentos, documentos e estornos de campanhas Parceiro, eliminando os novos avisos de FK sem índice no advisor de performance.
 - F3.25k: RPC de emissão protege os preços fixos do catálogo. O preço negociado só pode ser informado para formatos sob proposta; preços tabelados não podem ser substituídos pelo operador na emissão da cobrança.
 - F3.25l–F3.25m: a própria conta Parceiro escolhe M-Pesa ou créditos ao submeter a campanha. A opção créditos só é apresentada quando há associação empresarial, carteira com saldo suficiente e preço em créditos configurado; a RPC valida novamente no servidor. A preferência fica gravada na campanha e é usada como opção inicial na emissão administrativa. O endpoint de catálogo expõe apenas elegibilidade booleana e preço, nunca o saldo nem a empresa associada.
+
+
+## F3.34–F3.36 — Fecho estrutural do acesso único de parceiros (24/11/2026)
+
+- A regra de produto foi alinhada: uma organização Parceiro tem um único utilizador activo, sem convites de gestores adicionais.
+- `partner_access_claim(text,uuid)` atribui o papel `owner` ao utilizador inicial, valida email e conta de destino, respeita a membership única e não cria uma segunda associação activa.
+- F3.36 impede a activação de convites por perfis já desactivados, com pedido de eliminação ou estado diferente de `ACTIVE`; o fluxo não reativa contas por efeito lateral.
+- F3.35 introduz a listagem administrativa de utilizadores activos e a revogação controlada do acesso único. A revogação exige motivo, bloqueia a membership, desactiva-a e grava `ACCESS_REVOKED` no histórico institucional na mesma transacção.
+- A página Super Admin passou a apresentar os utilizadores activos por organização, permitir a revogação fundamentada e filtrar as organizações já ocupadas da lista de novos convites.
+- A substituição é sequencial: revogar o acesso actual, depois emitir convite para o novo responsável. A conta e os dados institucionais não são apagados.
+- Migrations: `f334_align_partner_activation_with_single_user_account_rule`, `f335_partner_single_user_access_revocation`, `f336_prevent_inactive_profile_partner_claim`.
+- Commits principais: `4517bcf`, `3f36d0f`, `afdb613`, `29c251a`, `35bef19`, `da10e34`, `76ee645`.
+- Esta tranche é implementação de produto e base de dados. Não foram executados testes de integração, smoke tests ou validações finais; ficam para depois do fecho integral da implementação.
