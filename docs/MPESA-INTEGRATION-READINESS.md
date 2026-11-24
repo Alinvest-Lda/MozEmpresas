@@ -36,6 +36,14 @@ Environment-variable presence does not prove that credentials are valid, that th
 - Callback data must not settle an order or wallet until it has been authenticated and reconciled against a server-to-server transaction-status query, unless the official account specification prescribes a different safe sequence.
 - No live payment, sandbox payment, or production transaction has been attempted.
 
+## Callback / webhook decision
+
+- A Vodacom asynchronous result listener is required when the merchant account/API is configured for asynchronous C2B responses: the portal specification says the platform posts the final result to the Response URL configured under My Account, and the third party must acknowledge it with `output_OriginalConversationID`, `output_ResponseDesc`, `output_ResponseCode`, and `output_ThirdPartyConversationID`.
+- A webhook is not required only if the merchant account is configured for synchronous responses and the synchronous C2B response contract is implemented and verified to provide a definitive transaction outcome. The currently supplied material names a synchronous mode but does not include its complete response schema or prove the account is configured for it.
+- Therefore do not delete the callback route or unregister the Response URL on the basis of the current evidence. The legacy route expects an unverified custom HMAC protocol and correctly fails closed because `MPESA_WEBHOOK_SECRET` is absent; it must not be treated as the Vodacom callback implementation.
+- No Vodacom-provided webhook secret has been established. The absence of such a secret does not mean the asynchronous callback can safely be accepted without authentication. Obtain the supported callback authentication/verification procedure from Vodacom, or use verified synchronous mode.
+- The existing `MPESA_WEBHOOK_SECRET` variable is not configured and must not be invented. Do not remove the route until synchronous mode and its definitive response handling have been verified.
+
 ## What public Vodacom documentation establishes
 
 Vodacom's public Mozambique page lists C2B (synchronous and asynchronous), B2C, B2B, reversals, and Query Transaction Status, and directs developers to the authenticated portal:
@@ -54,7 +62,7 @@ The public overview does not publish the account-specific authentication exchang
 4. Confirmation that `902809` is the Service Provider Code attached to these production credentials and that the application is approved/live.
 5. Sandbox/UAT credentials or an approved test procedure, plus confirmation whether the merchant account is configured for asynchronous responses.
 
-Next implementation steps are to verify the exact C2B Request Package, run the committed mocked tests in CI, implement the callback adapter only after an authenticity mechanism is agreed, and connect checkout only after the order's customer MSISDN and reference mapping are verified. Perform sandbox/UAT before production enablement. Never trigger a real charge without explicit authorization.
+Next implementation steps are to verify the exact C2B Request Package, run the committed mocked tests in CI, obtain Vodacom's callback authenticity procedure or verify the complete synchronous response mode, and connect checkout only after the order's customer MSISDN and reference mapping are verified. Perform sandbox/UAT before production enablement. Never trigger a real charge without explicit authorization.
 
 ## Configuration follow-up — 24 November 2026
 
