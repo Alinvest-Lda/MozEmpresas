@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { Buffer } from "node:buffer";
 import { constants, createPublicKey, publicEncrypt } from "node:crypto";
 
 const PROJECT_URL = Deno.env.get("SUPABASE_URL")!;
@@ -106,12 +107,11 @@ Deno.serve(async (req: Request) => {
   try {
     const user = await authorize(req);
     if (!user) return json({ error: "Unauthorized" }, 401);
-    if (Deno.env.get("MPESA_SANDBOX_TEST_ENABLED") !== "true") {
-      return json({ error: "Sandbox test is disabled until the server-side enable flag is configured." }, 503);
-    }
-    const cfg = await loadConfig();
-
     if (req.method === "POST") {
+      if (Deno.env.get("MPESA_SANDBOX_TEST_ENABLED") !== "true") {
+        return json({ error: "Sandbox test is disabled until the server-side enable flag is configured." }, 503);
+      }
+      const cfg = await loadConfig();
       const { data: existing, error: readError } = await admin
         .from("mpesa_sandbox_test_runs").select("*").eq("test_key", TEST_KEY).maybeSingle();
       if (readError) throw new Error("Unable to read test ledger.");
@@ -157,6 +157,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    const cfg = await loadConfig();
     const { data: test, error: testError } = await admin.from("mpesa_sandbox_test_runs")
       .select("*").eq("test_key", TEST_KEY).maybeSingle();
     if (testError) throw new Error("Unable to load test record.");
