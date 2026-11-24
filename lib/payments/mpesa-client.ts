@@ -13,6 +13,7 @@ export type MpesaConfig = {
   origin: string;
   c2bPort: string;
   statusPort: string;
+  serviceProviderCode: string;
   timeoutMs?: number;
 };
 
@@ -100,13 +101,19 @@ function required(value: string | undefined, name: string): string {
 }
 
 export function getMpesaConfigFromEnv(): MpesaConfig {
+  const environment = required(process.env.MPESA_ENVIRONMENT, "MPESA_ENVIRONMENT");
+  const baseUrl = required(process.env.MPESA_API_BASE_URL, "MPESA_API_BASE_URL");
+  if (environment !== "sandbox" || new URL(baseUrl).hostname !== "api.sandbox.vm.co.mz") {
+    throw new Error("M-Pesa checkout is locked to the Sandbox gateway until Production is explicitly enabled in a separate release.");
+  }
   return {
     apiKey: required(process.env.MPESA_API_KEY, "MPESA_API_KEY"),
     publicKey: required(process.env.MPESA_PUBLIC_KEY, "MPESA_PUBLIC_KEY"),
-    baseUrl: required(process.env.MPESA_API_BASE_URL, "MPESA_API_BASE_URL"),
+    baseUrl,
     origin: required(process.env.MPESA_ORIGIN, "MPESA_ORIGIN"),
     c2bPort: required(process.env.MPESA_C2B_PORT, "MPESA_C2B_PORT"),
     statusPort: required(process.env.MPESA_STATUS_PORT, "MPESA_STATUS_PORT"),
+    serviceProviderCode: required(process.env.MPESA_SERVICE_PROVIDER_CODE, "MPESA_SERVICE_PROVIDER_CODE"),
   };
 }
 
