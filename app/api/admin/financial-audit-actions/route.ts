@@ -21,6 +21,10 @@ export async function POST(request: Request) {
   if (note && note.length > 3000) return NextResponse.json({ error: "Nota excede 3000 caracteres." }, { status: 400 });
   if (evidence && evidence.length > 1000) return NextResponse.json({ error: "Referência de evidência excede 1000 caracteres." }, { status: 400 });
   if (assignee && !UUID.test(assignee)) return NextResponse.json({ error: "O responsável deve ser um UUID de utilizador válido." }, { status: 400 });
+  if (assignee) {
+    const { data: member, error: memberError } = await supabase.from("platform_members").select("user_id,active").eq("user_id",assignee).maybeSingle();
+    if (memberError || !member || member.active !== true) return NextResponse.json({ error: "Responsável não é membro activo da plataforma." }, { status: 400 });
+  }
   const { data, error } = await supabase.rpc("admin_update_financial_audit_issue_f329", {
     p_issue_key: issueKey, p_status: status, p_resolution_note: note,
     p_assigned_to: assignee, p_evidence_reference: evidence,
