@@ -26,7 +26,7 @@ Environment-variable presence does not prove that credentials are valid, that th
 - Added `lib/payments/mpesa-client.ts`, a server-only client for RSA Bearer authorization, C2B Single Stage initiation, and Query Transaction Status.
 - The authorization implementation follows the supplied Java SDK/portal material: 32-character API Key, X.509 DER/SPKI RSA public key, PKCS#1 v1.5 encryption, and Base64 ciphertext in the Bearer header. The public key is checked to be RSA-4096.
 - The client uses HTTPS, explicit operation ports, the configured Origin header, JSON content type, a 15-second timeout, no-store requests, and does not log credentials or request bodies.
-- C2B request fields are mapped to the five documented `input_*` names. The C2B body is currently serialized as JSON from those fields; the exact Request Package/example has not yet been supplied, so this packaging remains subject to sandbox verification before checkout integration.
+- C2B request fields are mapped to the five documented `input_*` names and serialized as a JSON object, matching the user-supplied Single Stage HTTP example: `POST /ipg/v1x/c2bPayment/singleStage/`, `Content-Type: application/json`, `Authorization: Bearer <RSA-encrypted API Key>`, and `Origin: developer.mpesa.vm.co.mz`. The request body contains `input_TransactionReference`, `input_CustomerMSISDN`, `input_Amount`, `input_ThirdPartyReference`, and `input_ServiceProviderCode`, all strings. The matching request shape is now covered by the client test; a sandbox transaction is still required to verify provider acceptance.
 - Query Transaction Status uses the documented three query parameters and the `GET` method.
 - Added `lib/payments/mpesa-client.test.ts` with mocked HTTP tests and a generated RSA key pair. The tests have been committed but have not yet been executed by a confirmed CI run.
 - The M-Pesa service checkout still creates a pending order only; it is intentionally not wired to initiate a live charge until the C2B Request Package and production routing are verified.
@@ -56,13 +56,13 @@ The public overview does not publish the account-specific authentication exchang
 
 ## Evidence still required from the authenticated portal / Vodacom
 
-1. Exact C2B Request Package/example, including confirmation of JSON body placement and all header details.
+1. Sandbox/UAT execution of the supplied C2B Single Stage request example to verify that Vodacom accepts the documented JSON body and headers.
 2. Production Resource URLs and ports for C2B and Query Transaction Status; the supplied operation references currently show Sandbox host `api.sandbox.vm.co.mz`, C2B port `18352`, and status port `18353`.
 3. Callback authenticity mechanism, retry policy, and any account-specific callback requirements. The payload and acknowledgement format are now documented, but authenticity is not.
 4. Confirmation that `902809` is the Service Provider Code attached to these production credentials and that the application is approved/live.
 5. Sandbox/UAT credentials or an approved test procedure, plus confirmation whether the merchant account is configured for asynchronous responses.
 
-Next implementation steps are to verify the exact C2B Request Package, run the committed mocked tests in CI, obtain Vodacom's callback authenticity procedure or verify the complete synchronous response mode, and connect checkout only after the order's customer MSISDN and reference mapping are verified. Perform sandbox/UAT before production enablement. Never trigger a real charge without explicit authorization.
+Next implementation steps are to execute the documented C2B request in Sandbox/UAT, run the committed mocked tests in CI, obtain Vodacom's callback authenticity procedure or verify the complete synchronous response mode, and connect checkout only after the order's customer MSISDN and reference mapping are verified. Perform sandbox/UAT before production enablement. Never trigger a real charge without explicit authorization.
 
 ## Configuration follow-up — 24 November 2026
 
