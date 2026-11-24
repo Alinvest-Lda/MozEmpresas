@@ -40,7 +40,10 @@ export async function updateProfile(_state: AccountState, formData: FormData): P
   const access = await verifyActiveProfile(supabase, user.id);
   if (!access.ok) return { error: access.message };
 
-  const { error } = await supabase.from("profiles").update({ full_name: parsed.data.fullName, location: parsed.data.location || null, website: parsed.data.website || null, bio: parsed.data.bio || null, mpesa_msisdn: mpesaMsisdn }).eq("id", user.id);
+  const { error: paymentSettingsError } = await supabase.from("user_payment_settings")
+    .upsert({ user_id: user.id, mpesa_msisdn: mpesaMsisdn }, { onConflict: "user_id" });
+  if (paymentSettingsError) return { error: "Não foi possível guardar o número M-Pesa." };
+  const { error } = await supabase.from("profiles").update({ full_name: parsed.data.fullName, location: parsed.data.location || null, website: parsed.data.website || null, bio: parsed.data.bio || null }).eq("id", user.id);
   if (error) return { error: "Não foi possível actualizar o perfil." };
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/conta");
