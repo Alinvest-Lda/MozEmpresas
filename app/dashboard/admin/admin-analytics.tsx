@@ -95,7 +95,7 @@ export default async function AdminAnalytics() {
   const performanceMetrics = [
     { label: "Visualizações de perfis", value: profileViews, hint: "eventos registados" },
     { label: "Cliques de contacto", value: contactClicks, hint: "telefone, email ou website" },
-    { label: "Pesquisas submetidas", value: searchSubmissions, hint: "pesquisas globais instrumentadas" },
+    { label: "Pesquisas submetidas", value: searchSubmissions, hint: "recolha iniciada nesta versão" },
     { label: "Candidaturas", value: opportunityApplications, hint: "participações submetidas" },
     { label: "Impressões publicitárias", value: adImpressions, hint: "entregas registadas" },
     { label: "Cliques publicitários", value: adClicks, hint: adImpressions && adImpressions > 0 && adClicks !== null ? `CTR ${((adClicks / adImpressions) * 100).toLocaleString("pt-MZ", { maximumFractionDigits: 1 })}%` : "CTR indisponível sem impressões" },
@@ -205,7 +205,7 @@ export default async function AdminAnalytics() {
             </div>
           ))}
         </div>
-        <p className={styles.chartFootnote}>Os números representam apenas eventos efectivamente registados, não estimativas de visitas ou alcance. “n/d” indica que a consulta não devolveu um valor. O CTR só é calculado quando existem impressões registadas.</p>
+        <p className={styles.chartFootnote}>Os números representam apenas eventos efectivamente registados, não estimativas de visitas ou alcance. A recolha de pesquisas começa nesta versão, sem histórico retroactivo. “n/d” indica que a consulta não devolveu um valor. O CTR só é calculado quando existem impressões registadas.</p>
       </section>
     </section>
   );
