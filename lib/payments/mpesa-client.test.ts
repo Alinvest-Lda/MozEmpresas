@@ -5,6 +5,7 @@ import { constants, generateKeyPairSync, privateDecrypt } from "node:crypto";
 import {
   createMpesaBearerToken,
   createMpesaClient,
+  getMpesaConfigFromEnv,
   type MpesaConfig,
 } from "./mpesa-client";
 
@@ -25,9 +26,24 @@ const config: MpesaConfig = {
   timeoutMs: 2_000,
 };
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe("M-Pesa Open API client", () => {
+  it("loads only the explicit Sandbox gateway configuration", () => {
+    vi.stubEnv("MPESA_ENVIRONMENT", "sandbox");
+    vi.stubEnv("MPESA_API_KEY", config.apiKey);
+    vi.stubEnv("MPESA_PUBLIC_KEY", config.publicKey);
+    vi.stubEnv("MPESA_API_BASE_URL", config.baseUrl);
+    vi.stubEnv("MPESA_ORIGIN", config.origin);
+    vi.stubEnv("MPESA_C2B_PORT", config.c2bPort);
+    vi.stubEnv("MPESA_STATUS_PORT", config.statusPort);
+    vi.stubEnv("MPESA_SERVICE_PROVIDER_CODE", config.serviceProviderCode);
+    expect(getMpesaConfigFromEnv().baseUrl).toBe("https://api.sandbox.vm.co.mz");
+    vi.stubEnv("MPESA_ENVIRONMENT", "production");
+    vi.stubEnv("MPESA_API_BASE_URL", "https://api.vm.co.mz");
+    expect(() => getMpesaConfigFromEnv()).toThrow("locked to the Sandbox gateway");
+  });
+
   it("encrypts the API key as a Base64 RSA PKCS#1 v1.5 Bearer token", () => {
     const token = createMpesaBearerToken(config.apiKey, config.publicKey);
     const decrypted = privateDecrypt(
