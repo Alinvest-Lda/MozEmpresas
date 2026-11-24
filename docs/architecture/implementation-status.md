@@ -91,3 +91,8 @@ A migração correctiva está em `supabase/migrations/20261124220337_reconcile_s
 ### Consolidação adicional — candidaturas a oportunidades (25/11/2026)
 
 A F3.72 já tinha o trigger `capture_opportunity_application_event` a registar transições de estado e a notificar o candidato. A migração posterior `f341` criou um segundo trigger (`opportunity_application_status_notification`) para a mesma transição. Foi removido apenas o trigger duplicado e consolidada a notificação no trigger de captura de eventos, mantendo o histórico transaccional e evitando auto-notificação quando o próprio candidato altera o estado. Migração aplicada: `20261124220709_consolidate_opportunity_application_status_notifications.sql`. Sem testes ou validações finais.
+
+
+### Correcção cronológica adicional (25/11/2026)
+
+A leitura integral dos nomes das migrações posteriores confirmou que a sequência funcional avançou depois da F3.73: **F3.74** (`20261124182000_f374_atomic_commerce_order_transitions.sql`) e **F3.75** (`20261124214209_f375_enforce_single_active_partner_user_per_organization.sql`). Assim, F3.73 é um marco histórico confirmado, mas não o último marco. O último identificador funcional explícito localizado no histórico de migrações é **F3.75**. Os sufixos f337–f341 das migrações subsequentes continuam a ser identificadores técnicos locais e não devem ser usados para reiniciar a sequência. A referência global de fecho permanece em 89% provisórios.
