@@ -88,18 +88,6 @@ export async function updatePlatformServiceRequest(formData: FormData) {
     return { error: "Não foi possível actualizar o pedido." };
   }
 
-  if (request?.requester_user_id && request.requester_user_id !== user.id) {
-    const { data: service } = await supabase.from("platform_services").select("name").eq("id", request.service_id).maybeSingle();
-    await supabase.from("notifications").insert({
-      user_id: request.requester_user_id,
-      type: "SERVICE_REQUEST_UPDATED",
-      title: "Pedido de serviço actualizado",
-      body: `O pedido de ${service?.name || "serviço"} passou para o estado ${status.replaceAll("_", " ").toLowerCase()}.`,
-      resource_type: "SERVICE_REQUEST",
-      resource_id: requestId,
-    });
-  }
-
   revalidatePath("/dashboard/admin");
   revalidatePath("/dashboard/servicos");
   return { success: true };

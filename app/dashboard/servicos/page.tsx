@@ -61,6 +61,20 @@ export default async function ServicesPage() {
           .limit(20),
   ]);
 
+  const requestIds = (serviceRequests ?? []).map(request => request.id);
+  const { data: requestEvents } = requestIds.length
+    ? await supabase.from("service_request_status_events")
+        .select("id,service_request_id,from_status,to_status,created_at")
+        .in("service_request_id", requestIds)
+        .order("created_at", { ascending: true })
+    : { data: [] as { id: string; service_request_id: string; from_status: string | null; to_status: string; created_at: string }[] };
+  const requestEventsById = new Map<string, typeof requestEvents>();
+  for (const event of requestEvents ?? []) {
+    const current = requestEventsById.get(event.service_request_id) ?? [];
+    current.push(event);
+    requestEventsById.set(event.service_request_id, current);
+  }
+
   const orderIds = (orders ?? []).map(order => order.id);
   const { data: adjustments } = orderIds.length
     ? await supabase.from("platform_service_adjustments")
@@ -119,6 +133,18 @@ export default async function ServicesPage() {
                     <small>Pedido de {new Date(request.created_at).toLocaleDateString("pt-MZ")}</small>
                     {request.notes ? <p>{request.notes}</p> : null}
                     {request.requested_price != null ? <small>Proposta: {Number(request.requested_price).toLocaleString("pt-MZ")} {request.currency || "MZN"}</small> : null}
+                    {(requestEventsById.get(request.id) ?? []).length ? (
+                      <div className="service-request-history" aria-label="Histórico do pedido">
+                        <small><strong>Histórico</strong></small>
+                        {(requestEventsById.get(request.id) ?? []).map(event => (
+                          <small key={event.id}>
+                            {event.from_status ? requestStatusLabels[event.from_status] || event.from_status : "Pedido criado"}
+                            {" → "}{requestStatusLabels[event.to_status] || event.to_status}
+                            {" · "}{new Date(event.created_at).toLocaleString("pt-MZ", { dateStyle: "short", timeStyle: "short", timeZone: "Africa/Maputo" })}
+                          </small>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                   <div className="service-order-meta">
                     <span className={request.status === "COMPLETED" ? "active" : ""}>{requestStatusLabels[request.status] || request.status}</span>
