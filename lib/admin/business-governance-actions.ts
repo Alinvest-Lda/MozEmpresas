@@ -8,7 +8,7 @@ async function run(rpc:string,args:Record<string,unknown>,result:string){
  const {supabase,authorized,user}=await getSuperAdminContext();
  if(!authorized||!user)redirect("/login?next=/dashboard/admin/empresas");
  const {error}=await supabase.rpc(rpc,args);
- if(error){const m=error.message;const code=m.includes("FORBIDDEN")?"forbidden":m.includes("BUSINESS_NOT_FOUND")?"not-found":m.includes("NEW_OWNER_NOT_ACTIVE")?"owner-inactive":m.includes("BUSINESS_ARCHIVED")?"archived":m.includes("UNCHANGED")?"unchanged":"operation-failed";redirect("/dashboard/admin/empresas?result="+code);}
+ if(error){const m=error.message;const code=m.includes("FORBIDDEN")?"forbidden":m.includes("BUSINESS_NOT_FOUND")?"not-found":m.includes("NEW_OWNER_NOT_ACTIVE")?"owner-inactive":m.includes("BUSINESS_ALREADY_ARCHIVED")?"already-archived":m.includes("BUSINESS_NOT_ARCHIVED")?"not-archived":m.includes("BUSINESS_ARCHIVED")?"archived":m.includes("UNCHANGED")?"unchanged":"operation-failed";redirect("/dashboard/admin/empresas?result="+code);}
  revalidatePath("/dashboard/admin/empresas");revalidatePath("/empresas");revalidatePath("/dashboard/empresas");
  redirect("/dashboard/admin/empresas?result="+result);
 }

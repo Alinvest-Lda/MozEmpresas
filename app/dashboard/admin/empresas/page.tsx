@@ -111,8 +111,8 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
                 <table className={styles.table}>
                   <thead><tr>
                     <th>Empresa</th>
-                    <th>Titular</th>
                     <th>Categoria</th>
+                    <th>Titular</th>
                     <th>Visibilidade</th>
                     <th>Localização e contactos</th>
                     <th>Registo</th>
