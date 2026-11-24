@@ -18,7 +18,8 @@ export default async function PartnerControlPage({searchParams}:{searchParams:Pr
  const [{data,error},{data:staffData},{data:performanceData,error:performanceError},{data:actionData,error:actionError}]=await Promise.all([
   supabase.rpc("admin_partner_execution_renewal_dashboard_f362"),
   supabase.rpc("admin_list_platform_staff"),
-  supabase.rpc("admin_partner_relationship_performance_f364"),\n  supabase.rpc("admin_partner_relationship_action_dashboard_f365")
+  supabase.rpc("admin_partner_relationship_performance_f364"),
+  supabase.rpc("admin_partner_relationship_action_dashboard_f365")
  ]);
  const performance=(performanceData??{}) as Performance, actions=(actionData??{actions:[]}) as ActionDashboard;
  const d=(data??{}) as Dashboard, staff=(staffData??[]) as Array<{user_id:string;full_name:string;role:string}>;
