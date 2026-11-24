@@ -14,14 +14,17 @@ export function PlatformServiceRequestForm({
   price,
   billing,
   defaultTermDays,
+  savedMsisdn,
 }: {
   serviceId: string;
   businesses: Business[];
   price: number | string | null;
   billing: string | null;
   defaultTermDays: number | null;
+  savedMsisdn: string;
 }) {
   const [purchaseKey, setPurchaseKey] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("CREDITS");
   useEffect(() => { setPurchaseKey(crypto.randomUUID()); }, []);
   const [state, action, pending] = useActionState<State, FormData>(
     async (_, formData) => {
@@ -44,12 +47,12 @@ export function PlatformServiceRequestForm({
       <div className="service-request-success" role="status">
         <span className="service-success-icon">✓</span>
         <div>
-          <strong>{state.requested ? "Pedido de serviço recebido." : state.pending ? "Contratação M-Pesa registada." : "Serviço contratado."}</strong>
+          <strong>{state.requested ? "Pedido de serviço recebido." : state.pending ? "Pedido de pagamento M-Pesa enviado." : "Serviço contratado."}</strong>
           <p>
             {state.requested
               ? "A equipa MozEmpresas irá analisar a necessidade e actualizar o estado do pedido no seu espaço."
               : state.pending
-                ? "O período começa após a confirmação do pagamento. A contratação e o prazo já ficaram registados."
+                ? "O pedido foi enviado à M-Pesa e aguarda confirmação. Não repita o pagamento; consulte a gestão financeira para acompanhar o estado."
                 : "O serviço, prazo e valor foram registados na gestão financeira."}{" "}
             {!state.requested && <Link href="/dashboard/financeiro">Ver gestão financeira</Link>}
           </p>
@@ -102,7 +105,7 @@ export function PlatformServiceRequestForm({
 
       {price != null ? <label>
         <span>Forma de pagamento</span>
-        <select name="paymentMethod" defaultValue="CREDITS">
+        <select name="paymentMethod" value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)}>
           <option value="CREDITS">Créditos</option>
           <option value="MPESA">M-Pesa</option>
         </select>
