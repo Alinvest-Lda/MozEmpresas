@@ -3,11 +3,12 @@ import { PartnerAccessLink } from "@/components/partner-access-link";
 import { PartnerAccessSubmitButton } from "@/components/partner-access-submit-button";
 import styles from "./parceiros.module.css";
 import { Input, Select } from "@/components/ui";
-import { linkPartnerBusiness } from "@/lib/admin/partner-billing-actions";\nimport { revokePartnerPortalAccess } from "@/lib/admin/partner-access-actions";
+import { linkPartnerBusiness } from "@/lib/admin/partner-billing-actions";
+import { revokePartnerPortalAccess } from "@/lib/admin/partner-access-actions";
 
 export const dynamic = "force-dynamic";
 
-const errorMessages: Record<string, string> = {\n  "access-invalid": "Indique um motivo com pelo menos 8 caracteres para revogar o acesso.",\n  "access-forbidden": "Apenas o Super Admin pode revogar acessos de parceiros.",\n  "access-not-found": "O acesso já não está activo ou não foi encontrado.",\n  "access-revoke": "Não foi possível revogar o acesso. A organização mantém o estado anterior.",
+const errorMessages: Record<string, string> = {
   validation: "O email ou o prazo indicado não é válido. Reveja os campos e tente novamente.",
   forbidden: "Apenas o Super Admin pode criar acessos dedicados de parceiros.",
   create: "Não foi possível criar o acesso. Confirme se a conta ainda não tem utilizador activo nem convite pendente.",
@@ -19,11 +20,20 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
   const params = await searchParams;
   const inviteUrl = params.created === "1" && params.access ? params.access : "";
   const supabase = await (await import("@/lib/supabase/server")).createClient();
-  const [{data: grantsData,error: grantsError},{data: memberAccessData,error: memberAccessError}] = await Promise.all([\n    supabase.rpc("partner_access_list"),\n    supabase.rpc("admin_partner_access_members_list"),\n  ]);\n  const activePartnerAccesses = Array.isArray(memberAccessData) ? memberAccessData : [];
-  const [{data: partnerAccounts},{data: businesses}] = await Promise.all([
-    supabase.from("partner_accounts").select("id,name,status,business_id,portal_enabled").order("name").limit(200),
-    supabase.from("businesses").select("id,name").is("archived_at",null).order("name").limit(500)
+  const [{data: grantsData,error: grantsError},{data: memberAccessData,error: memberAccessError}] = await Promise.all([
+    supabase.rpc("partner_access_list"),
+    supabase.rpc("admin_partner_access_members_list"),
   ]);
+  const activePartnerAccesses = Array.isArray(memberAccessData) ? memberAccessData : [];
+  const [{data: partnerAccounts},{data: businesses},{data: activePartnerMembers}] = await Promise.all([
+    supabase.from("partner_accounts").select("id,name,status,business_id,portal_enabled").order("name").limit(200),
+    supabase.from("businesses").select("id,name").is("archived_at",null).order("name").limit(500),
+    supabase.from("partner_account_members").select("account_id").eq("active",true).limit(500),
+  ]);
+  const assignedPartnerAccountIds = new Set((activePartnerMembers ?? []).map((member:any)=>member.account_id));
+  const eligiblePartnerAccounts = (partnerAccounts ?? []).filter((account:any)=>
+    account.portal_enabled && account.status==="ACTIVE" && !assignedPartnerAccountIds.has(account.id)
+  );
   const grants = (Array.isArray(grantsData) ? grantsData : []) as Array<{
     id: string; email: string; status: string; created_at: string; expires_at: string; accepted_at: string | null;
   }>;
@@ -75,7 +85,8 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
           </section>
         ) : null}
 
-        {params.error ? <div className={styles.errorNotice} role="alert">{errorMessages[params.error] || "Não foi possível concluir a operação. Tente novamente."}</div> : null}\n        {params.access ? <div className={params.access==="revoked" ? styles.noticeInfo : styles.errorNotice} role={params.access==="revoked"?"status":"alert"}>{accessMessages[params.access] || "Não foi possível concluir a operação de acesso."}</div> : null}
+        {params.error ? <div className={styles.errorNotice} role="alert">{errorMessages[params.error] || "Não foi possível concluir a operação. Tente novamente."}</div> : null}
+        {params.access ? <div className={params.access==="revoked" ? styles.noticeInfo : styles.errorNotice} role={params.access==="revoked"?"status":"alert"}>{accessMessages[params.access] || "Não foi possível concluir a operação de acesso."}</div> : null}
         {params.billing ? <div className={params.billing==="success" ? styles.noticeInfo : styles.errorNotice} role={params.billing==="success"?"status":"alert"}>{params.billing==="success"?"Associação empresarial actualizada. A carteira de créditos dessa empresa poderá ser usada para campanhas da conta Parceiro.":params.billing==="BUSINESS_ALREADY_LINKED_TO_PARTNER"?"Esta empresa já está associada a outra conta Parceiro.":params.billing==="BUSINESS_NOT_AVAILABLE"?"A empresa seleccionada não está disponível.":params.billing==="invalid"?"Selecção inválida.": "Não foi possível actualizar a associação empresarial."}</div> : null}
 
         <div className={styles.mainGrid}>
