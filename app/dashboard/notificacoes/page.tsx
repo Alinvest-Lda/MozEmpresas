@@ -14,6 +14,7 @@ function dateLabel(value: string) {
 
 const typeLabels: Record<string, string> = {
   SERVICE_REQUEST: "Serviços",
+  SUPPORT: "Suporte",
   ORDER: "Comprar e vender",
   OPPORTUNITY_APPLICATION: "Oportunidades",
   PAYMENT: "Pagamentos",
@@ -55,17 +56,28 @@ export default async function NotificationsPage({ searchParams }: { searchParams
   const businessIds = [...new Set(rawNotifications.filter((n) => n.resource_type === "BUSINESS" && n.resource_id).map((n) => n.resource_id as string))];
   const listingIds = [...new Set(rawNotifications.filter((n) => n.resource_type === "LISTING" && n.resource_id).map((n) => n.resource_id as string))];
   const opportunityIds = [...new Set(rawNotifications.filter((n) => n.resource_type === "OPPORTUNITY" && n.resource_id).map((n) => n.resource_id as string))];
+  const applicationIds = [...new Set(rawNotifications.filter((n) => n.resource_type === "OPPORTUNITY_APPLICATION" && n.resource_id).map((n) => n.resource_id as string))];
 
-  const [businessRows, listingRows, opportunityRows] = await Promise.all([
+  const [businessRows, listingRows, opportunityRows, applicationRows] = await Promise.all([
     businessIds.length ? supabase.from("businesses").select("id,slug").in("id", businessIds) : Promise.resolve({ data: [] }),
     listingIds.length ? supabase.from("listings").select("id").in("id", listingIds) : Promise.resolve({ data: [] }),
     opportunityIds.length ? supabase.from("opportunities").select("id,slug").in("id", opportunityIds) : Promise.resolve({ data: [] }),
+    applicationIds.length ? supabase.from("opportunity_applications").select("id,opportunity_id").in("id", applicationIds) : Promise.resolve({ data: [] }),
   ]);
 
   const resourceLinks = new Map<string, string>();
   (businessRows.data ?? []).forEach((item: { id: string; slug: string }) => resourceLinks.set("BUSINESS:" + item.id, "/empresas/" + item.slug));
   (listingRows.data ?? []).forEach((item: { id: string }) => resourceLinks.set("LISTING:" + item.id, "/marketplace/" + item.id));
   (opportunityRows.data ?? []).forEach((item: { id: string; slug: string }) => resourceLinks.set("OPPORTUNITY:" + item.id, "/oportunidades/" + item.slug));
+  const applicationOpportunityIds = [...new Set((applicationRows.data ?? []).map((item: { opportunity_id: string }) => item.opportunity_id))];
+  const { data: applicationOpportunities } = applicationOpportunityIds.length
+    ? await supabase.from("opportunities").select("id,slug").in("id", applicationOpportunityIds)
+    : { data: [] };
+  const applicationOpportunitySlugs = new Map((applicationOpportunities ?? []).map((item: { id: string; slug: string }) => [item.id, item.slug]));
+  (applicationRows.data ?? []).forEach((item: { id: string; opportunity_id: string }) => {
+    const slug = applicationOpportunitySlugs.get(item.opportunity_id);
+    if (slug) resourceLinks.set("OPPORTUNITY_APPLICATION:" + item.id, "/oportunidades/" + slug);
+  });
 
   const items = rawNotifications.filter((item) =>
     filter === "unread" ? !item.read_at
@@ -151,6 +163,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
                         </form>
                       ) : null}
                       {item.resource_type === "SERVICE_REQUEST" ? <Link className={styles.textAction} href="/dashboard/servicos">Abrir serviço <span aria-hidden="true">→</span></Link> : null}
+                      {item.resource_type === "SUPPORT_TICKET" ? <Link className={styles.textAction} href={isSuperAdmin ? "/dashboard/admin/suporte" : "/dashboard/suporte#atendimentos"}>Abrir atendimento <span aria-hidden="true">→</span></Link> : null}
                       {item.resource_type === "ORDER" ? <Link className={styles.textAction} href="/dashboard/marketplace?tab=negociacoes">Abrir negociação <span aria-hidden="true">→</span></Link> : null}
                       {resourceLink ? <Link className={styles.textAction} href={resourceLink}>Abrir registo <span aria-hidden="true">→</span></Link> : null}
                     </div>
