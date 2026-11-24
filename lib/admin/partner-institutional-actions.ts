@@ -302,3 +302,56 @@ export async function updatePartnerEngagementStatus(formData: FormData) {
   revalidatePath("/dashboard/admin/parceiros/gestao");
   redirect("/dashboard/admin/parceiros/gestao?saved=engagement-status");
 }
+
+
+export async function createPartnerEntitlement(formData: FormData) {
+  const parsed = z.object({
+    account_id: uuid,
+    entitlement_type: z.enum(["SERVICE","EXCLUSIVITY","ADVERTISING","INTELLIGENCE"]),
+    name: z.string().trim().min(2).max(180),
+    description: z.string().max(2000).optional(),
+    scope: z.string().max(500).optional(),
+    starts_at: z.string().optional(),
+    ends_at: z.string().optional(),
+  }).safeParse({
+    account_id:value(formData,"account_id"),
+    entitlement_type:value(formData,"entitlement_type"),
+    name:value(formData,"name"),
+    description:value(formData,"description") || undefined,
+    scope:value(formData,"scope") || undefined,
+    starts_at:value(formData,"starts_at") || undefined,
+    ends_at:value(formData,"ends_at") || undefined,
+  });
+  if (!parsed.success || (parsed.data.starts_at && parsed.data.ends_at && parsed.data.ends_at < parsed.data.starts_at) ||
+    (parsed.data.entitlement_type === "EXCLUSIVITY" && !parsed.data.scope?.trim())) {
+    redirect("/dashboard/admin/parceiros/gestao?error=entitlement");
+  }
+  const {supabase,user}=await adminContext();
+  const {error}=await supabase.from("partner_entitlements").insert({
+    account_id:parsed.data.account_id,
+    entitlement_type:parsed.data.entitlement_type,
+    name:parsed.data.name,
+    description:parsed.data.description || null,
+    scope:parsed.data.scope || null,
+    starts_at:parsed.data.starts_at ? new Date(parsed.data.starts_at).toISOString() : null,
+    ends_at:parsed.data.ends_at ? new Date(parsed.data.ends_at).toISOString() : null,
+    status:"ACTIVE",
+  });
+  if(error?.message.includes("PARTNER_EXCLUSIVITY_SCOPE_CONFLICT")) redirect("/dashboard/admin/parceiros/gestao?error=entitlement-conflict");
+  if(error?.message.includes("PARTNER_EXCLUSIVITY_SCOPE_REQUIRED") || error?.message.includes("PARTNER_ENTITLEMENT_INVALID_DATES")) redirect("/dashboard/admin/parceiros/gestao?error=entitlement");
+  if(error) redirect("/dashboard/admin/parceiros/gestao?error=entitlement-save");
+  revalidatePath("/dashboard/admin/parceiros/gestao");
+  redirect("/dashboard/admin/parceiros/gestao?saved=entitlement");
+}
+
+export async function updatePartnerEntitlementStatus(formData: FormData) {
+  const id=value(formData,"entitlement_id");
+  const status=value(formData,"status");
+  if(!uuid.safeParse(id).success || !["ACTIVE","SUSPENDED","EXPIRED"].includes(status)) redirect("/dashboard/admin/parceiros/gestao?error=entitlement");
+  const {supabase}=await adminContext();
+  const {error}=await supabase.from("partner_entitlements").update({status,updated_at:new Date().toISOString()}).eq("id",id);
+  if(error?.message.includes("PARTNER_EXCLUSIVITY_SCOPE_CONFLICT")) redirect("/dashboard/admin/parceiros/gestao?error=entitlement-conflict");
+  if(error) redirect("/dashboard/admin/parceiros/gestao?error=entitlement-save");
+  revalidatePath("/dashboard/admin/parceiros/gestao");
+  redirect("/dashboard/admin/parceiros/gestao?saved=entitlement-status");
+}

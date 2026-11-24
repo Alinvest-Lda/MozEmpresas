@@ -3,6 +3,7 @@ import {
   createInstitutionalPartner, createPartnerContract, createPartnerEngagement,
   issuePartnerInvoice, recordPartnerBankTransfer, verifyPartnerBankTransfer,
   createPartnerContact, createPartnerReportDelivery, createBackofficePartnerCampaign, updatePartnerEngagementStatus,
+  createPartnerEntitlement, updatePartnerEntitlementStatus,
 } from "@/lib/admin/partner-institutional-actions";
 import styles from "./gestao.module.css";
 
@@ -13,6 +14,9 @@ const date = (s: string | null) => s ? new Date(s).toLocaleDateString("pt-MZ",{t
 const messages: Record<string,string> = {
   campaign:"Revise os dados da campanha e o preço.", "campaign-product":"O formato publicitário não está activo.", "campaign-price":"O preço fixo do catálogo não pode ser alterado. Para formatos sob proposta, indique o preço negociado.", "campaign-capacity":"Não há disponibilidade para este formato no período escolhido.", "campaign-dates":"Verifique as datas e a duração máxima do formato.", "campaign-save":"Não foi possível criar a campanha.",
   "engagement-status":"Não foi possível actualizar o estado da execução.",
+  entitlement:"Indique uma entidade, designação e período válido. Exclusividades exigem um âmbito.",
+  "entitlement-conflict":"Já existe uma exclusividade activa para este âmbito e período noutra entidade.",
+  "entitlement-save":"Não foi possível registar o benefício. Verifique os dados e tente novamente.",
   contact:"Indique nome e pelo menos um meio de contacto.", "contact-save":"Não foi possível registar o contacto.",
   report:"Revise o relatório, destinatários e ficheiro/link de entrega.", "report-save":"Não foi possível registar a entrega do relatório.",
   partner:"Revise os dados da entidade parceira.", "partner-save":"Não foi possível criar a entidade. Verifique os dados e permissões.",
@@ -22,7 +26,7 @@ const messages: Record<string,string> = {
   transfer:"Revise os dados da transferência.", "transfer-save":"Não foi possível registar o pagamento.", "transfer-duplicate":"Esta referência bancária já foi registada para esta entidade.", "transfer-campaign-amount":"Para campanhas, o pagamento bancário deve liquidar o valor integral numa única transferência.",
   verify:"Não foi possível confirmar o pagamento.", "verify-overpayment":"O valor acumulado ultrapassa o saldo da factura. Corrija a alocação antes de confirmar.", "verify-not-payable":"A factura está anulada, em rascunho ou já liquidada e não aceita mais pagamentos.", "payment-id":"Identificador de pagamento inválido.",
 };
-const saved: Record<string,string> = {"engagement-status":"Estado da execução actualizado.",campaign:"Campanha criada no backoffice.",contact:"Contacto registado.",report:"Relatório registado.",partner:"Entidade parceira criada.",contract:"Contrato registado.",engagement:"Ordem de execução criada.",invoice:"Factura emitida.",transfer:"Transferência registada para verificação.",verified:"Transferência confirmada."};
+const saved: Record<string,string> = {"entitlement":"Benefício ou exclusividade registado.","entitlement-status":"Estado do benefício actualizado.","engagement-status":"Estado da execução actualizado.",campaign:"Campanha criada no backoffice.",contact:"Contacto registado.",report:"Relatório registado.",partner:"Entidade parceira criada.",contract:"Contrato registado.",engagement:"Ordem de execução criada.",invoice:"Factura emitida.",transfer:"Transferência registada para verificação.",verified:"Transferência confirmada."};
 
 export default async function InstitutionalPartnersPage({searchParams}:{searchParams:Promise<{error?:string;saved?:string}>}) {
   const {supabase,authorized}=await getSuperAdminContext();
@@ -41,6 +45,8 @@ export default async function InstitutionalPartnersPage({searchParams}:{searchPa
     supabase.from("partner_ad_campaigns").select("id,account_id,product_id,contract_id,assigned_operations_user_id,title,status,request_source,price_mzn,starts_at,ends_at,created_at").order("created_at",{ascending:false}).limit(100),
     supabase.rpc("admin_list_platform_staff"),
   ]);
+  const {data:entitlements}=await supabase.from("partner_entitlements").select("id,account_id,entitlement_type,name,description,scope,starts_at,ends_at,status").order("created_at",{ascending:false}).limit(300);
+  const entitlementRows=entitlements??[];
   const p=partners??[], c=contracts??[], e=engagements??[], pay=payments??[], docs=documents??[], contactsRows=contacts??[], reportRows=reports??[], financeRows=contractFinance??[], products=adProducts??[], campaignRows=campaigns??[];
   const staffUsers=(staff??[]).map((x:{user_id:string;full_name:string;role:string})=>({id:x.user_id,name:x.full_name||"Utilizador interno",role:x.role}));
   const partnerName=(id:string)=>p.find((x:{id:string;name:string})=>x.id===id)?.name??"Parceiro";
@@ -113,6 +119,26 @@ export default async function InstitutionalPartnersPage({searchParams}:{searchPa
         <label>Emails destinatários (separados por vírgula)<textarea name="recipient_emails" rows={2}/></label><label>Estado<select name="status"><option value="DRAFT">Rascunho</option><option value="READY">Pronto para envio</option><option value="DELIVERED">Entregue (registar evidência)</option></select></label>
         <button type="submit" disabled={!p.length}>Registar relatório</button>
       </form></article>
+    </section>
+
+    <section className={styles.panel}>
+      <h2>Benefícios, serviços e exclusividades</h2>
+      <p>Registe direitos contratados por parceiro. Exclusividades são controladas por âmbito e período, impedindo sobreposição activa entre entidades diferentes.</p>
+      <form action={createPartnerEntitlement} className={styles.form}>
+        <label>Entidade parceira<select name="account_id" required>{p.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
+        <div className={styles.two}>
+          <label>Tipo<select name="entitlement_type"><option value="SERVICE">Serviço</option><option value="EXCLUSIVITY">Exclusividade</option><option value="ADVERTISING">Publicidade</option><option value="INTELLIGENCE">Inteligência</option></select></label>
+          <label>Designação<input name="name" required minLength={2} maxLength={180} placeholder="Ex.: Exclusividade sectorial"/></label>
+        </div>
+        <label>Âmbito / mercado / território<input name="scope" maxLength={500} placeholder="Ex.: sector de energia · Moçambique"/></label>
+        <label>Descrição<textarea name="description" rows={2} maxLength={2000}/></label>
+        <div className={styles.two}><label>Início<input name="starts_at" type="datetime-local"/></label><label>Fim<input name="ends_at" type="datetime-local"/></label></div>
+        <button type="submit" disabled={!p.length}>Registar benefício</button>
+      </form>
+      <div className={styles.tableWrap}><table><thead><tr><th>Benefício</th><th>Parceiro</th><th>Âmbito</th><th>Validade</th><th>Estado / acção</th></tr></thead><tbody>
+        {entitlementRows.map(x=><tr key={x.id}><td><strong>{x.name}</strong><small>{x.entitlement_type} · {x.description||"—"}</small></td><td>{partnerName(x.account_id)}</td><td>{x.scope||"Geral"}</td><td>{date(x.starts_at)} – {date(x.ends_at)}</td><td><form action={updatePartnerEntitlementStatus} className={styles.verify}><input type="hidden" name="entitlement_id" value={x.id}/><select name="status" defaultValue={x.status}>{["ACTIVE","SUSPENDED","EXPIRED"].map(v=><option key={v} value={v}>{v==="ACTIVE"?"Activo":v==="SUSPENDED"?"Suspenso":"Expirado"}</option>)}</select><button type="submit">Guardar</button></form></td></tr>)}
+        {!entitlementRows.length?<tr><td colSpan={5}>Ainda não existem benefícios ou exclusividades registados.</td></tr>:null}
+      </tbody></table></div>
     </section>
     <section className={styles.panel}><h2>Entidades e modelos de relacionamento</h2>{partnerError?<p className={styles.error}>Não foi possível carregar as entidades.</p>:<div className={styles.tableWrap}><table><thead><tr><th>Entidade</th><th>Modelo</th><th>Portal</th><th>Contacto</th><th>Estado</th></tr></thead><tbody>{p.map(x=><tr key={x.id}><td><strong>{x.name}</strong><small>{x.legal_name||"Sem denominação legal"}</small></td><td>{({MANAGED:"Gestão interna",STRATEGIC:"Estratégico",HYBRID:"Híbrido",SELF_SERVICE:"Auto-serviço"} as Record<string,string>)[x.operating_model]||x.operating_model}</td><td>{x.portal_enabled?"Disponível":"Não activo"}</td><td>{x.contact_email||x.contact_phone||"—"}</td><td>{x.status}</td></tr>)}</tbody></table></div>}</section>
     <section className={styles.panel}><h2>Contactos institucionais</h2><div className={styles.tableWrap}><table><thead><tr><th>Contacto</th><th>Parceiro</th><th>Email / telefone</th><th>Responsabilidades</th><th>Estado</th></tr></thead><tbody>{contactsRows.map(x=><tr key={x.id}><td><strong>{x.full_name}</strong><small>{x.role_title||"—"}{x.is_primary?" · Principal":""}</small></td><td>{partnerName(x.account_id)}</td><td>{x.email||"—"}<small>{x.phone||""}</small></td><td>{[x.is_billing_contact?"Facturação":null,x.receives_reports?"Recebe relatórios":null].filter(Boolean).join(" · ")||"—"}</td><td>{x.active?"Activo":"Inactivo"}</td></tr>)}</tbody></table></div></section>
