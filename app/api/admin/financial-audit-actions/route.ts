@@ -28,7 +28,8 @@ export async function POST(request: Request) {
   const assignee = typeof input.assigned_to === "string" && input.assigned_to.trim() ? input.assigned_to.trim() : null;
   const evidence = typeof input.evidence_reference === "string" ? input.evidence_reference : null;
   if (!ISSUE_KEY.test(issueKey) || !STATES.has(status)) return NextResponse.json({ error: "Identificador ou estado inválido." }, { status: 400 });
-  if (status === "RESOLVED" && (!note?.trim() || !evidence?.trim())) return NextResponse.json({ error: "Para resolver, indique nota de tratamento e referência de evidência." }, { status: 400 });\n  if (note && note.length > 3000) return NextResponse.json({ error: "Nota excede 3000 caracteres." }, { status: 400 });
+  if (status === "RESOLVED" && (!note?.trim() || !evidence?.trim())) return NextResponse.json({ error: "Para resolver, indique nota de tratamento e referência de evidência." }, { status: 400 });
+  if (note && note.length > 3000) return NextResponse.json({ error: "Nota excede 3000 caracteres." }, { status: 400 });
   if (evidence && evidence.length > 1000) return NextResponse.json({ error: "Referência de evidência excede 1000 caracteres." }, { status: 400 });
   if (assignee && !UUID.test(assignee)) return NextResponse.json({ error: "O responsável deve ser um UUID de utilizador válido." }, { status: 400 });
   if (assignee) {
