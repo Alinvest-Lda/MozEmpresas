@@ -47,8 +47,32 @@ export async function moderateBusinessPromotion(formData: FormData) {
   return updateStatus("business_promotions", formData.get("id"), formData.get("status"), promotionStatuses, "empresarial");
 }
 export async function moderatePartnerCampaign(formData: FormData) {
-  return updateStatus("partner_ad_campaigns", formData.get("id"), formData.get("status"), partnerStatuses, "parceiro");
+  const id = String(formData.get("id") || "");
+  const status = String(formData.get("status") || "").toUpperCase();
+  if (!z.string().uuid().safeParse(id).success || !["APPROVED", "REJECTED", "ACTIVE", "PAUSED", "ENDED"].includes(status)) {
+    redirect("/dashboard/admin/publicidade?result=invalid-transition");
+  }
+  const { supabase, authorized } = await getSuperAdminContext();
+  if (!authorized) redirect("/login?next=/dashboard/admin/publicidade");
+  const { error } = await supabase.rpc("admin_transition_partner_ad_campaign", {
+    p_campaign_id: id,
+    p_new_status: status,
+  });
+  if (error) {
+    const known = [
+      "ADMIN_PARTNER_CAMPAIGN_STATUS_TRANSITION_INVALID",
+      "CAMPAIGN_PAYMENT_NOT_SETTLED",
+      "CAMPAIGN_PAYMENT_STILL_PENDING",
+      "CAMPAIGN_END_DATE_NOT_REACHED",
+      "CAMPAIGN_NOT_FOUND",
+    ].find((code) => error.message.includes(code));
+    redirect("/dashboard/admin/publicidade?result=" + (known || "error"));
+  }
+  revalidatePath("/dashboard/admin/publicidade");
+  revalidatePath("/parceiro/publicidade");
+  redirect("/dashboard/admin/publicidade?result=success");
 }
+
 export async function updateAdvertisingRequest(formData: FormData) {
   return updateStatus("advertising_requests", formData.get("id"), formData.get("status"), requestStatuses, "pedidos");
 }

@@ -21,12 +21,19 @@ type AdvertisingRequest = {
   starts_at: string | null; ends_at: string | null; created_at: string | null;
 };
 const promotionStatuses = ["PENDING", "ACTIVE", "PAUSED", "EXPIRED"];
-const partnerStatuses = ["REQUESTED", "PENDING", "UNDER_REVIEW", "APPROVED", "ACTIVE", "PAUSED", "RUNNING", "PUBLISHED", "CANCELLED", "ENDED", "REJECTED"];
+const partnerStatuses = ["DRAFT", "REQUESTED", "APPROVED", "ACTIVE", "PAUSED", "ENDED", "REJECTED", "CANCELLED"];
+function partnerNextStatuses(status: string | null, paymentStatus?: string | null, endsAt?: string | null) {
+  if (status === "REQUESTED") return ["APPROVED", "REJECTED"];
+  if (status === "APPROVED") return !paymentStatus || paymentStatus === "FAILED" ? ["REJECTED"] : [];
+  if (status === "ACTIVE") return ["PAUSED", ...(endsAt && new Date(endsAt).getTime() <= Date.now() ? ["ENDED"] : [])];
+  if (status === "PAUSED") return [...(paymentStatus === "PAID" ? ["ACTIVE"] : []), ...(endsAt && new Date(endsAt).getTime() <= Date.now() ? ["ENDED"] : [])];
+  return [];
+}
 const requestStatuses = ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT", "PAID", "APPROVED", "REJECTED", "CANCELLED"];
 const statusLabels: Record<string, string> = {
   PENDING: "Pendente", REQUESTED: "Solicitada", UNDER_REVIEW: "Em análise", NEW: "Novo pedido", ENDED: "Encerrada",
   ACTIVE: "Activa", RUNNING: "Em execução", PUBLISHED: "Publicada", PAUSED: "Pausada",
-  EXPIRED: "Expirada", CANCELLED: "Cancelada", CONTACTED: "Contactado", PROPOSAL: "Proposta enviada",
+  EXPIRED: "Expirada", CANCELLED: "Cancelada", CONTACTED: "Contactado", PROPOSAL: "Proposta enviada", DRAFT: "Rascunho",
   AWAITING_PAYMENT: "Aguarda pagamento", PAID: "Pago", APPROVED: "Aprovado", REJECTED: "Rejeitado",
 };
 function fmtDate(value: string | null) {
@@ -55,7 +62,6 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const result = params.result ?? "";
   const now = new Date();
   const nowIso = now.toISOString();
-  const soonIso = new Date(now.getTime() + 7 * 86400000).toISOString();
   const { supabase, authorized } = await (await import("@/lib/auth/super-admin")).getSuperAdminContext();
   if (!authorized) return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}><div className="notice">Acesso reservado ao Super Admin.</div></div></main>;
 
@@ -77,9 +83,19 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const allBusiness = (businessCampaigns ?? []) as Campaign[];
   const allPartner = (partnerCampaigns ?? []) as Campaign[];
   const allRequests = (requests ?? []) as AdvertisingRequest[];
+  const partnerCampaignIds = allPartner.map((campaign) => campaign.id);
+  const { data: partnerStatusEvents } = partnerCampaignIds.length
+    ? await supabase.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,created_at").in("campaign_id", partnerCampaignIds).order("created_at", { ascending: false })
+    : { data: [] };
+  const eventsByCampaign = new Map<string, any[]>();
+  for (const event of partnerStatusEvents ?? []) {
+    const list = eventsByCampaign.get(event.campaign_id) ?? [];
+    list.push(event);
+    eventsByCampaign.set(event.campaign_id, list);
+  }
   const campaigns = [
     ...allBusiness.map((c) => ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.budget) + " " + (c.currency || ""), table: "business", allowed: promotionStatuses })),
-    ...allPartner.map((c) => ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: partnerStatuses })),
+    ...allPartner.map((c) => ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: partnerNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at) })),
   ].sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
   const matchesQuery = (value: string) => !q || value.toLocaleLowerCase("pt").includes(q.toLocaleLowerCase("pt"));
   const filteredCampaigns = campaigns.filter((c) => {
@@ -115,7 +131,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
       <div className={styles.heroSummary}><span className={styles.summaryLabel}>A aguardar atenção</span><strong>{pendingCount}</strong><span className={styles.summaryCaption}>Pedidos e campanhas por rever</span><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Até 100 registos por origem em cada consulta.</span></div>
       <span className={styles.heroDecoration} aria-hidden="true">↗</span>
     </header>
-    {result ? <div className={`${styles.resultNotice} ${result === "error" ? styles.resultError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Estado actualizado com sucesso." : result === "payment-issued" ? "Cobrança emitida. Referência: " + (params.reference ?? "") + (params.method === "CREDITS" ? " · Créditos debitados e campanha activada." : " · Aguarda confirmação M-Pesa.") : result === "PARTNER_CREDIT_WALLET_NOT_LINKED" ? "Esta conta de parceiro ainda não está associada a uma empresa com carteira de créditos. Utilize M-Pesa ou configure a associação empresarial." : result === "INSUFFICIENT_CREDITS" ? "Saldo de créditos insuficiente para esta campanha." : result === "CAMPAIGN_PAYMENT_ALREADY_ISSUED" ? "Já existe uma cobrança activa para esta campanha." : result === "payment-error" ? "Não foi possível emitir a cobrança da campanha." : result === "partner-cancel-success" ? (params.refundType === "BANK_TRANSFER_REFUND" ? "Campanha cancelada. Estorno bancário registado: " + (params.reference ?? "") : params.refundType === "MPESA_REFUND" ? "Campanha cancelada. Reembolso M-Pesa registado: " + (params.reference ?? "") : "Campanha de parceiro cancelada. Créditos devolvidos: " + (params.refund ?? "0")) : result === "MPESA_REFUND_REFERENCE_REQUIRED" || result === "EXTERNAL_REFUND_REFERENCE_REQUIRED" ? "Introduza a referência do reembolso externo já executado fora da plataforma." : result === "INVALID_EXTERNAL_REFUND_REFERENCE" ? "A referência de estorno não pode ser igual à referência do pagamento original." : result === "CAMPAIGN_NOT_SETTLED" ? "Só é possível estornar campanhas efectivamente pagas." : result === "CAMPAIGN_ALREADY_REFUNDED" ? "Esta campanha já foi estornada." : result === "CANCELLATION_NOT_ALLOWED" ? "Só é possível cancelar campanhas futuras ainda não iniciadas." : result === "partner-cancel-error" ? "Não foi possível cancelar/estornar a campanha." : result === "credit-price-saved" ? "Preço em créditos actualizado." : result === "credit-price-invalid" ? "Indique um preço em créditos inteiro e superior a zero, ou deixe vazio para desactivar." : result === "credit-price-error" ? "Não foi possível actualizar o preço em créditos." : result === "PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED" ? "Este formato ainda não tem preço em créditos configurado." : result === "FIXED_PRODUCT_PRICE_CANNOT_BE_OVERRIDDEN" ? "O preço deste formato é fixo no catálogo e não pode ser alterado na cobrança." : result === "cancel-success" ? "Campanha cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "mpesa-refund-required" ? "Campanha M-Pesa activa: o reembolso externo deve ser executado e registado antes do cancelamento." : result === "cancel-not-allowed" ? "Cancelamento não permitido: campanha já iniciada, expirada ou num estado não elegível." : "Não foi possível actualizar o estado. Confirme permissões e elegibilidade."}</div> : null}
+    {result ? <div className={`${styles.resultNotice} ${result === "error" ? styles.resultError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Estado actualizado com sucesso." : result === "invalid-transition" || result === "ADMIN_PARTNER_CAMPAIGN_STATUS_TRANSITION_INVALID" ? "A transição de estado solicitada não é permitida." : result === "CAMPAIGN_PAYMENT_NOT_SETTLED" ? "A campanha só pode ser activada ou retomada após liquidação confirmada." : result === "CAMPAIGN_PAYMENT_STILL_PENDING" ? "Existe uma cobrança pendente. Não é possível rejeitar ou encerrar este pedido enquanto o pagamento estiver em processamento." : result === "CAMPAIGN_END_DATE_NOT_REACHED" ? "A data final da campanha ainda não foi atingida." : result === "payment-issued" ? "Cobrança emitida. Referência: " + (params.reference ?? "") + (params.method === "CREDITS" ? " · Créditos debitados e campanha activada." : " · Aguarda confirmação M-Pesa.") : result === "PARTNER_CREDIT_WALLET_NOT_LINKED" ? "Esta conta de parceiro ainda não está associada a uma empresa com carteira de créditos. Utilize M-Pesa ou configure a associação empresarial." : result === "INSUFFICIENT_CREDITS" ? "Saldo de créditos insuficiente para esta campanha." : result === "CAMPAIGN_PAYMENT_ALREADY_ISSUED" ? "Já existe uma cobrança activa para esta campanha." : result === "payment-error" ? "Não foi possível emitir a cobrança da campanha." : result === "partner-cancel-success" ? (params.refundType === "BANK_TRANSFER_REFUND" ? "Campanha cancelada. Estorno bancário registado: " + (params.reference ?? "") : params.refundType === "MPESA_REFUND" ? "Campanha cancelada. Reembolso M-Pesa registado: " + (params.reference ?? "") : "Campanha de parceiro cancelada. Créditos devolvidos: " + (params.refund ?? "0")) : result === "MPESA_REFUND_REFERENCE_REQUIRED" || result === "EXTERNAL_REFUND_REFERENCE_REQUIRED" ? "Introduza a referência do reembolso externo já executado fora da plataforma." : result === "INVALID_EXTERNAL_REFUND_REFERENCE" ? "A referência de estorno não pode ser igual à referência do pagamento original." : result === "CAMPAIGN_NOT_SETTLED" ? "Só é possível estornar campanhas efectivamente pagas." : result === "CAMPAIGN_ALREADY_REFUNDED" ? "Esta campanha já foi estornada." : result === "CANCELLATION_NOT_ALLOWED" ? "Só é possível cancelar campanhas futuras ainda não iniciadas." : result === "partner-cancel-error" ? "Não foi possível cancelar/estornar a campanha." : result === "credit-price-saved" ? "Preço em créditos actualizado." : result === "credit-price-invalid" ? "Indique um preço em créditos inteiro e superior a zero, ou deixe vazio para desactivar." : result === "credit-price-error" ? "Não foi possível actualizar o preço em créditos." : result === "PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED" ? "Este formato ainda não tem preço em créditos configurado." : result === "FIXED_PRODUCT_PRICE_CANNOT_BE_OVERRIDDEN" ? "O preço deste formato é fixo no catálogo e não pode ser alterado na cobrança." : result === "cancel-success" ? "Campanha cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "mpesa-refund-required" ? "Campanha M-Pesa activa: o reembolso externo deve ser executado e registado antes do cancelamento." : result === "cancel-not-allowed" ? "Cancelamento não permitido: campanha já iniciada, expirada ou num estado não elegível." : "Não foi possível actualizar o estado. Confirme permissões e elegibilidade."}</div> : null}
     <section className={styles.metrics} aria-label="Resumo do módulo">
       <article className={styles.metric}><span>Campanhas empresariais</span><strong>{allBusiness.length}</strong><small>Até 100 registos carregados</small></article>
       <article className={styles.metric}><span>Campanhas de parceiros</span><strong>{allPartner.length}</strong><small>Até 100 registos carregados</small></article>
@@ -153,6 +169,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
         {filteredCampaigns.map((c) => <article className={styles.campaignCard} key={c.table + c.id}>
           <div className={styles.campaignTop}><div className={styles.campaignMain}><span className={styles.campaignKicker}>{c.origin} · {c.position}{c.slot ? " · " + c.slot : ""}</span><h3>{c.headline || c.title || "Campanha sem título"}</h3><p>{c.advertiser} · Registada {fmtDate(c.created_at)}</p></div><span className={styles.status}>{label(c.status)}</span></div>
           <div className={styles.campaignMeta}><span><small>Início</small><strong>{fmtDate(c.starts_at)}</strong></span><span><small>Fim</small><strong>{fmtDate(c.ends_at)}</strong></span><span><small>Impressões</small><strong>{fmtNumber(c.impressions_count)}</strong></span><span><small>Cliques / CTR</small><strong>{fmtNumber(c.clicks_count)} · {ctr(c.clicks_count,c.impressions_count)}</strong></span><span><small>Preço / orçamento</small><strong>{c.price}</strong></span></div>
+          {c.table === "partner" ? <details className={styles.campaignHistory}><summary>Histórico ({(eventsByCampaign.get(c.id) ?? []).length})</summary><ol>{(eventsByCampaign.get(c.id) ?? []).map((event: any) => <li key={event.id}><strong>{event.event_type === "CREATED" ? "Pedido criado" : "Estado actualizado"}</strong><span>{event.old_status ? label(event.old_status) + " → " : ""}{label(event.new_status)}</span><small>{new Date(event.created_at).toLocaleString("pt-MZ")}</small></li>)}</ol></details> : null}
           {c.table === "partner" ? (() => {
             const payment = c.payment?.[0];
             return <>
@@ -175,11 +192,11 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
           </form> : null}
           {c.table === "business" && ["PENDING","ACTIVE"].includes(c.status ?? "") && c.starts_at && new Date(c.starts_at).getTime() > now.getTime() ? <form action={cancelBusinessPromotion} className={styles.cancelForm}><input type="hidden" name="id" value={c.id}/><label><span>Motivo do cancelamento</span><Input name="reason" minLength={8} maxLength={500} required placeholder="Motivo (mín. 8 caracteres)"/></label><button className="btn" type="submit">Cancelar campanha e estornar créditos</button><small>Campanhas pagas por créditos serão estornadas automaticamente. Campanhas M-Pesa activas exigem reembolso externo prévio.</small></form> : null}
         {c.target_url ? <p className={styles.destination}>Destino: <a href={c.target_url} target="_blank" rel="noreferrer">{c.target_url}</a></p> : null}
-          <form action={c.table === "business" ? moderateBusinessPromotion : moderatePartnerCampaign} className={styles.moderationForm}>
+          {c.allowed.length ? <form action={c.table === "business" ? moderateBusinessPromotion : moderatePartnerCampaign} className={styles.moderationForm}>
             <input type="hidden" name="id" value={c.id}/>
             <label><span>Actualizar estado</span><Select name="status" defaultValue={c.status ?? ""}>{c.allowed.map(s=><option key={s} value={s}>{label(s)}</option>)}</Select></label>
             <button className="btn primary" type="submit">Guardar estado</button>
-          </form>
+          </form> : null}
         </article>)}
         {filteredRequests.map((r) => <article className={styles.campaignCard} key={"request-" + r.id}>
           <div className={styles.campaignTop}><div className={styles.campaignMain}><span className={styles.campaignKicker}>Pedido de publicidade · {r.placement || "Posição não indicada"}</span><h3>{r.company_name}</h3><p>{r.contact_name} · {r.email}{r.phone ? " · " + r.phone : ""}</p></div><span className={styles.status}>{label(r.status)}</span></div>

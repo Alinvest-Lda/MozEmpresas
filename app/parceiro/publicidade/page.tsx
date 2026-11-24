@@ -4,7 +4,7 @@ import { requirePartnerAccount } from "@/lib/auth/access";
 import { PartnerPage,PartnerSection,PartnerMetric,PartnerEmpty } from "@/components/partner-workspace";
 
 const statusLabel=(status:string)=>{
-  const map:Record<string,string>={ACTIVE:"Activa",RUNNING:"Em execução",PUBLISHED:"Publicada",REQUESTED:"Solicitada",PENDING:"Pendente",UNDER_REVIEW:"Em análise",COMPLETED:"Concluída",CLOSED:"Encerrada",APPROVED:"Aprovada"};
+  const map:Record<string,string>={DRAFT:"Rascunho",ACTIVE:"Activa",PAUSED:"Pausada",REQUESTED:"Solicitada",APPROVED:"Aprovada",REJECTED:"Rejeitada",ENDED:"Encerrada",CANCELLED:"Cancelada"};
   return map[status]||status||"—";
 };
 
@@ -19,8 +19,12 @@ export default async function PartnerAds(){
   const metricsByCampaign=new Map<string,{impressions:number;clicks:number}>((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}] as [string,{impressions:number;clicks:number}]));
   const paymentsByCampaign=new Map<string,any>();(paymentOrders??[]).forEach((x:any)=>{if(!paymentsByCampaign.has(x.campaign_id))paymentsByCampaign.set(x.campaign_id,x)});
   const measuredCampaigns=(campaigns??[]).map((x:any)=>({...x,payment:paymentsByCampaign.get(x.id)||null,...(metricsByCampaign.get(x.id)||{impressions:0,clicks:0})}));
-  const active=(campaigns??[]).filter((x:any)=>["ACTIVE","RUNNING","PUBLISHED"].includes(x.status)).length;
-  const pending=(campaigns??[]).filter((x:any)=>["REQUESTED","PENDING","UNDER_REVIEW"].includes(x.status)).length;
+  const campaignIds=measuredCampaigns.map((x:any)=>x.id);
+  const {data:statusEvents}=campaignIds.length?await s.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,created_at").in("campaign_id",campaignIds).order("created_at",{ascending:false}):{data:[]};
+  const eventsByCampaign=new Map<string,any[]>();
+  (statusEvents??[]).forEach((event:any)=>{const list=eventsByCampaign.get(event.campaign_id)||[];list.push(event);eventsByCampaign.set(event.campaign_id,list)});
+  const active=(campaigns??[]).filter((x:any)=>x.status==="ACTIVE").length;
+  const pending=(campaigns??[]).filter((x:any)=>["REQUESTED","APPROVED"].includes(x.status)).length;
   const impressions=measuredCampaigns.reduce((sum:number,x:any)=>sum+x.impressions,0);
   const clicks=measuredCampaigns.reduce((sum:number,x:any)=>sum+x.clicks,0);
   const investment=measuredCampaigns.reduce((sum:number,x:any)=>sum+(x.payment?.status==="PAID"?Number(x.payment.amount_mzn??0):0),0);
@@ -116,5 +120,6 @@ export default async function PartnerAds(){
         </article>
       </div>
     </PartnerSection>
+    <style>{`.partner-ad-status-history{margin-top:8px;font-size:12px}.partner-ad-status-history summary{cursor:pointer;font-weight:700}.partner-ad-status-history ol{display:grid;gap:5px;margin:8px 0;padding-left:18px}.partner-ad-status-history li{display:grid;gap:2px}.partner-ad-status-history li small{opacity:.7}`}</style>
   </PartnerPage>
 }
