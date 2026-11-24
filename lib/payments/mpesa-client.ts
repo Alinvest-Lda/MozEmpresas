@@ -67,6 +67,9 @@ export function createMpesaBearerToken(apiKey: string, publicKeyBase64: string):
   if (!apiKey || !publicKeyBase64) {
     throw new Error("M-Pesa API credentials are not configured.");
   }
+  if (apiKey.length !== 32) {
+    throw new Error("M-Pesa API Key must contain exactly 32 characters.");
+  }
 
   let der: Buffer;
   try {
