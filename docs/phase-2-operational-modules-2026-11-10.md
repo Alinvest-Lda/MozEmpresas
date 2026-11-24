@@ -607,3 +607,18 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Migrations: `f334_align_partner_activation_with_single_user_account_rule`, `f335_partner_single_user_access_revocation`, `f336_prevent_inactive_profile_partner_claim`.
 - Commits principais: `4517bcf`, `3f36d0f`, `afdb613`, `29c251a`, `35bef19`, `da10e34`, `76ee645`.
 - Esta tranche é implementação de produto e base de dados. Não foram executados testes de integração, smoke tests ou validações finais; ficam para depois do fecho integral da implementação.
+
+
+## F3.37–F3.40 — Notificações transaccionais e governação de conta (25/11/2026)
+
+- F3.37: criada a persistência e o fluxo de notificação para governação de conta e revogação do acesso Parceiro. A revogação mantém-se atómica: membership inactiva, histórico institucional e notificação ao utilizador na mesma transacção.
+- F3.38: removido o segundo trigger de mensagens de suporte introduzido pela evolução F3.73, que coexistia com o trigger anterior e podia gerar notificações duplicadas. Mantido o trigger anterior, que exclui o utilizador do ticket da distribuição de alertas para o backoffice.
+- F3.39: acrescentado um trigger de transição de estado para pedidos de compra de créditos, ordens de serviço, pedidos de serviço, campanhas publicitárias de parceiros e cobranças dessas campanhas. A notificação vai para o requerente ou utilizador único activo da conta Parceiro; alterações sem mudança efectiva de estado não geram mensagem.
+- F3.40: alinhado o fluxo de governação com a tabela canónica `account_admin_audit_log` e as acções efectivamente usadas por `admin_set_account_status` e `admin_record_password_recovery`. Removida a tabela paralela criada na primeira versão da intervenção para não manter duas fontes de auditoria.
+- As notificações internas são persistidas dentro da mesma transacção PostgreSQL do evento de estado/auditoria. Não se está a declarar envio de email, SMS ou push externo.
+- Migrations aplicadas e registadas no repositório:
+  - `20261124231000_f337_account_governance_and_partner_revocation_notifications.sql`
+  - `20261124233000_f338_remove_duplicate_support_message_notifications.sql`
+  - `20261124235000_f339_business_service_and_partner_lifecycle_notifications.sql`
+  - `20261125001000_f340_use_canonical_account_audit_for_notifications.sql`
+- Não foram executados testes integrados, de duplicação ou de isolamento nesta tranche; ficam para a etapa posterior ao fecho global da implementação.
