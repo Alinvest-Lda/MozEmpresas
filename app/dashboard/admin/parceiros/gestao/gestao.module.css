@@ -1,1 +1,136 @@
-.page{color:var(--palette-173735)}.content{max-width:1440px}.hero{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:2px 0 18px;padding:28px;border:1px solid var(--palette-234f45);border-radius:18px;background:linear-gradient(120deg,var(--palette-173f37),var(--palette-205b4d));color:#fff}.eyebrow{font-size:10px;font-weight:850;letter-spacing:.13em;text-transform:uppercase;color:#a7d7c4}.hero h1{margin:9px 0;color:#fff;font-size:clamp(28px,3vw,38px);letter-spacing:-.04em}.hero p{max-width:780px;margin:0;color:#d1e2dc;font-size:13px;line-height:1.7}.hero a{white-space:nowrap;padding:12px 15px;border:1px solid #ffffff55;border-radius:10px;color:#fff;text-decoration:none;font-size:12px;font-weight:750}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.metrics article,.panel{padding:18px;border:1px solid var(--palette-e1ebe6);border-radius:14px;background:#fff;box-shadow:0 5px 18px #143c3608}.metrics span,.metrics small{display:block;color:#71847c;font-size:11px}.metrics strong{display:block;margin:7px 0;font-size:25px;color:#1c3b37}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-bottom:18px}.panel{margin-bottom:16px;min-width:0}.panel h2{margin:0 0 6px;color:#1c3b37;font-size:17px}.panel>p{margin:0 0 15px;color:#71847c;font-size:11px;line-height:1.6}.form{display:grid;gap:11px}.form label{display:grid;gap:5px;color:#34574c;font-size:11px;font-weight:750;min-width:0}.form input,.form select,.form textarea,.verify input{width:100%;min-width:0;padding:10px 11px;border:1px solid #dce7e2;border-radius:8px;background:#fff;color:#23423d;font:inherit;font-size:12px}.form button,.verify button{min-height:38px;padding:9px 13px;border:0;border-radius:8px;background:#1e6a52;color:#fff;font-size:11px;font-weight:800;cursor:pointer}.form button:disabled{opacity:.45;cursor:not-allowed}.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.tableWrap{overflow-x:auto}.tableWrap table{width:100%;border-collapse:collapse;font-size:11px;text-align:left}.tableWrap th{padding:10px 9px;background:#f5f9f6;color:#577066;font-size:10px;text-transform:uppercase;letter-spacing:.04em}.tableWrap td{padding:11px 9px;border-top:1px solid #edf2ef;color:#53675f;vertical-align:middle}.tableWrap td strong,.tableWrap td small{display:block}.tableWrap td strong{color:#29483e}.tableWrap td small{margin-top:4px;color:#87968f;font-size:10px}.verify{display:flex;gap:6px;min-width:220px}.verify input{min-width:100px;padding:7px}.verify button{white-space:nowrap}.note{margin:12px 0 0!important;color:#7a8983!important}.error,.success{margin-bottom:15px;padding:12px 14px;border-radius:9px;font-size:12px}.error{background:#fff5f2;border:1px solid #f0d3c9;color:#9d4d36}.success{background:#f3faf5;border:1px solid #cfe5d6;color:#276044}@media(max-width:900px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:680px){.grid{grid-template-columns:1fr}.hero{align-items:flex-start;flex-direction:column;padding:21px}.two{grid-template-columns:1fr}.metrics{gap:8px}.metrics article{padding:13px}}
+
+alter table public.partner_accounts
+  add column if not exists operating_model text not null default 'SELF_SERVICE',
+  add column if not exists portal_enabled boolean not null default true,
+  add column if not exists legal_name text,
+  add column if not exists tax_id text,
+  add column if not exists billing_address text,
+  add column if not exists billing_city text,
+  add column if not exists billing_country text not null default 'Moçambique',
+  add column if not exists internal_notes text;
+alter table public.partner_accounts drop constraint if exists partner_accounts_operating_model_check;
+alter table public.partner_accounts add constraint partner_accounts_operating_model_check check (operating_model in ('SELF_SERVICE','MANAGED','STRATEGIC','HYBRID'));
+
+create table if not exists public.partner_contacts (
+ id uuid primary key default gen_random_uuid(), account_id uuid not null references public.partner_accounts(id) on delete cascade,
+ full_name text not null, role_title text, email text, phone text, is_primary boolean not null default false,
+ is_billing_contact boolean not null default false, receives_reports boolean not null default true, active boolean not null default true,
+ notes text, created_by uuid not null references auth.users(id), created_at timestamptz not null default now(),
+ updated_at timestamptz not null default now(), constraint partner_contacts_name_check check(length(trim(full_name)) between 2 and 160),
+ constraint partner_contacts_reachability_check check(email is not null or phone is not null)
+);
+create unique index if not exists partner_contacts_one_primary_per_account on public.partner_contacts(account_id) where is_primary and active;
+create index if not exists partner_contacts_account_active_idx on public.partner_contacts(account_id,active);
+
+create table if not exists public.partner_contracts (
+ id uuid primary key default gen_random_uuid(), account_id uuid not null references public.partner_accounts(id) on delete restrict,
+ contract_code text not null, title text not null, contract_type text not null, status text not null default 'DRAFT',
+ starts_on date, ends_on date, contracted_amount_mzn numeric(14,2) not null default 0, currency text not null default 'MZN',
+ billing_frequency text not null default 'ONE_OFF', payment_terms text, billing_notes text, signed_document_path text,
+ created_by uuid not null references auth.users(id), approved_by uuid references auth.users(id), approved_at timestamptz,
+ created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
+ constraint partner_contracts_code_unique unique(account_id,contract_code),
+ constraint partner_contracts_type_check check(contract_type in ('STRATEGIC_PARTNERSHIP','CAMPAIGN_PACKAGE','SERVICE_ORDER','REPORTING','RETAINER','OTHER')),
+ constraint partner_contracts_status_check check(status in ('DRAFT','ACTIVE','SUSPENDED','COMPLETED','TERMINATED')),
+ constraint partner_contracts_billing_frequency_check check(billing_frequency in ('ONE_OFF','MONTHLY','QUARTERLY','SEMI_ANNUAL','ANNUAL','MILESTONE')),
+ constraint partner_contracts_amount_check check(contracted_amount_mzn>=0),
+ constraint partner_contracts_dates_check check(ends_on is null or starts_on is null or ends_on>=starts_on)
+);
+create index if not exists partner_contracts_account_status_idx on public.partner_contracts(account_id,status);
+create index if not exists partner_contracts_dates_idx on public.partner_contracts(starts_on,ends_on);
+
+create table if not exists public.partner_service_engagements (
+ id uuid primary key default gen_random_uuid(), account_id uuid not null references public.partner_accounts(id) on delete restrict,
+ contract_id uuid references public.partner_contracts(id) on delete set null,
+ campaign_id uuid references public.partner_ad_campaigns(id) on delete set null,
+ service_type text not null, request_source text not null default 'BACKOFFICE', title text not null, description text,
+ status text not null default 'RECEIVED', assigned_commercial_user_id uuid references auth.users(id),
+ assigned_operations_user_id uuid references auth.users(id), agreed_amount_mzn numeric(14,2), currency text not null default 'MZN',
+ received_at timestamptz not null default now(), due_at timestamptz, started_at timestamptz, delivered_at timestamptz,
+ closed_at timestamptz, created_by uuid not null references auth.users(id), created_at timestamptz not null default now(),
+ updated_at timestamptz not null default now(),
+ constraint partner_engagement_service_type_check check(service_type in ('ADVERTISING','CAMPAIGN_MANAGEMENT','MARKET_INTELLIGENCE','REPORTING','LEAD_GENERATION','PROMOTION','STRATEGIC_PARTNERSHIP','OTHER')),
+ constraint partner_engagement_source_check check(request_source in ('PORTAL','EMAIL','MEETING','CONTRACT','PHONE','BACKOFFICE','OTHER')),
+ constraint partner_engagement_status_check check(status in ('RECEIVED','SCOPING','AWAITING_APPROVAL','APPROVED','IN_PROGRESS','UNDER_REVIEW','DELIVERED','CLOSED','ON_HOLD','CANCELLED')),
+ constraint partner_engagement_amount_check check(agreed_amount_mzn is null or agreed_amount_mzn>=0),
+ constraint partner_engagement_dates_check check(due_at is null or due_at>=received_at)
+);
+create index if not exists partner_engagement_account_status_idx on public.partner_service_engagements(account_id,status,received_at desc);
+create index if not exists partner_engagement_contract_idx on public.partner_service_engagements(contract_id);
+create index if not exists partner_engagement_assignees_idx on public.partner_service_engagements(assigned_commercial_user_id,assigned_operations_user_id);
+
+create table if not exists public.partner_report_deliveries (
+ id uuid primary key default gen_random_uuid(), account_id uuid not null references public.partner_accounts(id) on delete restrict,
+ contract_id uuid references public.partner_contracts(id) on delete set null,
+ engagement_id uuid references public.partner_service_engagements(id) on delete set null,
+ campaign_id uuid references public.partner_ad_campaigns(id) on delete set null,
+ report_type text not null default 'PERFORMANCE', title text not null, period_start date, period_end date,
+ storage_path text, external_url text, recipient_emails text[] not null default '{}',
+ delivery_channel text not null default 'EMAIL', status text not null default 'DRAFT', delivered_at timestamptz,
+ delivered_by uuid references auth.users(id), delivery_reference text, notes text,
+ created_by uuid not null references auth.users(id), created_at timestamptz not null default now(),
+ constraint partner_report_type_check check(report_type in ('PERFORMANCE','FINANCIAL','MARKET_INTELLIGENCE','CAMPAIGN','EXECUTIVE','OTHER')),
+ constraint partner_report_channel_check check(delivery_channel in ('EMAIL','PORTAL','MEETING','SHARED_LINK','OTHER')),
+ constraint partner_report_status_check check(status in ('DRAFT','READY','DELIVERED','FAILED','WITHDRAWN')),
+ constraint partner_report_period_check check(period_end is null or period_start is null or period_end>=period_start),
+ constraint partner_report_asset_check check(storage_path is not null or external_url is not null or status in ('DRAFT','WITHDRAWN'))
+);
+create index if not exists partner_reports_account_delivered_idx on public.partner_report_deliveries(account_id,delivered_at desc);
+create index if not exists partner_reports_engagement_idx on public.partner_report_deliveries(engagement_id);
+
+alter table public.partner_ad_campaigns
+ add column if not exists contract_id uuid references public.partner_contracts(id) on delete set null,
+ add column if not exists request_source text not null default 'PORTAL',
+ add column if not exists created_by_internal_user_id uuid references auth.users(id),
+ add column if not exists assigned_operations_user_id uuid references auth.users(id),
+ add column if not exists internal_notes text;
+alter table public.partner_ad_campaigns drop constraint if exists partner_ad_campaigns_request_source_check;
+alter table public.partner_ad_campaigns add constraint partner_ad_campaigns_request_source_check check(request_source in ('PORTAL','EMAIL','MEETING','CONTRACT','PHONE','BACKOFFICE','OTHER'));
+create index if not exists partner_campaign_contract_idx on public.partner_ad_campaigns(contract_id);
+
+alter table public.financial_documents
+ add column if not exists contract_id uuid references public.partner_contracts(id) on delete set null,
+ add column if not exists engagement_id uuid references public.partner_service_engagements(id) on delete set null,
+ add column if not exists issued_by_internal_user_id uuid references auth.users(id);
+create index if not exists financial_documents_contract_idx on public.financial_documents(contract_id);
+create index if not exists financial_documents_engagement_idx on public.financial_documents(engagement_id);
+
+alter table public.financial_payments
+ add column if not exists contract_id uuid references public.partner_contracts(id) on delete set null,
+ add column if not exists engagement_id uuid references public.partner_service_engagements(id) on delete set null,
+ add column if not exists bank_name text, add column if not exists payer_name text, add column if not exists transfer_date date,
+ add column if not exists verified_by uuid references auth.users(id), add column if not exists verified_at timestamptz,
+ add column if not exists verification_notes text;
+create index if not exists financial_payments_contract_idx on public.financial_payments(contract_id);
+create index if not exists financial_payments_engagement_idx on public.financial_payments(engagement_id);
+create index if not exists financial_payments_partner_status_idx on public.financial_payments(partner_account_id,status,created_at desc);
+
+create or replace view public.partner_contract_financial_summary with (security_invoker=true) as
+select c.id contract_id,c.account_id,c.contract_code,c.title,c.contract_type,c.status,c.contracted_amount_mzn,
+ coalesce(sum(distinct d.amount_mzn),0)::numeric(14,2) invoiced_amount_mzn,
+ coalesce((select sum(p.amount_mzn) from public.financial_payments p where p.contract_id=c.id and p.status='CONFIRMED'),0)::numeric(14,2) received_amount_mzn,
+ (coalesce(sum(distinct d.amount_mzn),0)-coalesce((select sum(p.amount_mzn) from public.financial_payments p where p.contract_id=c.id and p.status='CONFIRMED'),0))::numeric(14,2) outstanding_amount_mzn
+from public.partner_contracts c left join public.financial_documents d on d.contract_id=c.id and d.status<>'VOID' group by c.id;
+
+alter table public.partner_contacts enable row level security;
+alter table public.partner_contracts enable row level security;
+alter table public.partner_service_engagements enable row level security;
+alter table public.partner_report_deliveries enable row level security;
+drop policy if exists partner_contacts_admin_all on public.partner_contacts;
+create policy partner_contacts_admin_all on public.partner_contacts for all to authenticated using(public.is_super_admin()) with check(public.is_super_admin());
+drop policy if exists partner_contracts_admin_all on public.partner_contracts;
+create policy partner_contracts_admin_all on public.partner_contracts for all to authenticated using(public.is_super_admin()) with check(public.is_super_admin());
+drop policy if exists partner_engagements_admin_all on public.partner_service_engagements;
+create policy partner_engagements_admin_all on public.partner_service_engagements for all to authenticated using(public.is_super_admin()) with check(public.is_super_admin());
+drop policy if exists partner_reports_admin_all on public.partner_report_deliveries;
+create policy partner_reports_admin_all on public.partner_report_deliveries for all to authenticated using(public.is_super_admin()) with check(public.is_super_admin());
+drop policy if exists partner_accounts_admin_manage_f326 on public.partner_accounts;
+create policy partner_accounts_admin_manage_f326 on public.partner_accounts for all to authenticated using(public.is_super_admin()) with check(public.is_super_admin());
+
+grant select,insert,update,delete on public.partner_contacts to authenticated;
+grant select,insert,update,delete on public.partner_contracts to authenticated;
+grant select,insert,update,delete on public.partner_service_engagements to authenticated;
+grant select,insert,update,delete on public.partner_report_deliveries to authenticated;
+grant select on public.partner_contract_financial_summary to authenticated;
+
+.lifecycle{min-width:260px}.lifecycle summary{cursor:pointer;color:#1e6a52;font-weight:800;padding:7px 0}.lifecycle form{min-width:280px;max-width:520px;padding:12px;margin-top:8px;border:1px solid #e3ece7;border-radius:10px;background:#fbfdfb}.lifecycle textarea{min-height:64px}
