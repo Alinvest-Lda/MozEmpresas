@@ -5,6 +5,7 @@ import {
   createPartnerContact, createPartnerReportDelivery, createBackofficePartnerCampaign, updatePartnerEngagementStatus,
   createPartnerEntitlement, updatePartnerEntitlementStatus, updateInstitutionalPartner, updateInstitutionalContact, transitionPartnerContract, transitionPartnerReport, createPartnerDocument, openPartnerDocument, sendPartnerReportEmail,
 } from "@/lib/admin/partner-institutional-actions";
+import { PartnerDocumentAssociation, PartnerReportAssociations } from "@/components/admin/partner-document-associations";
 import styles from "./gestao.module.css";
 
 export const dynamic = "force-dynamic";
@@ -122,9 +123,7 @@ export default async function InstitutionalPartnersPage({searchParams}:{searchPa
         <label>Recebe relatórios?<select name="receives_reports"><option value="true">Sim</option><option value="false">Não</option></select></label><button type="submit" disabled={!p.length}>Registar contacto</button>
       </form></article>
       <article className={styles.panel}><h2>Entrega de relatório</h2><p>Registe relatórios periódicos ou entregas de campanha. A entrega pode ser feita por email ou link externo, sem login do parceiro.</p><form action={createPartnerReportDelivery} className={styles.form}>
-        <label>Entidade<select name="account_id" required>{p.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
-        <label>Contrato<select name="contract_id" defaultValue=""><option value="">Sem contrato</option>{c.map(x=><option key={x.id} value={x.id}>{x.contract_code} · {x.title}</option>)}</select></label>
-        <label>Campanha associada (opcional)<select name="campaign_id" defaultValue=""><option value="">Sem campanha</option>{campaignRows.map(x=><option key={x.id} value={x.id}>{x.title}</option>)}</select></label>
+        <PartnerReportAssociations partners={p.map(x=>({id:x.id,name:x.name}))} contracts={c.map(x=>({id:x.id,account_id:x.account_id,contract_code:x.contract_code,title:x.title}))} engagements={e.map(x=>({id:x.id,account_id:x.account_id,title:x.title}))} campaigns={campaignRows.map(x=>({id:x.id,account_id:x.account_id,title:x.title}))} documents={partnerDocumentRows.map(x=>({id:x.id,account_id:x.account_id,document_type:x.document_type,title:x.title,version_number:x.version_number,storage_path:x.storage_path}))} />
         <label>Título<input name="title" required/></label>
         <div className={styles.two}><label>Tipo<select name="report_type"><option value="PERFORMANCE">Desempenho</option><option value="FINANCIAL">Financeiro</option><option value="MARKET_INTELLIGENCE">Inteligência de mercado</option><option value="CAMPAIGN">Campanha</option><option value="EXECUTIVE">Executivo</option><option value="OTHER">Outro</option></select></label><label>Canal<select name="delivery_channel"><option value="EMAIL">Email</option><option value="SHARED_LINK">Link partilhado</option><option value="MEETING">Reunião</option><option value="PORTAL">Portal</option><option value="OTHER">Outro</option></select></label></div>
         <div className={styles.two}><label>Período inicial<input name="period_start" type="date"/></label><label>Período final<input name="period_end" type="date"/></label></div>
@@ -139,10 +138,9 @@ export default async function InstitutionalPartnersPage({searchParams}:{searchPa
       <p>Documentos privados, com validação do formato, hash SHA-256, versões sucessivas e acesso temporário apenas para Super Admins.</p>
       <form action={createPartnerDocument} className={styles.form}>
         <div className={styles.two}>
-          <label>Entidade<select name="account_id" required>{p.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
+          <PartnerDocumentAssociation partners={p.map(x=>({id:x.id,name:x.name}))} contracts={c.map(x=>({id:x.id,account_id:x.account_id,contract_code:x.contract_code,title:x.title}))} engagements={e.map(x=>({id:x.id,account_id:x.account_id,title:x.title}))} reports={reportRows.map(x=>({id:x.id,account_id:x.account_id,title:x.title}))} campaigns={campaignRows.map(x=>({id:x.id,account_id:x.account_id,title:x.title}))} />
           <label>Tipo de documento<select name="document_type"><option value="SIGNED_CONTRACT">Contrato assinado</option><option value="REPORT">Relatório</option><option value="SUPPORTING">Documento de suporte</option><option value="OTHER">Outro</option></select></label>
         </div>
-        <label>Associação<select name="parent_ref" defaultValue="GENERAL"><option value="GENERAL">Dossiê geral</option>{c.map(x=><option key={x.id} value={`CONTRACT:${x.id}`}>Contrato · {x.contract_code} · {x.title}</option>)}{e.map(x=><option key={x.id} value={`ENGAGEMENT:${x.id}`}>Execução · {x.title}</option>)}{reportRows.map(x=><option key={x.id} value={`REPORT:${x.id}`}>Relatório · {x.title}</option>)}{campaignRows.map(x=><option key={x.id} value={`CAMPAIGN:${x.id}`}>Campanha · {x.title}</option>)}</select></label>
         <label>Designação<input name="title" required minLength={2} maxLength={180} placeholder="Ex.: Contrato assinado / Relatório mensal"/></label>
         <label>Ficheiro<input name="file" type="file" required accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/png,image/webp"/></label>
         <label>Notas internas<textarea name="notes" rows={2} maxLength={1000}/></label>
