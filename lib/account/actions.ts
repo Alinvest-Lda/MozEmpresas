@@ -70,8 +70,11 @@ export async function updateAccountStatus(_state: AccountState, formData: FormDa
   if (currentProfile.account_status === "DELETED" && status !== "DELETED") {
     return { error: "A conta já tem um pedido de eliminação. Contacte o suporte para rever este estado." };
   }
-  const { error } = await supabase.from("profiles").update({ account_status: status }).eq("id", user.id);
-  if (error) return { error: "Não foi possível actualizar o estado da conta." };
+  const { error } = await supabase.rpc("request_own_account_status", {
+    p_status: status,
+    p_reason: status === "DELETED" ? "Pedido de eliminação iniciado pelo titular da conta." : "Desactivação voluntária iniciada pelo titular da conta.",
+  });
+  if (error) return { error: "Não foi possível actualizar o estado da conta. Contacte o suporte se o problema persistir." };
   revalidatePath("/dashboard/conta");
   revalidatePath("/conta/estado");
   revalidatePath("/dashboard");
