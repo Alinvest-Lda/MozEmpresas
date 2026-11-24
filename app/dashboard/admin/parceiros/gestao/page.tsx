@@ -45,7 +45,8 @@ export default async function InstitutionalPartnersPage({searchParams}:{searchPa
     supabase.from("partner_ad_campaigns").select("id,account_id,product_id,contract_id,assigned_operations_user_id,title,status,request_source,price_mzn,starts_at,ends_at,created_at").order("created_at",{ascending:false}).limit(100),
     supabase.rpc("admin_list_platform_staff"),
   ]);
-  const {data:relationshipAudit,error:relationshipAuditError}=await supabase.from("partner_relationship_audit").select("id,entity_type,entity_id,account_id,actor_user_id,action,before_state,after_state,reason,created_at").order("created_at",{ascending:false}).limit(250);\n  const {data:operationalAudit,error:operationalAuditError}=await supabase.from("partner_operational_audit").select("id,account_id,entity_type,entity_id,action,actor_user_id,before_state,after_state,reason,created_at").order("created_at",{ascending:false}).limit(400);
+  const {data:relationshipAudit,error:relationshipAuditError}=await supabase.from("partner_relationship_audit").select("id,entity_type,entity_id,account_id,actor_user_id,action,before_state,after_state,reason,created_at").order("created_at",{ascending:false}).limit(250);
+  const {data:operationalAudit,error:operationalAuditError}=await supabase.from("partner_operational_audit").select("id,account_id,entity_type,entity_id,action,actor_user_id,before_state,after_state,reason,created_at").order("created_at",{ascending:false}).limit(400);
   const {data:entitlements}=await supabase.from("partner_entitlements").select("id,account_id,entitlement_type,name,description,scope,starts_at,ends_at,status").order("created_at",{ascending:false}).limit(300);
   const entitlementRows=entitlements??[];
   const p=partners??[], c=contracts??[], e=engagements??[], pay=payments??[], docs=documents??[], contactsRows=contacts??[], reportRows=reports??[], financeRows=contractFinance??[], products=adProducts??[], campaignRows=campaigns??[];
