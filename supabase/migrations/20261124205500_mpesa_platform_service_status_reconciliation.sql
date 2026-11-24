@@ -46,9 +46,7 @@ begin
   select * into v_payment from public.financial_payments
   where reference=p_payment_reference and method='MPESA' for update;
   if not found then raise exception 'SERVICE_PAYMENT_NOT_FOUND'; end if;
-  if v_payment.mpesa_third_party_reference is distinct from p_third_party_reference
-     or (p_conversation_id is not null and v_payment.mpesa_conversation_id is not null
-         and v_payment.mpesa_conversation_id is distinct from p_conversation_id) then
+  if v_payment.mpesa_third_party_reference is distinct from p_third_party_reference then
     raise exception 'MPESA_STATUS_REFERENCE_MISMATCH';
   end if;
 
