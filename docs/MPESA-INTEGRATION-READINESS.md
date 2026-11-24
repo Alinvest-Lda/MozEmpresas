@@ -32,6 +32,8 @@ The Sandbox host/ports and request contract are based on the user's supplied Vod
 - The checkout pre-fills the saved number, permits a checkout-time change, validates the Mozambique international format (`258XXXXXXXXX`), and sends it as `input_CustomerMSISDN`.
 - Checkout creates the existing idempotent pending service order, stores the payer MSISDN and unique third-party reference in `financial_payments`, and then calls the Sandbox C2B endpoint with the five documented string fields.
 - Provider conversation ID, response code and description are stored for later reconciliation. A network timeout is treated as an unknown outcome; the code does not blindly retry and risk issuing a duplicate request.
+- The finance page now provides an authenticated, user-initiated status check for pending platform-service M-Pesa payments. It queries using the stored ThirdPartyReference and ConversationID (or ThirdPartyReference fallback), verifies the returned ThirdPartyReference exactly, and records the status response, response code, description, check timestamp and check count.
+- Status reconciliation treats `Cancelled` and `Expired` as terminal only when Vodacom returns `INS-0`; the pending payment becomes `FAILED`, and the service order becomes `CANCELLED` or `FAILED`. `N/A` remains pending. `Completed` is recorded and shown to the user but does not settle the payment.
 - Database migrations add the payment correlation fields and private payer settings. They have been applied to the connected Supabase project and verified by read-only schema/privilege queries.
 - Automated client tests cover RSA token encryption, C2B payload/headers, status query parameters, and rejection of Production environment configuration.
 
@@ -39,7 +41,7 @@ The Sandbox host/ports and request contract are based on the user's supplied Vod
 
 An accepted C2B request or an initial `INS-0` response is not treated as proof that the customer completed payment. The current checkout deliberately leaves the order/payment pending. It does not activate a subscription, mark the invoice paid, or credit a wallet merely because the API request returned.
 
-The Query Transaction Status client exists, but a complete production-safe settlement flow still requires the definitive provider transaction identifier and response mapping to the existing settlement RPCs. The supplied status response documents `output_ResponseTransactionStatus` and `output_ConversationID`; it does not establish a separate provider transaction ID field in that response.
+The Query Transaction Status endpoint is now wired into a manual reconciliation action in Gestão financeira. A complete automatic settlement flow still requires the definitive provider transaction identifier and response mapping to the existing settlement RPCs. The supplied status response documents `output_ResponseTransactionStatus`, `output_ConversationID`, `output_ThirdPartyReference`, `output_ResponseCode` and `output_ResponseDesc`; it does not establish a separate provider transaction ID field in that response. Therefore a `Completed` status is not enough to mark the payment paid or activate the service.
 
 ## Callback / webhook boundary
 
@@ -67,8 +69,9 @@ The material supplied so far does not define Vodacom callback authentication/sig
 1. Ensure the runtime that executes the server action has the Sandbox values for `MPESA_ENVIRONMENT`, `MPESA_API_KEY`, `MPESA_PUBLIC_KEY`, `MPESA_API_BASE_URL`, `MPESA_ORIGIN`, `MPESA_C2B_PORT`, `MPESA_STATUS_PORT`, and `MPESA_SERVICE_PROVIDER_CODE`.
 2. Confirm the target test MSISDN is enabled/eligible in Vodacom Sandbox and has test balance/credentials as required by the provider.
 3. Run the app from an environment with those Sandbox secrets; submit one M-Pesa checkout and record the returned Conversation ID / ThirdPartyReference.
-4. Query the transaction status using the documented endpoint and reconcile the exact response with Vodacom's Sandbox behaviour.
-5. Only after the final transaction identifier and verified outcome mapping are established should we connect status reconciliation to the existing settlement RPCs.
+4. Open Gestão financeira and use **Consultar estado** on the pending M-Pesa payment. Verify the ThirdPartyReference returned by Vodacom matches the stored reference.
+5. For `Completed`, obtain the final provider transaction ID through a documented provider response or authenticated callback and then reconcile it with the existing settlement RPC. For `Cancelled` or `Expired`, the verified status check marks the pending payment/order as terminal. `N/A` remains pending.
+6. Confirm the provider's callback authenticity mechanism and synchronous/asynchronous account mode before registering a Response URL or enabling callback-driven settlement.
 
 ## Scope of this intervention
 
