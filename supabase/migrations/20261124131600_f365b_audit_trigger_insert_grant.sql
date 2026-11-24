@@ -1,0 +1,1 @@
+grant insert on public.partner_relationship_action_history to authenticated;
