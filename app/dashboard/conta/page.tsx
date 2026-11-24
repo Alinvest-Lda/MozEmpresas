@@ -14,7 +14,10 @@ export default async function AccountPage({ searchParams }: { searchParams?: Pro
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const { data: profile } = await supabase.from("profiles").select("full_name,location,website,bio,account_status,mpesa_msisdn").eq("id", user.id).maybeSingle();
+  const [{ data: profile }, { data: paymentSettings }] = await Promise.all([
+    supabase.from("profiles").select("full_name,location,website,bio,account_status").eq("id", user.id).maybeSingle(),
+    supabase.from("user_payment_settings").select("mpesa_msisdn").eq("user_id", user.id).maybeSingle(),
+  ]);
   const status = (profile?.account_status || "ACTIVE") as keyof typeof labels;
   const name = profile?.full_name || user.email?.split("@")[0] || "Utilizador";
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((part: string) => part[0]).join("").toUpperCase();
@@ -33,7 +36,7 @@ export default async function AccountPage({ searchParams }: { searchParams?: Pro
     {view === "perfil" ? <div className={styles.layout}>
       <section className={styles.panel}><div className={styles.panelHead}><span className={styles.sectionLabel}>Perfil pessoal</span><h2>Os seus dados</h2><p>Mantenha a informação de identificação actualizada para melhorar a sua experiência no MozEmpresas.</p></div>
         <div className={styles.emailBox}><span className={styles.emailIcon} aria-hidden="true">@</span><div><small>Email de acesso</small><strong>{user.email}</strong><p>O email usado para iniciar sessão. Para alterar este endereço, contacte o suporte.</p></div></div>
-        <ProfileForm initial={{ fullName: name, location: profile?.location || "", website: profile?.website || "", bio: profile?.bio || "", mpesaMsisdn: profile?.mpesa_msisdn || "" }} />
+        <ProfileForm initial={{ fullName: name, location: profile?.location || "", website: profile?.website || "", bio: profile?.bio || "", mpesaMsisdn: paymentSettings?.mpesa_msisdn || "" }} />
       </section>
       <div className={styles.securityColumn}>
         <section className={styles.panel}><div className={styles.panelHead}><span className={styles.sectionLabel}>Protecção da conta</span><h2>Acesso e segurança</h2><p>Boas práticas para manter a sua conta protegida.</p></div>
