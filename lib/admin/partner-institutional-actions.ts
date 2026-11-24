@@ -1,7 +1,7 @@
 "use server";
 
 import { createHash, randomUUID } from "node:crypto";
-import { sendPartnerReportEmail } from "@/lib/email/resend";
+import { sendPartnerReportEmail as deliverPartnerReportEmail } from "@/lib/email/resend";
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -483,7 +483,7 @@ export async function sendPartnerReportEmail(formData: FormData) {
     : "";
   let providerId:string;
   try {
-    providerId=await sendPartnerReportEmail({
+    providerId=await deliverPartnerReportEmail({
       to:report.recipient_emails as string[],
       subject:`MozEmpresas | ${report.title}`,
       html:`<div style="font-family:Arial,sans-serif;color:#172033;line-height:1.6"><h2>${esc(report.title)}</h2>${period}<p>O relatório institucional está disponível através do endereço seguro abaixo:</p><p><a href="${esc(reportUrl)}">Consultar relatório</a></p><p style="font-size:12px;color:#687386">Este endereço temporário expira em 72 horas. Se necessitar de novo acesso, contacte a equipa responsável.</p></div>`,
