@@ -3,11 +3,11 @@ import { PartnerAccessLink } from "@/components/partner-access-link";
 import { PartnerAccessSubmitButton } from "@/components/partner-access-submit-button";
 import styles from "./parceiros.module.css";
 import { Input, Select } from "@/components/ui";
-import { linkPartnerBusiness } from "@/lib/admin/partner-billing-actions";
+import { linkPartnerBusiness } from "@/lib/admin/partner-billing-actions";\nimport { revokePartnerPortalAccess } from "@/lib/admin/partner-access-actions";
 
 export const dynamic = "force-dynamic";
 
-const errorMessages: Record<string, string> = {
+const errorMessages: Record<string, string> = {\n  "access-invalid": "Indique um motivo com pelo menos 8 caracteres para revogar o acesso.",\n  "access-forbidden": "Apenas o Super Admin pode revogar acessos de parceiros.",\n  "access-not-found": "O acesso já não está activo ou não foi encontrado.",\n  "access-revoke": "Não foi possível revogar o acesso. A organização mantém o estado anterior.",
   validation: "O email ou o prazo indicado não é válido. Reveja os campos e tente novamente.",
   forbidden: "Apenas o Super Admin pode criar acessos dedicados de parceiros.",
   create: "Não foi possível criar o acesso. Confirme se a conta ainda não tem utilizador activo nem convite pendente.",
@@ -19,7 +19,7 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
   const params = await searchParams;
   const inviteUrl = params.created === "1" && params.access ? params.access : "";
   const supabase = await (await import("@/lib/supabase/server")).createClient();
-  const { data: grantsData, error: grantsError } = await supabase.rpc("partner_access_list");
+  const [{data: grantsData,error: grantsError},{data: memberAccessData,error: memberAccessError}] = await Promise.all([\n    supabase.rpc("partner_access_list"),\n    supabase.rpc("admin_partner_access_members_list"),\n  ]);\n  const activePartnerAccesses = Array.isArray(memberAccessData) ? memberAccessData : [];
   const [{data: partnerAccounts},{data: businesses}] = await Promise.all([
     supabase.from("partner_accounts").select("id,name,status,business_id,portal_enabled").order("name").limit(200),
     supabase.from("businesses").select("id,name").is("archived_at",null).order("name").limit(500)
@@ -75,7 +75,7 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
           </section>
         ) : null}
 
-        {params.error ? <div className={styles.errorNotice} role="alert">{errorMessages[params.error] || "Não foi possível concluir a operação. Tente novamente."}</div> : null}
+        {params.error ? <div className={styles.errorNotice} role="alert">{errorMessages[params.error] || "Não foi possível concluir a operação. Tente novamente."}</div> : null}\n        {params.access ? <div className={params.access==="revoked" ? styles.noticeInfo : styles.errorNotice} role={params.access==="revoked"?"status":"alert"}>{accessMessages[params.access] || "Não foi possível concluir a operação de acesso."}</div> : null}
         {params.billing ? <div className={params.billing==="success" ? styles.noticeInfo : styles.errorNotice} role={params.billing==="success"?"status":"alert"}>{params.billing==="success"?"Associação empresarial actualizada. A carteira de créditos dessa empresa poderá ser usada para campanhas da conta Parceiro.":params.billing==="BUSINESS_ALREADY_LINKED_TO_PARTNER"?"Esta empresa já está associada a outra conta Parceiro.":params.billing==="BUSINESS_NOT_AVAILABLE"?"A empresa seleccionada não está disponível.":params.billing==="invalid"?"Selecção inválida.": "Não foi possível actualizar a associação empresarial."}</div> : null}
 
         <div className={styles.mainGrid}>
@@ -155,6 +155,45 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
             </table>
           </div>}
           <p className={styles.tableNote}>A associação é única por empresa. O Super Admin deve confirmar previamente que a conta Parceiro representa a mesma entidade empresarial. A cobrança por M-Pesa continua disponível sem associação.</p>
+        </section>
+
+        <section className={styles.invitesPanel} aria-labelledby="active-access-title">
+          <div className={styles.invitesHeader}>
+            <div>
+              <span className={styles.kicker}>Acesso organizacional</span>
+              <h2 id="active-access-title">Utilizadores activos das organizações Parceiro</h2>
+              <p>Existe um único utilizador activo por organização. Quando for necessário substituir o responsável, revogue primeiro o acesso actual; depois poderá emitir um novo convite para a mesma conta. A operação fica registada no histórico institucional.</p>
+            </div>
+          </div>
+          {memberAccessError ? (
+            <div className={styles.emptyState} role="alert">Não foi possível carregar os acessos activos. A função administrativa de listagem precisa de estar disponível.</div>
+          ) : activePartnerAccesses.length === 0 ? (
+            <div className={styles.emptyState}>Não existem utilizadores activos associados a contas Parceiro.</div>
+          ) : (
+            <div className={styles.tableWrap}>
+              <table className={styles.invitesTable}>
+                <thead><tr><th>Organização</th><th>Utilizador</th><th>Email</th><th>Desde</th><th>Substituição do acesso</th></tr></thead>
+                <tbody>
+                  {activePartnerAccesses.map((member:any)=>(
+                    <tr key={member.member_id}>
+                      <td data-label="Organização"><strong>{member.account_name}</strong></td>
+                      <td data-label="Utilizador">{member.full_name || "—"}</td>
+                      <td data-label="Email">{member.email}</td>
+                      <td data-label="Desde">{formatDate(member.created_at)}</td>
+                      <td data-label="Substituição">
+                        <form action={revokePartnerPortalAccess} className={styles.statusFilter}>
+                          <input type="hidden" name="memberId" value={member.member_id}/>
+                          <Input name="reason" placeholder="Motivo da revogação (mín. 8 caracteres)" required minLength={8} maxLength={500}/>
+                          <button type="submit">Revogar acesso</button>
+                        </form>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p className={styles.tableNote}>A revogação desactiva a membership, não apaga a conta, os dados nem o histórico. O novo convite só deve ser emitido depois de confirmada a substituição do responsável.</p>
         </section>
 
         <section className={styles.invitesPanel} aria-labelledby="invites-title">
