@@ -22,6 +22,7 @@ const typeLabels: Record<string, string> = {
   ACCOUNT: "Conta",
   SYSTEM: "Sistema",
   SAVED_SEARCH_MATCH: "Pesquisa guardada",
+  PARTNER_OPERATIONS: "Operações institucionais",
 };
 
 type Notification = {
@@ -143,7 +144,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
                 const resourceKey = item.resource_type && item.resource_id
                   ? String(item.resource_type).toUpperCase() + ":" + item.resource_id
                   : "";
-                const resourceLink = resourceLinks.get(resourceKey);
+                const resourceLink = resourceLinks.get(resourceKey) ?? (isSuperAdmin && item.resource_type === "PARTNER_SERVICE_ENGAGEMENT" ? "/dashboard/admin/parceiros/gestao#execucoes" : isSuperAdmin && item.resource_type === "PARTNER_AD_CAMPAIGN" ? "/dashboard/admin/parceiros/gestao#campanhas" : undefined);
                 return (
                   <article key={item.id} className={`${styles.notification} ${item.read_at ? "" : styles.unread}`}>
                     <div className={styles.notificationBody}>
