@@ -97,7 +97,7 @@ export default async function ServiceDetail({
     managedBusinessIds.length
       ? supabase.from("businesses").select("id,name").in("id", managedBusinessIds).is("archived_at", null).order("name")
       : Promise.resolve({ data: [] as { id: string; name: string }[] }),
-    supabase.from("profiles").select("mpesa_msisdn").eq("id", user.id).maybeSingle(),
+    supabase.from("user_payment_settings").select("mpesa_msisdn").eq("user_id", user.id).maybeSingle(),
   ]);
 
   if (!service) notFound();
