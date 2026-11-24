@@ -198,3 +198,12 @@ Esta tranche é implementação estrutural. Não foram executados testes integra
 
 
 A cobertura de oportunidades foi ampliada: a alteração do estado de uma candidatura notifica o candidato, e a alteração do estado de uma oportunidade notifica o respectivo titular. O evento de submissão de candidatura já tinha notificação própria para o titular, pelo que esta tranche cobre a fase posterior de acompanhamento.
+
+
+## 3.5. Correcção de sequência e reconciliação de notificações (25/11/2026)
+
+A referência funcional histórica alcançou F3.73 antes das migrações com sufixos `f337`–`f341`. Esses sufixos são nomes/identificadores de migração, não novos números da sequência funcional. Não reiniciar a sequência em F3.37 nem contabilizar essas migrações como intervenções funcionais F3.37–F3.41.
+
+A função activa `notify_support_message_recipient()` e o trigger `notify_support_message_recipient_trigger` mantêm a notificação bilateral da Central de Suporte. O trigger adicional F3.73 foi removido para evitar duplicação; a funcionalidade não foi perdida. Em `service_requests`, a F3.72 já regista histórico e notifica atomicamente. Foi removido o trigger genérico sobreposto `service_request_status_notification`, mantendo-se o trigger atómico F3.72 e a função genérica para os restantes fluxos que ainda a utilizam. Migração correctiva: `20261125004500_reconcile_service_request_notification_ownership.sql`.
+
+Não foram executados testes ou validações finais. A referência global permanece em **89% provisórios**, sem recalcular ou aumentar a percentagem nesta correcção.
