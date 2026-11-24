@@ -60,3 +60,11 @@
 .rateInsight small{font-size:10px;line-height:1.5;color:var(--palette-80918c)}
 @media(max-width:420px){.barColumn small{font-size:7px}}
 
+
+.performanceGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:20px}
+.performanceMetric{display:grid;gap:7px;min-width:0;padding:14px;border:1px solid var(--palette-e8efec);border-radius:11px;background:var(--palette-f9fbfa)}
+.performanceMetric>span{font-size:10px;line-height:1.35;color:var(--palette-70817c);font-weight:700}
+.performanceMetric>strong{font-size:25px;line-height:1;letter-spacing:-.04em;color:var(--palette-173735)}
+.performanceMetric>small{font-size:9px;line-height:1.4;color:var(--palette-8b9a96)}
+@media(max-width:760px){.performanceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.performanceMetric{padding:11px}.performanceMetric>strong{font-size:22px}}
