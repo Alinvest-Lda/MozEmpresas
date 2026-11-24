@@ -15,10 +15,12 @@ const renewalStatus:Record<string,string>={NOT_REVIEWED:"Por avaliar",REVIEW_REQ
 export default async function PartnerControlPage({searchParams}:{searchParams:Promise<{error?:string;saved?:string}>}){
  const {supabase,authorized}=await getSuperAdminContext();if(!authorized)return null;
  const params=await searchParams;
- const [{data,error},{data:staffData}]=await Promise.all([
+ const [{data,error},{data:staffData},{data:performanceData,error:performanceError}]=await Promise.all([
   supabase.rpc("admin_partner_execution_renewal_dashboard_f362"),
-  supabase.rpc("admin_list_platform_staff")
+  supabase.rpc("admin_list_platform_staff"),
+  supabase.rpc("admin_partner_relationship_performance_f364")
  ]);
+ const performance=(performanceData??{}) as Performance;
  const d=(data??{}) as Dashboard, staff=(staffData??[]) as Array<{user_id:string;full_name:string;role:string}>;
  const staffName=(id:string|null)=>staff.find(x=>x.user_id===id)?.full_name||"Não atribuído";
  const errors:Record<string,string>={renewal:"Não foi possível actualizar o plano de renovação. Confirme o estado, responsável, prazo e justificação."};
@@ -55,7 +57,7 @@ export default async function PartnerControlPage({searchParams}:{searchParams:Pr
      {(performance.accounts??[]).length===0?<p className={styles.empty}>Ainda não existem entidades institucionais registadas.</p>:<div className={styles.scorecards}>{performance.accounts.map(a=><article key={a.account_id} className={styles.scorecard}>
       <div className={styles.scoreHead}><div><h3>{a.account_name}</h3><span>{a.operating_model} · {a.portal_enabled?"Portal activo":"Gestão sem portal"}</span></div><b className={a.relationship_status==="CRITICAL"?styles.critical:a.relationship_status==="FOLLOW_UP"?styles.followUp:a.relationship_status==="ON_TRACK"?styles.onTrack:styles.noData}>{a.relationship_status==="CRITICAL"?"Crítica":a.relationship_status==="FOLLOW_UP"?"Seguimento":a.relationship_status==="ON_TRACK"?"Sem alerta":"Dados insuficientes"}</b></div>
       <div className={styles.scoreMetrics}><span>Execuções concluídas <b>{a.engagements_completed}/{a.engagements_total}</b>{a.engagement_completion_rate!==null?<small>{a.engagement_completion_rate}%</small>:null}</span><span>Em atraso <b>{a.engagements_overdue}</b></span><span>Entregas tardias <b>{a.engagements_delivered_late}</b></span><span>Relatórios entregues <b>{a.reports_delivered}/{a.reports_total}</b>{a.report_delivery_rate!==null?<small>{a.report_delivery_rate}%</small>:null}</span><span>Relatórios pendentes/falhados <b>{a.reports_pending}/{a.reports_failed}</b></span><span>Contratos expirados <b>{a.contracts_expired_active}</b></span><span>Contratos a expirar (30 dias) <b>{a.contracts_expiring_30}</b></span><span>Benefícios/campanhas activos <b>{a.active_entitlements}/{a.active_campaigns}</b></span></div>
-      {Object.keys(a.risk_signals??{}).length>0?<div className={styles.riskSignals}>{Object.entries(a.risk_signals).map(([key,value])=><span key={key}>{key.replaceAll("_"," ")}: <b>{value}</b></span>)}</div>:null}
+      {Object.keys(a.risk_signals??{}).length>0?<div className={styles.riskSignals}>{Object.entries(a.risk_signals).map(([key,value])=><span key={key}>{key.replaceAll("_"," ")}: <b>{String(value)}</b></span>)}</div>:null}
      </article>)}</div>}
     </>}
    </section>
