@@ -64,7 +64,7 @@ export function PlatformServiceRequestForm({
   return (
     <form action={action} className="service-request-form">
       <input type="hidden" name="serviceId" value={serviceId} />
-      <input type="hidden" name="purchaseKey" value={purchaseKey} />\n      <input type="hidden" name="purchaseKey" value={purchaseKey} />
+      <input type="hidden" name="purchaseKey" value={purchaseKey} />
 
       <div className="service-form-heading">
         <span className="dashboard-kicker">Contratar este serviço</span>
@@ -111,7 +111,13 @@ export function PlatformServiceRequestForm({
         </select>
       </label> : null}
 
-      {price != null && paymentMethod === "MPESA" ? <label>\n        <span>Número M-Pesa para efectuar o pagamento</span>\n        <input name="customerMsisdn" inputMode="numeric" autoComplete="tel" maxLength={12} defaultValue={savedMsisdn} placeholder="258841234567" required pattern="2588[2-9][0-9]{7}" title="Use o formato 258XXXXXXXXX" />\n        <small>O pedido de pagamento será enviado para este número. Pode alterar o número guardado na sua conta.</small>\n      </label> : null}\n\n      {state.error ? <p className="service-form-error">{state.error}</p> : null}
+      {price != null && paymentMethod === "MPESA" ? <label>
+        <span>Número M-Pesa para efectuar o pagamento</span>
+        <input name="customerMsisdn" inputMode="numeric" autoComplete="tel" maxLength={12} defaultValue={savedMsisdn} placeholder="258841234567" required pattern="2588[2-9][0-9]{7}" title="Use o formato 258XXXXXXXXX" />
+        <small>O pedido de pagamento será enviado para este número. Pode alterar o número guardado na sua conta.</small>
+      </label> : null}
+
+      {state.error ? <p className="service-form-error">{state.error}</p> : null}
 
       <div className="service-form-submit">
         <div>
