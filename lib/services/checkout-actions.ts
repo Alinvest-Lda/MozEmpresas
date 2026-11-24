@@ -170,6 +170,81 @@ export async function purchasePlatformService(formData: FormData) {
   return { success: true, orderId, pending: true };
 }
 
+export async function reconcileMpesaServicePayment(formData: FormData) {
+  const s = await createClient();
+  const { data: { user } } = await s.auth.getUser();
+  if (!user) redirect("/login");
+
+  const paymentId = text(formData.get("paymentId"));
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(paymentId)) {
+    redirect("/dashboard/financeiro");
+  }
+
+  // RLS first establishes that the signed-in user can see this payment.
+  const { data: visiblePayment } = await s
+    .from("financial_payments")
+    .select("id,business_id,reference,method,status,mpesa_third_party_reference,mpesa_conversation_id")
+    .eq("id", paymentId)
+    .eq("method", "MPESA")
+    .maybeSingle();
+
+  if (!visiblePayment || !visiblePayment.business_id
+      || !visiblePayment.reference?.startsWith("SERVICE:")
+      || !(await access(s, user.id, visiblePayment.business_id))) {
+    redirect("/dashboard/financeiro");
+  }
+  if (visiblePayment.status !== "PENDING" || !visiblePayment.mpesa_third_party_reference) {
+    revalidatePath("/dashboard/financeiro");
+    redirect("/dashboard/financeiro");
+  }
+
+  let config: ReturnType<typeof getMpesaConfigFromEnv>;
+  let privileged: ReturnType<typeof createServiceRoleClient>;
+  try {
+    config = getMpesaConfigFromEnv();
+    privileged = createServiceRoleClient();
+  } catch {
+    redirect("/dashboard/financeiro");
+  }
+
+  const queryReference = visiblePayment.mpesa_conversation_id || visiblePayment.mpesa_third_party_reference;
+  try {
+    const response = await createMpesaClient(config).queryTransactionStatus({
+      thirdPartyReference: visiblePayment.mpesa_third_party_reference,
+      queryReference,
+      serviceProviderCode: config.serviceProviderCode,
+    });
+
+    const returnedReference = response.output_ThirdPartyReference?.trim();
+    if (returnedReference && returnedReference !== visiblePayment.mpesa_third_party_reference) {
+      redirect("/dashboard/financeiro");
+    }
+    const transactionStatus = response.output_ResponseTransactionStatus;
+    if (!transactionStatus || !["Completed", "Cancelled", "Expired", "N/A"].includes(transactionStatus)) {
+      redirect("/dashboard/financeiro");
+    }
+
+    const { error } = await privileged.rpc("record_mpesa_platform_service_status", {
+      p_payment_reference: visiblePayment.reference,
+      p_third_party_reference: visiblePayment.mpesa_third_party_reference,
+      p_conversation_id: response.output_ConversationID || visiblePayment.mpesa_conversation_id || null,
+      p_transaction_status: transactionStatus,
+      p_response_code: response.output_ResponseCode || "UNKNOWN",
+      p_response_desc: response.output_ResponseDesc || "Consulta de estado recebida sem descrição do fornecedor.",
+      p_checked_at: new Date().toISOString(),
+    });
+    if (error) {
+      // Do not expose provider payloads or database errors to the browser.
+      redirect("/dashboard/financeiro");
+    }
+  } catch {
+    // A status lookup is read-only; the payment remains pending on lookup failure.
+  }
+
+  revalidatePath("/dashboard/financeiro");
+  redirect("/dashboard/financeiro");
+}
+
 export async function adminCancelPlatformServiceOrder(formData: FormData): Promise<void> {
   const s = await createClient();
   const { data: { user } } = await s.auth.getUser();
