@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import styles from "./monetizacao.module.css";
 import FinancialAuditActions from "./financial-audit-actions";
+import MpesaSandboxTestPanel from "./mpesa-sandbox-test";
 
 const statusLabels: Record<string, string> = { ACTIVE: "Activo", INACTIVE: "Inactivo", PENDING: "Pendente", RUNNING: "Em execução", PAUSED: "Em pausa", EXPIRED: "Expirado", CANCELLED: "Cancelado", APPROVED: "Aprovado" };
 const formatMoney = (value: number | string | null, currency = "MZN") => value == null ? "Não definido" : `${Number(value).toLocaleString("pt-MZ", { maximumFractionDigits: 2 })} ${currency}`;
@@ -75,6 +76,7 @@ export default async function AdminMonetizationPage() {
   return (
     <main className={`dashboard-main admin-workspace ${styles.page}`}>
       <div className={`dashboard-content ${styles.content}`}>
+        <MpesaSandboxTestPanel />
         <header className={styles.hero}>
           <div className={styles.heroCopy}>
             <span className={styles.eyebrow}>Administração global</span>
