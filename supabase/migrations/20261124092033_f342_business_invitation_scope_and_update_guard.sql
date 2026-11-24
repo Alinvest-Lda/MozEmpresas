@@ -1,4 +1,3 @@
-
 -- F3.42: close invitation self-escalation and restore the advertised admin flow.
 revoke update on table public.business_invitations from authenticated;
 grant update (accepted_at) on table public.business_invitations to authenticated;

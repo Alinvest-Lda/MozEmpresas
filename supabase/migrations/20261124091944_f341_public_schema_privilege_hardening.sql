@@ -1,4 +1,3 @@
-
 -- F3.41: close table-level privilege paths that bypass row-level security.
 revoke truncate, references, trigger, maintain
   on all tables in schema public
