@@ -43,7 +43,7 @@ begin
  v_reason:=coalesce(nullif(current_setting('app.partner_change_reason',true),''),'Alteração administrativa registada');
  insert into public.partner_relationship_audit(entity_type,entity_id,account_id,actor_user_id,action,before_state,after_state,reason)
  values(case when tg_table_name='partner_accounts' then 'PARTNER_ACCOUNT' else 'PARTNER_CONTACT' end,v_entity,v_account,auth.uid(),v_action,v_before,v_after,v_reason);
- return coalesce(new,old);
+ return null;
 end $$;
 revoke all on function public.capture_partner_relationship_audit() from public,anon,authenticated;
 drop trigger if exists partner_accounts_audit_capture on public.partner_accounts;
