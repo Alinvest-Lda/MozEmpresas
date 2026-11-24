@@ -85,7 +85,7 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
         ) : null}
 
         {params.error ? <div className={styles.errorNotice} role="alert">{errorMessages[params.error] || "Não foi possível concluir a operação. Tente novamente."}</div> : null}
-        {params.access ? <div className={params.access==="revoked" ? styles.noticeInfo : styles.errorNotice} role={params.access==="revoked"?"status":"alert"}>{accessMessages[params.access] || "Não foi possível concluir a operação de acesso."}</div> : null}
+        {params.access && accessMessages[params.access] ? <div className={params.access==="revoked" ? styles.noticeInfo : styles.errorNotice} role={params.access==="revoked"?"status":"alert"}>{accessMessages[params.access]}</div> : null}
         {params.billing ? <div className={params.billing==="success" ? styles.noticeInfo : styles.errorNotice} role={params.billing==="success"?"status":"alert"}>{params.billing==="success"?"Associação empresarial actualizada. A carteira de créditos dessa empresa poderá ser usada para campanhas da conta Parceiro.":params.billing==="BUSINESS_ALREADY_LINKED_TO_PARTNER"?"Esta empresa já está associada a outra conta Parceiro.":params.billing==="BUSINESS_NOT_AVAILABLE"?"A empresa seleccionada não está disponível.":params.billing==="invalid"?"Selecção inválida.": "Não foi possível actualizar a associação empresarial."}</div> : null}
 
         <div className={styles.mainGrid}>
