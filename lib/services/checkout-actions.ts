@@ -107,9 +107,8 @@ export async function purchasePlatformService(formData: FormData) {
   const privileged = createServiceRoleClient();
 
   const { error: profileUpdateError } = await s
-    .from("profiles")
-    .update({ mpesa_msisdn: customerMsisdn })
-    .eq("id", user.id);
+    .from("user_payment_settings")
+    .upsert({ user_id: user.id, mpesa_msisdn: customerMsisdn }, { onConflict: "user_id" });
   if (profileUpdateError) {
     return { error: "Não foi possível guardar o número M-Pesa na sua conta." };
   }
