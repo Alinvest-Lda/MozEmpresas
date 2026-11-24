@@ -1,69 +1,75 @@
-# M-Pesa Open API — integration readiness
+# M-Pesa Open API — Sandbox integration readiness
 
 **Checked:** 24 November 2026  
 **Repository:** `Alinvest-Lda/MozEmpresas`, branch `main`
 
-## Confirmed production configuration
+## Sandbox configuration
 
-The Vercel Production environment was inspected without decrypting or printing secret values:
+The implementation is deliberately locked to Vodacom Sandbox. The server refuses to load M-Pesa configuration unless both conditions are true:
 
-- `MPESA_API_KEY`: present as a protected Secret.
-- `MPESA_PUBLIC_KEY`: present.
-- `MPESA_API_BASE_URL`: `https://api.vm.co.mz`.
-- `MPESA_MERCHANT_CODE`: present; this is the application's current internal merchant identifier used by the legacy callback implementation.
-- `MPESA_SERVICE_PROVIDER_CODE`: present, configured as `902809`, based on the Organization Shortcode supplied for this merchant account.
-- `MPESA_ORIGIN`: configured provisionally as `developer.mpesa.vm.co.mz`.
-- `MPESA_C2B_PORT`: configured provisionally as `18352`.
-- `MPESA_STATUS_PORT`: configured provisionally as `18353`.
-- `MPESA_WEBHOOK_SECRET`: deliberately absent. Do not create or require a Vodacom shared secret unless the authenticated account documentation explicitly defines one.
+- `MPESA_ENVIRONMENT=sandbox`
+- `MPESA_API_BASE_URL=https://api.sandbox.vm.co.mz`
 
-The Organization Shortcode and Service Provider Code are being treated as the same merchant identifier (`902809`) for this configuration. This mapping must be checked against the merchant's account/API application details in the Vodacom portal; it is not a reason to invent a second shortcode.
+Sandbox routing values reflected in the supplied HTTP/API examples:
 
-Environment-variable presence does not prove that credentials are valid, that the application is approved for production, or that the gateway accepts the configured routing values. Values were not decrypted.
+- C2B Single Stage: `POST`, port `18352`, path `/ipg/v1x/c2bPayment/singleStage/`.
+- Query Transaction Status: `GET`, port `18353`, path `/ipg/v1x/queryTransactionStatus/`.
+- Origin: `developer.mpesa.vm.co.mz`.
+- Service Provider Code: `902809` (the Organization Shortcode supplied for this merchant account).
+- API Key and Public Key remain server-side secrets and must never be prefixed with `NEXT_PUBLIC_`.
+- `MPESA_MERCHANT_CODE` remains a legacy internal identifier; it is not substituted for Service Provider Code.
+- No `MPESA_WEBHOOK_SECRET` is assumed or fabricated.
 
-## Current implementation state
+The Sandbox host/ports and request contract are based on the user's supplied Vodacom portal material and HTTP example. A successful mocked test validates our request construction, not the provider's acceptance of a live Sandbox request.
 
-- Added `lib/payments/mpesa-client.ts`, a server-only client for RSA Bearer authorization, C2B Single Stage initiation, and Query Transaction Status.
-- The authorization implementation follows the supplied Java SDK/portal material: 32-character API Key, X.509 DER/SPKI RSA public key, PKCS#1 v1.5 encryption, and Base64 ciphertext in the Bearer header. The public key is checked to be RSA-4096.
-- The client uses HTTPS, explicit operation ports, the configured Origin header, JSON content type, a 15-second timeout, no-store requests, and does not log credentials or request bodies.
-- C2B request fields are mapped to the five documented `input_*` names and serialized as a JSON object, matching the user-supplied Single Stage HTTP example: `POST /ipg/v1x/c2bPayment/singleStage/`, `Content-Type: application/json`, `Authorization: Bearer <RSA-encrypted API Key>`, and `Origin: developer.mpesa.vm.co.mz`. The request body contains `input_TransactionReference`, `input_CustomerMSISDN`, `input_Amount`, `input_ThirdPartyReference`, and `input_ServiceProviderCode`, all strings. The matching request shape is now covered by the client test; a sandbox transaction is still required to verify provider acceptance.
-- Query Transaction Status uses the documented three query parameters and the `GET` method.
-- Added `lib/payments/mpesa-client.test.ts` with mocked HTTP tests and a generated RSA key pair. The tests have been committed but have not yet been executed by a confirmed CI run.
-- The M-Pesa service checkout still creates a pending order only; it is intentionally not wired to initiate a live charge until the C2B Request Package and production routing are verified.
-- The current webhook route still expects a custom JSON payload and HMAC headers (`x-mpesa-timestamp`, `x-mpesa-signature`) and requires `MPESA_WEBHOOK_SECRET`.
-- The supplied Vodacom callback specification defines a different asynchronous payload (`input_OriginalConversationID`, `input_ThirdPartyReference`, `input_TransactionID`, `input_ResultCode`, `input_ResultDesc`) and the four-field acknowledgement response. It does not define callback authentication/signature headers or a Vodacom shared secret.
-- The existing HMAC route must therefore remain fail-closed until a secure callback authenticity mechanism is agreed with Vodacom. Do not add a made-up Vodacom secret or disable authenticity checks.
-- Callback data must not settle an order or wallet until it has been authenticated and reconciled against a server-to-server transaction-status query, unless the official account specification prescribes a different safe sequence.
-- No live payment, sandbox payment, or production transaction has been attempted.
+## Implemented in the repository
 
-## Callback / webhook decision
+- `lib/payments/mpesa-client.ts`: server-only RSA Bearer token generation (32-character API Key, X.509 DER/SPKI RSA-4096 public key, PKCS#1 v1.5, Base64 ciphertext), HTTPS-only requests, JSON headers, Origin header, 15-second timeout and no request/credential logging.
+- The client exposes C2B Single Stage and Query Transaction Status using the documented request fields.
+- Sandbox-only environment guard prevents accidentally routing this checkout to the Production host.
+- Account settings include a private M-Pesa payer number field. Numbers are stored in `public.user_payment_settings`, not in the public-readable `profiles` relation.
+- `user_payment_settings` has RLS enabled, authenticated-user-only grants, and policies restricting SELECT/INSERT/UPDATE to the row whose `user_id` equals `auth.uid()`. Anonymous access is denied.
+- The checkout pre-fills the saved number, permits a checkout-time change, validates the Mozambique international format (`258XXXXXXXXX`), and sends it as `input_CustomerMSISDN`.
+- Checkout creates the existing idempotent pending service order, stores the payer MSISDN and unique third-party reference in `financial_payments`, and then calls the Sandbox C2B endpoint with the five documented string fields.
+- Provider conversation ID, response code and description are stored for later reconciliation. A network timeout is treated as an unknown outcome; the code does not blindly retry and risk issuing a duplicate request.
+- Database migrations add the payment correlation fields and private payer settings. They have been applied to the connected Supabase project and verified by read-only schema/privilege queries.
+- Automated client tests cover RSA token encryption, C2B payload/headers, status query parameters, and rejection of Production environment configuration.
 
-- A Vodacom asynchronous result listener is required when the merchant account/API is configured for asynchronous C2B responses: the portal specification says the platform posts the final result to the Response URL configured under My Account, and the third party must acknowledge it with `output_OriginalConversationID`, `output_ResponseDesc`, `output_ResponseCode`, and `output_ThirdPartyConversationID`.
-- A webhook is not required only if the merchant account is configured for synchronous responses and the synchronous C2B response contract is implemented and verified to provide a definitive transaction outcome. The currently supplied material names a synchronous mode but does not include its complete response schema or prove the account is configured for it.
-- Therefore do not delete the callback route or unregister the Response URL on the basis of the current evidence. The legacy route expects an unverified custom HMAC protocol and correctly fails closed because `MPESA_WEBHOOK_SECRET` is absent; it must not be treated as the Vodacom callback implementation.
-- No Vodacom-provided webhook secret has been established. The absence of such a secret does not mean the asynchronous callback can safely be accepted without authentication. Obtain the supported callback authentication/verification procedure from Vodacom, or use verified synchronous mode.
-- The existing `MPESA_WEBHOOK_SECRET` variable is not configured and must not be invented. Do not remove the route until synchronous mode and its definitive response handling have been verified.
+## Important payment-state boundary
 
-## What public Vodacom documentation establishes
+An accepted C2B request or an initial `INS-0` response is not treated as proof that the customer completed payment. The current checkout deliberately leaves the order/payment pending. It does not activate a subscription, mark the invoice paid, or credit a wallet merely because the API request returned.
 
-Vodacom's public Mozambique page lists C2B (synchronous and asynchronous), B2C, B2B, reversals, and Query Transaction Status, and directs developers to the authenticated portal:
+The Query Transaction Status client exists, but a complete production-safe settlement flow still requires the definitive provider transaction identifier and response mapping to the existing settlement RPCs. The supplied status response documents `output_ResponseTransactionStatus` and `output_ConversationID`; it does not establish a separate provider transaction ID field in that response.
 
-- Public API overview: https://www.vm.co.mz/m-pesa/artigo/api-aberta-do-m-pesa
-- Developer portal: https://developer.mpesa.vm.co.mz/
-- M-Pesa Business contact: https://www.vm.co.mz/m-pesa/artigo/apoio-ao-cliente (M-Pesa.Business@vm.co.mz; 84 09 00 000)
+## Callback / webhook boundary
 
-The public overview does not publish the account-specific authentication exchange, exact operation paths/ports, request and response schemas, callback authentication, callback retry rules, or production enablement state. Community references to port 18352 for C2B, port 18353 for status query, and paths such as `/ipg/v1x/c2bPayment/singleStage/` and `/ipg/v1x/queryTransactionStatus/` are clues only and must not be treated as confirmed account configuration.
+The existing `app/api/webhooks/payments/mpesa/route.ts` is a legacy custom callback that expects HMAC headers and a custom payload. It is not the Vodacom callback format.
 
-## Evidence still required from the authenticated portal / Vodacom
+The supplied Vodacom asynchronous callback payload is:
 
-1. Sandbox/UAT execution of the supplied C2B Single Stage request example to verify that Vodacom accepts the documented JSON body and headers.
-2. Production Resource URLs and ports for C2B and Query Transaction Status; the supplied operation references currently show Sandbox host `api.sandbox.vm.co.mz`, C2B port `18352`, and status port `18353`.
-3. Callback authenticity mechanism, retry policy, and any account-specific callback requirements. The payload and acknowledgement format are now documented, but authenticity is not.
-4. Confirmation that `902809` is the Service Provider Code attached to these production credentials and that the application is approved/live.
-5. Sandbox/UAT credentials or an approved test procedure, plus confirmation whether the merchant account is configured for asynchronous responses.
+- `input_OriginalConversationID`
+- `input_ThirdPartyReference`
+- `input_TransactionID`
+- `input_ResultCode`
+- `input_ResultDesc`
 
-Next implementation steps are to execute the documented C2B request in Sandbox/UAT, run the committed mocked tests in CI, obtain Vodacom's callback authenticity procedure or verify the complete synchronous response mode, and connect checkout only after the order's customer MSISDN and reference mapping are verified. Perform sandbox/UAT before production enablement. Never trigger a real charge without explicit authorization.
+The acknowledgement contains:
 
-## Configuration follow-up — 24 November 2026
+- `output_OriginalConversationID`
+- `output_ResponseDesc`
+- `output_ResponseCode`
+- `output_ThirdPartyConversationID`
 
-The Production variables above were added/updated in Vercel. A new deployment is required for changed Production variables to become available to a running deployment. The latest repository commit for this configuration is `59716efb0ddb89463a84a084f344c621f2e82817`. Its Vercel status check reported success; no GitHub Actions workflow run was returned for that SHA. A successful hosting status check does not establish that the M-Pesa protocol is implemented or that a real transaction works.
+The material supplied so far does not define Vodacom callback authentication/signature headers or a shared secret. The legacy HMAC handler therefore remains fail-closed and must not be mistaken for a verified Vodacom listener. Do not register an asynchronous Response URL or accept unauthenticated callbacks until the account's callback authenticity procedure is confirmed. If the account uses synchronous mode, the complete synchronous response contract must still be verified before settlement is automated.
+
+## What remains before a real Sandbox payment test
+
+1. Ensure the runtime that executes the server action has the Sandbox values for `MPESA_ENVIRONMENT`, `MPESA_API_KEY`, `MPESA_PUBLIC_KEY`, `MPESA_API_BASE_URL`, `MPESA_ORIGIN`, `MPESA_C2B_PORT`, `MPESA_STATUS_PORT`, and `MPESA_SERVICE_PROVIDER_CODE`.
+2. Confirm the target test MSISDN is enabled/eligible in Vodacom Sandbox and has test balance/credentials as required by the provider.
+3. Run the app from an environment with those Sandbox secrets; submit one M-Pesa checkout and record the returned Conversation ID / ThirdPartyReference.
+4. Query the transaction status using the documented endpoint and reconcile the exact response with Vodacom's Sandbox behaviour.
+5. Only after the final transaction identifier and verified outcome mapping are established should we connect status reconciliation to the existing settlement RPCs.
+
+## Scope of this intervention
+
+Changes were made on GitHub `main` and in the connected Supabase database only. No Vercel configuration, deployment, or live Production call was performed. No real or Sandbox charge has yet been executed from this session.
