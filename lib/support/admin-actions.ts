@@ -47,7 +47,7 @@ export async function updateSupportTicketStatus(formData: FormData): Promise<voi
   redirect("/dashboard/admin/suporte?result=success");
 }
 
-export async function replySupportAsStaff(formData: FormData): Promise<{ success: true } | { error: string }> {
+export async function replySupportAsStaff(formData: FormData): Promise<{ success: true } | { error: string; saved?: boolean }> {
   const parsed = replySchema.safeParse({ ticketId: formData.get("ticket_id"), body: formData.get("body") });
   if (!parsed.success) return { error: "A resposta é inválida ou excede o limite permitido." };
   const { supabase, user, authorized } = await getSuperAdminContext();
