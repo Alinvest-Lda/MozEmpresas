@@ -32,6 +32,18 @@
 4. Review Supabase Security Advisor findings and enable leaked-password protection after confirming the Auth policy rollout.
 5. Run the complete application build and integrated workflows when Vercel's deployment quota is available.
 
+## Follow-up F3.33 — single active user per partner organization
+
+A live Supabase migration was applied after the initial read-only audit:
+
+- Added the partial unique index `partner_account_members_one_active_user_per_account_uidx` on `account_id WHERE active = true`.
+- Hardened account-bound invitation creation: only an active Super Admin can create it; the account must be active and portal-enabled; an existing active member or unexpired pending invitation blocks another invite for that account; token hash and expiry are validated.
+- Hardened invitation claim: it locks the grant and account, verifies the authenticated user ID and matching email, rejects a second active user for the same organization, and marks the grant accepted only after membership succeeds.
+- Historical inactive memberships remain available.
+- Verified the index exists, there are zero active account conflicts, and the invitation create/claim RPCs are not executable by `anon`.
+
+The migration is recorded as `20261124214209_f375_enforce_single_active_partner_user_per_organization`.
+
 ## Closure decision
 
-This checkpoint records verified posture and narrows the remaining security work. It does **not** declare F3.32 closed and does not increase the global closure percentage. No live database permissions were modified because the reviewed public functions and policy-less tables require context-sensitive handling.
+F3.32/F3.33 remain **in progress**. The database now enforces one active login per partner organization, but the invitation flow still needs an authenticated end-to-end test, including expiry, replay, email mismatch, and competing invite attempts. The role matrix and two-tenant isolation tests also remain outstanding. No global closure percentage is increased by this single intervention.
