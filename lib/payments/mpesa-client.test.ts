@@ -57,7 +57,11 @@ describe("M-Pesa Open API client", () => {
     const [url, init] = fetchMock.mock.calls[0] as [URL, RequestInit];
     expect(String(url)).toBe("https://api.sandbox.vm.co.mz:18352/ipg/v1x/c2bPayment/singleStage/");
     expect(init.method).toBe("POST");
-    expect(new Headers(init.headers).get("authorization")).toMatch(/^Bearer /);
+    const headers = new Headers(init.headers);
+    expect(headers.get("authorization")).toMatch(/^Bearer /);
+    expect(headers.get("content-type")).toBe("application/json");
+    expect(headers.get("origin")).toBe("developer.mpesa.vm.co.mz");
+    expect(headers.get("accept")).toBe("application/json");
     expect(JSON.parse(String(init.body))).toEqual({
       input_TransactionReference: "SERVICE-ORDER-1",
       input_CustomerMSISDN: "258841234567",
