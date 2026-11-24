@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { updateAccountStatus, updatePassword, updateProfile } from "@/lib/account/actions";
 import type { AccountState } from "@/lib/account/actions";
 
-export function ProfileForm({ initial }: { initial: { fullName: string; location: string; website: string; bio: string } }) {
+export function ProfileForm({ initial }: { initial: { fullName: string; location: string; website: string; bio: string; mpesaMsisdn: string } }) {
   const [state, action, pending] = useActionState<AccountState, FormData>(updateProfile, {});
   return <form action={action} className="account-form">
     <div className="account-form-grid">
@@ -14,6 +14,10 @@ export function ProfileForm({ initial }: { initial: { fullName: string; location
       <label><span>Website</span><input name="website" type="url" defaultValue={initial.website} placeholder="https://..." /></label>
     </div>
     <label><span>Apresentação</span><textarea name="bio" rows={4} defaultValue={initial.bio} placeholder="Uma breve apresentação sobre si." /></label>
+    <div className="account-form-grid">
+      <label><span>Número M-Pesa para pagamentos</span><input name="mpesaMsisdn" inputMode="numeric" autoComplete="tel" maxLength={12} defaultValue={initial.mpesaMsisdn} placeholder="258841234567" aria-describedby="mpesa-msisdn-help" /></label>
+    </div>
+    <p id="mpesa-msisdn-help" className="form-hint">Número privado usado quando paga serviços no MozEmpresas. Introduza o formato internacional, por exemplo 258841234567. Não será publicado no perfil da empresa.</p>
     {state.error && <p className="notice">{state.error}</p>}{state.success && <p className="account-success">{state.success}</p>}
     <button className="btn primary" disabled={pending}>{pending ? "A guardar..." : "Guardar alterações"}</button>
   </form>;
