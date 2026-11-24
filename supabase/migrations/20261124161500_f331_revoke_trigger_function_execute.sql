@@ -1,0 +1,2 @@
+revoke all on function public.f331_capture_financial_audit_action_history() from public, anon, authenticated;
+revoke all on function public.f331_restrict_financial_audit_history_mutation() from public, anon, authenticated;
