@@ -208,37 +208,32 @@ export async function reconcileMpesaServicePayment(formData: FormData) {
   }
 
   const queryReference = visiblePayment.mpesa_conversation_id || visiblePayment.mpesa_third_party_reference;
+  let response: Awaited<ReturnType<ReturnType<typeof createMpesaClient>["queryTransactionStatus"]>> | null = null;
   try {
-    const response = await createMpesaClient(config).queryTransactionStatus({
+    response = await createMpesaClient(config).queryTransactionStatus({
       thirdPartyReference: visiblePayment.mpesa_third_party_reference,
       queryReference,
       serviceProviderCode: config.serviceProviderCode,
     });
-
-    const returnedReference = response.output_ThirdPartyReference?.trim();
-    if (returnedReference && returnedReference !== visiblePayment.mpesa_third_party_reference) {
-      redirect("/dashboard/financeiro");
-    }
-    const transactionStatus = response.output_ResponseTransactionStatus;
-    if (!transactionStatus || !["Completed", "Cancelled", "Expired", "N/A"].includes(transactionStatus)) {
-      redirect("/dashboard/financeiro");
-    }
-
-    const { error } = await privileged.rpc("record_mpesa_platform_service_status", {
-      p_payment_reference: visiblePayment.reference,
-      p_third_party_reference: visiblePayment.mpesa_third_party_reference,
-      p_conversation_id: response.output_ConversationID || visiblePayment.mpesa_conversation_id || null,
-      p_transaction_status: transactionStatus,
-      p_response_code: response.output_ResponseCode || "UNKNOWN",
-      p_response_desc: response.output_ResponseDesc || "Consulta de estado recebida sem descrição do fornecedor.",
-      p_checked_at: new Date().toISOString(),
-    });
-    if (error) {
-      // Do not expose provider payloads or database errors to the browser.
-      redirect("/dashboard/financeiro");
-    }
   } catch {
-    // A status lookup is read-only; the payment remains pending on lookup failure.
+    // Read-only lookup failed; keep the original payment state unchanged.
+  }
+
+  if (response) {
+    const returnedReference = response.output_ThirdPartyReference?.trim();
+    const transactionStatus = response.output_ResponseTransactionStatus;
+    const validStatus = transactionStatus && ["Completed", "Cancelled", "Expired", "N/A"].includes(transactionStatus);
+    if ((!returnedReference || returnedReference === visiblePayment.mpesa_third_party_reference) && validStatus) {
+      await privileged.rpc("record_mpesa_platform_service_status", {
+        p_payment_reference: visiblePayment.reference,
+        p_third_party_reference: visiblePayment.mpesa_third_party_reference,
+        p_conversation_id: response.output_ConversationID || visiblePayment.mpesa_conversation_id || null,
+        p_transaction_status: transactionStatus,
+        p_response_code: response.output_ResponseCode || "UNKNOWN",
+        p_response_desc: response.output_ResponseDesc || "Consulta de estado recebida sem descrição do fornecedor.",
+        p_checked_at: new Date().toISOString(),
+      });
+    }
   }
 
   revalidatePath("/dashboard/financeiro");
