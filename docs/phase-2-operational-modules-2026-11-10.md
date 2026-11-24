@@ -622,3 +622,12 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
   - `20261124235000_f339_business_service_and_partner_lifecycle_notifications.sql`
   - `20261125001000_f340_use_canonical_account_audit_for_notifications.sql`
 - Não foram executados testes integrados, de duplicação ou de isolamento nesta tranche; ficam para a etapa posterior ao fecho global da implementação.
+
+
+## F3.41 — Notificações do ciclo de oportunidades (25/11/2026)
+
+- Alterações de estado de uma candidatura geram notificação ao candidato, com referência à oportunidade e estados anterior/novo.
+- Alterações de estado de uma oportunidade geram notificação ao titular registado, sem notificar o próprio actor que efectuou a alteração.
+- O evento de nova candidatura mantém a notificação existente ao titular; esta tranche completa a comunicação das transições subsequentes.
+- Migration aplicada: `20261125003000_f341_opportunity_lifecycle_notifications.sql`.
+- Implementação registada no commit `ce99da7`. Não foram executados testes integrados ou validações finais.
