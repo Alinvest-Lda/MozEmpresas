@@ -25,13 +25,12 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
     supabase.rpc("admin_partner_access_members_list"),
   ]);
   const activePartnerAccesses = Array.isArray(memberAccessData) ? memberAccessData : [];
-  const [{data: partnerAccounts},{data: businesses},{data: activePartnerMembers}] = await Promise.all([
+  const [{data: partnerAccounts},{data: businesses}] = await Promise.all([
     supabase.from("partner_accounts").select("id,name,status,business_id,portal_enabled").order("name").limit(200),
-    supabase.from("businesses").select("id,name").is("archived_at",null).order("name").limit(500),
-    supabase.from("partner_account_members").select("account_id").eq("active",true).limit(500),
+    supabase.from("businesses").select("id,name").is("archived_at",null).order("name").limit(500)
   ]);
-  const assignedPartnerAccountIds = new Set((activePartnerMembers ?? []).map((member:any)=>member.account_id));
-  const eligiblePartnerAccounts = (partnerAccounts ?? []).filter((account:any)=>
+  const assignedPartnerAccountIds = new Set(activePartnerAccesses.map((member:any)=>member.account_id));
+  const eligiblePartnerAccounts = memberAccessError ? [] : (partnerAccounts ?? []).filter((account:any)=>
     account.portal_enabled && account.status==="ACTIVE" && !assignedPartnerAccountIds.has(account.id)
   );
   const grants = (Array.isArray(grantsData) ? grantsData : []) as Array<{
