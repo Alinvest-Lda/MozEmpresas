@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireNormalAccount } from "@/lib/auth/access";
 import { getManagedBusinessIds } from "@/lib/businesses/permissions";
-import { canTransitionSupportTicket } from "@/lib/support/state-machine";
 
 const supportAreas = ["Técnico", "Comercial", "Conta e acessos", "Pagamentos e créditos", "Publicidade", "Serviços MozEmpresas"] as const;
 
@@ -27,17 +26,10 @@ export async function createSupportTicket(formData: FormData) {
     const managedIds = await getManagedBusinessIds(supabase, user.id);
     if (!managedIds.includes(businessId)) redirect("/dashboard/suporte?status=business-denied");
   }
-  const { data: ticket, error: ticketError } = await supabase.from("support_tickets").insert({
-    user_id: user.id, business_id: businessId, area, subject, status: "OPEN", priority: "NORMAL",
-  }).select("id").single();
-  if (ticketError || !ticket) redirect("/dashboard/suporte?status=error");
-  const { error: messageError } = await supabase.from("support_messages").insert({
-    ticket_id: ticket.id, sender_user_id: user.id, sender_role: "USER", body,
+  const { data: ticketId, error: ticketError } = await supabase.rpc("create_support_ticket_with_message", {
+    p_area: area, p_subject: subject, p_business_id: businessId, p_body: body,
   });
-  if (messageError) {
-    await supabase.from("support_tickets").delete().eq("id", ticket.id).eq("user_id", user.id);
-    redirect("/dashboard/suporte?status=error");
-  }
+  if (ticketError || !ticketId) redirect("/dashboard/suporte?status=error");
   revalidatePath("/dashboard/suporte");
   redirect("/dashboard/suporte?status=created");
 }
@@ -46,26 +38,9 @@ export async function addSupportMessage(formData: FormData) {
   const ticketId = String(formData.get("ticket_id") || "").trim();
   const body = String(formData.get("body") || "").trim();
   if (!ticketId || body.length < 1 || body.length > 5000) redirect("/dashboard/suporte?status=invalid");
-  const { supabase, user } = await activeUser();
-  const { data: ticket, error: ticketError } = await supabase.from("support_tickets")
-    .select("id,status").eq("id", ticketId).eq("user_id", user.id).maybeSingle();
-  if (ticketError || !ticket) redirect("/dashboard/suporte?status=reply-error");
-  if (ticket.status === "CLOSED") redirect("/dashboard/suporte?status=reply-closed");
-  const nextStatus = ticket.status === "WAITING_USER" ? "IN_PROGRESS" : ticket.status === "RESOLVED" ? "OPEN" : ticket.status;
-  if (nextStatus !== ticket.status && !canTransitionSupportTicket(ticket.status, nextStatus)) redirect("/dashboard/suporte?status=reply-error");
-  const { error: messageError } = await supabase.from("support_messages").insert({
-    ticket_id: ticketId, sender_user_id: user.id, sender_role: "USER", body,
-  });
-  if (messageError) redirect("/dashboard/suporte?status=reply-error");
-  if (nextStatus !== ticket.status) {
-    const { data: updated, error: updateError } = await supabase.from("support_tickets")
-      .update({ status: nextStatus, closed_at: null, updated_at: new Date().toISOString() })
-      .eq("id", ticketId).eq("user_id", user.id).eq("status", ticket.status);
-    if (updateError || !updated) {
-      revalidatePath("/dashboard/suporte");
-      redirect("/dashboard/suporte?status=reply-saved");
-    }
-  }
+  const { supabase } = await activeUser();
+  const { error } = await supabase.rpc("reply_to_support_ticket", { p_ticket_id: ticketId, p_body: body });
+  if (error) redirect("/dashboard/suporte?status=reply-error");
   revalidatePath("/dashboard/suporte");
   redirect("/dashboard/suporte?status=replied");
 }

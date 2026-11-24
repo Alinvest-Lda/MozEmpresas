@@ -47,31 +47,13 @@ export async function updateSupportTicketStatus(formData: FormData): Promise<voi
   redirect("/dashboard/admin/suporte?result=success");
 }
 
-export async function replySupportAsStaff(formData: FormData): Promise<{ success: true } | { error: string; saved?: boolean }> {
+export async function replySupportAsStaff(formData: FormData): Promise<{ success: true } | { error: string }> {
   const parsed = replySchema.safeParse({ ticketId: formData.get("ticket_id"), body: formData.get("body") });
   if (!parsed.success) return { error: "A resposta é inválida ou excede o limite permitido." };
   const { supabase, user, authorized } = await getSuperAdminContext();
   if (!user || !authorized) return { error: "Sem autorização para responder a atendimentos." };
-  const { data: ticket, error: ticketError } = await supabase.from("support_tickets")
-    .select("id,status").eq("id", parsed.data.ticketId).maybeSingle();
-  if (ticketError || !ticket) return { error: "Atendimento não encontrado." };
-  if (ticket.status === "CLOSED" || ticket.status === "RESOLVED") {
-    return { error: "Este atendimento está encerrado ou resolvido. Reabra-o antes de enviar uma nova resposta." };
-  }
-  const { error: messageError } = await supabase.from("support_messages").insert({
-    ticket_id: parsed.data.ticketId, sender_user_id: user.id, sender_role: "BACKOFFICE", body: parsed.data.body,
-  });
-  if (messageError) return { error: "Não foi possível registar a resposta." };
-  {
-    const { data: updated, error: updateError } = await supabase.from("support_tickets")
-      .update({ status: "WAITING_USER", updated_at: new Date().toISOString() })
-      .eq("id", parsed.data.ticketId).eq("status", ticket.status).select("id").maybeSingle();
-    if (updateError || !updated) {
-      revalidatePath("/dashboard/admin/suporte");
-      revalidatePath("/dashboard/suporte");
-      return { error: "A resposta foi registada, mas o estado mudou em simultâneo. Consulte o histórico antes de tentar novamente.", saved: true };
-    }
-  }
+  const { error } = await supabase.rpc("reply_to_support_ticket_as_staff", { p_ticket_id: parsed.data.ticketId, p_body: parsed.data.body });
+  if (error) return { error: "Não foi possível registar a resposta. Confirme o estado do atendimento e tente novamente." };
   revalidatePath("/dashboard/admin/suporte");
   revalidatePath("/dashboard/suporte");
   return { success: true };

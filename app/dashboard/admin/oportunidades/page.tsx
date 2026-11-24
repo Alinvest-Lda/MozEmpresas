@@ -100,6 +100,16 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
   if (deadlineFilter) filterParams.set("prazo", deadlineFilter);
   const queryString = filterParams.toString();
   const pageHref = (number: number) => "/dashboard/admin/oportunidades?" + [queryString, "page=" + number].filter(Boolean).join("&");
+  const pageIds = (opportunities ?? []).map((item) => item.id);
+  const { data: lifecycleEvents } = pageIds.length
+    ? await supabase.from("opportunity_events").select("id,opportunity_id,event_type,old_status,new_status,created_at").in("opportunity_id", pageIds).order("created_at", { ascending: false })
+    : { data: [] };
+  const eventsByOpportunity = new Map<string, any[]>();
+  for (const event of lifecycleEvents ?? []) {
+    const list = eventsByOpportunity.get(event.opportunity_id) ?? [];
+    list.push(event);
+    eventsByOpportunity.set(event.opportunity_id, list);
+  }
 
   return (
     <main className={`dashboard-main admin-workspace ${styles.page}`}>
@@ -166,7 +176,7 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
                   const closingSoon = item.status === "PUBLISHED" && Boolean(item.closes_at && new Date(item.closes_at).getTime() >= now.getTime() && new Date(item.closes_at).getTime() <= now.getTime() + 7 * 86400000);
                   const allowedNextStatuses = opportunityTransitions[item.status] ?? [];
                   return <tr key={item.id}>
-                    <td><div className={styles.opportunityCell}><strong>{item.title}</strong><small>{item.location || "Localização não indicada"} · Registada {dateLabel(item.created_at)}</small><span className={styles.description}>{(item.description || "Sem descrição").slice(0, 145)}{(item.description || "").length > 145 ? "…" : ""}</span>{item.status === "PUBLISHED" ? <Link className={styles.detailLink} href={"/oportunidades/" + item.slug} target="_blank" rel="noreferrer">Ver publicação ↗</Link> : null}</div></td>
+                    <td><div className={styles.opportunityCell}><strong>{item.title}</strong><small>{item.location || "Localização não indicada"} · Registada {dateLabel(item.created_at)}</small><details className={styles.history}><summary>Histórico ({(eventsByOpportunity.get(item.id) ?? []).length})</summary><ol>{(eventsByOpportunity.get(item.id) ?? []).map((event: any) => <li key={event.id}><strong>{event.event_type === "CREATED" ? "Publicação criada" : event.event_type === "BASELINE" ? "Histórico inicial" : "Estado actualizado"}</strong><span>{event.old_status ? (statusLabels[event.old_status] || event.old_status) + " → " : ""}{statusLabels[event.new_status] || event.new_status}</span><small>{new Date(event.created_at).toLocaleString("pt-MZ")}</small></li>)}</ol></details><span className={styles.description}>{(item.description || "Sem descrição").slice(0, 145)}{(item.description || "").length > 145 ? "…" : ""}</span>{item.status === "PUBLISHED" ? <Link className={styles.detailLink} href={"/oportunidades/" + item.slug} target="_blank" rel="noreferrer">Ver publicação ↗</Link> : null}</div></td>
                     <td><strong className={styles.typeLabel}>{typeLabels[item.type] || item.type}</strong><small className={styles.organization}>{item.organization || "Organização não indicada"}</small><small className={styles.origin}>{item.partner_account_id ? "Conta de parceiro" : "Conta de utilizador"}</small></td>
                     <td><span className={styles.deadline}>{item.closes_at ? dateLabel(item.closes_at) : "Sem prazo"}</span>{expired ? <small className={styles.deadlineExpired}>Prazo ultrapassado</small> : closingSoon ? <small className={styles.deadlineSoon}>Encerra em breve</small> : null}{item.opens_at ? <small className={styles.opensAt}>Abre: {dateLabel(item.opens_at)}</small> : null}</td>
                     <td><span className={`${styles.status} ${styles[statusClass[item.status] || "draft"]}`}>{statusLabels[item.status] || item.status}</span><small className={styles.updated}>Actualizada {dateLabel(item.updated_at)}</small></td>

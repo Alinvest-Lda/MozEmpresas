@@ -48,12 +48,9 @@ export async function applyToOpportunity(formData: FormData) {
   let submissionError;
   if (existingApplication) {
     if (existingApplication.status !== "SUBMITTED") redirect("/oportunidades?application=locked");
-    const { error } = await supabase
-      .from("opportunity_applications")
-      .update({ applicant_business_id: businessId, cover_note: coverNote })
-      .eq("id", existingApplication.id)
-      .eq("applicant_user_id", userId)
-      .eq("status", "SUBMITTED");
+    const { error } = await supabase.rpc("update_own_opportunity_application_submission", {
+      p_application_id: existingApplication.id, p_applicant_business_id: businessId, p_cover_note: coverNote,
+    });
     submissionError = error;
   } else {
     const { error } = await supabase.from("opportunity_applications").insert({

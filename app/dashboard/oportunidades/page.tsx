@@ -42,6 +42,16 @@ export default async function MyOpportunities({
     supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
   ]);
 
+  const opportunityIds = (opportunities ?? []).map((item) => item.id);
+  const { data: lifecycleEvents } = opportunityIds.length
+    ? await supabase.from("opportunity_events").select("id,opportunity_id,event_type,old_status,new_status,created_at").in("opportunity_id", opportunityIds).order("created_at", { ascending: false })
+    : { data: [] };
+  const eventsByOpportunity = new Map<string, any[]>();
+  for (const event of lifecycleEvents ?? []) {
+    const list = eventsByOpportunity.get(event.opportunity_id) ?? [];
+    list.push(event);
+    eventsByOpportunity.set(event.opportunity_id, list);
+  }
   const feedback: Record<string, { kind: "success" | "error" | "warning"; message: string }> = {
     success: { kind: "success", message: "Oportunidade publicada." },
     updated: { kind: "success", message: "Estado da oportunidade actualizado." },
@@ -102,6 +112,7 @@ export default async function MyOpportunities({
                     <strong>{item.title}</strong>
                     <small>{item.organization || "Entidade não indicada"}{item.location ? " · " + item.location : ""}</small>
                     <small>{item.closes_at ? "Encerra em " + new Date(item.closes_at).toLocaleString("pt-MZ") : "Sem data de encerramento"}</small>
+                    <details className="opportunity-history"><summary>Histórico ({(eventsByOpportunity.get(item.id) ?? []).length})</summary><ol>{(eventsByOpportunity.get(item.id) ?? []).map((event) => <li key={event.id}><strong>{event.event_type === "CREATED" ? "Publicação criada" : event.event_type === "BASELINE" ? "Histórico inicial" : "Estado actualizado"}</strong><span>{event.old_status ? (statusLabels[event.old_status] || event.old_status) + " → " : ""}{statusLabels[event.new_status] || event.new_status}</span><small>{new Date(event.created_at).toLocaleString("pt-MZ")}</small></li>)}</ol></details>
                   </div>
                   <div className="opportunity-list-actions">
                     {item.status !== "ARCHIVED" && <Link href={"/oportunidades/" + item.slug} className="text-link">Ver publicação →</Link>}
@@ -117,6 +128,7 @@ export default async function MyOpportunities({
           )}
         </section>
       </div>
+      <style>{`.opportunity-history{margin-top:8px;font-size:12px}.opportunity-history summary{cursor:pointer;font-weight:700}.opportunity-history ol{display:grid;gap:5px;margin:8px 0;padding-left:18px}.opportunity-history li{display:grid;gap:2px}.opportunity-history li small{color:var(--muted,#687572)}`}</style>
     </main>
   );
 }

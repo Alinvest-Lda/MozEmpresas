@@ -46,6 +46,16 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
     .limit(50) : { data: null, error: accountError || new Error("PARTNER_ACCOUNT_REQUIRED") };
 
   const rows = data ?? [];
+  const rowIds = rows.map((row: any) => row.id);
+  const { data: lifecycleEvents } = rowIds.length
+    ? await supabase.from("opportunity_events").select("id,opportunity_id,event_type,old_status,new_status,created_at").in("opportunity_id", rowIds).order("created_at", { ascending: false })
+    : { data: [] };
+  const eventsByOpportunity = new Map<string, any[]>();
+  for (const event of lifecycleEvents ?? []) {
+    const list = eventsByOpportunity.get(event.opportunity_id) ?? [];
+    list.push(event);
+    eventsByOpportunity.set(event.opportunity_id, list);
+  }
   const published = rows.filter((row: any) => row.status === "PUBLISHED").length;
   const drafts = rows.filter((row: any) => row.status === "DRAFT").length;
   const closed = rows.filter((row: any) => ["CLOSED", "ARCHIVED"].includes(row.status)).length;
@@ -110,6 +120,7 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
                       </Link>
                     </strong>
                     <small>{row.organization || "A sua entidade"} · {row.location || "Localização não indicada"}</small>
+                    <details className="partner-opportunity-history"><summary>Histórico ({(eventsByOpportunity.get(row.id) ?? []).length})</summary><ol>{(eventsByOpportunity.get(row.id) ?? []).map((event: any) => <li key={event.id}><strong>{event.event_type === "CREATED" ? "Publicação criada" : event.event_type === "BASELINE" ? "Histórico inicial" : "Estado actualizado"}</strong><span>{event.old_status ? statusLabel(event.old_status) + " → " : ""}{statusLabel(event.new_status)}</span><small>{new Date(event.created_at).toLocaleString("pt-MZ")}</small></li>)}</ol></details>
                   </div>
 
                   <div className="partner-pub-cell">{labels[row.type] || row.type || "—"}</div>
@@ -168,7 +179,7 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
         </div>
       </div>
 
-      <style>{`.partner-pub-row-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.partner-pub-row-actions form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.partner-pub-row-actions button{background:transparent;border:0;cursor:pointer;font:inherit}`}</style>
+      <style>{`.partner-pub-row-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.partner-pub-row-actions form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.partner-pub-row-actions button{background:transparent;border:0;cursor:pointer;font:inherit}.partner-opportunity-history{margin-top:7px;font-size:12px}.partner-opportunity-history summary{cursor:pointer;font-weight:700}.partner-opportunity-history ol{display:grid;gap:5px;margin:8px 0;padding-left:18px}.partner-opportunity-history li{display:grid;gap:2px}.partner-opportunity-history li small{color:var(--muted,#687572)}`}</style>
     </PartnerPage>
   );
 }
