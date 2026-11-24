@@ -506,3 +506,24 @@ export async function sendPartnerReportEmail(formData: FormData) {
   revalidatePath("/dashboard/admin/parceiros/gestao");
   redirect("/dashboard/admin/parceiros/gestao?saved=report-sent");
 }
+
+export async function updatePartnerContractRenewal(formData: FormData) {
+  const contractId=value(formData,"contract_id");
+  const status=value(formData,"renewal_status");
+  const due=value(formData,"renewal_due_on");
+  const owner=value(formData,"renewal_owner_user_id");
+  const notes=value(formData,"renewal_notes");
+  if(!uuid.safeParse(contractId).success ||
+    !["NOT_REVIEWED","REVIEW_REQUIRED","IN_PROGRESS","RENEWED","NON_RENEWAL"].includes(status) ||
+    (owner&&!uuid.safeParse(owner).success) || (due&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(due)) ||
+    notes.length<8 || notes.length>1000) redirect("/dashboard/admin/parceiros/controlo?error=renewal");
+  const {supabase}=await adminContext();
+  const {error}=await supabase.rpc("admin_update_partner_contract_renewal_f363",{
+    p_contract_id:contractId,p_renewal_status:status,p_renewal_due_on:due||null,
+    p_renewal_owner_user_id:owner||null,p_renewal_notes:notes,
+  });
+  if(error) redirect("/dashboard/admin/parceiros/controlo?error=renewal");
+  revalidatePath("/dashboard/admin/parceiros/controlo");
+  revalidatePath("/dashboard/admin/parceiros/gestao");
+  redirect("/dashboard/admin/parceiros/controlo?saved=renewal");
+}
