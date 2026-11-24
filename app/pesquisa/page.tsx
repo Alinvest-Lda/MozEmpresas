@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TrackedSearchForm } from "@/components/tracked-search-form";
 import { createClient } from "@/lib/supabase/server";
 
 type SearchType = "all" | "business" | "listing" | "opportunity";
@@ -137,28 +138,7 @@ export default async function SearchPage({
           <span className="eyebrow">Pesquisa transversal</span>
           <h1>Encontre o que procura em todo o MozEmpresas.</h1>
           <p>Uma única pesquisa para descobrir empresas, produtos, serviços e oportunidades.</p>
-          <form className="global-search-form" action="/pesquisa">
-            <label className="global-search-query">
-              <span>O que procura?</span>
-              <div className="global-search-input">
-                <b aria-hidden="true">⌕</b>
-                <input name="q" defaultValue={q} placeholder="Empresa, produto, serviço, oportunidade..." autoFocus />
-                <kbd>⌘ K</kbd>
-              </div>
-            </label>
-            <div className="global-search-form-side">
-              <label>
-                <span>Pesquisar em</span>
-                <select name="tipo" defaultValue={type}>
-                  <option value="all">Tudo</option>
-                  <option value="business">Empresas</option>
-                  <option value="listing">Produtos e serviços</option>
-                  <option value="opportunity">Oportunidades</option>
-                </select>
-              </label>
-              <button className="btn primary" type="submit">Pesquisar →</button>
-            </div>
-          </form>
+          <TrackedSearchForm query={q} type={type} />
           <div className="global-search-hint"><span>Pesquisa transversal</span><small>Use uma palavra-chave ou necessidade. O sistema procura nas áreas públicas disponíveis.</small></div>
         </section>
 
