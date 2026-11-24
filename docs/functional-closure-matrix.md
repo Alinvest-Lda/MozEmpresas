@@ -212,3 +212,8 @@ Não foram executados testes ou validações finais. A referência global perman
 ### Candidaturas a oportunidades — reconciliação de notificações (25/11/2026)
 
 A F3.72 já combinava histórico de estado e notificação do candidato em `capture_opportunity_application_event`. Foi removido o trigger posterior duplicado `opportunity_application_status_notification` e mantida a notificação no fluxo transaccional de captura, sem auto-notificação ao próprio actor. Migração: `20261124220709_consolidate_opportunity_application_status_notifications.sql`. Não foram executados testes/validações.
+
+
+### Correcção cronológica adicional (25/11/2026)
+
+A leitura integral dos nomes das migrações posteriores confirmou que a sequência funcional avançou depois da F3.73: **F3.74** (`20261124182000_f374_atomic_commerce_order_transitions.sql`) e **F3.75** (`20261124214209_f375_enforce_single_active_partner_user_per_organization.sql`). Assim, F3.73 é um marco histórico confirmado, mas não o último marco. O último identificador funcional explícito localizado no histórico de migrações é **F3.75**. Os sufixos f337–f341 das migrações subsequentes continuam a ser identificadores técnicos locais e não devem ser usados para reiniciar a sequência. A referência global de fecho permanece em 89% provisórios.
