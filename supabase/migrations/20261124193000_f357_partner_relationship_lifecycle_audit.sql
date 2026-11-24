@@ -69,7 +69,7 @@ create or replace function public.admin_update_partner_account(
  p_account_id uuid,p_name text,p_legal_name text,p_tax_id text,p_billing_address text,p_billing_city text,
  p_contact_email text,p_contact_phone text,p_operating_model text,p_status text,p_portal_enabled boolean,
  p_description text,p_internal_notes text,p_reason text
-) returns jsonb language plpgsql security invoker set search_path=pg_catalog,public,auth,pg_temp as $
+) returns jsonb language plpgsql security invoker set search_path=pg_catalog,public,auth,pg_temp as $$
 declare v_account public.partner_accounts;
 begin
  if auth.uid() is null or not public.is_super_admin() then raise exception 'FORBIDDEN' using errcode='42501'; end if;
@@ -84,14 +84,14 @@ begin
  where id=p_account_id returning * into v_account;
  if not found then raise exception 'PARTNER_ACCOUNT_NOT_FOUND' using errcode='P0002'; end if;
  return jsonb_build_object('id',v_account.id,'status',v_account.status,'portal_enabled',v_account.portal_enabled);
-end $;
+end $$;
 revoke all on function public.admin_update_partner_account(uuid,text,text,text,text,text,text,text,text,text,boolean,text,text,text) from public,anon;
 grant execute on function public.admin_update_partner_account(uuid,text,text,text,text,text,text,text,text,text,boolean,text,text,text) to authenticated;
 
 create or replace function public.admin_update_partner_contact(
  p_contact_id uuid,p_full_name text,p_role_title text,p_email text,p_phone text,p_is_primary boolean,
  p_is_billing_contact boolean,p_receives_reports boolean,p_active boolean,p_reason text
-) returns jsonb language plpgsql security invoker set search_path=pg_catalog,public,auth,pg_temp as $
+) returns jsonb language plpgsql security invoker set search_path=pg_catalog,public,auth,pg_temp as $$
 declare v_account_id uuid;
 begin
  if auth.uid() is null or not public.is_super_admin() then raise exception 'FORBIDDEN' using errcode='42501'; end if;
@@ -105,6 +105,6 @@ begin
  is_primary=p_is_primary,is_billing_contact=p_is_billing_contact,receives_reports=p_receives_reports,
  active=p_active,updated_at=now() where id=p_contact_id;
  return jsonb_build_object('id',p_contact_id,'account_id',v_account_id);
-end $;
+end $$;
 revoke all on function public.admin_update_partner_contact(uuid,text,text,text,text,boolean,boolean,boolean,boolean,text) from public,anon;
 grant execute on function public.admin_update_partner_contact(uuid,text,text,text,text,boolean,boolean,boolean,boolean,text) to authenticated;
