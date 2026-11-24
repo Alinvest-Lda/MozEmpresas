@@ -41,7 +41,7 @@ A tabela privada `private.partner_access_grants` pode conter convites histórico
 ## 5. Implementação registada
 
 - `20261124214209_f375_enforce_single_active_partner_user_per_organization`: regra de membership única e hardening do acesso.
-- `20261124221000_f334_align_partner_activation_with_single_user_account_rule.sql`: alinhamento da activação inicial para papel `owner`.
+- `20261124221000_f334_align_partner_activation_with_single_user_account_rule.sql`: alinhamento da activação inicial para papel `owner`.\n- `20261124223500_f335_partner_single_user_access_revocation.sql`: listagem administrativa e revogação auditada do utilizador único.
 - Commit `4517bcf2e3270552dfbb941f0ac419ecad668a1f`: alteração de activação.
 - Commit `870c8f420bff1a4b5fa31a803191c2cb6056eaf5`: interface administrativa alinhada com utilizador único por organização.
 
