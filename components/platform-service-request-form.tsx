@@ -47,7 +47,7 @@ export function PlatformServiceRequestForm({
       <div className="service-request-success" role="status">
         <span className="service-success-icon">✓</span>
         <div>
-          <strong>{state.requested ? "Pedido de serviço recebido." : state.pending ? "Pedido de pagamento M-Pesa enviado." : "Serviço contratado."}</strong>
+          <strong>{state.requested ? "Pedido de serviço recebido." : state.pending ? "Pedido de pagamento M-Pesa pendente." : "Serviço contratado."}</strong>
           <p>
             {state.requested
               ? "A equipa MozEmpresas irá analisar a necessidade e actualizar o estado do pedido no seu espaço."
@@ -111,7 +111,7 @@ export function PlatformServiceRequestForm({
         </select>
       </label> : null}
 
-      {state.error ? <p className="service-form-error">{state.error}</p> : null}
+      {price != null && paymentMethod === "MPESA" ? <label>\n        <span>Número M-Pesa para efectuar o pagamento</span>\n        <input name="customerMsisdn" inputMode="numeric" autoComplete="tel" maxLength={12} defaultValue={savedMsisdn} placeholder="258841234567" required pattern="2588[2-9][0-9]{7}" title="Use o formato 258XXXXXXXXX" />\n        <small>O pedido de pagamento será enviado para este número. Pode alterar o número guardado na sua conta.</small>\n      </label> : null}\n\n      {state.error ? <p className="service-form-error">{state.error}</p> : null}
 
       <div className="service-form-submit">
         <div>
