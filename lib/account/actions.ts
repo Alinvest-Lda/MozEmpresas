@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-const profileSchema = z.object({ fullName: z.string().trim().min(2).max(120), location: z.string().trim().max(160).optional(), website: z.string().trim().url().optional().or(z.literal("")), bio: z.string().trim().max(1000).optional() });
+const profileSchema = z.object({ fullName: z.string().trim().min(2).max(120), location: z.string().trim().max(160).optional(), website: z.string().trim().url().optional().or(z.literal("")), bio: z.string().trim().max(1000).optional(), mpesaMsisdn: z.string().trim().optional().or(z.literal("")) });
 const passwordSchema = z.object({ password: z.string().min(8), confirmPassword: z.string().min(8) });
 
 export type AccountState = { error?: string; success?: string };
@@ -27,8 +27,12 @@ async function verifyActiveProfile(supabase: Awaited<ReturnType<typeof createCli
 }
 
 export async function updateProfile(_state: AccountState, formData: FormData): Promise<AccountState> {
-  const parsed = profileSchema.safeParse({ fullName: formData.get("fullName"), location: formData.get("location") || "", website: formData.get("website") || "", bio: formData.get("bio") || "" });
+  const parsed = profileSchema.safeParse({ fullName: formData.get("fullName"), location: formData.get("location") || "", website: formData.get("website") || "", bio: formData.get("bio") || "", mpesaMsisdn: formData.get("mpesaMsisdn") || "" });
   if (!parsed.success) return { error: "Verifique os dados do perfil." };
+  const mpesaMsisdn = parsed.data.mpesaMsisdn || null;
+  if (mpesaMsisdn && !/^2588[2-9][0-9]{7}$/.test(mpesaMsisdn)) {
+    return { error: "Introduza um número M-Pesa moçambicano no formato 258XXXXXXXXX." };
+  }
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -36,7 +40,7 @@ export async function updateProfile(_state: AccountState, formData: FormData): P
   const access = await verifyActiveProfile(supabase, user.id);
   if (!access.ok) return { error: access.message };
 
-  const { error } = await supabase.from("profiles").update({ full_name: parsed.data.fullName, location: parsed.data.location || null, website: parsed.data.website || null, bio: parsed.data.bio || null }).eq("id", user.id);
+  const { error } = await supabase.from("profiles").update({ full_name: parsed.data.fullName, location: parsed.data.location || null, website: parsed.data.website || null, bio: parsed.data.bio || null, mpesa_msisdn: mpesaMsisdn }).eq("id", user.id);
   if (error) return { error: "Não foi possível actualizar o perfil." };
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/conta");
