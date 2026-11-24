@@ -207,3 +207,8 @@ A referência funcional histórica alcançou F3.73 antes das migrações com suf
 A função activa `notify_support_message_recipient()` e o trigger `notify_support_message_recipient_trigger` mantêm a notificação bilateral da Central de Suporte. O trigger adicional F3.73 foi removido para evitar duplicação; a funcionalidade não foi perdida. Em `service_requests`, a F3.72 já regista histórico e notifica atomicamente. Foi removido o trigger genérico sobreposto `service_request_status_notification`, mantendo-se o trigger atómico F3.72 e a função genérica para os restantes fluxos que ainda a utilizam. Migração correctiva: `20261124220337_reconcile_service_request_notification_ownership.sql`.
 
 Não foram executados testes ou validações finais. A referência global permanece em **89% provisórios**, sem recalcular ou aumentar a percentagem nesta correcção.
+
+
+### Candidaturas a oportunidades — reconciliação de notificações (25/11/2026)
+
+A F3.72 já combinava histórico de estado e notificação do candidato em `capture_opportunity_application_event`. Foi removido o trigger posterior duplicado `opportunity_application_status_notification` e mantida a notificação no fluxo transaccional de captura, sem auto-notificação ao próprio actor. Migração: `20261124220709_consolidate_opportunity_application_status_notifications.sql`. Não foram executados testes/validações.
