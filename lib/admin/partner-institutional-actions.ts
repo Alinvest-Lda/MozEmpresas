@@ -226,37 +226,16 @@ export async function createPartnerContact(formData: FormData) {
 }
 
 export async function createPartnerReportDelivery(formData: FormData) {
-  const parsed=z.object({account_id:uuid,contract_id:z.string().optional(),engagement_id:z.string().optional(),campaign_id:z.string().optional(),
-    title:z.string().min(2).max(180),report_type:z.enum(["PERFORMANCE","FINANCIAL","MARKET_INTELLIGENCE","CAMPAIGN","EXECUTIVE","OTHER"]),
-    period_start:z.string().optional(),period_end:z.string().optional(),storage_path:z.string().max(500).optional(),
-    external_url:z.string().url().optional().or(z.literal("")),recipient_emails:z.string().max(2000).optional(),
-    delivery_channel:z.enum(["EMAIL","PORTAL","MEETING","SHARED_LINK","OTHER"]),status:z.enum(["DRAFT","READY","DELIVERED"])})
-    .safeParse({account_id:value(formData,"account_id"),contract_id:value(formData,"contract_id")||undefined,
-      engagement_id:value(formData,"engagement_id")||undefined,campaign_id:value(formData,"campaign_id")||undefined,title:value(formData,"title"),report_type:value(formData,"report_type"),
-      period_start:value(formData,"period_start")||undefined,period_end:value(formData,"period_end")||undefined,
-      storage_path:value(formData,"storage_path")||undefined,external_url:value(formData,"external_url"),
-      recipient_emails:value(formData,"recipient_emails")||undefined,delivery_channel:value(formData,"delivery_channel"),
-      status:value(formData,"status")});
-  if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id,parsed.data.campaign_id].some(x=>x&&!uuid.safeParse(x).success) ||
-    (["READY","DELIVERED"].includes(parsed.data.status)&&!parsed.data.storage_path&&!parsed.data.external_url))
-    redirect("/dashboard/admin/parceiros/gestao?error=report");
-  const {supabase,user}=await adminContext();
-  if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id}))) redirect("/dashboard/admin/parceiros/gestao?error=report");
-  const recipients=(parsed.data.recipient_emails||"").split(/[;,\\n]/).map(x=>x.trim()).filter(Boolean);
-  if(recipients.some(x=>!z.string().email().safeParse(x).success)) redirect("/dashboard/admin/parceiros/gestao?error=report");
-  const {error}=await supabase.from("partner_report_deliveries").insert({
-    account_id:parsed.data.account_id,contract_id:parsed.data.contract_id||null,engagement_id:parsed.data.engagement_id||null,campaign_id:parsed.data.campaign_id||null,
-    title:parsed.data.title,report_type:parsed.data.report_type,period_start:parsed.data.period_start||null,
-    period_end:parsed.data.period_end||null,storage_path:parsed.data.storage_path||null,external_url:parsed.data.external_url||null,
-    recipient_emails:recipients,delivery_channel:parsed.data.delivery_channel,status:parsed.data.status,
-    delivered_at:parsed.data.status==="DELIVERED"?new Date().toISOString():null,
-    delivered_by:parsed.data.status==="DELIVERED"?user!.id:null,created_by:user!.id,
-  });
-  if(error) redirect("/dashboard/admin/parceiros/gestao?error=report-save");
-  revalidatePath("/dashboard/admin/parceiros/gestao");
-  redirect("/dashboard/admin/parceiros/gestao?saved=report");
+ const parsed=z.object({account_id:uuid,contract_id:z.string().optional(),engagement_id:z.string().optional(),campaign_id:z.string().optional(),title:z.string().min(2).max(180),report_type:z.enum(["PERFORMANCE","FINANCIAL","MARKET_INTELLIGENCE","CAMPAIGN","EXECUTIVE","OTHER"]),period_start:z.string().optional(),period_end:z.string().optional(),storage_path:z.string().max(500).optional(),external_url:z.string().url().optional().or(z.literal("")),recipient_emails:z.string().max(2000).optional(),delivery_channel:z.enum(["EMAIL","PORTAL","MEETING","SHARED_LINK","OTHER"])}).safeParse({account_id:value(formData,"account_id"),contract_id:value(formData,"contract_id")||undefined,engagement_id:value(formData,"engagement_id")||undefined,campaign_id:value(formData,"campaign_id")||undefined,title:value(formData,"title"),report_type:value(formData,"report_type"),period_start:value(formData,"period_start")||undefined,period_end:value(formData,"period_end")||undefined,storage_path:value(formData,"storage_path")||undefined,external_url:value(formData,"external_url"),recipient_emails:value(formData,"recipient_emails")||undefined,delivery_channel:value(formData,"delivery_channel")});
+ if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id,parsed.data.campaign_id].some(x=>x&&!uuid.safeParse(x).success) || (parsed.data.period_start&&parsed.data.period_end&&parsed.data.period_end<parsed.data.period_start)) redirect("/dashboard/admin/parceiros/gestao?error=report");
+ const {supabase,user}=await adminContext();
+ if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id}))) redirect("/dashboard/admin/parceiros/gestao?error=report");
+ const recipients=(parsed.data.recipient_emails||"").split(/[;,\\n]/).map(x=>x.trim()).filter(Boolean);
+ if(recipients.some(x=>!z.string().email().safeParse(x).success)) redirect("/dashboard/admin/parceiros/gestao?error=report");
+ const {error}=await supabase.from("partner_report_deliveries").insert({account_id:parsed.data.account_id,contract_id:parsed.data.contract_id||null,engagement_id:parsed.data.engagement_id||null,campaign_id:parsed.data.campaign_id||null,title:parsed.data.title,report_type:parsed.data.report_type,period_start:parsed.data.period_start||null,period_end:parsed.data.period_end||null,storage_path:parsed.data.storage_path||null,external_url:parsed.data.external_url||null,recipient_emails:recipients,delivery_channel:parsed.data.delivery_channel,status:"DRAFT",created_by:user!.id});
+ if(error) redirect("/dashboard/admin/parceiros/gestao?error=report-save");
+ revalidatePath("/dashboard/admin/parceiros/gestao");redirect("/dashboard/admin/parceiros/gestao?saved=report");
 }
-
 
 export async function createBackofficePartnerCampaign(formData: FormData) {
   const parsed=z.object({account_id:uuid,product_id:uuid,contract_id:z.string().optional(),title:z.string().min(2).max(180),
@@ -288,21 +267,13 @@ export async function createBackofficePartnerCampaign(formData: FormData) {
 }
 
 export async function updatePartnerEngagementStatus(formData: FormData) {
-  const id=value(formData,"engagement_id");
-  const status=value(formData,"status");
-  if(!uuid.safeParse(id).success || !["RECEIVED","SCOPING","AWAITING_APPROVAL","APPROVED","IN_PROGRESS","UNDER_REVIEW","DELIVERED","CLOSED","ON_HOLD","CANCELLED"].includes(status))
-    redirect("/dashboard/admin/parceiros/gestao?error=engagement-status");
-  const {supabase}=await adminContext();
-  const updates:Record<string,unknown>={status};
-  if(status==="IN_PROGRESS") updates.started_at=new Date().toISOString();
-  if(status==="DELIVERED") updates.delivered_at=new Date().toISOString();
-  if(status==="CLOSED") updates.closed_at=new Date().toISOString();
-  const {error}=await supabase.from("partner_service_engagements").update(updates).eq("id",id);
-  if(error) redirect("/dashboard/admin/parceiros/gestao?error=engagement-status");
-  revalidatePath("/dashboard/admin/parceiros/gestao");
-  redirect("/dashboard/admin/parceiros/gestao?saved=engagement-status");
+ const id=value(formData,"engagement_id"),status=value(formData,"status"),commercial=value(formData,"assigned_commercial_user_id"),operations=value(formData,"assigned_operations_user_id"),due=value(formData,"due_at"),reason=value(formData,"reason");
+ if(!uuid.safeParse(id).success || (commercial&&!uuid.safeParse(commercial).success) || (operations&&!uuid.safeParse(operations).success) || (due&&!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(due)) || reason.length<8 || reason.length>500) redirect("/dashboard/admin/parceiros/gestao?error=engagement-status");
+ const {supabase}=await adminContext();
+ const {error}=await supabase.rpc("admin_update_partner_engagement",{p_engagement_id:id,p_status:status,p_commercial_user_id:commercial||null,p_operations_user_id:operations||null,p_due_at:due?new Date(due).toISOString():null,p_reason:reason});
+ if(error) redirect("/dashboard/admin/parceiros/gestao?error=engagement-status");
+ revalidatePath("/dashboard/admin/parceiros/gestao");redirect("/dashboard/admin/parceiros/gestao?saved=engagement-status");
 }
-
 
 export async function createPartnerEntitlement(formData: FormData) {
   const parsed = z.object({
@@ -345,17 +316,13 @@ export async function createPartnerEntitlement(formData: FormData) {
 }
 
 export async function updatePartnerEntitlementStatus(formData: FormData) {
-  const id=value(formData,"entitlement_id");
-  const status=value(formData,"status");
-  if(!uuid.safeParse(id).success || !["ACTIVE","SUSPENDED","EXPIRED"].includes(status)) redirect("/dashboard/admin/parceiros/gestao?error=entitlement");
-  const {supabase}=await adminContext();
-  const {error}=await supabase.from("partner_entitlements").update({status,updated_at:new Date().toISOString()}).eq("id",id);
-  if(error?.message.includes("PARTNER_EXCLUSIVITY_SCOPE_CONFLICT")) redirect("/dashboard/admin/parceiros/gestao?error=entitlement-conflict");
-  if(error) redirect("/dashboard/admin/parceiros/gestao?error=entitlement-save");
-  revalidatePath("/dashboard/admin/parceiros/gestao");
-  redirect("/dashboard/admin/parceiros/gestao?saved=entitlement-status");
+ const id=value(formData,"entitlement_id"),status=value(formData,"status"),reason=value(formData,"reason");
+ if(!uuid.safeParse(id).success || reason.length<8 || reason.length>500) redirect("/dashboard/admin/parceiros/gestao?error=entitlement");
+ const {supabase}=await adminContext();
+ const {error}=await supabase.rpc("admin_update_partner_entitlement_status",{p_entitlement_id:id,p_status:status,p_reason:reason});
+ if(error) redirect("/dashboard/admin/parceiros/gestao?error=entitlement-save");
+ revalidatePath("/dashboard/admin/parceiros/gestao");redirect("/dashboard/admin/parceiros/gestao?saved=entitlement-status");
 }
-
 
 export async function updateInstitutionalPartner(formData:FormData) {
  const parsed=z.object({account_id:uuid,name:z.string().min(2).max(180),legal_name:z.string().max(180),tax_id:z.string().max(80),billing_address:z.string().max(300),billing_city:z.string().max(120),contact_email:z.string().email().or(z.literal("")),contact_phone:z.string().max(60),operating_model:z.enum(["MANAGED","STRATEGIC","HYBRID","SELF_SERVICE"]),status:z.enum(["ACTIVE","SUSPENDED","CLOSED"]),portal_enabled:z.enum(["true","false"]),description:z.string().max(2000),internal_notes:z.string().max(4000),reason:z.string().min(8).max(500)}).safeParse({
@@ -374,4 +341,22 @@ export async function updateInstitutionalContact(formData:FormData) {
  const {error}=await supabase.rpc("admin_update_partner_contact",{p_contact_id:parsed.data.contact_id,p_full_name:parsed.data.full_name,p_role_title:parsed.data.role_title||null,p_email:parsed.data.email||null,p_phone:parsed.data.phone||null,p_is_primary:parsed.data.is_primary==="true",p_is_billing_contact:parsed.data.is_billing_contact==="true",p_receives_reports:parsed.data.receives_reports==="true",p_active:parsed.data.active==="true",p_reason:parsed.data.reason});
  if(error) redirect("/dashboard/admin/parceiros/gestao?error=contact-update");
  revalidatePath("/dashboard/admin/parceiros/gestao");redirect("/dashboard/admin/parceiros/gestao?saved=contact-update");
+}
+
+
+export async function transitionPartnerContract(formData: FormData) {
+ const id=value(formData,"contract_id"),status=value(formData,"status"),signed=value(formData,"signed_document_path"),reason=value(formData,"reason");
+ if(!uuid.safeParse(id).success || reason.length<8 || reason.length>500 || signed.length>500) redirect("/dashboard/admin/parceiros/gestao?error=contract-transition");
+ const {supabase}=await adminContext();
+ const {error}=await supabase.rpc("admin_transition_partner_contract",{p_contract_id:id,p_status:status,p_signed_document_path:signed||null,p_reason:reason});
+ if(error) redirect("/dashboard/admin/parceiros/gestao?error=contract-transition");
+ revalidatePath("/dashboard/admin/parceiros/gestao");redirect("/dashboard/admin/parceiros/gestao?saved=contract-transition");
+}
+export async function transitionPartnerReport(formData: FormData) {
+ const id=value(formData,"report_id"),status=value(formData,"status"),reference=value(formData,"delivery_reference"),reason=value(formData,"reason");
+ if(!uuid.safeParse(id).success || reason.length<8 || reason.length>500 || reference.length>500) redirect("/dashboard/admin/parceiros/gestao?error=report-transition");
+ const {supabase}=await adminContext();
+ const {error}=await supabase.rpc("admin_update_partner_report_delivery",{p_report_id:id,p_status:status,p_delivery_reference:reference||null,p_reason:reason});
+ if(error) redirect("/dashboard/admin/parceiros/gestao?error=report-transition");
+ revalidatePath("/dashboard/admin/parceiros/gestao");redirect("/dashboard/admin/parceiros/gestao?saved=report-transition");
 }
