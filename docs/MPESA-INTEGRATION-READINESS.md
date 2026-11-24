@@ -23,12 +23,18 @@ Environment-variable presence does not prove that credentials are valid, that th
 
 ## Current implementation state
 
-- The M-Pesa service checkout creates a pending order but does not send a payment request to Vodacom.
-- There is no implemented server-side authentication/session flow, C2B initiation client, or transaction-status query client.
-- The current webhook route expects a custom JSON payload and HMAC headers (`x-mpesa-timestamp`, `x-mpesa-signature`) and requires `MPESA_WEBHOOK_SECRET`.
-- That HMAC protocol, callback payload, and shared-secret requirement have not been established as Vodacom's protocol for this account. Since the secret is intentionally not configured, the current route fails closed with HTTP 503; do not add a made-up secret or disable authenticity checks.
-- Callback data must not settle an order or wallet until it has been authenticated according to Vodacom's documented mechanism and reconciled against a server-to-server transaction-status query, unless the official account specification prescribes a different safe sequence.
-- No live payment or production transaction has been attempted.
+- Added `lib/payments/mpesa-client.ts`, a server-only client for RSA Bearer authorization, C2B Single Stage initiation, and Query Transaction Status.
+- The authorization implementation follows the supplied Java SDK/portal material: 32-character API Key, X.509 DER/SPKI RSA public key, PKCS#1 v1.5 encryption, and Base64 ciphertext in the Bearer header. The public key is checked to be RSA-4096.
+- The client uses HTTPS, explicit operation ports, the configured Origin header, JSON content type, a 15-second timeout, no-store requests, and does not log credentials or request bodies.
+- C2B request fields are mapped to the five documented `input_*` names. The C2B body is currently serialized as JSON from those fields; the exact Request Package/example has not yet been supplied, so this packaging remains subject to sandbox verification before checkout integration.
+- Query Transaction Status uses the documented three query parameters and the `GET` method.
+- Added `lib/payments/mpesa-client.test.ts` with mocked HTTP tests and a generated RSA key pair. The tests have been committed but have not yet been executed by a confirmed CI run.
+- The M-Pesa service checkout still creates a pending order only; it is intentionally not wired to initiate a live charge until the C2B Request Package and production routing are verified.
+- The current webhook route still expects a custom JSON payload and HMAC headers (`x-mpesa-timestamp`, `x-mpesa-signature`) and requires `MPESA_WEBHOOK_SECRET`.
+- The supplied Vodacom callback specification defines a different asynchronous payload (`input_OriginalConversationID`, `input_ThirdPartyReference`, `input_TransactionID`, `input_ResultCode`, `input_ResultDesc`) and the four-field acknowledgement response. It does not define callback authentication/signature headers or a Vodacom shared secret.
+- The existing HMAC route must therefore remain fail-closed until a secure callback authenticity mechanism is agreed with Vodacom. Do not add a made-up Vodacom secret or disable authenticity checks.
+- Callback data must not settle an order or wallet until it has been authenticated and reconciled against a server-to-server transaction-status query, unless the official account specification prescribes a different safe sequence.
+- No live payment, sandbox payment, or production transaction has been attempted.
 
 ## What public Vodacom documentation establishes
 
@@ -42,13 +48,13 @@ The public overview does not publish the account-specific authentication exchang
 
 ## Evidence still required from the authenticated portal / Vodacom
 
-1. Authentication procedure and exact token/session exchange, including the role of the API Key and Public Key.
-2. C2B operation URL, port, required headers (including the exact Origin value), request body, response body, and error/status mapping.
-3. Transaction-status query URL, port, headers, request and response examples.
-4. Callback registration requirements, callback URL constraints, exact payload, authenticity mechanism, retry policy, and whether callbacks are required for the chosen C2B mode.
-5. Confirmation that `902809` is the Service Provider Code attached to these production credentials and that the application is approved/live.
+1. Exact C2B Request Package/example, including confirmation of JSON body placement and all header details.
+2. Production Resource URLs and ports for C2B and Query Transaction Status; the supplied operation references currently show Sandbox host `api.sandbox.vm.co.mz`, C2B port `18352`, and status port `18353`.
+3. Callback authenticity mechanism, retry policy, and any account-specific callback requirements. The payload and acknowledgement format are now documented, but authenticity is not.
+4. Confirmation that `902809` is the Service Provider Code attached to these production credentials and that the application is approved/live.
+5. Sandbox/UAT credentials or an approved test procedure, plus confirmation whether the merchant account is configured for asynchronous responses.
 
-Once these are available, implement the server-only provider client, connect the idempotent pending order to C2B initiation, implement status reconciliation, replace the unverified callback contract with the documented one, add mocked tests, and run CI. Perform sandbox/UAT before production enablement. Never trigger a real charge without explicit authorization.
+Next implementation steps are to verify the exact C2B Request Package, run the committed mocked tests in CI, implement the callback adapter only after an authenticity mechanism is agreed, and connect checkout only after the order's customer MSISDN and reference mapping are verified. Perform sandbox/UAT before production enablement. Never trigger a real charge without explicit authorization.
 
 ## Configuration follow-up — 24 November 2026
 
