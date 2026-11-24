@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 const errorMessages: Record<string, string> = {
   validation: "O email ou o prazo indicado não é válido. Reveja os campos e tente novamente.",
   forbidden: "Apenas o Super Admin pode criar acessos dedicados de parceiros.",
-  create: "Não foi possível criar o acesso. Verifique as permissões e tente novamente.",
+  create: "Não foi possível criar o acesso. Confirme se a conta ainda não tem utilizador activo nem convite pendente.",
   "portal-disabled": "A conta seleccionada não está activa ou não permite acesso ao portal.",
 };
 
@@ -50,7 +50,7 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
           <div className={styles.heroCopy}>
             <span className={styles.eyebrow}>Módulo de administração · Parceiros</span>
             <h1>Acessos de parceiros</h1>
-            <p>Crie acessos dedicados para organizações parceiras e partilhe um convite seguro com prazo definido.</p>
+            <p>Crie um acesso individual por organização parceira e partilhe um convite seguro com prazo definido.</p>
           </div>
           <div className={styles.heroBadge}><span className={styles.badgeIcon} aria-hidden="true">↗</span><strong>Acesso controlado</strong><small>Convite individual por email</small></div>
           <a className={styles.heroBadge} href="/dashboard/admin/parceiros/gestao"><strong>Gestão institucional</strong><small>Contratos · execução · facturação · relatórios →</small></a>
@@ -59,7 +59,7 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
 
         <div className={styles.noticeInfo}>
           <span className={styles.noticeIcon} aria-hidden="true">i</span>
-          <p><strong>Como funciona</strong> O acesso é criado pelo Super Admin. O parceiro activa a conta através do link e do email autorizado; não pode escolher este perfil no registo público.</p>
+          <p><strong>Como funciona</strong> Cada organização parceira tem um único utilizador activo. O acesso é criado pelo Super Admin e activado apenas pelo email autorizado; não existe convite de gestores adicionais.</p>
         </div>
 
         {inviteUrl ? (
@@ -83,21 +83,21 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
             <div className={styles.sectionHead}>
               <span className={styles.kicker}>Novo convite</span>
               <h2 id="new-access-title">Criar acesso dedicado</h2>
-              <p>Defina o email do parceiro e o prazo para activar a conta.</p>
+              <p>Defina o email do utilizador único da organização e o prazo para activar a conta.</p>
             </div>
             <form action={createPartnerAccess} className={styles.form}>
               <label className={styles.field} htmlFor="partner-account">
-                <span>Associar a uma entidade existente (opcional)</span>
+                <span>Atribuir a uma entidade existente (opcional)</span>
                 <Select id="partner-account" name="accountId" defaultValue="">
                   <option value="">Criar uma nova conta Parceiro de auto-serviço</option>
-                  {(partnerAccounts??[]).filter((account:any)=>account.portal_enabled && account.status==="ACTIVE").map((account:any)=><option key={account.id} value={account.id}>{account.name}</option>)}
+                  {eligiblePartnerAccounts.map((account:any)=><option key={account.id} value={account.id}>{account.name}</option>)}
                 </Select>
-                <small>Se seleccionar uma entidade, o utilizador será associado a essa conta. Entidades sem acesso ao portal não aparecem nesta lista.</small>
+                <small>Só são elegíveis entidades activas com portal ligado e sem utilizador activo. Cada conta aceita um único utilizador; contas já atribuídas não aparecem.</small>
               </label>
               <label className={styles.field} htmlFor="partner-email">
                 <span>Email do parceiro</span>
                 <Input id="partner-email" name="email" type="email" placeholder="nome@organizacao.co.mz" autoComplete="email" required />
-                <small>O convite só pode ser aceite com este endereço de email.</small>
+                <small>O convite só pode ser aceite com este endereço de email. O utilizador ficará como responsável único pelo acesso da organização.</small>
               </label>
               <label className={styles.field} htmlFor="partner-expiry">
                 <span>Validade do convite</span>
@@ -114,11 +114,11 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
 
           <aside className={styles.stepsPanel} aria-label="Etapas do acesso">
             <span className={styles.kicker}>Processo de activação</span>
-            <h2>Do convite ao acesso</h2>
+            <h2>Activação do acesso único</h2>
             <ol className={styles.steps}>
-              <li><span>01</span><div><strong>Criar convite</strong><p>Indique o email e escolha a validade.</p></div></li>
+              <li><span>01</span><div><strong>Criar convite</strong><p>Seleccione a organização, indique o email e escolha a validade.</p></div></li>
               <li><span>02</span><div><strong>Partilhar o link</strong><p>Envie o link gerado ao contacto autorizado.</p></div></li>
-              <li><span>03</span><div><strong>Activar a conta</strong><p>O parceiro define o nome e a palavra-passe para concluir o registo.</p></div></li>
+              <li><span>03</span><div><strong>Activar a conta</strong><p>O utilizador autorizado define o nome e a palavra-passe; a conta fica associada a uma única pessoa.</p></div></li>
             </ol>
             <div className={styles.securityCallout}><strong>Nota de segurança</strong><p>O link expira automaticamente. Se o prazo terminar, será necessário criar um novo convite.</p></div>
           </aside>
@@ -132,7 +132,7 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
               <p>Associe uma conta Parceiro a uma empresa existente apenas quando a relação jurídica/comercial estiver confirmada. Esta associação permite utilizar a carteira de créditos da empresa; não transfere a titularidade da conta nem mistura os registos financeiros: a factura publicitária continua emitida à conta Parceiro.</p>
             </div>
           </div>
-          {!partnerAccounts?.length ? <div className={styles.emptyState}>Ainda não existem contas Parceiro activas.</div> : <div className={styles.tableWrap}>
+          {!partnerAccounts?.length ? <div className={styles.emptyState}>Ainda não existem contas Parceiro registadas.</div> : <div className={styles.tableWrap}>
             <table className={styles.invitesTable}>
               <thead><tr><th>Conta Parceiro</th><th>Estado</th><th>Empresa associada / carteira</th><th>Acção</th></tr></thead>
               <tbody>
@@ -162,7 +162,7 @@ export default async function PartnerAccessAdmin({ searchParams }: { searchParam
             <div>
               <span className={styles.kicker}>Acompanhamento</span>
               <h2 id="invites-title">Convites emitidos</h2>
-              <p>Consulte o estado e a validade dos acessos criados. Os links e hashes de convite não são apresentados nesta lista.</p>
+              <p>Consulte o estado e a validade dos acessos criados. Os links e hashes de convite não são apresentados nesta lista. Cada convite corresponde a um único acesso organizacional.</p>
             </div>
             <form method="get" className={styles.statusFilter}>
               <label htmlFor="invite-status">Estado</label>
