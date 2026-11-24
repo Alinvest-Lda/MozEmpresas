@@ -57,6 +57,31 @@ export default async function AdminAnalytics() {
     supabase.from("service_requests").select("created_at").gte("created_at", sinceIso).order("created_at", { ascending: true }).limit(1500),
   ]);
 
+  const since30Days = new Date(now.getTime() - 30 * DAY_MS).toISOString();
+  const [
+    { count: profileViews },
+    { count: contactClicks },
+    { count: searchSubmissions },
+    { count: opportunityApplications },
+    { count: adImpressions },
+    { count: adClicks },
+  ] = await Promise.all([
+    supabase.from("platform_conversion_events").select("id", { count: "exact", head: true }).eq("event_type", "PROFILE_VIEW").gte("created_at", since30Days),
+    supabase.from("platform_conversion_events").select("id", { count: "exact", head: true }).eq("event_type", "CONTACT_CLICK").gte("created_at", since30Days),
+    supabase.from("platform_conversion_events").select("id", { count: "exact", head: true }).eq("event_type", "SEARCH_SUBMITTED").gte("created_at", since30Days),
+    supabase.from("opportunity_applications").select("id", { count: "exact", head: true }).gte("submitted_at", since30Days),
+    supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "IMPRESSION").gte("created_at", since30Days),
+    supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "CLICK").gte("created_at", since30Days),
+  ]);
+  const performanceMetrics = [
+    { label: "Visualizações de perfis", value: profileViews, hint: "eventos registados" },
+    { label: "Cliques de contacto", value: contactClicks, hint: "telefone, email ou website" },
+    { label: "Pesquisas submetidas", value: searchSubmissions, hint: "pesquisas globais instrumentadas" },
+    { label: "Candidaturas", value: opportunityApplications, hint: "participações submetidas" },
+    { label: "Impressões publicitárias", value: adImpressions, hint: "entregas registadas" },
+    { label: "Cliques publicitários", value: adClicks, hint: adImpressions && adImpressions > 0 && adClicks !== null ? `CTR ${((adClicks / adImpressions) * 100).toLocaleString("pt-MZ", { maximumFractionDigits: 1 })}%` : "CTR indisponível sem impressões" },
+  ] as const;
+
   const days = Array.from({ length: 14 }, (_, index) => {
     const day = new Date(today.getTime() - (13 - index) * DAY_MS);
     return {
@@ -147,6 +172,22 @@ export default async function AdminAnalytics() {
           <p className={styles.chartFootnote}>O gráfico mostra novos registos por dia; não representa utilizadores activos nem visitas. As datas seguem o fuso horário de Moçambique.</p>
         </section>
       </div>
+      <section className={styles.panel}>
+        <div className={styles.panelHead}>
+          <div><span className={styles.eyebrow}>INTELIGÊNCIA DE DESEMPENHO</span><h2>Interacções e conversões</h2><p>Eventos confirmados e participações registadas nos últimos 30 dias.</p></div>
+          <span className={styles.chartBadge}>30 dias</span>
+        </div>
+        <div className={styles.performanceGrid}>
+          {performanceMetrics.map((metric) => (
+            <div className={styles.performanceMetric} key={metric.label}>
+              <span>{metric.label}</span>
+              <strong>{metric.value === null ? "n/d" : formatNumber(metric.value)}</strong>
+              <small>{metric.hint}</small>
+            </div>
+          ))}
+        </div>
+        <p className={styles.chartFootnote}>Os números representam apenas eventos efectivamente registados, não estimativas de visitas ou alcance. “n/d” indica que a consulta não devolveu um valor. O CTR só é calculado quando existem impressões registadas.</p>
+      </section>
     </section>
   );
 }
