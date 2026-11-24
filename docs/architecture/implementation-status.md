@@ -86,3 +86,8 @@ Reconciliação read-only do Supabase confirmou que a F3.73 deixou a funcionalid
 Foi identificada uma sobreposição real em `service_requests`: a F3.72 já grava o histórico de estado e a notificação na mesma transacção (`trg_capture_service_request_status_event_f372`), enquanto uma migração posterior adicionou também `service_request_status_notification` usando a função genérica de ciclo de vida. Foi removido apenas esse segundo trigger. A função genérica foi preservada porque continua a servir os pedidos de créditos, ordens de serviço e campanhas/cobranças de parceiros.
 
 A migração correctiva está em `supabase/migrations/20261124220337_reconcile_service_request_notification_ownership.sql` e foi aplicada ao projecto Supabase. Não foram executados testes, validações finais ou deploy. O progresso global mantém-se em **89% (referência provisória anterior, não recalculada)** até reconciliação integral dos módulos; esta correcção não aumenta por si só a percentagem.
+
+
+### Consolidação adicional — candidaturas a oportunidades (25/11/2026)
+
+A F3.72 já tinha o trigger `capture_opportunity_application_event` a registar transições de estado e a notificar o candidato. A migração posterior `f341` criou um segundo trigger (`opportunity_application_status_notification`) para a mesma transição. Foi removido apenas o trigger duplicado e consolidada a notificação no trigger de captura de eventos, mantendo o histórico transaccional e evitando auto-notificação quando o próprio candidato altera o estado. Migração aplicada: `20261124220709_consolidate_opportunity_application_status_notifications.sql`. Sem testes ou validações finais.
