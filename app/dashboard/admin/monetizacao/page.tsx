@@ -43,8 +43,8 @@ export default async function AdminMonetizationPage() {
   const businessProducts = businessAdProducts ?? [];
   const partnerProducts = partnerAdProducts ?? [];
   const promotionRows = promotions ?? [];
-  const activePlans = planRows.filter(p => p.active).length;
-  const activeProducts = [...businessProducts, ...partnerProducts].filter(p => p.active).length;
+  const activePlans = plansError ? null : planRows.filter(p => p.active).length;
+  const activeProducts = businessProductsError || partnerProductsError ? null : [...businessProducts, ...partnerProducts].filter(p => p.active).length;
   const queryErrors = [plansError, promotionsError, subscriptionsError, businessProductsError, partnerProductsError, impressionsError, clicksError, financeOverviewError, transversalReconciliationError, financialAuditError, auditActionsError].filter(Boolean).length;
   type FinanceGroup = { status: string; method?: string; type?: string; payment_method?: string; count: number; amount_mzn?: number; credits?: number; budget_mzn?: number; credits_charged?: number };
   type FinanceOverview = {
@@ -83,19 +83,19 @@ export default async function AdminMonetizationPage() {
             <h1>Central de monetização</h1>
             <p>Visão consolidada dos planos empresariais, assinaturas, inventário publicitário e actividade comercial da plataforma.</p>
           </div>
-          <div className={styles.heroSummary}><span>Catálogo comercial</span><strong>{products.length}</strong><small>Formatos publicitários registados</small><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Consulta de planos, inventário e actividade.</span><a className={styles.creditLink} href="/dashboard/admin/monetizacao/creditos">Gerir créditos <span aria-hidden="true">→</span></a><a className={styles.creditLink} href="/dashboard/admin/monetizacao/servicos">Reconciliar serviços <span aria-hidden="true">→</span></a></div>
+          <div className={styles.heroSummary}><span>Catálogo comercial</span><strong>{businessProductsError || partnerProductsError ? "—" : products.length}</strong><small>{businessProductsError || partnerProductsError ? "Inventário indisponível ou parcial" : "Formatos publicitários registados"}</small><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Consulta de planos, inventário e actividade.</span><a className={styles.creditLink} href="/dashboard/admin/monetizacao/creditos">Gerir créditos <span aria-hidden="true">→</span></a><a className={styles.creditLink} href="/dashboard/admin/monetizacao/servicos">Reconciliar serviços <span aria-hidden="true">→</span></a></div>
           <span className={styles.heroMark} aria-hidden="true">M</span>
         </header>
 
         {queryErrors > 0 ? <div className={styles.dataNotice} role="status"><strong>Alguns indicadores podem estar incompletos.</strong> Não foi possível carregar {queryErrors} consulta(s). Os valores apresentados reflectem apenas os dados disponíveis.</div> : null}
 
         <section className={styles.metrics} aria-label="Indicadores de monetização">
-          <article><span>Planos activos</span><strong>{activePlans}</strong><small>{planRows.length} planos no catálogo</small></article>
+          <article><span>Planos activos</span><strong>{activePlans ?? "—"}</strong><small>{plansError ? "Catálogo indisponível" : `${planRows.length} planos no catálogo`}</small></article>
           <article><span>Assinaturas activas</span><strong>{subscriptions ?? "—"}</strong><small>Empresas com plano activo</small></article>
-          <article><span>Promoções recentes</span><strong>{promotionRows.length}</strong><small>Máximo de 30 registos recentes</small></article>
+          <article><span>Promoções recentes</span><strong>{promotionsError ? "—" : promotionRows.length}</strong><small>{promotionsError ? "Consulta indisponível" : "Máximo de 30 registos recentes"}</small></article>
           <article><span>Impressões</span><strong>{impressions == null ? "—" : impressions.toLocaleString("pt-MZ")}</strong><small>Eventos de exibição registados</small></article>
           <article><span>Cliques</span><strong>{clicks == null ? "—" : clicks.toLocaleString("pt-MZ")}</strong><small>Interacções registadas</small></article>
-          <article><span>Produtos activos</span><strong>{activeProducts}</strong><small>Inventário empresarial e parceiro</small></article>
+          <article><span>Produtos activos</span><strong>{activeProducts ?? "—"}</strong><small>{activeProducts == null ? "Inventário incompleto" : "Inventário empresarial e parceiro"}</small></article>
         </section>
 
         <section className={styles.panel} aria-labelledby="finance-reconciliation-title">
