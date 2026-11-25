@@ -195,6 +195,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
           {c.allowed.length ? <form action={c.table === "business" ? moderateBusinessPromotion : moderatePartnerCampaign} className={styles.moderationForm}>
             <input type="hidden" name="id" value={c.id}/>
             <label><span>Actualizar estado</span><Select name="status" defaultValue={c.status ?? ""}>{c.allowed.map(s=><option key={s} value={s}>{label(s)}</option>)}</Select></label>
+            <label><span>Justificação obrigatória</span><Input name="reason" minLength={8} maxLength={500} required placeholder="Motivo da decisão (mín. 8 caracteres)"/></label>
             <button className="btn primary" type="submit">Guardar estado</button>
           </form> : null}
         </article>)}
@@ -204,6 +205,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
           <form action={updateAdvertisingRequest} className={styles.moderationForm}>
             <input type="hidden" name="id" value={r.id}/>
             <label><span>Estado comercial</span><Select name="status" defaultValue={r.status ?? "NEW"}>{requestStatuses.map(s=><option key={s} value={s}>{label(s)}</option>)}</Select></label>
+            <label><span>Justificação obrigatória</span><Input name="reason" minLength={8} maxLength={500} required placeholder="Motivo da decisão (mín. 8 caracteres)"/></label>
             <button className="btn primary" type="submit">Actualizar pedido</button>
           </form>
         </article>)}
