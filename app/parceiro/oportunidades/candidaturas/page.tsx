@@ -13,7 +13,7 @@ export default async function PartnerOpportunityApplicationsPage({searchParams}:
  const {supabase,user}=await requirePartnerAccount();
  const [{data:accountId,error:accountError},{data:contextRows,error:contextError}]=await Promise.all([supabase.rpc("current_partner_account_id"),supabase.rpc("partner_account_context")]);
  const context=Array.isArray(contextRows)?contextRows[0]:null;
- const canManage=context?.member_role==="owner"||context?.member_role==="manager";
+ const canManage=context?.member_role==="owner";
  const {data:opportunities,error:opError}=accountId?await supabase.from("opportunities").select("id,title,slug,status").eq("partner_account_id",accountId).order("created_at",{ascending:false}):{data:[],error:accountError||new Error("Conta de parceiro não identificada")};
  const ids=(opportunities||[]).map((x:any)=>x.id);
  const {data:applications,error:appError}=ids.length?await supabase.from("opportunity_applications").select("id,opportunity_id,applicant_user_id,applicant_business_id,cover_note,status,submitted_at,created_at").in("opportunity_id",ids).order("created_at",{ascending:false}):{data:[],error:null};
@@ -31,7 +31,7 @@ export default async function PartnerOpportunityApplicationsPage({searchParams}:
  const rows=applications||[];
  return <PartnerPage eyebrow="Oportunidades · Respostas" title="Candidaturas recebidas" description="Consulte as respostas submetidas às suas oportunidades e actualize o estado de acompanhamento." action={{href:"/parceiro/oportunidades",label:"Voltar às publicações"}}>
   {(contextError||accountError)&&<div className="notice" role="alert">Não foi possível confirmar as permissões da sua conta. As alterações ficam indisponíveis até a validação ser concluída.</div>}
-  {!canManage&&!contextError&&<div className="notice">O seu papel permite consultar candidaturas, mas apenas o administrador e o gestor podem actualizar o estado.</div>}
+  {!canManage&&!contextError&&<div className="notice">O seu papel permite consultar candidaturas, mas apenas o responsável único pode actualizar o estado.</div>}
   {params.updated&&<div className="notice">Estado actualizado.</div>}
   {params.error&&<div className="notice">Não foi possível actualizar o estado. Confirme as permissões da sua conta.</div>}
   {opError||appError?<div className="partner-pub-empty"><strong>Não foi possível carregar todas as candidaturas.</strong><p>Confirme a sessão da conta e tente novamente.</p></div>:<PartnerSection eyebrow="Acompanhamento" title={rows.length+" resposta"+(rows.length===1?"":"s")} description="Os dados apresentados são limitados às oportunidades que a sua conta consegue consultar.">
