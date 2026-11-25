@@ -82,9 +82,9 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 - No tests, validation or deployment performed (per closure directive).
 
 **B8-T04 — Moderation and discovery governance (10/10):**
-- Implementation evidence added: listing moderation reads current state, enforces an explicit transition map and compare-and-set; an immutable listing status-event table/trigger records actor and before/after state with owner/business-manager/Super-Admin read boundaries; committed status changes notify the listing owner. Opportunity moderation retains its state machine and compare-and-set guard; deadline expiry is covered by the existing scheduled close migration.
-- Commits: `28587dd` (listing lifecycle guard), `1aa1d61` (correct transition-map validation), `55ba647` (immutable listing moderation history), `c7747ba` (owner notification after status change).
-- Task remains open; company/profile moderation audit and reason coverage, duplicate/invalid submission handling and media/report operations still require implementation.
+- Implementation evidence added: listing moderation now uses a Super Admin-only database RPC with row locking, an authoritative lifecycle map and mandatory 8–500 character reason. The immutable event record captures actor, before/after status and reason atomically; the Admin offer page exposes this history and the reason for each decision. Owner notification remains tied to committed status changes. Opportunity moderation retains its state machine and compare-and-set guard; deadline expiry is covered by the existing scheduled close migration.
+- Commits: `28587dd` (listing lifecycle guard), `1aa1d61` (transition validation), `55ba647` (immutable listing history), `c7747ba` (owner notification), `5586339` (reason-required moderation RPC), `d9e3669` (action uses RPC), `22fa009` (reason input), `d855c76` (history UI).
+- Task remains open; company/profile moderation reason coverage, duplicate/invalid submission handling and media/report operations still require implementation.
 
 1. company moderation; 2. profile state; 3. listing moderation; 4. listing lifecycle transitions; 5. opportunity moderation; 6. deadline/expiry controls; 7. duplicate/invalid submissions; 8. media/report handling; 9. status/audit history; 10. notifications tied to approved actions.
 
@@ -111,7 +111,7 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 
 **B8-T08 — Audit, finance action reasons and notification governance (10/10):**
 - Implementation evidence: account governance uses immutable account audit records, reason-required administrative status changes, actor/target attribution, previous/next status, and a protected last-active-Super-Admin rule. Account and Partner-access revocation flows also preserve reasoned audit history. Canonical account audit notification wiring exists in the 25 Nov migration set. Listing moderation now also records immutable actor/before/after status events; this closes listing event integrity but does not yet provide an administrator reason field.
-- Support assignment and status changes now capture mandatory reason, actor and before/after values in the operational event log via transaction-local context, atomically with the mutation. The reason is exposed in the Super Admin event history. This is a further module-specific audit closure, not yet a canonical cross-module writer/event matrix.
+- Support assignment and status changes now capture mandatory reason, actor and before/after values in the operational event log via transaction-local context, atomically with the mutation. Listing moderation also records mandatory reason and immutable actor/before/after status events, exposed in the Admin moderation history. These are module-specific audit closures, not yet a canonical cross-module writer/event matrix.
 - Task remains open pending canonical cross-module writer/event matrix, recipient privacy, deduplication, delivery failure/retry and complete review surface.
 1. canonical audit writer inventory; 2. critical-action reason; 3. actor attribution; 4. before/after state; 5. event integrity; 6. recipient matrix; 7. message/link privacy; 8. dedupe; 9. failed delivery/retry visibility; 10. history and admin review surfaces.
 
