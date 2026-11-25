@@ -33,6 +33,8 @@ begin
       ))
   ) then raise exception 'BUSINESS_MANAGEMENT_REQUIRED' using errcode='42501'; end if;
 
+  -- Lock the natural key even when no application row exists yet; this serializes first-time concurrent submissions.
+  perform pg_advisory_xact_lock(hashtextextended(p_opportunity_id::text || ':' || v_actor::text,0));
   select * into v_application from public.opportunity_applications
     where opportunity_id=p_opportunity_id and applicant_user_id=v_actor for update;
   if found then
