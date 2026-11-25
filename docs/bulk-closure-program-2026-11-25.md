@@ -286,3 +286,9 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - O limite efectivo do servidor foi alinhado com o limite anunciado no formulário: 10 ficheiros, até 10 MB cada.
 - Commits: `fd10ca2` (detecção e sinalização), `22f3566` (mensagem ao utilizador), `305e5a7` (limite coerente).
 - A limpeza compensatória de objectos após falha continua a ser best-effort; uma falha de remoção não foi convertida ainda numa fila durável de recuperação. Não foram executados testes.
+
+### B8 — Transparência de moderação para titulares (26/11)
+- O histórico de oportunidades na área do titular passou a apresentar a justificação da decisão administrativa, quando exista.
+- As notificações de alteração de estado de oportunidades e ofertas passaram a incluir a justificação capturada pela mesma transacção de moderação. Alterações sem motivo administrativo continuam sem texto de justificação.
+- Migration: `20261126104000_f370_moderation_reason_notifications.sql`; commits `48acea3` (histórico do titular) e `0db51d3` (notificações).
+- Não foram executados testes ou validação SQL.
