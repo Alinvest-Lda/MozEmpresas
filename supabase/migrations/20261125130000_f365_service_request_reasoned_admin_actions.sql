@@ -38,11 +38,15 @@ begin
   end if;
   select * into v_request from public.service_requests where id=p_request_id for update;
   if not found then raise exception 'SERVICE_REQUEST_NOT_FOUND'; end if;
-  if p_status is distinct from v_request.status and p_status not in (
-    case v_request.status when 'REQUESTED' then 'UNDER_REVIEW' when 'UNDER_REVIEW' then 'QUOTED'
-    when 'QUOTED' then 'ACCEPTED' when 'ACCEPTED' then 'IN_PROGRESS'
-    when 'IN_PROGRESS' then 'COMPLETED' else null end,
-    'CANCELLED'
+  if p_status is distinct from v_request.status and not (
+    case v_request.status
+      when 'REQUESTED' then p_status in ('UNDER_REVIEW','CANCELLED')
+      when 'UNDER_REVIEW' then p_status in ('QUOTED','ACCEPTED','CANCELLED')
+      when 'QUOTED' then p_status in ('ACCEPTED','CANCELLED')
+      when 'ACCEPTED' then p_status in ('IN_PROGRESS','CANCELLED')
+      when 'IN_PROGRESS' then p_status in ('COMPLETED','CANCELLED')
+      else false
+    end
   ) then raise exception 'INVALID_SERVICE_REQUEST_TRANSITION'; end if;
   if p_status is not distinct from v_request.status and p_requested_price is not distinct from v_request.requested_price then
     raise exception 'SERVICE_REQUEST_UNCHANGED';
