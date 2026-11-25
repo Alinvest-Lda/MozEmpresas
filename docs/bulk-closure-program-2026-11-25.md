@@ -280,3 +280,9 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - O endpoint de escrita rejeita corpos com Content-Length superior a 16 KiB antes de interpretar o JSON. A protecção de rate limit mantém comportamento fail-closed quando o endereço do cliente não pode ser obtido do proxy configurado.
 - Commit: `634c5d3`.
 - Não foram executados testes ou validação.
+
+### B8 — Integridade dos anexos de oportunidades (26/11)
+- A interface já não apresenta como concluída uma publicação com ficheiros seleccionados que falharam no upload: a oportunidade permanece publicada, mas o utilizador recebe aviso específico de que os anexos não foram associados.
+- O limite efectivo do servidor foi alinhado com o limite anunciado no formulário: 10 ficheiros, até 10 MB cada.
+- Commits: `fd10ca2` (detecção e sinalização), `22f3566` (mensagem ao utilizador), `305e5a7` (limite coerente).
+- A limpeza compensatória de objectos após falha continua a ser best-effort; uma falha de remoção não foi convertida ainda numa fila durável de recuperação. Não foram executados testes.
