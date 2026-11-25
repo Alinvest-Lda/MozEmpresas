@@ -115,3 +115,8 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - The main ticket query still distinguishes query failure from a genuinely empty queue.
 - Commit: `48a4494` — report incomplete support data instead of false queue metrics.
 - Remaining nuance: if auxiliary queries fail, ticket rows may still render, but related names/conversation/event detail can be incomplete. The warning is visible; B8 remains open until all admin surfaces/actions are reviewed.
+
+### B8 — Advertising and company governance error-integrity tranche
+- Advertising Admin now captures failures from campaign/request queries, event counters, partner catalogue and partner campaign history. When any query fails, derived counts and CTR are suppressed, a warning explains possible partial lists, and an empty-filter state is not shown as conclusive.
+- Company governance now explicitly surfaces failure in the active-owner lookup; company data may still be present, but owner names/emails are marked as potentially unavailable rather than silently blank.
+- Commits: `f539ebf` (advertising metrics/query error handling); `17a4123` (company owner lookup warning).
