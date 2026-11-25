@@ -34,7 +34,7 @@ export default async function InstitutionalPartnersPage({searchParams}:{searchPa
   const {supabase,authorized}=await getSuperAdminContext();
   if(!authorized) return null;
   const params=await searchParams;
-  const [{data:partners,error:partnerError},{data:contracts},{data:engagements},{data:payments},{data:documents},{data:contacts},{data:reports},{data:contractFinance},{data:adProducts},{data:campaigns},{data:staff}] = await Promise.all([
+  const [{data:partners,error:partnerError},{data:contracts,error:contractsError},{data:engagements,error:engagementsError},{data:payments,error:paymentsError},{data:documents,error:documentsError},{data:contacts,error:contactsError},{data:reports,error:reportsError},{data:contractFinance,error:contractFinanceError},{data:adProducts,error:adProductsError},{data:campaigns,error:campaignsError},{data:staff,error:staffError}] = await Promise.all([
     supabase.from("partner_accounts").select("id,name,legal_name,tax_id,billing_address,billing_city,operating_model,portal_enabled,status,contact_email,contact_phone,description,internal_notes,created_at").order("created_at",{ascending:false}).limit(250),
     supabase.from("partner_contracts").select("id,account_id,contract_code,title,contract_type,status,contracted_amount_mzn,billing_frequency,starts_on,ends_on").order("created_at",{ascending:false}).limit(150),
     supabase.from("partner_service_engagements").select("id,account_id,contract_id,title,service_type,status,request_source,agreed_amount_mzn,due_at,received_at,assigned_commercial_user_id,assigned_operations_user_id").order("received_at",{ascending:false}).limit(150),
@@ -51,7 +51,7 @@ export default async function InstitutionalPartnersPage({searchParams}:{searchPa
   const {data:operationalAudit,error:operationalAuditError}=await supabase.from("partner_operational_audit").select("id,account_id,entity_type,entity_id,action,actor_user_id,before_state,after_state,reason,created_at").order("created_at",{ascending:false}).limit(400);
   const {data:partnerDocuments,error:partnerDocumentsError}=await supabase.from("partner_documents").select("id,account_id,document_type,parent_type,parent_id,title,original_filename,mime_type,size_bytes,version_number,storage_path,created_at").order("created_at",{ascending:false}).limit(300);
   const {data:campaignStatusEvents,error:campaignStatusEventsError}=await supabase.from("partner_ad_campaign_status_events").select("id,campaign_id,account_id,old_status,new_status,event_type,actor_user_id,created_at").order("created_at",{ascending:false}).limit(250);
-  const {data:entitlements}=await supabase.from("partner_entitlements").select("id,account_id,entitlement_type,name,description,scope,starts_at,ends_at,status").order("created_at",{ascending:false}).limit(300);
+  const {data:entitlements,error:entitlementsError}=await supabase.from("partner_entitlements").select("id,account_id,entitlement_type,name,description,scope,starts_at,ends_at,status").order("created_at",{ascending:false}).limit(300);
   const entitlementRows=entitlements??[];
   const partnerDocumentRows=partnerDocuments??[];
   const p=partners??[], c=contracts??[], e=engagements??[], pay=payments??[], docs=documents??[], contactsRows=contacts??[], reportRows=reports??[], financeRows=contractFinance??[], products=adProducts??[], campaignRows=campaigns??[];
