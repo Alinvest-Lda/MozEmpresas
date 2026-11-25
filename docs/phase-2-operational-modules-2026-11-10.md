@@ -598,6 +598,10 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 
 ## F3.34–F3.36 — Fecho estrutural do acesso único de parceiros (24/11/2026)
 
+
+> **Nota de reconciliação de numeração (25/11/2026):** As headings abaixo com F3.37–F3.41 foram atribuídas por engano aos sufixos de migração f337–f341. Não são novos números funcionais. O histórico funcional confirmado já alcança F3.75. Esta secção passa a ser lida como registo de migrações técnicas, não como reinício ou avanço da série funcional. Os registos de intervenções F3.34–F3.36 são preservados separadamente.
+
+
 - A regra de produto foi alinhada: uma organização Parceiro tem um único utilizador activo, sem convites de gestores adicionais.
 - `partner_access_claim(text,uuid)` atribui o papel `owner` ao utilizador inicial, valida email e conta de destino, respeita a membership única e não cria uma segunda associação activa.
 - F3.36 impede a activação de convites por perfis já desactivados, com pedido de eliminação ou estado diferente de `ACTIVE`; o fluxo não reativa contas por efeito lateral.
@@ -609,7 +613,7 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Esta tranche é implementação de produto e base de dados. Não foram executados testes de integração, smoke tests ou validações finais; ficam para depois do fecho integral da implementação.
 
 
-## F3.37–F3.40 — Notificações transaccionais e governação de conta (25/11/2026)
+## Migrações técnicas f337–f340 — Notificações e governação (25/11/2026)
 
 - F3.37: criada a persistência e o fluxo de notificação para governação de conta e revogação do acesso Parceiro. A revogação mantém-se atómica: membership inactiva, histórico institucional e notificação ao utilizador na mesma transacção.
 - F3.38: removido o segundo trigger de mensagens de suporte introduzido pela evolução F3.73, que coexistia com o trigger anterior e podia gerar notificações duplicadas. Mantido o trigger anterior, que exclui o utilizador do ticket da distribuição de alertas para o backoffice.
@@ -624,7 +628,7 @@ Os 25 ficheiros sem nome correspondente incluem 7 baselines legadas numeradas `0
 - Não foram executados testes integrados, de duplicação ou de isolamento nesta tranche; ficam para a etapa posterior ao fecho global da implementação.
 
 
-## F3.41 — Notificações do ciclo de oportunidades (25/11/2026)
+## Migração técnica f341 — Notificações do ciclo de oportunidades (25/11/2026)
 
 - Alterações de estado de uma candidatura geram notificação ao candidato, com referência à oportunidade e estados anterior/novo.
 - Alterações de estado de uma oportunidade geram notificação ao titular registado, sem notificar o próprio actor que efectuou a alteração.
