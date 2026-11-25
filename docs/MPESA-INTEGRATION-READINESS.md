@@ -17,7 +17,7 @@ Sandbox routing values reflected in the supplied HTTP/API examples:
 - Origin: `developer.mpesa.vm.co.mz`.
 - Service Provider Code: `902809` (the Organization Shortcode supplied for this merchant account).
 - API Key and Public Key remain server-side secrets and must never be prefixed with `NEXT_PUBLIC_`.
-- `MPESA_MERCHANT_CODE` remains a legacy internal identifier; it is not substituted for Service Provider Code.
+- `MPESA_SERVICE_PROVIDER_CODE` is the Open API routing identifier; it is not duplicated with a callback-only merchant field.
 - No `MPESA_WEBHOOK_SECRET` is assumed or fabricated.
 
 The Sandbox host/ports and request contract are based on the user's supplied Vodacom portal material and HTTP example. A successful mocked test validates our request construction, not the provider's acceptance of a live Sandbox request.
@@ -45,24 +45,9 @@ The Query Transaction Status endpoint is now wired into a manual reconciliation 
 
 ## Callback / webhook boundary
 
-The existing `app/api/webhooks/payments/mpesa/route.ts` is a legacy custom callback that expects HMAC headers and a custom payload. It is not the Vodacom callback format.
+The obsolete custom HMAC callback endpoint was removed from the repository. It expected a custom payload and HMAC headers not confirmed by the supplied Vodacom documentation, so it must not be registered as a Vodacom Response URL. The callback helper and its isolated tests were removed with that endpoint.
 
-The supplied Vodacom asynchronous callback payload is:
-
-- `input_OriginalConversationID`
-- `input_ThirdPartyReference`
-- `input_TransactionID`
-- `input_ResultCode`
-- `input_ResultDesc`
-
-The acknowledgement contains:
-
-- `output_OriginalConversationID`
-- `output_ResponseDesc`
-- `output_ResponseCode`
-- `output_ThirdPartyConversationID`
-
-The material supplied so far does not define Vodacom callback authentication/signature headers or a shared secret. The legacy HMAC handler therefore remains fail-closed and must not be mistaken for a verified Vodacom listener. Do not register an asynchronous Response URL or accept unauthenticated callbacks until the account's callback authenticity procedure is confirmed. If the account uses synchronous mode, the complete synchronous response contract must still be verified before settlement is automated.
+No callback listener is currently enabled. Until the provider confirms callback authentication and the account's synchronous/asynchronous mode, settlement remains dependent on documented status reconciliation and the appropriate existing settlement RPC; do not enable automated callback settlement.
 
 ## What remains before a real Sandbox payment test
 
