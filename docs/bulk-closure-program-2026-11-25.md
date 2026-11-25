@@ -65,6 +65,9 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 
 **B8-T02 — Partner backoffice operations (10/10):**
 1. partner create/update/status; 2. contacts and primary-contact consistency; 3. contracts and transition rules; 4. engagements, assignment and status; 5. invoice creation/link validation; 6. bank transfer registration/duplicate reference; 7. transfer verification and overpayment guard; 8. campaign capacity/date/price integrity; 9. report delivery/email confirmation; 10. document upload/version/access and association integrity.
+- **Task implementation status: 10/10 addressed in the backoffice actions (implementation-only; not runtime-verified).** Added strict calendar-date validation for contract periods; start/end ordering; finite bounded engagement amounts and local datetime validation; report period format/date-order checks; entitlement date parsing; campaign datetime format/order checks; active-partner guard before new contract, engagement, invoice, bank transfer, contact, report, campaign, entitlement or document operations; document parent ownership validation against partner account; document upload rollback when registration fails remains in place; campaign price/capacity/date invariants continue to be delegated to the database RPC as authoritative.
+- Batch commits: `f1dbc24` contract/engagement/report/entitlement date validations; `5f1f242` campaign date window and document-parent ownership; `dceb05e` active-partner account guard.
+- No tests, validation or deployment performed (per closure directive).
 
 **B8-T03 — User, staff and access administration (10/10):**
 1. user list/query states; 2. staff listing and role source; 3. activation/deactivation; 4. suspension/ban; 5. account recovery controls; 6. session/security actions; 7. staff removal/revocation; 8. owner/super-admin escalation protections; 9. audit and reason coverage; 10. revalidation of access after mutation.
