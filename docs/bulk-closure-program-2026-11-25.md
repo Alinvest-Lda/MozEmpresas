@@ -235,3 +235,10 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - Gestão institucional agora captura erros das consultas auxiliares (contratos, execuções, pagamentos, documentos, contactos, relatórios, resumos financeiros, catálogo de publicidade, campanhas, staff, auditorias, documentos, eventos e benefícios) e exibe aviso global quando o conjunto está incompleto.
 - Commits: `0b7663e` (captura de erros), `6881a22` (aviso visível no backoffice).
 - Sem testes, validação final ou deploy.
+
+### B8 — Additional implementation tranche (26/11)
+- Security response headers were added globally in `next.config.ts`: HSTS, MIME sniffing protection, frame denial, strict referrer policy, restrictive permissions policy, DNS prefetch and same-origin opener isolation. No Content Security Policy was introduced because the complete script/style/third-party inventory has not yet been reconciled; a premature CSP could break legitimate flows.
+- Opportunity moderation history now displays the recorded action reason. A failure in the lifecycle-event query is included in the page's incomplete-data warning rather than silently rendering an empty history.
+- Support tickets now expose factual ageing (days since creation and last update). This is operational visibility only; it does not define or promise an SLA.
+- Commits: `fd6b822` (global security headers), `0db925e` (opportunity reason/history error visibility), `a8c6bf9` and `f367e69` (support ageing and styling).
+- No tests, validation, smoke checks or deployment performed.
