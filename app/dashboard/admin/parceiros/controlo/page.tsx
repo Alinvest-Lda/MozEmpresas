@@ -15,7 +15,7 @@ const renewalStatus:Record<string,string>={NOT_REVIEWED:"Por avaliar",REVIEW_REQ
 export default async function PartnerControlPage({searchParams}:{searchParams:Promise<{error?:string;saved?:string}>}){
  const {supabase,authorized}=await getSuperAdminContext();if(!authorized)return null;
  const params=await searchParams;
- const [{data,error},{data:staffData},{data:performanceData,error:performanceError},{data:actionData,error:actionError}]=await Promise.all([
+ const [{data,error},{data:staffData,error:staffError},{data:performanceData,error:performanceError},{data:actionData,error:actionError}]=await Promise.all([
   supabase.rpc("admin_partner_execution_renewal_dashboard_f362"),
   supabase.rpc("admin_list_platform_staff"),
   supabase.rpc("admin_partner_relationship_performance_f364"),
@@ -28,7 +28,7 @@ export default async function PartnerControlPage({searchParams}:{searchParams:Pr
  return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
   <header className={styles.hero}><div><span>Backoffice institucional · F3.62 / F3.63</span><h1>Controlo e continuidade</h1><p>Acompanhamento das execuções, entregas pendentes e continuidade dos contratos institucionais. Os indicadores são calculados a partir dos registos operacionais existentes.</p></div><a href="/dashboard/admin/parceiros/gestao">Gestão de parceiros</a></header>
   {params.error?<div className={styles.error}>{errors[params.error]??"Não foi possível concluir a operação."}</div>:null}
-  {staffData===null?<div className={styles.error}>A lista de utilizadores internos não foi carregada; campos de responsável podem estar incompletos.</div>:null}
+  {staffError?<div className={styles.error}>Não foi possível carregar a lista de utilizadores internos; selecção de responsáveis está indisponível ou incompleta.</div>:null}
   {actionError?<div className={styles.error}>Não foi possível carregar o histórico de acções institucionais. Não assumimos que a fila esteja vazia.</div>:null}
   {params.saved?<div className={styles.success}>Plano de renovação actualizado e registado no histórico.</div>:null}
   {error?<div className={styles.error}>Não foi possível carregar o painel. Verifique as permissões e tente novamente.</div>:<>
