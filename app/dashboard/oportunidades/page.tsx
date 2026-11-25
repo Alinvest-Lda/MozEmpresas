@@ -54,13 +54,14 @@ export default async function MyOpportunities({
   }
   const feedback: Record<string, { kind: "success" | "error" | "warning"; message: string }> = {
     success: { kind: "success", message: "Oportunidade publicada." },
+    "attachments-error": { kind: "warning", message: "A oportunidade foi publicada, mas os ficheiros seleccionados não foram anexados. Edite a publicação ou contacte o suporte antes de partilhar os documentos." },
     updated: { kind: "success", message: "Estado da oportunidade actualizado." },
     unchanged: { kind: "warning", message: "A oportunidade já se encontra nesse estado." },
     error: { kind: "error", message: "Não foi possível concluir a operação. Verifique os campos e tente novamente." },
     forbidden: { kind: "error", message: "Não tem permissão para alterar esta oportunidade." },
     "invalid-transition": { kind: "error", message: "Uma oportunidade arquivada não pode ser reaberta." },
   };
-  const messageKey = params?.publish === "success" ? "success" : params?.publish === "error" ? "error" : params?.status;
+  const messageKey = params?.publish === "success" ? "success" : params?.publish === "attachments-error" ? "attachments-error" : params?.publish === "error" ? "error" : params?.status;
   const notice = messageKey ? feedback[messageKey] : null;
 
   return (
