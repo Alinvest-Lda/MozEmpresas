@@ -274,3 +274,9 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - A acção de servidor deixou de fazer a sequência vulnerável de consulta seguida de insert e passa a traduzir os resultados da RPC em respostas específicas.
 - Migration: `20261126103000_f369_atomic_opportunity_submission.sql`; commits `dc74da6` e `03227bf` (RPC e serialização), `bb060b6` (server action).
 - Não foram executados testes ou validação SQL.
+
+### B8 — Segurança de APIs administrativas (26/11)
+- A API de leitura e intervenção sobre divergências de auditoria financeira passou a aplicar limites separados de frequência (60 leituras/minuto; 20 escritas/minuto), mantendo a autorização Super Admin já existente.
+- O endpoint de escrita rejeita corpos com Content-Length superior a 16 KiB antes de interpretar o JSON. A protecção de rate limit mantém comportamento fail-closed quando o endereço do cliente não pode ser obtido do proxy configurado.
+- Commit: `634c5d3`.
+- Não foram executados testes ou validação.
