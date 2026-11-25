@@ -38,9 +38,9 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
   const ids = rows.map(t => t.id);
   const [{ data: events, error: eventsError }, { data: staffRows, error: staffError }] = await Promise.all([
     ids.length ? supabase.from("support_ticket_events").select("id,ticket_id,event_type,old_status,new_status,old_priority,new_priority,old_assigned_to,new_assigned_to,created_at").in("ticket_id", ids).order("created_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
-    supabase.from("platform_members").select("user_id").eq("active", true).eq("role", "super_admin"),
+    supabase.rpc("admin_list_platform_staff"),
   ]);
-  const staffIds = [...new Set((staffRows ?? []).map(x => x.user_id))];
+  const staffIds = [...new Set((staffRows ?? []).filter((x:any) => x.role === "super_admin" && x.active === true).map((x:any) => x.user_id))];
   const { data: staffProfiles, error: staffProfilesError } = staffIds.length ? await supabase.from("profiles").select("id,full_name").in("id", staffIds) : { data: [], error: null };
   const staff = staffProfiles ?? [];
   const { data: messages, error: messagesError } = ids.length ? await supabase.from("support_messages").select("id,ticket_id,sender_role,body,created_at").in("ticket_id", ids).order("created_at", { ascending: true }) : { data: [], error: null };
