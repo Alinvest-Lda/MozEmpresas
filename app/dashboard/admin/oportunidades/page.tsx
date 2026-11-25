@@ -101,9 +101,9 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
   const queryString = filterParams.toString();
   const pageHref = (number: number) => "/dashboard/admin/oportunidades?" + [queryString, "page=" + number].filter(Boolean).join("&");
   const pageIds = (opportunities ?? []).map((item) => item.id);
-  const { data: lifecycleEvents } = pageIds.length
+  const { data: lifecycleEvents, error: lifecycleEventsError } = pageIds.length
     ? await supabase.from("opportunity_events").select("id,opportunity_id,event_type,old_status,new_status,created_at").in("opportunity_id", pageIds).order("created_at", { ascending: false })
-    : { data: [] };
+    : { data: [], error: null };
   const eventsByOpportunity = new Map<string, any[]>();
   for (const event of lifecycleEvents ?? []) {
     const list = eventsByOpportunity.get(event.opportunity_id) ?? [];
@@ -131,6 +131,7 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
           {result === "success" ? "Estado da oportunidade actualizado." : "Não foi possível actualizar o estado. Confirme a autorização e tente novamente."}
         </div> : null}
 
+        {lifecycleEventsError ? <div className="notice" role="alert">O histórico de alterações não pôde ser carregado. As oportunidades são apresentadas, mas o seu histórico está indisponível.</div> : null}
         <section className={styles.metrics} aria-label="Resumo do módulo">
           <Link href="/dashboard/admin/oportunidades?estado=PUBLISHED" className={styles.metric}>
             <span>Publicadas</span><strong>{publishedCount.error ? "—" : (publishedCount.count ?? 0).toLocaleString("pt-MZ")}</strong><small>Visíveis no directório, conforme os prazos</small>
