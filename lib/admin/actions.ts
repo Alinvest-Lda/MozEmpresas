@@ -54,25 +54,16 @@ export async function moderateListing(formData: FormData) {
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return { error: "Sem autorização para moderar ofertas." };
 
-  const { data: currentListing, error: lookupError } = await supabase
-    .from("listings")
-    .select("id,status")
-    .eq("id", id)
-    .maybeSingle();
-  if (lookupError || !currentListing) return { error: "Não foi possível localizar a oferta. Confirme o registo e tente novamente." };
-  if (!(listingTransitions[currentListing.status] ?? []).includes(status)) {
-    return { error: "A transição solicitada não é permitida a partir do estado actual da oferta." };
-  }
-
-  const { data: updatedListing, error } = await supabase
-    .from("listings")
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("status", currentListing.status)
-    .select("id")
-    .maybeSingle();
-
-  if (error || !updatedListing) return { error: "A oferta foi alterada em simultâneo ou não foi possível actualizar. Reveja o estado antes de repetir." };
+  const reason = String(formData.get("reason") || "").trim();
+  if (reason.length < 8 || reason.length > 500) return { error: "A justificação deve ter entre 8 e 500 caracteres." };
+  const { error } = await supabase.rpc("admin_set_listing_status", {
+    p_listing_id: id,
+    p_new_status: status,
+    p_reason: reason,
+  });
+  if (error) return { error: error.message.includes("INVALID_LISTING_STATUS_TRANSITION")
+    ? "A transição solicitada não é permitida a partir do estado actual."
+    : "Não foi possível moderar a oferta. Confirme o estado e tente novamente." };
   revalidatePath("/dashboard/admin");
   revalidatePath("/marketplace");
   return { success: true };
