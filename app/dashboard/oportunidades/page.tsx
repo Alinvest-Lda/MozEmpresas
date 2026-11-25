@@ -44,7 +44,7 @@ export default async function MyOpportunities({
 
   const opportunityIds = (opportunities ?? []).map((item) => item.id);
   const { data: lifecycleEvents } = opportunityIds.length
-    ? await supabase.from("opportunity_events").select("id,opportunity_id,event_type,old_status,new_status,created_at").in("opportunity_id", opportunityIds).order("created_at", { ascending: false })
+    ? await supabase.from("opportunity_events").select("id,opportunity_id,event_type,old_status,new_status,action_reason,created_at").in("opportunity_id", opportunityIds).order("created_at", { ascending: false })
     : { data: [] };
   const eventsByOpportunity = new Map<string, any[]>();
   for (const event of lifecycleEvents ?? []) {
@@ -113,7 +113,7 @@ export default async function MyOpportunities({
                     <strong>{item.title}</strong>
                     <small>{item.organization || "Entidade não indicada"}{item.location ? " · " + item.location : ""}</small>
                     <small>{item.closes_at ? "Encerra em " + new Date(item.closes_at).toLocaleString("pt-MZ") : "Sem data de encerramento"}</small>
-                    <details className="opportunity-history"><summary>Histórico ({(eventsByOpportunity.get(item.id) ?? []).length})</summary><ol>{(eventsByOpportunity.get(item.id) ?? []).map((event) => <li key={event.id}><strong>{event.event_type === "CREATED" ? "Publicação criada" : event.event_type === "BASELINE" ? "Histórico inicial" : "Estado actualizado"}</strong><span>{event.old_status ? (statusLabels[event.old_status] || event.old_status) + " → " : ""}{statusLabels[event.new_status] || event.new_status}</span><small>{new Date(event.created_at).toLocaleString("pt-MZ")}</small></li>)}</ol></details>
+                    <details className="opportunity-history"><summary>Histórico ({(eventsByOpportunity.get(item.id) ?? []).length})</summary><ol>{(eventsByOpportunity.get(item.id) ?? []).map((event) => <li key={event.id}><strong>{event.event_type === "CREATED" ? "Publicação criada" : event.event_type === "BASELINE" ? "Histórico inicial" : "Estado actualizado"}</strong><span>{event.old_status ? (statusLabels[event.old_status] || event.old_status) + " → " : ""}{statusLabels[event.new_status] || event.new_status}</span><small>{new Date(event.created_at).toLocaleString("pt-MZ")}</small>{event.action_reason ? <small>Justificação: {event.action_reason}</small> : null}</li>)}</ol></details>
                   </div>
                   <div className="opportunity-list-actions">
                     {item.status !== "ARCHIVED" && <Link href={"/oportunidades/" + item.slug} className="text-link">Ver publicação →</Link>}
