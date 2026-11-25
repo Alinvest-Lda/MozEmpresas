@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
 const promotionTransitions: Record<string, readonly string[]> = {
+  DRAFT: ["PENDING", "ARCHIVED"],
   PENDING: ["ACTIVE", "PAUSED", "EXPIRED"],
   ACTIVE: ["PAUSED", "EXPIRED"],
   PAUSED: ["ACTIVE", "EXPIRED"],
@@ -32,9 +33,14 @@ async function updateStatus(table: "business_promotions" | "advertising_requests
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) redirect("/login?next=/dashboard/admin/publicidade");
 
-  const { data: current, error: lookupError } = await supabase.from(table).select("id,status").eq("id", id).maybeSingle();
+  const { data: current, error: lookupError } = await supabase.from(table).select(table === "business_promotions" ? "id,status,payment_method,paid_at,credits_charged" : "id,status").eq("id", id).maybeSingle();
   if (lookupError || !current || !(transitions[current.status ?? ""] ?? []).includes(status)) {
     redirect("/dashboard/admin/publicidade?result=invalid-transition");
+  }
+  if (table === "business_promotions" && status === "ACTIVE") {
+    const creditSettled = current.payment_method === "CREDITS" && Number(current.credits_charged ?? 0) > 0;
+    const mpesaSettled = current.payment_method === "MPESA" && Boolean(current.paid_at);
+    if (!creditSettled && !mpesaSettled) redirect("/dashboard/admin/publicidade?result=payment-not-settled");
   }
   const { data: updated, error } = await supabase.from(table).update({ status, updated_at: new Date().toISOString() })
     .eq("id", id).eq("status", current.status).select("id").maybeSingle();
