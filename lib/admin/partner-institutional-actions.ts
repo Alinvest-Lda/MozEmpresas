@@ -35,6 +35,10 @@ function validLocalDateTime(value: string) {
 
 
 type PartnerLinkIds = { contractId?: string; engagementId?: string; campaignId?: string; documentId?: string };
+async function partnerAccountIsActive(supabase: AdminSupabase, accountId: string) {
+  const {data,error}=await supabase.from("partner_accounts").select("status").eq("id",accountId).maybeSingle();
+  return !error && data?.status==="ACTIVE";
+}
 async function partnerParentBelongsToAccount(supabase: AdminSupabase, accountId: string, parentType: string, parentId: string) {
   const tables: Record<string,string> = {
     CONTRACT: "partner_contracts",
@@ -124,6 +128,7 @@ export async function createPartnerContract(formData: FormData) {
     (parsed.data.starts_on && parsed.data.ends_on && parsed.data.ends_on < parsed.data.starts_on))
     redirect("/dashboard/admin/parceiros/gestao?error=contract");
   const { supabase,user } = await adminContext();
+  if(!(await partnerAccountIsActive(supabase,parsed.data.account_id))) redirect("/dashboard/admin/parceiros/gestao?error=contract");
   const { error } = await supabase.from("partner_contracts").insert({
     ...parsed.data, starts_on:parsed.data.starts_on || null, ends_on:parsed.data.ends_on || null,
     payment_terms:parsed.data.payment_terms || null, created_by:user!.id,
@@ -154,6 +159,7 @@ export async function createPartnerEngagement(formData: FormData) {
     (parsed.data.agreed_amount_mzn && (!Number.isFinite(amountValue) || amountValue! < 0 || amountValue! > 100000000000)) ||
     (parsed.data.due_at && !validLocalDateTime(parsed.data.due_at))) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
   const { supabase,user } = await adminContext();
+  if(!(await partnerAccountIsActive(supabase,parsed.data.account_id))) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
   if(parsed.data.contract_id && !(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id}))) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
   if(!(await isActivePlatformMember(supabase,parsed.data.assigned_commercial_user_id)) || !(await isActivePlatformMember(supabase,parsed.data.assigned_operations_user_id))) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
   const { error } = await supabase.from("partner_service_engagements").insert({
@@ -179,6 +185,7 @@ export async function issuePartnerInvoice(formData: FormData) {
   if (!parsed.success || (parsed.data.contract_id && !uuid.safeParse(parsed.data.contract_id).success) ||
       (parsed.data.engagement_id && !uuid.safeParse(parsed.data.engagement_id).success) || (parsed.data.campaign_id && !uuid.safeParse(parsed.data.campaign_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=invoice");
   const {supabase}=await adminContext();
+  if(!(await partnerAccountIsActive(supabase,parsed.data.account_id))) redirect("/dashboard/admin/parceiros/gestao?error=invoice");
   if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id}))) redirect("/dashboard/admin/parceiros/gestao?error=invoice");
   const {error}=await supabase.rpc("admin_issue_partner_invoice",{
     p_account_id:parsed.data.account_id,p_contract_id:parsed.data.contract_id||null,
@@ -204,6 +211,7 @@ export async function recordPartnerBankTransfer(formData: FormData) {
   if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id,parsed.data.campaign_id,parsed.data.document_id].some(x=>x && !uuid.safeParse(x).success))
     redirect("/dashboard/admin/parceiros/gestao?error=transfer");
   const {supabase}=await adminContext();
+  if(!(await partnerAccountIsActive(supabase,parsed.data.account_id))) redirect("/dashboard/admin/parceiros/gestao?error=transfer");
   if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id,documentId:parsed.data.document_id}))) redirect("/dashboard/admin/parceiros/gestao?error=transfer");
   const {error}=await supabase.rpc("admin_record_partner_bank_transfer",{
     p_account_id:parsed.data.account_id,p_amount_mzn:parsed.data.amount_mzn,p_reference:parsed.data.reference,
@@ -243,6 +251,7 @@ export async function createPartnerContact(formData: FormData) {
       is_billing_contact:value(formData,"is_billing_contact"),receives_reports:value(formData,"receives_reports")});
   if(!parsed.success || (!parsed.data.email && !parsed.data.phone)) redirect("/dashboard/admin/parceiros/gestao?error=contact");
   const {supabase,user}=await adminContext();
+  if(!(await partnerAccountIsActive(supabase,parsed.data.account_id))) redirect("/dashboard/admin/parceiros/gestao?error=contact");
   if(parsed.data.is_primary==="true") {
     const {error:primaryError}=await supabase.from("partner_contacts").update({is_primary:false}).eq("account_id",parsed.data.account_id).eq("is_primary",true);
     if(primaryError) redirect("/dashboard/admin/parceiros/gestao?error=contact-save");
@@ -263,6 +272,7 @@ export async function createPartnerReportDelivery(formData: FormData) {
    (parsed.data.period_start&&!validCalendarDate(parsed.data.period_start)) || (parsed.data.period_end&&!validCalendarDate(parsed.data.period_end)) ||
    (parsed.data.period_start&&parsed.data.period_end&&parsed.data.period_end<parsed.data.period_start)) redirect("/dashboard/admin/parceiros/gestao?error=report");
  const {supabase,user}=await adminContext();
+ if(!(await partnerAccountIsActive(supabase,parsed.data.account_id))) redirect("/dashboard/admin/parceiros/gestao?error=report");
  if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id}))) redirect("/dashboard/admin/parceiros/gestao?error=report");
  if(parsed.data.storage_path) {
   const {data:attached,error:attachedError}=await supabase.from("partner_documents").select("id,document_type").eq("account_id",parsed.data.account_id).eq("storage_path",parsed.data.storage_path).maybeSingle();
@@ -290,6 +300,7 @@ export async function createBackofficePartnerCampaign(formData: FormData) {
     (parsed.data.ends_at&&!validLocalDateTime(parsed.data.ends_at)) ||
     (parsed.data.starts_at&&parsed.data.ends_at&&parsed.data.ends_at<=parsed.data.starts_at)) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
   const {supabase}=await adminContext();
+  if(!(await partnerAccountIsActive(supabase,parsed.data.account_id))) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
   if(parsed.data.contract_id && !(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id}))) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
   if(!(await isActivePlatformMember(supabase,parsed.data.assigned_operations_user_id))) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
   const {error}=await supabase.rpc("admin_create_partner_ad_campaign_bank_transfer",{
@@ -342,6 +353,7 @@ export async function createPartnerEntitlement(formData: FormData) {
     redirect("/dashboard/admin/parceiros/gestao?error=entitlement");
   }
   const {supabase,user}=await adminContext();
+  if(!(await partnerAccountIsActive(supabase,parsed.data.account_id))) redirect("/dashboard/admin/parceiros/gestao?error=entitlement");
   const {error}=await supabase.from("partner_entitlements").insert({
     account_id:parsed.data.account_id,
     entitlement_type:parsed.data.entitlement_type,
@@ -462,6 +474,7 @@ export async function createPartnerDocument(formData: FormData) {
   }
   if(documentType==="SIGNED_CONTRACT" && parentType!=="CONTRACT") redirect("/dashboard/admin/parceiros/gestao?error=document");
   const {supabase}=await adminContext();
+  if(!(await partnerAccountIsActive(supabase,accountId))) redirect("/dashboard/admin/parceiros/gestao?error=document");
   if(parentId && !(await partnerParentBelongsToAccount(supabase,accountId,parentType,parentId)))
     redirect("/dashboard/admin/parceiros/gestao?error=document");
   const extension=documentExtension(file.type);
