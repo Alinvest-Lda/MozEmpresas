@@ -109,3 +109,9 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - Added a read-only, aggregate Super Admin Notifications page at `/dashboard/admin/notificacoes`; it reports volume, unread backlog, type distribution and daily volume without exposing recipient identifiers or notification bodies. Metrics use the server-only admin client and are unavailable if that client cannot be created; queries show an error state rather than zero.
 - Added direct navigation links for Partner institutional management, execution control and reconciliation, and for the Notifications page, reducing the need to discover those routes through cross-links.
 - Commits: `46463db` (notifications page), `7720229` (navigation), `d72a0c7` (Partner route links in navigation).
+
+### B8 — Support queue error integrity (additional intervention)
+- Central Support now captures query failures for company/profile lookup, ticket events, internal staff lookup, staff profiles and message threads. If any auxiliary query fails, a warning is shown and all queue metrics are suppressed to avoid implying complete/accurate counts.
+- The main ticket query still distinguishes query failure from a genuinely empty queue.
+- Commit: `48a4494` — report incomplete support data instead of false queue metrics.
+- Remaining nuance: if auxiliary queries fail, ticket rows may still render, but related names/conversation/event detail can be incomplete. The warning is visible; B8 remains open until all admin surfaces/actions are reviewed.
