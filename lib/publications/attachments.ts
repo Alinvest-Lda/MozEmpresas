@@ -9,7 +9,7 @@ export async function savePublicationAttachments(
   files: FormDataEntryValue[]
 ) {
   const validation = validateAttachmentSelection(files, {
-    maxFiles: 12,
+    maxFiles: 10,
     maxBytesPerFile: 10 * 1024 * 1024,
     allowedMimeTypes: PUBLICATION_ATTACHMENT_TYPES,
   });
