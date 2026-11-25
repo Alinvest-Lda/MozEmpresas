@@ -43,6 +43,40 @@ Canonical product/pricing/slots/capacity/dates/targeting. Business ad request/pa
 Single active user and sequential replacement. Opportunities lifecycle/candidates/status/history/notifications. Define partner services/entitlements/exclusivity terms, scope, validity, renewal, suspension and audit. Contract/document vault. Relationship accountability/performance/action plans. Activity indicators must be factual; intelligence needs real sources.
 
 ### B8 — Super Admin
+
+#### B8 execution in bulk tasks (10 elements each)
+Tasks are executed as cohesive batches; individual micro-interventions are not reported as separate progress. Do not close a task until all ten elements are implemented (not tested) and documented.
+
+**B8-T01 — Financial and monetisation control plane (10/10 elements):**
+1. Plans/subscriptions query integrity; 2. business-ad product catalogue; 3. partner-ad catalogue; 4. campaign/promotions visibility; 5. impression/click metrics; 6. financial overview RPC failure states; 7. cross-module reconciliation RPC failure states; 8. integrity audit F3.28 failure/sample states; 9. resolution queue F3.29 action/history states; 10. M-Pesa sandbox safety, single-attempt handling and distinction between gateway acceptance and settlement.
+
+**B8-T02 — Partner backoffice operations (10/10):**
+1. partner create/update/status; 2. contacts and primary-contact consistency; 3. contracts and transition rules; 4. engagements, assignment and status; 5. invoice creation/link validation; 6. bank transfer registration/duplicate reference; 7. transfer verification and overpayment guard; 8. campaign capacity/date/price integrity; 9. report delivery/email confirmation; 10. document upload/version/access and association integrity.
+
+**B8-T03 — User, staff and access administration (10/10):**
+1. user list/query states; 2. staff listing and role source; 3. activation/deactivation; 4. suspension/ban; 5. account recovery controls; 6. session/security actions; 7. staff removal/revocation; 8. owner/super-admin escalation protections; 9. audit and reason coverage; 10. revalidation of access after mutation.
+
+**B8-T04 — Moderation and discovery governance (10/10):**
+1. company moderation; 2. profile state; 3. listing moderation; 4. listing lifecycle transitions; 5. opportunity moderation; 6. deadline/expiry controls; 7. duplicate/invalid submissions; 8. media/report handling; 9. status/audit history; 10. notifications tied to approved actions.
+
+**B8-T05 — Platform Services operations (10/10):**
+1. service request queue; 2. request status guard; 3. quote/price; 4. acceptance; 5. assignment/execution; 6. completion; 7. cancellation/expiry; 8. credit-payment boundary; 9. M-Pesa-payment boundary; 10. atomic/audit/notification and retry behavior.
+
+**B8-T06 — Advertising operations (10/10):**
+1. business campaign intake; 2. partner campaign intake; 3. product/slot eligibility; 4. capacity; 5. date bounds; 6. moderation/review; 7. payment/credit settlement; 8. activation/pause/end; 9. telemetry/billing; 10. refund/cancel and audit/notification paths.
+
+**B8-T07 — Support and service accountability (10/10):**
+1. ticket queue; 2. auxiliary profile/company lookup; 3. message thread; 4. event timeline; 5. assignment; 6. status transition; 7. response/resolution note; 8. SLA/ageing; 9. notifications; 10. incomplete-data/error state and safe retry.
+
+**B8-T08 — Audit, finance action reasons and notification governance (10/10):**
+1. canonical audit writer inventory; 2. critical-action reason; 3. actor attribution; 4. before/after state; 5. event integrity; 6. recipient matrix; 7. message/link privacy; 8. dedupe; 9. failed delivery/retry visibility; 10. history and admin review surfaces.
+
+**B8-T09 — Configuration and security control surfaces (10/10):**
+1. environment/secret state (without exposing secrets); 2. payment configuration; 3. feature/catalog settings; 4. role/RBAC source; 5. route/action guard consistency; 6. rate-limit settings; 7. storage access governance; 8. system-level error reporting; 9. auditability of configuration changes; 10. remove or clearly label unsafe/unimplemented controls.
+
+**B8-T10 — Admin UX and consolidation (10/10):**
+1. loading states; 2. true-empty states; 3. error states; 4. retry paths; 5. forbidden states; 6. consistent Portuguese-MZ terms; 7. mobile layout; 8. keyboard/focus; 9. duplicate admin entry points/navigation; 10. stale/unused admin code removal after dependency tracing.
+
 Central RBAC/server guards. Work queue/overview/SLA. User/account/session governance. Company/listing/opportunity moderation. Partner lifecycle. Service/ad/credit/payment backoffice. Atomic support. Canonical audit and reason-required critical actions. Event-recipient-message-link notification matrix.
 
 ### B9 — UX/config/legacy
