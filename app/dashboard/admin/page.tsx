@@ -32,18 +32,18 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
   let serviceRequestsQuery = supabase.from("service_requests").select("id,status,requested_price,currency,notes,created_at,updated_at,requester_user_id,requester_business_id,platform_services(name),businesses:requester_business_id(name)").order("created_at", { ascending: false }).limit(30);
   if (staleOnly) serviceRequestsQuery = serviceRequestsQuery.in("status", ["REQUESTED", "UNDER_REVIEW", "QUOTED", "ACCEPTED", "IN_PROGRESS"]).lt("updated_at", staleCutoff);
   const [
-    { data: requests },
-    { count: newRequests },
-    { count: reviewRequests },
-    { count: acceptedRequests },
-    { count: inProgressRequests },
-    { count: draftListings },
-    { count: expiredOpportunities },
-    { count: pendingBusinessCampaigns },
-    { count: pendingPartnerCampaigns },
-    { count: expiredBusinessCampaigns },
-    { count: expiredPartnerCampaigns },
-    { count: staleServiceRequests },
+    requestsResult,
+    newRequestsResult,
+    reviewRequestsResult,
+    acceptedRequestsResult,
+    inProgressRequestsResult,
+    draftListingsResult,
+    expiredOpportunitiesResult,
+    pendingBusinessCampaignsResult,
+    pendingPartnerCampaignsResult,
+    expiredBusinessCampaignsResult,
+    expiredPartnerCampaignsResult,
+    staleServiceRequestsResult,
   ] = await Promise.all([
     serviceRequestsQuery,
     supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "REQUESTED"),
@@ -58,6 +58,19 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     supabase.from("partner_ad_campaigns").select("id", { count: "exact", head: true }).eq("status", "ACTIVE").lt("ends_at", nowIso),
     supabase.from("service_requests").select("id", { count: "exact", head: true }).in("status", ["REQUESTED", "UNDER_REVIEW", "QUOTED", "ACCEPTED", "IN_PROGRESS"]).lt("updated_at", staleCutoff),
   ]);
+  const requests = requestsResult.data;
+  const newRequests = newRequestsResult.count;
+  const reviewRequests = reviewRequestsResult.count;
+  const acceptedRequests = acceptedRequestsResult.count;
+  const inProgressRequests = inProgressRequestsResult.count;
+  const draftListings = draftListingsResult.count;
+  const expiredOpportunities = expiredOpportunitiesResult.count;
+  const pendingBusinessCampaigns = pendingBusinessCampaignsResult.count;
+  const pendingPartnerCampaigns = pendingPartnerCampaignsResult.count;
+  const expiredBusinessCampaigns = expiredBusinessCampaignsResult.count;
+  const expiredPartnerCampaigns = expiredPartnerCampaignsResult.count;
+  const staleServiceRequests = staleServiceRequestsResult.count;
+  const adminDataError = [requestsResult, newRequestsResult, reviewRequestsResult, acceptedRequestsResult, inProgressRequestsResult, draftListingsResult, expiredOpportunitiesResult, pendingBusinessCampaignsResult, pendingPartnerCampaignsResult, expiredBusinessCampaignsResult, expiredPartnerCampaignsResult, staleServiceRequestsResult].some((query) => Boolean(query.error));
 
   const statusLabel = new Map(statuses);
   const requestPriority = new Map(statuses.map(([value], index) => [value, index]));
@@ -68,22 +81,23 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
   );
   return <main className="dashboard-main admin-workspace"><div className="dashboard-content">
     <AdminAnalytics />
+    {adminDataError ? <div className="notice" role="alert">Alguns indicadores do centro de controlo não puderam ser carregados. Os valores afectados são ocultados em vez de apresentados como zero.</div> : null}
     <section className="admin-control-center" aria-label="Resumo operacional">
       <div className="admin-control-heading">
         <div><span className="dashboard-kicker">Centro de controlo</span><h2>O que precisa de atenção</h2><p>Indicadores operacionais para orientar a próxima acção.</p></div>
       </div>
       <div className="admin-control-stats">
         <a className="admin-control-stat admin-control-stat-priority" href="#pedidos-servico">
-          <span className="admin-control-stat-label">Pedidos por tratar</span><strong>{(newRequests ?? 0) + (reviewRequests ?? 0)}</strong><span>{newRequests ?? 0} recebidos · {reviewRequests ?? 0} em análise</span><b>Rever pedidos <span aria-hidden="true">→</span></b>
+          <span className="admin-control-stat-label">Pedidos por tratar</span><strong>{adminDataError ? "—" : (newRequests ?? 0) + (reviewRequests ?? 0)}</strong><span>{adminDataError ? "Indicador indisponível" : (newRequests ?? 0) + " recebidos · " + (reviewRequests ?? 0) + " em análise"}</span><b>Rever pedidos <span aria-hidden="true">→</span></b>
         </a>
         <a className="admin-control-stat" href="#pedidos-servico">
-          <span className="admin-control-stat-label">Pedidos aceites</span><strong>{acceptedRequests ?? 0}</strong><span>Pedidos aceites e ainda não concluídos</span><b>Acompanhar pedidos <span aria-hidden="true">→</span></b>
+          <span className="admin-control-stat-label">Pedidos aceites</span><strong>{adminDataError ? "—" : acceptedRequests ?? 0}</strong><span>Pedidos aceites e ainda não concluídos</span><b>Acompanhar pedidos <span aria-hidden="true">→</span></b>
         </a>
         <a className="admin-control-stat" href="#ofertas">
-          <span className="admin-control-stat-label">Ofertas em rascunho</span><strong>{draftListings ?? 0}</strong><span>Ofertas que ainda precisam de revisão antes da publicação</span><b>Rever ofertas <span aria-hidden="true">→</span></b>
+          <span className="admin-control-stat-label">Ofertas em rascunho</span><strong>{adminDataError ? "—" : draftListings ?? 0}</strong><span>Ofertas que ainda precisam de revisão antes da publicação</span><b>Rever ofertas <span aria-hidden="true">→</span></b>
         </a>
         <a className="admin-control-stat" href="#pedidos-servico">
-          <span className="admin-control-stat-label">Pedidos em execução</span><strong>{inProgressRequests ?? 0}</strong><span>Pedidos com trabalho operacional iniciado</span><b>Acompanhar pedidos <span aria-hidden="true">→</span></b>
+          <span className="admin-control-stat-label">Pedidos em execução</span><strong>{adminDataError ? "—" : inProgressRequests ?? 0}</strong><span>Pedidos com trabalho operacional iniciado</span><b>Acompanhar pedidos <span aria-hidden="true">→</span></b>
         </a>
       </div>
 
@@ -94,19 +108,19 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
       <div className="admin-alert-grid">
         <a className="admin-alert-card admin-alert-critical" href="/dashboard/admin/oportunidades?prazo=expirado">
           <span className="admin-alert-topline"><span>Oportunidades expiradas</span><span className="admin-alert-mark">Prazo</span></span>
-          <strong>{expiredOpportunities ?? 0}</strong><span>Publicadas com data de encerramento anterior a hoje.</span><b>Ver oportunidades <span aria-hidden="true">→</span></b>
+          <strong>{adminDataError ? "—" : expiredOpportunities ?? 0}</strong><span>Publicadas com data de encerramento anterior a hoje.</span><b>Ver oportunidades <span aria-hidden="true">→</span></b>
         </a>
         <a className="admin-alert-card" href="/dashboard/admin/publicidade?alerta=pendentes">
           <span className="admin-alert-topline"><span>Campanhas por analisar</span><span className="admin-alert-mark">Decisão</span></span>
-          <strong>{(pendingBusinessCampaigns ?? 0) + (pendingPartnerCampaigns ?? 0)}</strong><span>{pendingBusinessCampaigns ?? 0} empresariais pendentes · {pendingPartnerCampaigns ?? 0} de parceiros solicitadas.</span><b>Rever campanhas <span aria-hidden="true">→</span></b>
+          <strong>{adminDataError ? "—" : (pendingBusinessCampaigns ?? 0) + (pendingPartnerCampaigns ?? 0)}</strong><span>{adminDataError ? "Indicador indisponível" : (pendingBusinessCampaigns ?? 0) + " empresariais pendentes · " + (pendingPartnerCampaigns ?? 0) + " de parceiros solicitadas."}</span><b>Rever campanhas <span aria-hidden="true">→</span></b>
         </a>
         <a className="admin-alert-card admin-alert-critical" href="/dashboard/admin/publicidade?alerta=expiradas">
           <span className="admin-alert-topline"><span>Campanhas activas fora do prazo</span><span className="admin-alert-mark">Prazo</span></span>
-          <strong>{(expiredBusinessCampaigns ?? 0) + (expiredPartnerCampaigns ?? 0)}</strong><span>Campanhas ainda marcadas como activas, mas com data final ultrapassada.</span><b>Ver campanhas <span aria-hidden="true">→</span></b>
+          <strong>{adminDataError ? "—" : (expiredBusinessCampaigns ?? 0) + (expiredPartnerCampaigns ?? 0)}</strong><span>Campanhas ainda marcadas como activas, mas com data final ultrapassada.</span><b>Ver campanhas <span aria-hidden="true">→</span></b>
         </a>
         <a className="admin-alert-card" href="/dashboard/admin?alerta=sem-actualizacao#pedidos-servico">
           <span className="admin-alert-topline"><span>Pedidos sem actualização</span><span className="admin-alert-mark">7+ dias</span></span>
-          <strong>{staleServiceRequests ?? 0}</strong><span>Pedidos não concluídos nem cancelados, sem actualização há mais de 7 dias.</span><b>Rever pedidos <span aria-hidden="true">→</span></b>
+          <strong>{adminDataError ? "—" : staleServiceRequests ?? 0}</strong><span>Pedidos não concluídos nem cancelados, sem actualização há mais de 7 dias.</span><b>Rever pedidos <span aria-hidden="true">→</span></b>
         </a>
       </div>
     </section>
