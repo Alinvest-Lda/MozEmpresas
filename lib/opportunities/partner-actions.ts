@@ -7,7 +7,7 @@ import { canManagePartnerOpportunity } from "@/lib/auth/partner-permissions";
 import { canTransitionOpportunity, canTransitionPartnerApplication } from "@/lib/opportunities/state-machine";
 import { isValidOpportunityId } from "@/lib/opportunities/validation";
 
-async function partnerManager() {
+async function partnerOwner() {
   const context = await requirePartnerAccount();
   if (!context.user || !canManagePartnerOpportunity(context.partnerContext.member_role)) {
     redirect("/parceiro/oportunidades?error=forbidden");
@@ -21,7 +21,7 @@ export async function changeOpportunityStatus(formData: FormData) {
   if (!isValidOpportunityId(id) || !["PUBLISHED", "CLOSED", "ARCHIVED", "DRAFT"].includes(status)) {
     redirect("/parceiro/oportunidades?error=status");
   }
-  const { supabase, accountId } = await partnerManager();
+  const { supabase, accountId } = await partnerOwner();
 
   const { data: currentOpportunity, error: readError } = await supabase
     .from("opportunities")
@@ -53,7 +53,7 @@ export async function changeOpportunityApplicationStatus(formData: FormData) {
   if (!isValidOpportunityId(id) || !["UNDER_REVIEW", "SHORTLISTED", "ACCEPTED", "REJECTED"].includes(status)) {
     redirect("/parceiro/oportunidades/candidaturas?error=status");
   }
-  const { supabase, accountId } = await partnerManager();
+  const { supabase, accountId } = await partnerOwner();
 
   const { data: application, error: applicationError } = await supabase
     .from("opportunity_applications")
