@@ -68,7 +68,7 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
       <div className={`dashboard-content ${styles.content}`}>
         <header className={styles.hero}>
           <div className={styles.heroCopy}><span className={styles.eyebrow}>Administração global</span><h1>Central de suporte</h1><p>Organize os pedidos de assistência, acompanhe o histórico de conversas e responda aos utilizadores num único espaço.</p></div>
-          <div className={styles.heroSummary}><span>Registos carregados</span><strong>{rows.length}</strong><small>{totalTickets} atendimentos no total · {pageSize} por página</small></div>
+          <div className={styles.heroSummary}><span>Registos carregados</span><strong>{error ? "—" : totalTickets}</strong><small>{error ? "Total indisponível" : `${pageSize} registos por página`}</small></div>
           <span className={styles.heroMark} aria-hidden="true">?</span>
         </header>
 
@@ -94,7 +94,7 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
         </section>
 
         <section className={styles.queue} aria-labelledby="support-queue-title">
-          <div className={styles.queueHead}><div><span className={styles.kicker}>Fila operacional</span><h2 id="support-queue-title">Atendimentos</h2><p>Conversas ordenadas pela actualização mais recente.</p></div><strong>{rows.length} <span>registos nesta página · {totalTickets} no total</span></strong></div>
+          <div className={styles.queueHead}><div><span className={styles.kicker}>Fila operacional</span><h2 id="support-queue-title">Atendimentos</h2><p>Conversas ordenadas pela actualização mais recente.</p></div><strong>{error ? "—" : rows.length} <span>{error ? "consulta indisponível" : `registos nesta página · ${totalTickets} no total`}</span></strong></div>
           {error ? <div className={styles.empty} role="alert"><strong>Não foi possível carregar a fila.</strong><p>Verifique a ligação à base de dados e tente novamente.</p></div> :
           rows.length ? <div className={styles.ticketList}>{rows.map(t => {
             const business = businessOptions.find(x => x.id === t.business_id)?.name || "Sem empresa associada";
