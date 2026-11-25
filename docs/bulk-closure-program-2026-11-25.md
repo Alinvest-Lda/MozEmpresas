@@ -49,6 +49,7 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 
 **B8-T01 — Financial and monetisation control plane (10/10 elements):**
 1. Plans/subscriptions query integrity; 2. business-ad product catalogue; 3. partner-ad catalogue; 4. campaign/promotions visibility; 5. impression/click metrics; 6. financial overview RPC failure states; 7. cross-module reconciliation RPC failure states; 8. integrity audit F3.28 failure/sample states; 9. resolution queue F3.29 action/history states; 10. M-Pesa sandbox safety, single-attempt handling and distinction between gateway acceptance and settlement.
+- Batch status: implementation tranche active; previous page-level safeguards already landed in prior commits. This tranche corrected optional/null finance fields so absent values display as unknown (`—`) instead of silently becoming zero. Commit `04777a4`. No tests or validation were run (per closure directive).
 
 **B8-T02 — Partner backoffice operations (10/10):**
 1. partner create/update/status; 2. contacts and primary-contact consistency; 3. contracts and transition rules; 4. engagements, assignment and status; 5. invoice creation/link validation; 6. bank transfer registration/duplicate reference; 7. transfer verification and overpayment guard; 8. campaign capacity/date/price integrity; 9. report delivery/email confirmation; 10. document upload/version/access and association integrity.
