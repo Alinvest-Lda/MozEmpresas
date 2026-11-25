@@ -104,3 +104,8 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - Review global audit coverage and required reasons for critical administrative actions; verify notification ownership and event-recipient matrix.
 - Reconcile Admin navigation against the actual route set and product contract, including notification governance/system configuration.
 - No tests, smoke checks, deployment, or final validation were run, in accordance with the implementation-only closure instruction.
+
+### Additional B8 implementation
+- Added a read-only, aggregate Super Admin Notifications page at `/dashboard/admin/notificacoes`; it reports volume, unread backlog, type distribution and daily volume without exposing recipient identifiers or notification bodies. Metrics use the server-only admin client and are unavailable if that client cannot be created; queries show an error state rather than zero.
+- Added direct navigation links for Partner institutional management, execution control and reconciliation, and for the Notifications page, reducing the need to discover those routes through cross-links.
+- Commits: `46463db` (notifications page), `7720229` (navigation), `d72a0c7` (Partner route links in navigation).
