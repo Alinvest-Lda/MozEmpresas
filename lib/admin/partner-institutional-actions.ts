@@ -35,6 +35,18 @@ function validLocalDateTime(value: string) {
 
 
 type PartnerLinkIds = { contractId?: string; engagementId?: string; campaignId?: string; documentId?: string };
+async function partnerParentBelongsToAccount(supabase: AdminSupabase, accountId: string, parentType: string, parentId: string) {
+  const tables: Record<string,string> = {
+    CONTRACT: "partner_contracts",
+    ENGAGEMENT: "partner_service_engagements",
+    REPORT: "partner_report_deliveries",
+    CAMPAIGN: "partner_ad_campaigns",
+  };
+  const table=tables[parentType];
+  if(!table) return false;
+  const {data,error}=await supabase.from(table).select("account_id").eq("id",parentId).maybeSingle();
+  return !error && data?.account_id===accountId;
+}
 async function partnerLinksValid(supabase: AdminSupabase, accountId: string, links: PartnerLinkIds) {
   if (links.contractId) {
     const {data,error}=await supabase.from("partner_contracts").select("account_id").eq("id",links.contractId).maybeSingle();
@@ -273,7 +285,10 @@ export async function createBackofficePartnerCampaign(formData: FormData) {
       ends_at:value(formData,"ends_at")||undefined,price_mzn:value(formData,"price_mzn"),
       assigned_operations_user_id:value(formData,"assigned_operations_user_id")||undefined});
   if(!parsed.success || (parsed.data.contract_id&&!uuid.safeParse(parsed.data.contract_id).success) ||
-    (parsed.data.assigned_operations_user_id&&!uuid.safeParse(parsed.data.assigned_operations_user_id).success)) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
+    (parsed.data.assigned_operations_user_id&&!uuid.safeParse(parsed.data.assigned_operations_user_id).success) ||
+    (parsed.data.starts_at&&!validLocalDateTime(parsed.data.starts_at)) ||
+    (parsed.data.ends_at&&!validLocalDateTime(parsed.data.ends_at)) ||
+    (parsed.data.starts_at&&parsed.data.ends_at&&parsed.data.ends_at<=parsed.data.starts_at)) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
   const {supabase}=await adminContext();
   if(parsed.data.contract_id && !(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id}))) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
   if(!(await isActivePlatformMember(supabase,parsed.data.assigned_operations_user_id))) redirect("/dashboard/admin/parceiros/gestao?error=campaign");
@@ -447,6 +462,8 @@ export async function createPartnerDocument(formData: FormData) {
   }
   if(documentType==="SIGNED_CONTRACT" && parentType!=="CONTRACT") redirect("/dashboard/admin/parceiros/gestao?error=document");
   const {supabase}=await adminContext();
+  if(parentId && !(await partnerParentBelongsToAccount(supabase,accountId,parentType,parentId)))
+    redirect("/dashboard/admin/parceiros/gestao?error=document");
   const extension=documentExtension(file.type);
   if(!extension) redirect("/dashboard/admin/parceiros/gestao?error=document");
   const bytes=new Uint8Array(await file.arrayBuffer());
