@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./audit-actions.module.css";
 type AuditIssue = { issue_key:string; record_id:string; issue_code:string; module:string; severity:string; summary:string; status:string; assigned_to:string|null; resolution_note:string|null; evidence_reference:string|null; occurred_at:string|null };
 type AuditHistory = { id:number; previous_status:string|null; new_status:string; previous_assigned_to:string|null; new_assigned_to:string|null; resolution_note:string|null; evidence_reference:string|null; actor:string|null; created_at:string };
 const labels:Record<string,string>={OPEN:"Em aberto",IN_PROGRESS:"Em tratamento",RESOLVED:"Resolvido",IGNORED:"Ignorado"};
 export default function FinancialAuditActions({issues}:{issues:AuditIssue[]}) {
+ const router = useRouter();
  const [drafts,setDrafts]=useState<Record<string,{status:string;assigned_to:string;resolution_note:string;evidence_reference:string}>>({});
  const [busy,setBusy]=useState<string|null>(null);
  const [messages,setMessages]=useState<Record<string,string>>({});
@@ -19,8 +21,19 @@ export default function FinancialAuditActions({issues}:{issues:AuditIssue[]}) {
   finally{setHistoryBusy(null);}
  };
  const save=async(issue:AuditIssue)=>{
-  const v=value(issue);setBusy(issue.issue_key);setMessages(prev=>({...prev,[issue.issue_key]:""}));
-  try{const res=await fetch("/api/admin/financial-audit-actions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({issue_key:issue.issue_key,status:v.status,assigned_to:v.assigned_to||null,resolution_note:v.resolution_note||null,evidence_reference:v.evidence_reference||null})});const data=await res.json();if(!res.ok)throw new Error(data.error||"Falha ao guardar.");setMessages(prev=>({...prev,[issue.issue_key]:"Guardado. Actualize a página para recarregar o estado da auditoria."}));if(histories[issue.issue_key])await showHistory(issue);}
+  const v=value(issue);
+  if (v.status === "RESOLVED" && (!v.resolution_note.trim() || !v.evidence_reference.trim())) {
+   setMessages(prev=>({...prev,[issue.issue_key]:"Para resolver, indique uma nota e a referência de evidência."}));
+   return;
+  }
+  if (v.status === "IGNORED" && !v.resolution_note.trim()) {
+   setMessages(prev=>({...prev,[issue.issue_key]:"Para ignorar, indique o motivo da decisão."}));
+   return;
+  }
+  setBusy(issue.issue_key);setMessages(prev=>({...prev,[issue.issue_key]:""}));
+  try{const res=await fetch("/api/admin/financial-audit-actions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({issue_key:issue.issue_key,status:v.status,assigned_to:v.assigned_to||null,resolution_note:v.resolution_note||null,evidence_reference:v.evidence_reference||null})});const data=await res.json();if(!res.ok)throw new Error(data.error||"Falha ao guardar.");setMessages(prev=>({...prev,[issue.issue_key]:"Intervenção guardada; estado actualizado."}));
+   await showHistory(issue);
+   router.refresh();}
   catch(e){setMessages(prev=>({...prev,[issue.issue_key]:e instanceof Error?e.message:"Falha ao guardar."}));}
   finally{setBusy(null);}
  };
