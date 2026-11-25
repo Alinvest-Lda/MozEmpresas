@@ -102,7 +102,7 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
   const pageHref = (number: number) => "/dashboard/admin/oportunidades?" + [queryString, "page=" + number].filter(Boolean).join("&");
   const pageIds = (opportunities ?? []).map((item) => item.id);
   const { data: lifecycleEvents, error: lifecycleEventsError } = pageIds.length
-    ? await supabase.from("opportunity_events").select("id,opportunity_id,event_type,old_status,new_status,created_at").in("opportunity_id", pageIds).order("created_at", { ascending: false })
+    ? await supabase.from("opportunity_events").select("id,opportunity_id,event_type,old_status,new_status,action_reason,created_at").in("opportunity_id", pageIds).order("created_at", { ascending: false })
     : { data: [], error: null };
   const eventsByOpportunity = new Map<string, any[]>();
   for (const event of lifecycleEvents ?? []) {
@@ -181,7 +181,7 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
                     <td><strong className={styles.typeLabel}>{typeLabels[item.type] || item.type}</strong><small className={styles.organization}>{item.organization || "Organização não indicada"}</small><small className={styles.origin}>{item.partner_account_id ? "Conta de parceiro" : "Conta de utilizador"}</small></td>
                     <td><span className={styles.deadline}>{item.closes_at ? dateLabel(item.closes_at) : "Sem prazo"}</span>{expired ? <small className={styles.deadlineExpired}>Prazo ultrapassado</small> : closingSoon ? <small className={styles.deadlineSoon}>Encerra em breve</small> : null}{item.opens_at ? <small className={styles.opensAt}>Abre: {dateLabel(item.opens_at)}</small> : null}</td>
                     <td><span className={`${styles.status} ${styles[statusClass[item.status] || "draft"]}`}>{statusLabels[item.status] || item.status}</span><small className={styles.updated}>Actualizada {dateLabel(item.updated_at)}</small></td>
-                    <td><form action={moderateOpportunity} className={styles.actionForm}><input type="hidden" name="opportunityId" value={item.id}/><label className={styles.srOnly} htmlFor={`status-${item.id}`}>Novo estado para {item.title}</label><Select id={`status-${item.id}`} name="status" defaultValue={item.status}><option value={item.status} disabled>Estado actual · {statusLabels[item.status] || item.status}</option>{allowedNextStatuses.map((nextStatus) => <option value={nextStatus} key={nextStatus}>{statusLabels[nextStatus] || nextStatus}</option>)}</Select><button className="btn primary" type="submit">Guardar</button></form></td>
+                    <td><form action={moderateOpportunity} className={styles.actionForm}><input type="hidden" name="opportunityId" value={item.id}/><label className={styles.srOnly} htmlFor={`status-${item.id}`}>Novo estado para {item.title}</label><Select id={`status-${item.id}`} name="status" defaultValue={item.status}><option value={item.status} disabled>Estado actual · {statusLabels[item.status] || item.status}</option>{allowedNextStatuses.map((nextStatus) => <option value={nextStatus} key={nextStatus}>{statusLabels[nextStatus] || nextStatus}</option>)}</Select><Input name="reason" required minLength={8} maxLength={500} placeholder="Justificação (mín. 8 caracteres)" /><button className="btn primary" type="submit">Guardar</button></form></td>
                   </tr>;
                 })}</tbody>
               </table>
