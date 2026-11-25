@@ -6,6 +6,7 @@ import { Input, Select } from "@/components/ui";
 import styles from "./usuarios.module.css";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { setManagedAccountStatus, sendManagedPasswordRecovery } from "@/lib/admin/account-management-actions";
+import { setPlatformStaffActive } from "@/lib/admin/platform-staff-actions";
 
 type SearchParams = Promise<{ q?: string; tipo?: string; estado?: string; acesso?: string; associacao?: string; page?: string; result?: string }>;
 const userTypes: Record<string,string> = { empresa:"Empresa", parceiro:"Parceiro", profissional:"Profissional" };
@@ -21,7 +22,15 @@ const resultMessages: Record<string,string> = {
   "not-found":"A conta indicada não foi encontrada.",
   unchanged:"A conta já se encontra nesse estado.",
   "update-failed":"Não foi possível actualizar a conta. Verifique o estado e tente novamente.",
-  "recovery-failed":"Não foi possível iniciar a recuperação de password."
+  "recovery-failed":"Não foi possível iniciar a recuperação de password.",
+  "staff-invalid":"Indique um utilizador, estado e justificação válida (mínimo 8 caracteres).",
+  "staff-self":"Não pode revogar o seu próprio acesso administrativo.",
+  "LAST_ACTIVE_SUPER_ADMIN_PROTECTED":"A operação foi bloqueada para proteger o último Super Admin activo.",
+  "PLATFORM_STAFF_NOT_FOUND":"O membro da equipa administrativa não foi encontrado.",
+  "PLATFORM_STAFF_STATUS_UNCHANGED":"O membro já se encontra nesse estado.",
+  "FORBIDDEN":"Não tem autorização para esta operação.",
+  "staff-update-failed":"Não foi possível actualizar o acesso da equipa administrativa.",
+  "staff-updated":"Acesso administrativo actualizado, sessões revogadas quando aplicável e decisão auditada."
 };
 
 export default async function AdminUsersPage({searchParams}:{searchParams?:SearchParams}) {
@@ -49,7 +58,11 @@ export default async function AdminUsersPage({searchParams}:{searchParams?:Searc
   if(access)filterParams.set("acesso",access);if(association)filterParams.set("associacao",association);
   const queryString=filterParams.toString();
   const pageHref=(n:number)=>"/dashboard/admin/usuarios?"+[queryString,"page="+n].filter(Boolean).join("&");
-  const {data:audit,error:auditError}=await supabase.rpc("admin_list_account_audit",{p_limit:50});
+  const [{data:audit,error:auditError},{data:staff,error:staffError},{data:staffAudit,error:staffAuditError}]=await Promise.all([
+    supabase.rpc("admin_list_account_audit",{p_limit:50}),
+    supabase.rpc("admin_list_platform_staff"),
+    supabase.from("platform_staff_audit_log").select("id,actor_user_id,target_user_id,role,active_from,active_to,reason,created_at").order("created_at",{ascending:false}).limit(50)
+  ]);
   const result=params?.result&&resultMessages[params.result]?params.result:"";
   const activeCount=users.filter((p:any)=>p.account_status==="ACTIVE").length;
   const deletionRequests=users.filter((p:any)=>p.account_status==="DELETED").length;
@@ -82,6 +95,13 @@ export default async function AdminUsersPage({searchParams}:{searchParams?:Searc
     </section>
     <section className={styles.directory} aria-labelledby="account-audit-title"><div className={styles.sectionHead}><div><h2 id="account-audit-title">Histórico administrativo</h2><p>Suspensões, reativações, pedidos de eliminação e recuperações de password.</p></div></div>
       {auditError?<div className="notice" role="alert">Não foi possível carregar o histórico. A tabela foi omitida para não apresentar um histórico incompleto como se fosse íntegro.</div>:audit?.length?<div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Data</th><th>Acção</th><th>Conta afectada</th><th>Responsável</th><th>Estado</th><th>Justificação</th></tr></thead><tbody>{audit.map((event:any)=><tr key={event.id}><td>{new Date(event.created_at).toLocaleString("pt-MZ")}</td><td>{event.action}</td><td>{event.target_user_id}</td><td>{event.actor_user_id||"Sistema"}</td><td>{event.status_from||"—"} → {event.status_to||"—"}</td><td>{event.metadata?.reason||"—"}</td></tr>)}</tbody></table></div>:<div className={styles.emptyState}><strong>Ainda não existem decisões administrativas de conta.</strong><span>As próximas operações serão registadas automaticamente.</span></div>}
+    </section>
+    <section className={styles.directory} aria-labelledby="platform-staff-title">
+      <div className={styles.sectionHead}><div><h2 id="platform-staff-title">Equipa administrativa</h2><p>Revogue ou restaure o acesso de membros da plataforma. A alteração exige justificação, protege o último Super Admin e revoga sessões ao desactivar.</p></div></div>
+      {staffError?<div className="notice" role="alert">Não foi possível carregar a equipa administrativa. A gestão foi bloqueada para evitar decisões sobre uma lista incompleta.</div>:staff?.length?<div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Membro</th><th>Perfil</th><th>Estado</th><th>Alterar acesso</th></tr></thead><tbody>{staff.map((member:any)=><tr key={member.user_id}><td><strong>{member.full_name||"Utilizador"}</strong><small className={styles.subDate}>{member.user_id}</small></td><td>{member.role}</td><td>{member.active?"Activo":"Inactivo"}</td><td>{member.user_id===user.id?<span className={styles.secondary}>Sessão administrativa actual</span>:<form action={setPlatformStaffActive} className={styles.operations}><input type="hidden" name="userId" value={member.user_id}/><select name="active" defaultValue={member.active?"false":"true"} aria-label="Novo estado de acesso"><option value="false">Revogar acesso</option><option value="true">Restaurar acesso</option></select><input name="reason" minLength={8} maxLength={500} required placeholder="Justificação (mín. 8 caracteres)" aria-label="Justificação da alteração"/><button className="btn primary" type="submit">Aplicar</button></form>}</td></tr>)}</tbody></table></div>:<div className={styles.emptyState}><strong>Não existem membros administrativos activos.</strong></div>}
+    </section>
+    <section className={styles.directory} aria-labelledby="staff-audit-title"><div className={styles.sectionHead}><div><h2 id="staff-audit-title">Histórico de acessos administrativos</h2><p>Revogações e restaurações de acesso, com responsável e justificação.</p></div></div>
+      {staffAuditError?<div className="notice" role="alert">Não foi possível carregar o histórico de acessos administrativos.</div>:staffAudit?.length?<div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Data</th><th>Utilizador</th><th>Perfil</th><th>Estado</th><th>Responsável</th><th>Justificação</th></tr></thead><tbody>{staffAudit.map((event:any)=><tr key={event.id}><td>{new Date(event.created_at).toLocaleString("pt-MZ")}</td><td>{event.target_user_id}</td><td>{event.role}</td><td>{event.active_from?"Activo":"Inactivo"} → {event.active_to?"Activo":"Inactivo"}</td><td>{event.actor_user_id||"Sistema"}</td><td>{event.reason}</td></tr>)}</tbody></table></div>:<div className={styles.emptyState}><strong>Ainda não existem alterações de acesso registadas.</strong></div>}
     </section>
   </div></main>;
 }
