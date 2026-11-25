@@ -146,3 +146,8 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - A consulta de staff interno agora captura explicitamente o erro RPC e mostra aviso de indisponibilidade/incompletude na selecção de responsáveis, em vez de tratar o retorno nulo como lista vazia.
 - Commit: `768b34c`.
 - Sem testes, validação final ou deploy.
+
+### B8 — Backoffice institucional: consultas auxiliares parciais (25/11)
+- Gestão institucional agora captura erros das consultas auxiliares (contratos, execuções, pagamentos, documentos, contactos, relatórios, resumos financeiros, catálogo de publicidade, campanhas, staff, auditorias, documentos, eventos e benefícios) e exibe aviso global quando o conjunto está incompleto.
+- Commits: `0b7663e` (captura de erros), `6881a22` (aviso visível no backoffice).
+- Sem testes, validação final ou deploy.
