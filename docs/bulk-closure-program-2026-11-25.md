@@ -267,3 +267,10 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - O resumo de itens publicitários pendentes deixa de apresentar totais derivados de listas parciais quando alguma consulta falha; a interface identifica que a amostra é limitada a 100 registos por origem.
 - Commit adicional: `0e8f81d` (ocultar resumo parcial em falha).
 - Não foram executados testes, validação ou deploy.
+
+### B8 — Oportunidades: submissão concorrente e prevenção de duplicados (26/11)
+- A submissão/actualização de candidatura foi centralizada numa RPC transaccional. A operação verifica a oportunidade publicada e dentro do prazo, impede candidatura do próprio proprietário, valida o direito de representação empresarial e só permite editar candidaturas ainda em SUBMITTED.
+- A chave natural oportunidade+candidato é protegida por advisory transaction lock antes da leitura/inserção, evitando a corrida de duas primeiras submissões simultâneas que antes podia terminar num erro de unicidade genérico.
+- A acção de servidor deixou de fazer a sequência vulnerável de consulta seguida de insert e passa a traduzir os resultados da RPC em respostas específicas.
+- Migration: `20261126103000_f369_atomic_opportunity_submission.sql`; commits `dc74da6` e `03227bf` (RPC e serialização), `bb060b6` (server action).
+- Não foram executados testes ou validação SQL.
