@@ -40,7 +40,7 @@ A experiência final-user está publicada e separada de funcionalidades reservad
 - As estruturas de oportunidades permanecem disponíveis para o módulo de Parceiros; concursos não fazem parte do produto MozEmpresas.
 - O módulo de serviços permite adicionar serviços pagos relevantes sem introduzir módulos que não fazem parte da proposta de valor do produto.
 - A separação actual é: **final-user → directório/marketplace/serviços**; **parceiros → workspace próprio da relação estratégica com a MozEmpresas**.
-- O parceiro representa uma entidade única; vários gestores podem actuar sobre a mesma conta.
+- O parceiro representa uma entidade própria com um único utilizador activo por organização. A substituição do responsável é sequencial, auditada e controlada pelo Super Admin.
 - `business_partner_relationships` não é o núcleo conceptual da conta de parceiro.
 - O design do parceiro reutiliza as fundações transversais do produto; não será criado um segundo design system.
 
@@ -54,7 +54,7 @@ Pendências principais: convites de gestores vinculados à conta, ciclo financei
 A especificação fechada está em `docs/architecture/partner-module.md`.
 
 Ordem prevista:
-1. Modelar a entidade de conta de parceiro e os gestores.
+1. Consolidar a entidade de conta de parceiro e o acesso do utilizador único.
 2. Fechar permissões e integração com o acesso dedicado existente.
 3. Implementar publicação/gestão de oportunidades.
 4. Implementar serviços e exclusividades.
