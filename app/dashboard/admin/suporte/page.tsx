@@ -11,7 +11,7 @@ const areas = ["", "Técnico", "Comercial", "Conta e acessos", "Pagamentos e cr�
 const statuses = ["", "OPEN", "IN_PROGRESS", "WAITING_USER", "RESOLVED", "CLOSED"];
 const statusLabels: Record<string, string> = { OPEN: "Aberto", IN_PROGRESS: "Em atendimento", WAITING_USER: "Aguarda utilizador", RESOLVED: "Resolvido", CLOSED: "Fechado" };
 const priorityLabels: Record<string, string> = { LOW: "Baixa", NORMAL: "Normal", MEDIUM: "Média", HIGH: "Alta", URGENT: "Urgente" };
-type SearchParams = Promise<{ area?: string; status?: string; business?: string; subject?: string; result?: string }>;
+type SearchParams = Promise<{ area?: string; status?: string; business?: string; subject?: string; result?: string; page?: string }>;
 
 export default async function AdminSupport({ searchParams }: { searchParams?: SearchParams }) {
   const p = searchParams ? await searchParams : {};
@@ -19,16 +19,28 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
   const area = areas.includes(p.area ?? "") ? p.area ?? "" : "";
   const status = statuses.includes(p.status ?? "") ? p.status ?? "" : "";
   const subject = (p.subject ?? "").trim().slice(0, 100);
+  const pageSize = 50;
+  const requestedPage = Number.parseInt(p.page ?? "1", 10);
+  const currentPage = Number.isFinite(requestedPage) ? Math.max(1, Math.min(10000, requestedPage)) : 1;
+  const from = (currentPage - 1) * pageSize;
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
 
-  let query = supabase.from("support_tickets").select("id,user_id,business_id,area,subject,status,priority,assigned_to,created_at,updated_at").order("updated_at", { ascending: false }).limit(100);
+  let query = supabase.from("support_tickets").select("id,user_id,business_id,area,subject,status,priority,assigned_to,created_at,updated_at", { count: "exact" }).order("updated_at", { ascending: false }).range(from, from + pageSize - 1);
   if (area) query = query.eq("area", area);
   if (status) query = query.eq("status", status);
   if (p.business) query = query.eq("business_id", p.business);
   if (subject) query = query.ilike("subject", "%" + subject.replace(/[%_,]/g, " ") + "%");
-  const { data: tickets, error } = await query;
+  const { data: tickets, error, count } = await query;
   const rows = tickets ?? [];
+  const totalTickets = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalTickets / pageSize));
+  const pageParams = new URLSearchParams();
+  if (area) pageParams.set("area", area);
+  if (status) pageParams.set("status", status);
+  if (p.business) pageParams.set("business", p.business);
+  if (subject) pageParams.set("subject", subject);
+  const pageHref = (n: number) => { const params = new URLSearchParams(pageParams); params.set("page", String(n)); return "/dashboard/admin/suporte?" + params.toString(); };
   const businessIds = [...new Set(rows.map(t => t.business_id).filter((id): id is string => Boolean(id)))];
   const userIds = [...new Set(rows.map(t => t.user_id))];
   const [{ data: businesses, error: businessesError }, { data: profiles, error: profilesError }] = await Promise.all([
@@ -56,7 +68,7 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
       <div className={`dashboard-content ${styles.content}`}>
         <header className={styles.hero}>
           <div className={styles.heroCopy}><span className={styles.eyebrow}>Administração global</span><h1>Central de suporte</h1><p>Organize os pedidos de assistência, acompanhe o histórico de conversas e responda aos utilizadores num único espaço.</p></div>
-          <div className={styles.heroSummary}><span>Registos carregados</span><strong>{rows.length}</strong><small>Máximo de 100 atendimentos por consulta</small></div>
+          <div className={styles.heroSummary}><span>Registos carregados</span><strong>{rows.length}</strong><small>{totalTickets} atendimentos no total · {pageSize} por página</small></div>
           <span className={styles.heroMark} aria-hidden="true">?</span>
         </header>
 
@@ -82,7 +94,7 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
         </section>
 
         <section className={styles.queue} aria-labelledby="support-queue-title">
-          <div className={styles.queueHead}><div><span className={styles.kicker}>Fila operacional</span><h2 id="support-queue-title">Atendimentos</h2><p>Conversas ordenadas pela actualização mais recente.</p></div><strong>{rows.length} <span>registos</span></strong></div>
+          <div className={styles.queueHead}><div><span className={styles.kicker}>Fila operacional</span><h2 id="support-queue-title">Atendimentos</h2><p>Conversas ordenadas pela actualização mais recente.</p></div><strong>{rows.length} <span>registos nesta página · {totalTickets} no total</span></strong></div>
           {error ? <div className={styles.empty} role="alert"><strong>Não foi possível carregar a fila.</strong><p>Verifique a ligação à base de dados e tente novamente.</p></div> :
           rows.length ? <div className={styles.ticketList}>{rows.map(t => {
             const business = businessOptions.find(x => x.id === t.business_id)?.name || "Sem empresa associada";
@@ -109,6 +121,7 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
               </form> : null}
             </article>;
           })}</div> : <div className={styles.empty}><strong>Nenhum atendimento encontrado</strong><p>Experimente remover alguns filtros ou pesquisar por outro assunto.</p></div>}
+          {totalTickets > pageSize ? <nav aria-label="Paginação dos atendimentos" className={styles.pagination}><span>Página {currentPage} de {totalPages}</span><div>{currentPage > 1 ? <a className="btn secondary" href={pageHref(currentPage - 1)}>Anterior</a> : null}{currentPage < totalPages ? <a className="btn secondary" href={pageHref(currentPage + 1)}>Seguinte</a> : null}</div></nav> : null}
         </section>
       </div>
     </main>
