@@ -47,7 +47,7 @@ export async function moderateBusiness(formData: FormData) {
 export async function moderateListing(formData: FormData) {
   const id = String(formData.get("listingId") || "");
   const status = String(formData.get("status") || "").toUpperCase();
-  if (!z.string().uuid().safeParse(id).success || !listingStatuses.includes(status as typeof listingStatuses[number])) {
+  if (!z.string().uuid().safeParse(id).success || !Object.hasOwn(listingTransitions, status)) {
     return { error: "Oferta ou estado inválido." };
   }
 
