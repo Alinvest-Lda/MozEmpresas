@@ -131,3 +131,8 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - Totais dependentes de consultas com erro agora mostram indisponível (—), com rótulos indicando catálogo/consulta incompleta; o aviso global de consultas falhadas permanece.
 - Commit: `1e9478c`.
 - Sem testes, validação final ou deploy.
+
+### B8 — Reconciliação institucional: erro RPC não equivale a zero (25/11)
+- A página de reconciliação institucional de parceiros agora oculta os totais de verificação quando o RPC falha e mostra a contagem por tipo como indisponível, em vez de renderizar zeros/contagens vazias.
+- Commit: `8d73f80`.
+- Sem testes, validação final ou deploy.
