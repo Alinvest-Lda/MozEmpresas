@@ -8,6 +8,7 @@ Plataforma digital para descoberta de empresas, produtos e serviços em Moçambi
 
 A matriz de fecho funcional e regras de negócio é a referência de trabalho para esta etapa:
 - [Matriz de fecho funcional](docs/functional-closure-matrix.md)
+- [Programa canónico de fecho em bulk (25/11)](docs/bulk-closure-program-2026-11-25.md)
 - [Inventário de estados e transições](docs/business-state-transition-inventory.md)
 - [Achados do esquema activo e Security Advisor (2026-10-29)](docs/functional-closure-live-findings-2026-10-29.md)
 - [Achados de autorização e convites de Parceiros (2026-10-31)](docs/partner-authorization-findings-2026-10-31.md)
