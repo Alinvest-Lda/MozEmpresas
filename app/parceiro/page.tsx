@@ -61,7 +61,7 @@ export default async function PartnerHome() {
       <div className="partner-content partner-home">
         <header className="partner-home-top">
           <div><span className="partner-kicker">ÁREA DE PARCEIROS</span><h1>{name}</h1><p>Gerir publicações, acompanhar pedidos e consultar os indicadores disponíveis da conta.</p></div>
-          <div className="partner-home-top-meta"><span>CONTA</span><strong>{account?.account_status === "ACTIVE" ? "Activa" : "A validar"}</strong><small>{contextError ? "Acesso não confirmado" : account?.member_role === "owner" ? "Responsável único" : "Acesso pendente"}</small><Link href="/parceiro/conta">Gerir conta →</Link></div>
+          <div className="partner-home-top-meta"><span>CONTA</span><strong>{account?.account_status === "ACTIVE" ? "Activa" : "A validar"}</strong><small>{contextError ? "Acesso não confirmado" : context?.member_role === "owner" ? "Responsável único" : "Acesso pendente"}</small><Link href="/parceiro/conta">Gerir conta →</Link></div>
         </header>
 
         {loadErrors.length > 0 && <div className="notice" role="alert">Alguns dados não puderam ser carregados ({loadErrors.join(", ")}). Actualize a página ou tente novamente. Não interprete estes dados como ausência de actividade.</div>}
