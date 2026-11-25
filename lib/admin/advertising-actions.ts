@@ -58,7 +58,9 @@ export async function moderateBusinessPromotion(formData: FormData) {
 export async function moderatePartnerCampaign(formData: FormData) {
   const id = String(formData.get("id") || "");
   const status = String(formData.get("status") || "").toUpperCase();
-  if (!z.string().uuid().safeParse(id).success || !["APPROVED", "REJECTED", "ACTIVE", "PAUSED", "ENDED"].includes(status)) {
+  const reason = String(formData.get("reason") || "").trim();
+  if (!z.string().uuid().safeParse(id).success || !["APPROVED", "REJECTED", "ACTIVE", "PAUSED", "ENDED"].includes(status)
+    || reason.length < 8 || reason.length > 500) {
     redirect("/dashboard/admin/publicidade?result=invalid-transition");
   }
   const { supabase, authorized } = await getSuperAdminContext();
@@ -66,6 +68,7 @@ export async function moderatePartnerCampaign(formData: FormData) {
   const { error } = await supabase.rpc("admin_transition_partner_ad_campaign", {
     p_campaign_id: id,
     p_new_status: status,
+    p_reason: reason,
   });
   if (error) {
     const known = [
