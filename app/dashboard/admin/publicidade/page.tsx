@@ -84,14 +84,26 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const allPartner = (partnerCampaigns ?? []) as Campaign[];
   const allRequests = (requests ?? []) as AdvertisingRequest[];
   const partnerCampaignIds = allPartner.map((campaign) => campaign.id);
-  const { data: partnerStatusEvents, error: partnerStatusEventsError } = partnerCampaignIds.length
-    ? await supabase.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,created_at").in("campaign_id", partnerCampaignIds).order("created_at", { ascending: false })
-    : { data: [], error: null };
+  const administrativeAdIds = [...allBusiness.map((campaign) => campaign.id), ...allRequests.map((request) => request.id)];
+  const [{ data: partnerStatusEvents, error: partnerStatusEventsError }, { data: advertisingAdminEvents, error: advertisingAdminEventsError }] = await Promise.all([
+    partnerCampaignIds.length
+      ? supabase.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,created_at").in("campaign_id", partnerCampaignIds).order("created_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+    administrativeAdIds.length
+      ? supabase.from("advertising_admin_events").select("id,entity_type,entity_id,old_status,new_status,action_reason,created_at").in("entity_id", administrativeAdIds).order("created_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+  ]);
   const eventsByCampaign = new Map<string, any[]>();
   for (const event of partnerStatusEvents ?? []) {
     const list = eventsByCampaign.get(event.campaign_id) ?? [];
     list.push(event);
     eventsByCampaign.set(event.campaign_id, list);
+  }
+  const eventsByAdvertisingEntity = new Map<string, any[]>();
+  for (const event of advertisingAdminEvents ?? []) {
+    const list = eventsByAdvertisingEntity.get(event.entity_id) ?? [];
+    list.push(event);
+    eventsByAdvertisingEntity.set(event.entity_id, list);
   }
   const campaigns = [
     ...allBusiness.map((c) => ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.budget) + " " + (c.currency || ""), table: "business", allowed: promotionStatuses })),
@@ -123,7 +135,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const totalImpressions = filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
   const totalClicks = filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
   const pendingCount = allBusiness.filter(c => c.status === "PENDING").length + allPartner.filter(c => ["REQUESTED", "PENDING", "UNDER_REVIEW"].includes(c.status ?? "")).length + allRequests.filter(r => ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT"].includes(r.status ?? "")).length;
-  const error = businessError || partnerError || requestError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError;
+  const error = businessError || partnerError || requestError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError;
 
   return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
     <header className={styles.hero}>
@@ -198,6 +210,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
             <label><span>Justificação obrigatória</span><Input name="reason" minLength={8} maxLength={500} required placeholder="Motivo da decisão (mín. 8 caracteres)"/></label>
             <button className="btn primary" type="submit">Guardar estado</button>
           </form> : null}
+          {c.table === "business" ? <details className={styles.history}><summary>Histórico de decisões · {(eventsByAdvertisingEntity.get(c.id) ?? []).length}</summary>{(eventsByAdvertisingEntity.get(c.id) ?? []).map((event:any)=><p key={event.id}>{event.old_status} → {event.new_status} · {fmtDate(event.created_at)}<br/>Justificação: {event.action_reason}</p>)}</details> : null}
         </article>)}
         {filteredRequests.map((r) => <article className={styles.campaignCard} key={"request-" + r.id}>
           <div className={styles.campaignTop}><div className={styles.campaignMain}><span className={styles.campaignKicker}>Pedido de publicidade · {r.placement || "Posição não indicada"}</span><h3>{r.company_name}</h3><p>{r.contact_name} · {r.email}{r.phone ? " · " + r.phone : ""}</p></div><span className={styles.status}>{label(r.status)}</span></div>
@@ -208,6 +221,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
             <label><span>Justificação obrigatória</span><Input name="reason" minLength={8} maxLength={500} required placeholder="Motivo da decisão (mín. 8 caracteres)"/></label>
             <button className="btn primary" type="submit">Actualizar pedido</button>
           </form>
+          <details className={styles.history}><summary>Histórico de decisões · {(eventsByAdvertisingEntity.get(r.id) ?? []).length}</summary>{(eventsByAdvertisingEntity.get(r.id) ?? []).map((event:any)=><p key={event.id}>{event.old_status} → {event.new_status} · {fmtDate(event.created_at)}<br/>Justificação: {event.action_reason}</p>)}</details>
         </article>)}
         {!error && !filteredCampaigns.length && !filteredRequests.length ? <div className={styles.emptyState}><strong>Nenhum registo corresponde aos filtros.</strong><span>Altere a pesquisa ou limpe os filtros para consultar outras campanhas e pedidos.</span></div> : null}
       </div>
