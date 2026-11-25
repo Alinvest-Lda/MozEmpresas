@@ -83,6 +83,8 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 1. company moderation; 2. profile state; 3. listing moderation; 4. listing lifecycle transitions; 5. opportunity moderation; 6. deadline/expiry controls; 7. duplicate/invalid submissions; 8. media/report handling; 9. status/audit history; 10. notifications tied to approved actions.
 
 **B8-T05 — Platform Services operations (10/10):**
+- Implementation evidence: service request administration loads the current status, checks the central transition function, and applies a compare-and-set update against the previously read status; stale concurrent changes are rejected. Commit history includes earlier service control-plane work; this code path is source-reviewed only.
+- Task remains open pending complete quote/acceptance/execution, payment-boundary, atomic audit and notification/retry closure.
 1. service request queue; 2. request status guard; 3. quote/price; 4. acceptance; 5. assignment/execution; 6. completion; 7. cancellation/expiry; 8. credit-payment boundary; 9. M-Pesa-payment boundary; 10. atomic/audit/notification and retry behavior.
 
 **B8-T06 — Advertising operations (10/10):**
@@ -100,9 +102,13 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 1. ticket queue; 2. auxiliary profile/company lookup; 3. message thread; 4. event timeline; 5. assignment; 6. status transition; 7. response/resolution note; 8. SLA/ageing; 9. notifications; 10. incomplete-data/error state and safe retry.
 
 **B8-T08 — Audit, finance action reasons and notification governance (10/10):**
+- Implementation evidence: account governance uses immutable account audit records, reason-required administrative status changes, actor/target attribution, previous/next status, and a protected last-active-Super-Admin rule. Account and Partner-access revocation flows also preserve reasoned audit history. Canonical account audit notification wiring exists in the 25 Nov migration set.
+- Task remains open pending canonical cross-module writer/event matrix, recipient privacy, deduplication, delivery failure/retry and complete review surface.
 1. canonical audit writer inventory; 2. critical-action reason; 3. actor attribution; 4. before/after state; 5. event integrity; 6. recipient matrix; 7. message/link privacy; 8. dedupe; 9. failed delivery/retry visibility; 10. history and admin review surfaces.
 
 **B8-T09 — Configuration and security control surfaces (10/10):**
+- Implementation evidence: the Super Admin route has a server-side fail-closed gate; sensitive account and staff directory RPCs enforce Super Admin identity and restrict execution grants; secrets are not rendered by these surfaces. Payment and Partner access controls remain separately governed by dedicated RPCs.
+- Task remains open pending environment/config inventory, route/action consistency, rate limits, storage controls, configuration audit and removal/labeling of unsafe controls.
 1. environment/secret state (without exposing secrets); 2. payment configuration; 3. feature/catalog settings; 4. role/RBAC source; 5. route/action guard consistency; 6. rate-limit settings; 7. storage access governance; 8. system-level error reporting; 9. auditability of configuration changes; 10. remove or clearly label unsafe/unimplemented controls.
 
 **B8-T10 — Admin UX and consolidation (10/10):**
