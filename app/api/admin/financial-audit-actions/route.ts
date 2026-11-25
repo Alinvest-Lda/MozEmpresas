@@ -22,15 +22,25 @@ export async function POST(request: Request) {
   try { body = await request.json(); } catch { return NextResponse.json({ error: "JSON inválido." }, { status: 400 }); }
   if (!body || typeof body !== "object") return NextResponse.json({ error: "Payload inválido." }, { status: 400 });
   const input = body as Record<string, unknown>;
-  const issueKey = typeof input.issue_key === "string" ? input.issue_key : "";
-  const status = typeof input.status === "string" ? input.status : "";
-  const note = typeof input.resolution_note === "string" ? input.resolution_note : null;
-  const assignee = typeof input.assigned_to === "string" && input.assigned_to.trim() ? input.assigned_to.trim() : null;
-  const evidence = typeof input.evidence_reference === "string" ? input.evidence_reference : null;
+  const issueKey = typeof input.issue_key === "string" ? input.issue_key.trim() : "";
+  const status = typeof input.status === "string" ? input.status.trim().toUpperCase() : "";
+  if (input.resolution_note !== undefined && input.resolution_note !== null && typeof input.resolution_note !== "string")
+    return NextResponse.json({ error: "Nota de tratamento inválida." }, { status: 400 });
+  if (input.evidence_reference !== undefined && input.evidence_reference !== null && typeof input.evidence_reference !== "string")
+    return NextResponse.json({ error: "Referência de evidência inválida." }, { status: 400 });
+  if (input.assigned_to !== undefined && input.assigned_to !== null && typeof input.assigned_to !== "string")
+    return NextResponse.json({ error: "Responsável inválido." }, { status: 400 });
+  const noteRaw = typeof input.resolution_note === "string" ? input.resolution_note : "";
+  const evidenceRaw = typeof input.evidence_reference === "string" ? input.evidence_reference : "";
+  const note = noteRaw.trim() ? noteRaw.trim() : null;
+  const assigneeRaw = typeof input.assigned_to === "string" ? input.assigned_to.trim() : "";
+  const assignee = assigneeRaw || null;
+  const evidence = evidenceRaw.trim() ? evidenceRaw.trim() : null;
   if (!ISSUE_KEY.test(issueKey) || !STATES.has(status)) return NextResponse.json({ error: "Identificador ou estado inválido." }, { status: 400 });
-  if (status === "RESOLVED" && (!note?.trim() || !evidence?.trim())) return NextResponse.json({ error: "Para resolver, indique nota de tratamento e referência de evidência." }, { status: 400 });
-  if (note && note.length > 3000) return NextResponse.json({ error: "Nota excede 3000 caracteres." }, { status: 400 });
-  if (evidence && evidence.length > 1000) return NextResponse.json({ error: "Referência de evidência excede 1000 caracteres." }, { status: 400 });
+  if (status === "RESOLVED" && (!note || !evidence)) return NextResponse.json({ error: "Para resolver, indique nota de tratamento e referência de evidência." }, { status: 400 });
+  if (status === "IGNORED" && !note) return NextResponse.json({ error: "Para ignorar, indique o motivo da decisão." }, { status: 400 });
+  if (noteRaw.length > 3000) return NextResponse.json({ error: "Nota excede 3000 caracteres." }, { status: 400 });
+  if (evidenceRaw.length > 1000) return NextResponse.json({ error: "Referência de evidência excede 1000 caracteres." }, { status: 400 });
   if (assignee && !UUID.test(assignee)) return NextResponse.json({ error: "O responsável deve ser um UUID de utilizador válido." }, { status: 400 });
   if (assignee) {
     const { data: member, error: memberError } = await supabase.from("platform_members").select("user_id,active").eq("user_id",assignee).maybeSingle();
