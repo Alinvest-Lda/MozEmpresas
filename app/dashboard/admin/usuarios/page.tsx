@@ -60,7 +60,7 @@ export default async function AdminUsersPage({searchParams}:{searchParams?:Searc
   const pageHref=(n:number)=>"/dashboard/admin/usuarios?"+[queryString,"page="+n].filter(Boolean).join("&");
   const [{data:audit,error:auditError},{data:staff,error:staffError},{data:staffAudit,error:staffAuditError}]=await Promise.all([
     supabase.rpc("admin_list_account_audit",{p_limit:50}),
-    supabase.rpc("admin_list_platform_staff"),
+    supabase.rpc("admin_list_platform_staff_governance"),
     supabase.from("platform_staff_audit_log").select("id,actor_user_id,target_user_id,role,active_from,active_to,reason,created_at").order("created_at",{ascending:false}).limit(50)
   ]);
   const result=params?.result&&resultMessages[params.result]?params.result:"";
