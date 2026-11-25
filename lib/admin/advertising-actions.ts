@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
 const promotionTransitions: Record<string, readonly string[]> = {
-  DRAFT: ["PENDING", "ARCHIVED"],
+  DRAFT: ["PENDING"],
   PENDING: ["ACTIVE", "PAUSED", "EXPIRED"],
   ACTIVE: ["PAUSED", "EXPIRED"],
   PAUSED: ["ACTIVE", "EXPIRED"],
