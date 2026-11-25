@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireNormalAccount } from "@/lib/auth/access";
 import { savePublicationAttachments } from "@/lib/publications/attachments";
-import { canManageBusiness } from "@/lib/businesses/permissions";
 import { isValidOpportunityId } from "@/lib/opportunities/validation";
 
 const text = (v: FormDataEntryValue | null) => typeof v === "string" ? v.trim() : "";
@@ -28,43 +27,21 @@ export async function applyToOpportunity(formData: FormData) {
   const coverNote = text(formData.get("cover_note")) || null;
   if (!isValidOpportunityId(opportunityId)) redirect("/oportunidades?application=error");
 
-  if (businessId && !(await canManageBusiness(supabase, userId, businessId))) {
-    // Association alone is insufficient: viewer/member roles cannot act for a business.
-    redirect("/oportunidades?application=forbidden");
-  }
   if (coverNote && coverNote.length > 5000) redirect("/oportunidades?application=error");
 
-  const { data: opportunity } = await supabase.from("opportunities").select("id,status,opens_at,closes_at,owner_id").eq("id", opportunityId).maybeSingle();
-  if (!opportunity || opportunity.owner_id === userId || opportunity.status !== "PUBLISHED" || (opportunity.opens_at && new Date(opportunity.opens_at).getTime() > Date.now()) || (opportunity.closes_at && new Date(opportunity.closes_at).getTime() < Date.now())) redirect("/oportunidades?application=closed");
-
-  const { data: existingApplication, error: existingError } = await supabase
-    .from("opportunity_applications")
-    .select("id,status")
-    .eq("opportunity_id", opportunityId)
-    .eq("applicant_user_id", userId)
-    .maybeSingle();
-  if (existingError) redirect("/oportunidades?application=error");
-
-  let submissionError;
-  if (existingApplication) {
-    if (existingApplication.status !== "SUBMITTED") redirect("/oportunidades?application=locked");
-    const { error } = await supabase.rpc("update_own_opportunity_application_submission", {
-      p_application_id: existingApplication.id, p_applicant_business_id: businessId, p_cover_note: coverNote,
-    });
-    submissionError = error;
-  } else {
-    const { error } = await supabase.from("opportunity_applications").insert({
-      opportunity_id: opportunityId,
-      applicant_user_id: userId,
-      applicant_business_id: businessId,
-      cover_note: coverNote,
-      status: "SUBMITTED",
-      submitted_at: new Date().toISOString()
-    });
-    submissionError = error;
-    // The database trigger notifies the opportunity owner after a successful insert.
+  const { data: submission, error: submissionError } = await supabase.rpc("submit_opportunity_application", {
+    p_opportunity_id: opportunityId,
+    p_applicant_business_id: businessId,
+    p_cover_note: coverNote,
+  });
+  if (submissionError) {
+    const message = submissionError.message || "";
+    if (message.includes("BUSINESS_MANAGEMENT_REQUIRED")) redirect("/oportunidades?application=forbidden");
+    if (message.includes("APPLICATION_NOT_EDITABLE")) redirect("/oportunidades?application=locked");
+    if (message.includes("OPPORTUNITY_NOT_OPEN")) redirect("/oportunidades?application=closed");
+    redirect("/oportunidades?application=error");
   }
-  if (submissionError) redirect("/oportunidades?application=error");
+  const action = submission?.action === "updated" ? "updated" : "submitted";
   await supabase.from("platform_conversion_events").insert({
     user_id: userId,
     visitor_key: "user:" + userId,
@@ -72,7 +49,7 @@ export async function applyToOpportunity(formData: FormData) {
     entity_type: "opportunity",
     entity_id: opportunityId,
     source: "opportunity_detail",
-    metadata: { action: existingApplication ? "updated" : "submitted" },
+    metadata: { action },
   });
   redirect("/oportunidades/" + (formData.get("slug") || "") + "?application=submitted");
 }
