@@ -49,7 +49,19 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 
 **B8-T01 — Financial and monetisation control plane (10/10 elements):**
 1. Plans/subscriptions query integrity; 2. business-ad product catalogue; 3. partner-ad catalogue; 4. campaign/promotions visibility; 5. impression/click metrics; 6. financial overview RPC failure states; 7. cross-module reconciliation RPC failure states; 8. integrity audit F3.28 failure/sample states; 9. resolution queue F3.29 action/history states; 10. M-Pesa sandbox safety, single-attempt handling and distinction between gateway acceptance and settlement.
-- Batch status: implementation tranche active; previous page-level safeguards already landed in prior commits. This tranche corrected optional/null finance fields so absent values display as unknown (`—`) instead of silently becoming zero. Commit `04777a4`. No tests or validation were run (per closure directive).
+- **Task implementation status: 10/10 elements addressed in the Admin financial control surface (implementation-only; not runtime-verified).**
+  1. Plans/subscriptions: query error states and active-plan count not fabricated on failure.
+  2. Business-ad catalogue: query errors handled and catalogue distinguishes unavailable from empty.
+  3. Partner-ad catalogue: same error/empty separation.
+  4. Promotions: list-query error state handled.
+  5. Delivery telemetry: impressions/click query failures tracked.
+  6. Financial overview: RPC error state; missing optional fields display unknown instead of zero.
+  7. F3.27 reconciliation: dedicated error/availability state.
+  8. F3.28 audit: error state, sample limit, issue severity/detail rendering.
+  9. F3.29 queue: status, assignment, notes, evidence, history; strict API payload types/trim/limits; RESOLVED requires note+evidence and IGNORED requires reason; successful action refreshes history and server-rendered state.
+  10. M-Pesa sandbox: explicit sandbox/test recipient/amount/shortcode/gateway, one-shot attempt guard, pre-check prior attempt, no retries after ambiguous result, query-state action, and explicit warning gateway acceptance is not settlement.
+- Batch commits: `04777a4` finance missing-value handling; `31ff138` strict financial-audit mutation validation; `6af2ec1` refresh/history after save.
+- No tests, validation or deployment performed (per closure directive).
 
 **B8-T02 — Partner backoffice operations (10/10):**
 1. partner create/update/status; 2. contacts and primary-contact consistency; 3. contracts and transition rules; 4. engagements, assignment and status; 5. invoice creation/link validation; 6. bank transfer registration/duplicate reference; 7. transfer verification and overpayment guard; 8. campaign capacity/date/price integrity; 9. report delivery/email confirmation; 10. document upload/version/access and association integrity.
