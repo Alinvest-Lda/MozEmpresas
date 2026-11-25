@@ -10,14 +10,12 @@ export default async function PartnerHome() {
     { data: context, error: contextError },
     { data: accountId, error: accountError },
     { data: requests, error: requestsError },
-    { data: members, error: membersError },
     { data: campaigns, error: campaignsError },
     { data: entitlements, error: entitlementsError },
   ] = await Promise.all([
     supabase.rpc("partner_account_context"),
     supabase.rpc("current_partner_account_id"),
     supabase.from("service_requests").select("id,status,created_at,requested_price,currency,platform_services(name)").eq("requester_user_id", user.id).order("created_at", { ascending: false }).limit(8),
-    supabase.rpc("partner_account_members_list"),
     supabase.rpc("partner_ad_campaigns_list"),
     supabase.rpc("partner_entitlements_list"),
   ]);
@@ -49,7 +47,6 @@ export default async function PartnerHome() {
     accountError && "identificação da conta",
     opportunitiesError && "publicações",
     requestsError && "pedidos submetidos por si",
-    membersError && "gestores",
     campaignsError && "campanhas",
     entitlementsError && "benefícios",
   ].filter(Boolean);
@@ -64,7 +61,7 @@ export default async function PartnerHome() {
       <div className="partner-content partner-home">
         <header className="partner-home-top">
           <div><span className="partner-kicker">ÁREA DE PARCEIROS</span><h1>{name}</h1><p>Gerir publicações, acompanhar pedidos e consultar os indicadores disponíveis da conta.</p></div>
-          <div className="partner-home-top-meta"><span>CONTA</span><strong>{account?.account_status === "ACTIVE" ? "Activa" : "A validar"}</strong><small>{membersError ? "Gestores indisponíveis" : (members?.length ?? 0) + " gestor(es) autorizado(s)"}</small><Link href="/parceiro/conta">Gerir conta →</Link></div>
+          <div className="partner-home-top-meta"><span>CONTA</span><strong>{account?.account_status === "ACTIVE" ? "Activa" : "A validar"}</strong><small>{contextError ? "Acesso não confirmado" : account?.member_role === "owner" ? "Responsável único" : "Acesso pendente"}</small><Link href="/parceiro/conta">Gerir conta →</Link></div>
         </header>
 
         {loadErrors.length > 0 && <div className="notice" role="alert">Alguns dados não puderam ser carregados ({loadErrors.join(", ")}). Actualize a página ou tente novamente. Não interprete estes dados como ausência de actividade.</div>}
@@ -77,7 +74,7 @@ export default async function PartnerHome() {
         <section className="partner-home-metrics">
           <article><span>Publicações activas da conta</span><strong>{opportunitiesError ? "—" : published}</strong><small>{opportunitiesError ? "Dados indisponíveis" : drafts + " rascunho(s)"}</small></article>
           <article><span>Campanhas activas</span><strong>{campaignsError ? "—" : activeCampaigns}</strong><small>Publicidade e exposição</small></article>
-          <article><span>Pedidos submetidos por si</span><strong>{requestsError ? "—" : pending}</strong><small>Não representa pedidos de outros gestores</small></article>
+          <article><span>Pedidos submetidos por si</span><strong>{requestsError ? "—" : pending}</strong><small>Pedidos do responsável único</small></article>
           <article><span>Benefícios activos da conta</span><strong>{entitlementsError ? "—" : benefits}</strong><small>Benefícios atribuídos à organização</small></article>
         </section>
 
