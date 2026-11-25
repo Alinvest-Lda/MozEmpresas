@@ -71,9 +71,15 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 
 **B8-T03 — User, staff and access administration (10/10):**
 1. user list/query states; 2. staff listing and role source; 3. activation/deactivation; 4. suspension/ban; 5. account recovery controls; 6. session/security actions; 7. staff removal/revocation; 8. owner/super-admin escalation protections; 9. audit and reason coverage; 10. revalidation of access after mutation.
-- **Implementation progress: 9/10 evidence-backed controls; task remains open.** Existing Super Admin user directory includes search/type/status/global-access/company filters, pagination, account state mutation via authoritative RPC, reason-required form input, self-account mutation protection, surfaced last-active-Super-Admin protection, password recovery flow, route revalidation, and account action history. Audit-query failure now explicitly warns that the history is unavailable and does not render an incomplete table as authoritative.
-- Remaining controls not yet fully closed: platform-staff listing/role source is implemented through the restricted staff-directory RPC; account session revocation and last-Super-Admin protections are implemented in the account-governance RPCs; single-user Partner access revocation is implemented through an audited RPC. The remaining gap is platform staff role removal/revocation and revalidation after staff-role changes.
-- Implementation commit: `cff1c9c` (account audit failure state clarity). This is source review only, not runtime verified.
+- **Task implementation status: 10/10 addressed (implementation-only; not runtime-verified).**
+  - User directory supports bounded search, type/status/access/association filters, pagination and explicit query-error handling.
+  - Account activation, suspension and deletion-request review use the authoritative governance RPC; changes require a reason, prevent self-change and protect the last active Super Admin.
+  - Password recovery uses the privileged email lookup and records the recovery event; account status changes revoke refresh sessions.
+  - Staff directory has a Super Admin-only RPC exposing active and inactive staff for both revocation and restoration; role escalation is not offered by this surface.
+  - Staff access changes use a dedicated RPC with row locking, compare-and-set semantics, self-revocation protection, last-Super-Admin protection, session revocation, immutable audit and required reason.
+  - User/staff pages and dependent admin surfaces are revalidated after staff access changes.
+- Commits: `cff1c9c` account audit failure state; `f302bd8` audited staff activation/revocation RPC; `c1b5710` staff server action; `2dce8b6` full active/inactive staff directory RPC; `7dfb8fe` staff governance UI/history; `320c2b6` inactive staff restoration visibility.
+- No tests, validation or deployment performed (per closure directive).
 
 **B8-T04 — Moderation and discovery governance (10/10):**
 - Implementation evidence added: listing moderation now reads the current state, enforces an explicit forward-only transition map, and uses compare-and-set on the prior state to prevent stale concurrent overwrites. Opportunity moderation already uses its state machine and compare-and-set guard.
