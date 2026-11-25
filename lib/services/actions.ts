@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { requireNormalAccount } from "@/lib/auth/access";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 import { canManageBusiness } from "@/lib/businesses/permissions";
-import { canTransitionServiceRequest } from "@/lib/services/state-machine";
 import { parseServiceRequestInput, parseServiceRequestUpdateInput } from "@/lib/services/validation";
 
 export async function requestPlatformService(formData: FormData) {
@@ -59,33 +58,18 @@ export async function updatePlatformServiceRequest(formData: FormData) {
   const { supabase, authorized, user } = await getSuperAdminContext();
   if (!authorized || !user) return { error: "Sem autorização para gerir pedidos." };
 
-  const { data: request, error: requestError } = await supabase
-    .from("service_requests")
-    .select("id,requester_user_id,service_id,status")
-    .eq("id", requestId)
-    .maybeSingle();
-
-  if (requestError || !request) {
-    return { error: "Pedido não encontrado ou indisponível." };
-  }
-  if (!canTransitionServiceRequest(request.status, status)) {
-    return { error: "Esta alteração não é permitida a partir do estado actual do pedido." };
-  }
-
-  const { data: updatedRequest, error } = await supabase
-    .from("service_requests")
-    .update({
-      status,
-      requested_price: requestedPrice,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", requestId)
-    .eq("status", request.status)
-    .select("id")
-    .maybeSingle();
-
-  if (error || !updatedRequest) {
-    return { error: "Não foi possível actualizar o pedido." };
+  const reason = String(formData.get("reason") || "").trim();
+  if (reason.length < 8 || reason.length > 500) return { error: "A justificação deve ter entre 8 e 500 caracteres." };
+  const { error } = await supabase.rpc("admin_update_service_request", {
+    p_request_id: requestId,
+    p_status: status,
+    p_requested_price: requestedPrice,
+    p_reason: reason,
+  });
+  if (error) {
+    return { error: error.message.includes("INVALID_SERVICE_REQUEST_TRANSITION")
+      ? "Esta alteração não é permitida a partir do estado actual."
+      : "Não foi possível actualizar o pedido. Reveja o estado e tente novamente." };
   }
 
   revalidatePath("/dashboard/admin");
