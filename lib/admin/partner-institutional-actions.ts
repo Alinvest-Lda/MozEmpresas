@@ -21,6 +21,17 @@ async function adminContext() {
 function value(data: FormData, key: string) {
   return String(data.get(key) ?? "").trim();
 }
+function validCalendarDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+function validLocalDateTime(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return false;
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime());
+}
 
 
 type PartnerLinkIds = { contractId?: string; engagementId?: string; campaignId?: string; documentId?: string };
@@ -96,7 +107,10 @@ export async function createPartnerContract(formData: FormData) {
     starts_on:value(formData,"starts_on") || undefined, ends_on:value(formData,"ends_on") || undefined,
     payment_terms:value(formData,"payment_terms") || undefined,
   });
-  if (!parsed.success) redirect("/dashboard/admin/parceiros/gestao?error=contract");
+  if (!parsed.success || (parsed.data.starts_on && !validCalendarDate(parsed.data.starts_on)) ||
+    (parsed.data.ends_on && !validCalendarDate(parsed.data.ends_on)) ||
+    (parsed.data.starts_on && parsed.data.ends_on && parsed.data.ends_on < parsed.data.starts_on))
+    redirect("/dashboard/admin/parceiros/gestao?error=contract");
   const { supabase,user } = await adminContext();
   const { error } = await supabase.from("partner_contracts").insert({
     ...parsed.data, starts_on:parsed.data.starts_on || null, ends_on:parsed.data.ends_on || null,
@@ -122,8 +136,11 @@ export async function createPartnerEngagement(formData: FormData) {
     assigned_commercial_user_id:value(formData,"assigned_commercial_user_id") || undefined,
     assigned_operations_user_id:value(formData,"assigned_operations_user_id") || undefined,
   });
+  const amountValue=parsed.success && parsed.data.agreed_amount_mzn ? Number(parsed.data.agreed_amount_mzn) : null;
   if (!parsed.success || (parsed.data.contract_id && !uuid.safeParse(parsed.data.contract_id).success) ||
-    [parsed.data.assigned_commercial_user_id,parsed.data.assigned_operations_user_id].some(x=>x&&!uuid.safeParse(x).success)) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
+    [parsed.data.assigned_commercial_user_id,parsed.data.assigned_operations_user_id].some(x=>x&&!uuid.safeParse(x).success) ||
+    (parsed.data.agreed_amount_mzn && (!Number.isFinite(amountValue) || amountValue! < 0 || amountValue! > 100000000000)) ||
+    (parsed.data.due_at && !validLocalDateTime(parsed.data.due_at))) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
   const { supabase,user } = await adminContext();
   if(parsed.data.contract_id && !(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id}))) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
   if(!(await isActivePlatformMember(supabase,parsed.data.assigned_commercial_user_id)) || !(await isActivePlatformMember(supabase,parsed.data.assigned_operations_user_id))) redirect("/dashboard/admin/parceiros/gestao?error=engagement");
@@ -131,7 +148,7 @@ export async function createPartnerEngagement(formData: FormData) {
     account_id:parsed.data.account_id, contract_id:parsed.data.contract_id || null,
     service_type:parsed.data.service_type, request_source:parsed.data.request_source,
     title:parsed.data.title, description:parsed.data.description || null,
-    agreed_amount_mzn:parsed.data.agreed_amount_mzn ? Number(parsed.data.agreed_amount_mzn) : null,
+    agreed_amount_mzn:amountValue,
     due_at:parsed.data.due_at || null, created_by:user!.id,
     assigned_commercial_user_id:parsed.data.assigned_commercial_user_id || null,
     assigned_operations_user_id:parsed.data.assigned_operations_user_id || null,
@@ -230,7 +247,9 @@ export async function createPartnerContact(formData: FormData) {
 
 export async function createPartnerReportDelivery(formData: FormData) {
  const parsed=z.object({account_id:uuid,contract_id:z.string().optional(),engagement_id:z.string().optional(),campaign_id:z.string().optional(),title:z.string().min(2).max(180),report_type:z.enum(["PERFORMANCE","FINANCIAL","MARKET_INTELLIGENCE","CAMPAIGN","EXECUTIVE","OTHER"]),period_start:z.string().optional(),period_end:z.string().optional(),storage_path:z.string().max(500).optional(),external_url:z.string().url().optional().or(z.literal("")),recipient_emails:z.string().max(2000).optional(),delivery_channel:z.enum(["EMAIL","PORTAL","MEETING","SHARED_LINK","OTHER"])}).safeParse({account_id:value(formData,"account_id"),contract_id:value(formData,"contract_id")||undefined,engagement_id:value(formData,"engagement_id")||undefined,campaign_id:value(formData,"campaign_id")||undefined,title:value(formData,"title"),report_type:value(formData,"report_type"),period_start:value(formData,"period_start")||undefined,period_end:value(formData,"period_end")||undefined,storage_path:value(formData,"storage_path")||undefined,external_url:value(formData,"external_url"),recipient_emails:value(formData,"recipient_emails")||undefined,delivery_channel:value(formData,"delivery_channel")});
- if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id,parsed.data.campaign_id].some(x=>x&&!uuid.safeParse(x).success) || (parsed.data.period_start&&parsed.data.period_end&&parsed.data.period_end<parsed.data.period_start)) redirect("/dashboard/admin/parceiros/gestao?error=report");
+ if(!parsed.success || [parsed.data.contract_id,parsed.data.engagement_id,parsed.data.campaign_id].some(x=>x&&!uuid.safeParse(x).success) ||
+   (parsed.data.period_start&&!validCalendarDate(parsed.data.period_start)) || (parsed.data.period_end&&!validCalendarDate(parsed.data.period_end)) ||
+   (parsed.data.period_start&&parsed.data.period_end&&parsed.data.period_end<parsed.data.period_start)) redirect("/dashboard/admin/parceiros/gestao?error=report");
  const {supabase,user}=await adminContext();
  if(!(await partnerLinksValid(supabase,parsed.data.account_id,{contractId:parsed.data.contract_id,engagementId:parsed.data.engagement_id,campaignId:parsed.data.campaign_id}))) redirect("/dashboard/admin/parceiros/gestao?error=report");
  if(parsed.data.storage_path) {
@@ -301,7 +320,9 @@ export async function createPartnerEntitlement(formData: FormData) {
     starts_at:value(formData,"starts_at") || undefined,
     ends_at:value(formData,"ends_at") || undefined,
   });
-  if (!parsed.success || (parsed.data.starts_at && parsed.data.ends_at && parsed.data.ends_at < parsed.data.starts_at) ||
+  if (!parsed.success || (parsed.data.starts_at && Number.isNaN(new Date(parsed.data.starts_at).getTime())) ||
+    (parsed.data.ends_at && Number.isNaN(new Date(parsed.data.ends_at).getTime())) ||
+    (parsed.data.starts_at && parsed.data.ends_at && parsed.data.ends_at < parsed.data.starts_at) ||
     (parsed.data.entitlement_type === "EXCLUSIVITY" && !parsed.data.scope?.trim())) {
     redirect("/dashboard/admin/parceiros/gestao?error=entitlement");
   }
