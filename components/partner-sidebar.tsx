@@ -15,7 +15,7 @@ export function PartnerSidebar(){
       <nav className="partner-nav" aria-label="Navegação do parceiro">
         {partnerNavGroups.map(g=><div className="partner-nav-group" key={g.label}><span>{g.label}</span>{g.links.map(([h,l])=><Link key={h} className={"partner-nav-link"+(active(h)?" active":"")} href={h} aria-current={active(h)?"page":undefined}><i aria-hidden="true"/><span>{l}</span></Link>)}</div>)}
       </nav>
-      <div className="partner-sidebar-foot"><Link href="/parceiro/conta">Conta e gestores</Link><form action={signOut}><button type="submit">Sair</button></form></div>
+      <div className="partner-sidebar-foot"><Link href="/parceiro/conta">Conta e acesso</Link><form action={signOut}><button type="submit">Sair</button></form></div>
     </aside>
   </>;
 }
