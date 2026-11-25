@@ -63,6 +63,7 @@ export default async function AdminOffersPage({ searchParams }: { searchParams?:
               <Field label="Estado da oferta" htmlFor={`offer-status-${listing.id}`}>
                 <Select id={`offer-status-${listing.id}`} name="status" defaultValue={listing.status}>{listingStatuses.map((value)=><option value={value} key={value}>{value}</option>)}</Select>
               </Field>
+              <Field label="Justificação obrigatória (mín. 8 caracteres)" htmlFor={`offer-reason-${listing.id}`}><Input id={`offer-reason-${listing.id}`} name="reason" required minLength={8} maxLength={500} placeholder="Motivo da decisão de moderação" /></Field>
               <Button variant="primary" type="submit">Actualizar estado</Button>
             </form>
           </article>;
