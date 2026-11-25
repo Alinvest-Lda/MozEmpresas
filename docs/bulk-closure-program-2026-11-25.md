@@ -261,3 +261,9 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - A regra é aplicada na base de dados sob bloqueio da linha e mantém o registo transaccional de motivo, actor e valores anterior/novo. A interface devolve mensagem específica quando o orçamento já está bloqueado.
 - Migration: `20261126102000_f368_lock_service_quotes_after_acceptance.sql`; commits `5ef8314` (regra SQL) e `8693f61` (mensagem da acção).
 - Não foram executados testes ou validação SQL.
+
+### B8 — Consolidação adicional da publicidade (26/11)
+- A governação de estados empresariais, pedidos de publicidade e campanhas de parceiros exige motivo administrativo e grava actor/estado anterior/novo no histórico. Os três fluxos usam RPCs protegidos e validam as transições na base de dados.
+- O resumo de itens publicitários pendentes deixa de apresentar totais derivados de listas parciais quando alguma consulta falha; a interface identifica que a amostra é limitada a 100 registos por origem.
+- Commit adicional: `0e8f81d` (ocultar resumo parcial em falha).
+- Não foram executados testes, validação ou deploy.
