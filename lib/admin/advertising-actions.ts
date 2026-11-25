@@ -23,29 +23,29 @@ const requestTransitions: Record<string, readonly string[]> = {
   CANCELLED: [],
 };
 
-async function updateStatus(table: "business_promotions" | "advertising_requests", idValue: FormDataEntryValue | null, statusValue: FormDataEntryValue | null, origin: string) {
+async function updateStatus(table: "business_promotions" | "advertising_requests", idValue: FormDataEntryValue | null, statusValue: FormDataEntryValue | null, reasonValue: FormDataEntryValue | null, origin: string) {
   const id = String(idValue || "");
   const status = String(statusValue || "").toUpperCase();
+  const reason = String(reasonValue || "").trim();
   const transitions = table === "business_promotions" ? promotionTransitions : requestTransitions;
-  if (!z.string().uuid().safeParse(id).success || !Object.hasOwn(transitions, status)) {
+  if (!z.string().uuid().safeParse(id).success || !Object.hasOwn(transitions, status)
+    || reason.length < 8 || reason.length > 500) {
     redirect("/dashboard/admin/publicidade?result=error");
   }
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) redirect("/login?next=/dashboard/admin/publicidade");
 
-  const { data: current, error: lookupError } = await supabase.from(table).select(table === "business_promotions" ? "id,status,payment_method,paid_at,credits_charged" : "id,status").eq("id", id).maybeSingle();
-  if (lookupError || !current || !(transitions[current.status ?? ""] ?? []).includes(status)) {
-    redirect("/dashboard/admin/publicidade?result=invalid-transition");
+  const { error } = await supabase.rpc("admin_update_advertising_status", {
+    p_entity_type: table === "business_promotions" ? "BUSINESS_PROMOTION" : "ADVERTISING_REQUEST",
+    p_entity_id: id,
+    p_new_status: status,
+    p_reason: reason,
+  });
+  if (error) {
+    const code = error.message.includes("ADVERTISING_PAYMENT_NOT_SETTLED") ? "payment-not-settled"
+      : error.message.includes("INVALID_ADVERTISING_STATUS_TRANSITION") ? "invalid-transition" : "error";
+    redirect("/dashboard/admin/publicidade?result=" + code);
   }
-  if (table === "business_promotions" && status === "ACTIVE") {
-    const promotion = current as { payment_method?: string | null; credits_charged?: number | null; paid_at?: string | null };
-    const creditSettled = promotion.payment_method === "CREDITS" && Number(promotion.credits_charged ?? 0) > 0;
-    const mpesaSettled = promotion.payment_method === "MPESA" && Boolean(promotion.paid_at);
-    if (!creditSettled && !mpesaSettled) redirect("/dashboard/admin/publicidade?result=payment-not-settled");
-  }
-  const { data: updated, error } = await supabase.from(table).update({ status, updated_at: new Date().toISOString() })
-    .eq("id", id).eq("status", current.status).select("id").maybeSingle();
-  if (error || !updated) redirect("/dashboard/admin/publicidade?result=stale");
   revalidatePath("/dashboard/admin");
   revalidatePath("/dashboard/admin/publicidade");
   revalidatePath("/dashboard/admin/monetizacao");
@@ -53,7 +53,7 @@ async function updateStatus(table: "business_promotions" | "advertising_requests
   redirect("/dashboard/admin/publicidade?result=success");
 }
 export async function moderateBusinessPromotion(formData: FormData) {
-  return updateStatus("business_promotions", formData.get("id"), formData.get("status"), "empresarial");
+  return updateStatus("business_promotions", formData.get("id"), formData.get("status"), formData.get("reason"), "empresarial");
 }
 export async function moderatePartnerCampaign(formData: FormData) {
   const id = String(formData.get("id") || "");
@@ -83,7 +83,7 @@ export async function moderatePartnerCampaign(formData: FormData) {
 }
 
 export async function updateAdvertisingRequest(formData: FormData) {
-  return updateStatus("advertising_requests", formData.get("id"), formData.get("status"), "pedidos");
+  return updateStatus("advertising_requests", formData.get("id"), formData.get("status"), formData.get("reason"), "pedidos");
 }
 
 export async function cancelBusinessPromotion(formData: FormData) {
