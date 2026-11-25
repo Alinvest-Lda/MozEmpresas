@@ -39,14 +39,14 @@ export default async function AdminAnalytics() {
   const since = new Date(today.getTime() - 13 * DAY_MS - 2 * 60 * 60 * 1000);
   const sinceIso = since.toISOString();
   const [ 
-    { count: totalBusinesses },
-    { count: totalUsers },
-    { count: totalListings },
-    { count: totalRequests },
-    { data: businessActivity },
-    { data: userActivity },
-    { data: listingActivity },
-    { data: requestActivity },
+    businessesResult,
+    usersResult,
+    listingsResult,
+    requestsResult,
+    businessActivityResult,
+    userActivityResult,
+    listingActivityResult,
+    requestActivityResult,
   ] = await Promise.all([
     supabase.from("businesses").select("id", { count: "exact", head: true }),
     supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -57,6 +57,15 @@ export default async function AdminAnalytics() {
     supabase.from("listings").select("created_at").gte("created_at", sinceIso).order("created_at", { ascending: true }).limit(1500),
     supabase.from("service_requests").select("created_at").gte("created_at", sinceIso).order("created_at", { ascending: true }).limit(1500),
   ]);
+  const totalBusinesses = businessesResult.error ? null : businessesResult.count;
+  const totalUsers = usersResult.error ? null : usersResult.count;
+  const totalListings = listingsResult.error ? null : listingsResult.count;
+  const totalRequests = requestsResult.error ? null : requestsResult.count;
+  const businessActivity = businessActivityResult.error ? null : businessActivityResult.data;
+  const userActivity = userActivityResult.error ? null : userActivityResult.data;
+  const listingActivity = listingActivityResult.error ? null : listingActivityResult.data;
+  const requestActivity = requestActivityResult.error ? null : requestActivityResult.data;
+  const activityError = [businessActivityResult, userActivityResult, listingActivityResult, requestActivityResult].some((query) => Boolean(query.error));
 
   const since30Days = new Date(now.getTime() - 30 * DAY_MS).toISOString();
   // This dashboard is already gated by getSuperAdminContext. Use a server-only
@@ -131,10 +140,10 @@ export default async function AdminAnalytics() {
   const maxActivity = Math.max(1, ...days.map((day) => day.businesses + day.users + day.listings + day.requests));
 
   const metrics = [
-    { label: "Empresas registadas", total: totalBusinesses ?? 0, hint: "total na plataforma", symbol: "EM", tone: "teal", href: "/dashboard/admin/empresas" },
-    { label: "Utilizadores", total: totalUsers ?? 0, hint: "total na plataforma", symbol: "US", tone: "blue", href: "/dashboard/admin/usuarios" },
-    { label: "Ofertas no marketplace", total: totalListings ?? 0, hint: "total no inventário", symbol: "OF", tone: "violet", href: "/dashboard/admin/ofertas" },
-    { label: "Pedidos de serviço", total: totalRequests ?? 0, hint: "total registado", symbol: "PS", tone: "orange", href: "#pedidos-servico" },
+    { label: "Empresas registadas", total: totalBusinesses, hint: "total na plataforma", symbol: "EM", tone: "teal", href: "/dashboard/admin/empresas" },
+    { label: "Utilizadores", total: totalUsers, hint: "total na plataforma", symbol: "US", tone: "blue", href: "/dashboard/admin/usuarios" },
+    { label: "Ofertas no marketplace", total: totalListings, hint: "total no inventário", symbol: "OF", tone: "violet", href: "/dashboard/admin/ofertas" },
+    { label: "Pedidos de serviço", total: totalRequests, hint: "total registado", symbol: "PS", tone: "orange", href: "#pedidos-servico" },
   ] as const;
 
   return (
@@ -152,7 +161,7 @@ export default async function AdminAnalytics() {
         {metrics.map((metric) => (
           <a className={styles.metric} href={metric.href} key={metric.label}>
             <div className={styles.metricTop}><span>{metric.label}</span><span className={`${styles.metricIcon} ${styles[metric.tone]}`}>{metric.symbol}</span></div>
-            <strong>{formatNumber(metric.total)}</strong>
+            <strong>{metric.total === null ? "n/d" : formatNumber(metric.total)}</strong>
             <div className={styles.metricBottom}><span>{metric.hint}</span></div>
           </a>
         ))}
@@ -170,7 +179,7 @@ export default async function AdminAnalytics() {
             <span><i className={styles.legendListings} /> Ofertas</span>
             <span><i className={styles.legendRequests} /> Pedidos</span>
           </div>
-          <div className={styles.chart} role="img" aria-label="Gráfico de barras da actividade diária por utilizadores, empresas, ofertas e pedidos">
+          {activityError ? <div className={styles.chartFootnote} role="alert">A actividade diária não está disponível porque uma ou mais consultas falharam. Não é apresentado um gráfico de zeros.</div> : <div className={styles.chart} role="img" aria-label="Gráfico de barras da actividade diária por utilizadores, empresas, ofertas e pedidos">
             {days.map((day) => {
               const total = day.businesses + day.users + day.listings + day.requests;
               const userHeight = (day.users / maxActivity) * 100;
@@ -187,7 +196,7 @@ export default async function AdminAnalytics() {
                 <small>{day.label}</small>
               </div>;
             })}
-          </div>
+          </div>}
           <p className={styles.chartFootnote}>O gráfico mostra novos registos por dia; não representa utilizadores activos nem visitas. As datas seguem o fuso horário de Moçambique.</p>
         </section>
       </div>
