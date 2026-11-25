@@ -1,10 +1,13 @@
 # MozEmpresas — Fluxo e conceito do módulo de Parceiros
 
+> **CONTRATO VIGENTE (25/11/2026):** Esta especificação foi escrita quando a conta Parceiro podia ter vários responsável único. Essa parte foi substituída: a regra vigente é **um único utilizador activo por organização Parceiro**. Não implementar convites de gestores, papéis manager/analyst/viewer, gestão multiutilizador ou transferências paralelas. Usar `docs/architecture/partner-manager-invitations.md` e `docs/bulk-closure-program-2026-11-25.md` como referência actual. A área de Inteligência fica limitada a indicadores factuais da actividade até haver dados de mercado externos e metodologia.
+
+
 ## 1. Decisão de produto
 
 O Parceiro é uma **entidade parceira da MozEmpresas**, não um utilizador que gere empresas de terceiros.
 
-A conta representa uma única entidade parceira. A mesma conta pode ter vários gestores, com permissões internas, mas todos actuam sobre a mesma relação com a MozEmpresas.
+A conta representa uma única entidade parceira. A conta tem um único utilizador activo responsável, que actua sobre a relação com a MozEmpresas. A substituição é sequencial e administrada pelo Super Admin.
 
 A proposta do módulo é gerir e enriquecer essa relação através de:
 - publicação e acompanhamento de oportunidades;
@@ -136,7 +139,7 @@ Separar claramente:
 - métricas calculadas;
 - interpretações/recomendações.
 
-### CONTA E GESTORES
+### CONTA E ACESSO
 Uma única entidade parceira pode ter vários gestores.
 
 Estrutura conceptual:
@@ -178,7 +181,7 @@ A experiência deve explicar:
 - serviços/benefícios disponíveis;
 - publicidade;
 - inteligência;
-- gestores da conta.
+- responsável único da conta.
 
 O onboarding não deve pedir criação de várias empresas.
 
@@ -237,7 +240,7 @@ ACTIVIDADE
 
 CONTA
   • Perfil da entidade
-  • Gestores
+  • Acesso
   • Acesso
 ```
 
@@ -320,7 +323,7 @@ Publicidade, serviços, exclusividades e inteligência devem ligar-se à mesma c
 O módulo só será considerado concluído quando:
 - o acesso dedicado estiver fechado;
 - a entidade parceira estiver correctamente modelada;
-- vários gestores puderem actuar na mesma conta;
+- a conta tiver um único utilizador activo e o processo de substituição estiver fechado;
 - permissões forem explícitas;
 - oportunidades tiverem CRUD e estados;
 - publicidade tiver fluxo e estados;
@@ -328,7 +331,7 @@ O módulo só será considerado concluído quando:
 - exclusividades forem suportadas por entitlement;
 - inteligência tiver fontes e métricas reais;
 - actividade tiver histórico factual;
-- conta permitir gestão dos gestores;
+- conta permitir gestão do acesso do responsável único;
 - estados vazio/carregamento/erro/sucesso existirem;
 - desktop/tablet/mobile seguirem o contrato transversal;
 - não houver CSS concorrente;
