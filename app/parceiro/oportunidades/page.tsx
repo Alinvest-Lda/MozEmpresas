@@ -37,7 +37,7 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
     supabase.rpc("partner_account_context"),
   ]);
   const context = Array.isArray(contextRows) ? contextRows[0] : null;
-  const canManage = context?.member_role === "owner" || context?.member_role === "manager";
+  const canManage = context?.member_role === "owner";
   const { data, error: opportunitiesError } = accountId ? await supabase
     .from("opportunities")
     .select("id,title,slug,type,organization,location,closes_at,status,created_at")
@@ -69,7 +69,7 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
     >
       {(contextError || accountError) && <div className="notice" role="alert">Não foi possível confirmar o contexto de acesso da sua conta. As operações de publicação ficam indisponíveis até a validação ser concluída.</div>}
       {opportunitiesError && <div className="notice" role="alert">Não foi possível carregar as publicações. Não interprete a lista indisponível como ausência de registos.</div>}
-      {!canManage && !contextError && <div className="notice">O seu papel permite consultar as publicações, mas a criação, edição e alteração de estado estão reservadas ao administrador e ao gestor da conta.</div>}
+      {!canManage && !contextError && <div className="notice">O seu papel permite consultar as publicações, mas a criação, edição e alteração de estado estão reservadas ao responsável único da conta.</div>}
       {params.saved && <div className="notice" role="status">A oportunidade foi guardada com sucesso.</div>}
       {params.updated && <div className="notice" role="status">O estado da publicação foi actualizado.</div>}
       {params.error && <div className="notice" role="alert">Não foi possível actualizar a publicação. Confirme as permissões e tente novamente.</div>}
