@@ -43,8 +43,8 @@ export default async function PartnerInsights() {
 
       <PartnerSection eyebrow="Leitura operacional" title="O que os indicadores mostram">
         <div className="partner-insight-grid">
-          <article><span>01 · PUBLICAÇÕES</span><h3>{opportunitiesError ? "Dados indisponíveis" : published ? "A conta tem actividade publicada" : "Ainda não existem publicações activas"}</h3><p>Este indicador conta oportunidades associadas à organização, independentemente do gestor que as criou.</p></article>
-          <article><span>02 · SERVIÇOS</span><h3>{requestsError ? "Dados indisponíveis" : activeRequests ? "Existem pedidos por acompanhar" : "Não há pedidos individuais activos"}</h3><p>Os pedidos apresentados são os submetidos pelo seu utilizador. Submetidos pelo utilizador responsável activo da organização.</p></article>
+          <article><span>01 · PUBLICAÇÕES</span><h3>{opportunitiesError ? "Dados indisponíveis" : published ? "A conta tem actividade publicada" : "Ainda não existem publicações activas"}</h3><p>Este indicador agrega oportunidades vinculadas à conta Parceira.</p></article>
+          <article><span>02 · SERVIÇOS</span><h3>{requestsError ? "Dados indisponíveis" : activeRequests ? "Existem pedidos por acompanhar" : "Não há pedidos individuais activos"}</h3><p>Os pedidos apresentados são submetidos pelo utilizador responsável activo da organização.</p></article>
           <article><span>03 · BENEFÍCIOS</span><h3>{entitlementsError ? "Dados indisponíveis" : benefits ? "A conta tem benefícios activos" : "Sem benefícios activos"}</h3><p>Consulte os serviços e exclusividades formalmente atribuídos à organização.</p></article>
         </div>
       </PartnerSection>
