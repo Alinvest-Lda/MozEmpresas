@@ -69,7 +69,9 @@ export async function updatePlatformServiceRequest(formData: FormData) {
   if (error) {
     return { error: error.message.includes("INVALID_SERVICE_REQUEST_TRANSITION")
       ? "Esta alteração não é permitida a partir do estado actual."
-      : "Não foi possível actualizar o pedido. Reveja o estado e tente novamente." };
+      : error.message.includes("SERVICE_REQUEST_QUOTE_LOCKED")
+        ? "O orçamento fica bloqueado depois da aceitação do pedido."
+        : "Não foi possível actualizar o pedido. Reveja o estado e tente novamente." };
   }
 
   revalidatePath("/dashboard/admin");
