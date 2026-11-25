@@ -22,3 +22,5 @@
 .moderationForm select{min-width:180px;height:38px;border:1px solid var(--palette-dce7e2);border-radius:8px;padding:0 10px;background:var(--palette-fff);color:var(--palette-23423d);font:inherit;font-size:12px}
 
 .pagination{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 0;color:var(--muted,#64748b);font-size:.875rem}.pagination>div{display:flex;gap:.5rem;flex-wrap:wrap}@media(max-width:640px){.pagination{align-items:flex-start;flex-direction:column}.pagination>div{width:100%}.pagination a{flex:1;text-align:center}}
+
+.ticketAge{font-size:.78rem;color:var(--muted,#667085);margin-top:.25rem}
