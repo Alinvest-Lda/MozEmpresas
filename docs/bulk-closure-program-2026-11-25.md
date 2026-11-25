@@ -249,3 +249,9 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - O backoffice passou a exigir motivo para estas decisões e apresenta o histórico por campanha/pedido.
 - Migration: `20261126100000_f366_reasoned_advertising_admin_actions.sql`; commits `76ad046` (RPC/auditoria), `912e1f2` (server actions), `baffc86` (formulários), `693bacc` (histórico).
 - O fluxo de campanhas de parceiros continua a usar o RPC próprio e o histórico próprio; a inclusão de motivo nesse fluxo permanece uma intervenção distinta. Não foram executados testes nem validação da migration.
+
+### B8 — Publicidade: governação das campanhas de parceiros (26/11)
+- O RPC de moderação de campanhas de parceiros passou a exigir justificação, preservando a mesma máquina de estados, bloqueio de linha, validação de pagamento e regras de fim de campanha.
+- O histórico imutável de campanhas de parceiros passou a guardar e apresentar a justificação administrativa, mantendo compatibilidade de leitura com eventos históricos sem motivo capturado.
+- Migration: `20261126101000_f367_reasoned_partner_ad_campaign_moderation.sql`; commits `c74cd38` (RPC/eventos), `08899df` (server action), `3394db1` (histórico UI).
+- Não foram executados testes ou validação SQL.
