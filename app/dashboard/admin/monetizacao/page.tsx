@@ -58,7 +58,7 @@ export default async function AdminMonetizationPage() {
     promotion_cancellations?: { cancellation_count: number; credits_refunded: number };
   };
   const finance = (financeOverview ?? null) as FinanceOverview | null;
-  const financeMoney = (value?: number) => formatMoney(value ?? 0);
+  const financeMoney = (value?: number | null) => formatMoney(value ?? null);
   type F328Issue = {record_id:string;module:string;issue_code:string;severity:string;summary:string;details:Record<string,unknown>;occurred_at:string|null};
   type F328Audit = {generated_at:string;total_issues:number;error_count:number;warning_count:number;issue_codes:Record<string,number>;sample_limit:number;issues:F328Issue[]};
   const audit328 = (financialAudit ?? null) as F328Audit | null;
@@ -102,18 +102,18 @@ export default async function AdminMonetizationPage() {
           <div className={styles.panelHead}><div><span className={styles.kicker}>00 · Controlo financeiro integrado</span><h2 id="finance-reconciliation-title">Reconciliação operacional</h2><p>Resumo conjunto de pagamentos, documentos, créditos, campanhas e serviços, calculado no PostgreSQL e protegido por autorização Super Admin.</p></div><span className={styles.counter}>{finance?.generated_at ? formatDate(finance.generated_at) : "Sem leitura"}</span></div>
           {financeOverviewError || !finance ? <div className={styles.empty}><strong>Reconciliação indisponível.</strong><p>Não foi possível obter o resumo financeiro. Os restantes módulos continuam disponíveis; não são apresentados valores presumidos.</p></div> : <>
             <div className={styles.metrics}>
-              <article><span>Carteiras</span><strong>{finance.wallets?.wallet_count ?? 0}</strong><small>{Number(finance.wallets?.wallet_balance ?? 0).toLocaleString("pt-MZ")} créditos disponíveis</small></article>
-              <article><span>Divergências de saldo</span><strong>{finance.reconciliation?.wallet_balance_mismatches ?? 0}</strong><small>Carteira versus ledger</small></article>
-              <article><span>Pagamentos/documentos</span><strong>{finance.reconciliation?.payment_document_mismatches ?? 0}</strong><small>Estados incompatíveis</small></article>
-              <article><span>Compras sem movimento</span><strong>{finance.reconciliation?.paid_credit_purchases_missing_ledger ?? 0}</strong><small>Compras pagas sem lançamento</small></article>
-              <article><span>Serviços por rever</span><strong>{finance.reconciliation?.service_payment_issues ?? 0}</strong><small>{Number(finance.reconciliation?.service_orders_checked ?? 0).toLocaleString("pt-MZ")} ordens verificadas integralmente</small></article>
-              <article><span>Callbacks por rever</span><strong>{finance.reconciliation?.callbacks_needing_review ?? 0}</strong><small>Eventos rejeitados ou em retry</small></article>
+              <article><span>Carteiras</span><strong>{finance.wallets?.wallet_count ?? "—"}</strong><small>{finance.wallets?.wallet_balance == null ? "—" : Number(finance.wallets.wallet_balance).toLocaleString("pt-MZ")} créditos disponíveis</small></article>
+              <article><span>Divergências de saldo</span><strong>{finance.reconciliation?.wallet_balance_mismatches ?? "—"}</strong><small>Carteira versus ledger</small></article>
+              <article><span>Pagamentos/documentos</span><strong>{finance.reconciliation?.payment_document_mismatches ?? "—"}</strong><small>Estados incompatíveis</small></article>
+              <article><span>Compras sem movimento</span><strong>{finance.reconciliation?.paid_credit_purchases_missing_ledger ?? "—"}</strong><small>Compras pagas sem lançamento</small></article>
+              <article><span>Serviços por rever</span><strong>{finance.reconciliation?.service_payment_issues ?? "—"}</strong><small>{finance.reconciliation?.service_orders_checked == null ? "—" : Number(finance.reconciliation.service_orders_checked).toLocaleString("pt-MZ")} ordens verificadas integralmente</small></article>
+              <article><span>Callbacks por rever</span><strong>{finance.reconciliation?.callbacks_needing_review ?? "—"}</strong><small>Eventos rejeitados ou em retry</small></article>
             </div>
             <div className={styles.productList}>
               <article className={styles.product}><div className={styles.productMain}><h3>Pagamentos</h3><p>Estado e método de cobrança</p>{(finance.payments ?? []).map((x,i)=><small key={x.status + (x.method ?? "") + i}>{x.status} · {x.method} · {x.count} · {financeMoney(x.amount_mzn)}</small>)}</div></article>
               <article className={styles.product}><div className={styles.productMain}><h3>Documentos financeiros</h3><p>Facturas, recibos e documentos de compra</p>{(finance.documents ?? []).map((x,i)=><small key={x.status + (x.type ?? "") + i}>{x.status} · {x.type} · {x.count} · {financeMoney(x.amount_mzn)}</small>)}</div></article>
               <article className={styles.product}><div className={styles.productMain}><h3>Compras de créditos</h3><p>Pedidos, pagamentos e créditos atribuídos</p>{(finance.credit_purchases ?? []).map(x=><small key={x.status}>{x.status} · {x.count} pedidos · {financeMoney(x.amount_mzn)} · {Number(x.credits ?? 0).toLocaleString("pt-MZ")} créditos</small>)}</div></article>
-              <article className={styles.product}><div className={styles.productMain}><h3>Publicidade e estornos</h3><p>Campanhas por estado e método de pagamento</p>{(finance.promotions ?? []).map((x,i)=><small key={x.status + (x.payment_method ?? "") + i}>{x.status} · {x.payment_method} · {x.count} campanhas · {financeMoney(x.budget_mzn)} · {Number(x.credits_charged ?? 0).toLocaleString("pt-MZ")} créditos</small>)}<small>Cancelamentos: {finance.promotion_cancellations?.cancellation_count ?? 0} · Créditos devolvidos: {Number(finance.promotion_cancellations?.credits_refunded ?? 0).toLocaleString("pt-MZ")}</small></div></article>
+              <article className={styles.product}><div className={styles.productMain}><h3>Publicidade e estornos</h3><p>Campanhas por estado e método de pagamento</p>{(finance.promotions ?? []).map((x,i)=><small key={x.status + (x.payment_method ?? "") + i}>{x.status} · {x.payment_method} · {x.count} campanhas · {financeMoney(x.budget_mzn)} · {Number(x.credits_charged ?? 0).toLocaleString("pt-MZ")} créditos</small>)}<small>Cancelamentos: {finance.promotion_cancellations?.cancellation_count ?? "—"} · Créditos devolvidos: {Number(finance.promotion_cancellations?.credits_refunded ?? 0).toLocaleString("pt-MZ")}</small></div></article>
             </div>
           </>}
         <section className={styles.panel} aria-labelledby="f327-title">
