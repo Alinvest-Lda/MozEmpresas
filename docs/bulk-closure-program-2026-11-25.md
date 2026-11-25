@@ -255,3 +255,9 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - O histórico imutável de campanhas de parceiros passou a guardar e apresentar a justificação administrativa, mantendo compatibilidade de leitura com eventos históricos sem motivo capturado.
 - Migration: `20261126101000_f367_reasoned_partner_ad_campaign_moderation.sql`; commits `c74cd38` (RPC/eventos), `08899df` (server action), `3394db1` (histórico UI).
 - Não foram executados testes ou validação SQL.
+
+### B8 — Platform Services: integridade do orçamento após aceitação (26/11)
+- A RPC administrativa de pedidos de serviço agora impede alterações ao orçamento depois de o pedido ser aceite ou entrar em execução/conclusão/cancelamento. A alteração permanece permitida nas fases de recepção, análise e orçamento.
+- A regra é aplicada na base de dados sob bloqueio da linha e mantém o registo transaccional de motivo, actor e valores anterior/novo. A interface devolve mensagem específica quando o orçamento já está bloqueado.
+- Migration: `20261126102000_f368_lock_service_quotes_after_acceptance.sql`; commits `5ef8314` (regra SQL) e `8693f61` (mensagem da acção).
+- Não foram executados testes ou validação SQL.
