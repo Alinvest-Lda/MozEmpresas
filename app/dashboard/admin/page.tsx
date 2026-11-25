@@ -79,6 +79,15 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
     (requestPriority.get(b.status as typeof statuses[number][0]) ?? 99) ||
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
+  const serviceRequestIds = (requests ?? []).map((request) => request.id);
+  const { data: serviceAdminEvents, error: serviceAdminEventsError } = serviceRequestIds.length
+    ? await supabase.from("service_request_admin_events").select("id,service_request_id,event_type,old_status,new_status,old_requested_price,new_requested_price,action_reason,created_at").in("service_request_id", serviceRequestIds).order("created_at", { ascending: false })
+    : { data: [], error: null };
+  const serviceEventsByRequest = new Map<string, typeof serviceAdminEvents>();
+  for (const event of serviceAdminEvents ?? []) {
+    const existing = serviceEventsByRequest.get(event.service_request_id) ?? [];
+    serviceEventsByRequest.set(event.service_request_id, [...existing, event]);
+  }
   return <main className="dashboard-main admin-workspace"><div className="dashboard-content">
     <AdminAnalytics />
     {adminDataError ? <div className="notice" role="alert">Alguns indicadores do centro de controlo não puderam ser carregados. Os valores afectados são ocultados em vez de apresentados como zero.</div> : null}
@@ -152,6 +161,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
               <span>Última actualização: {new Date(request.updated_at || request.created_at).toLocaleDateString("pt-MZ")}</span>
             </div>
             <p>{request.notes || "Sem observações adicionais."}</p>
+            {serviceAdminEventsError ? <p className="notice" role="alert">O histórico administrativo deste pedido não está disponível.</p> : <details><summary>Histórico de decisões · {(serviceEventsByRequest.get(request.id) ?? []).length} evento(s)</summary>{(serviceEventsByRequest.get(request.id) ?? []).map((event) => <p key={event.id}>{event.event_type === "STATUS_CHANGED" ? `${event.old_status} → ${event.new_status}` : "Orçamento actualizado"} · {new Date(event.created_at).toLocaleString("pt-MZ")}<br />Motivo: {event.action_reason}</p>)}</details>}
             <form action={async (formData) => { "use server"; const outcome = await updatePlatformServiceRequest(formData); redirect(`/dashboard/admin?result=${"error" in outcome ? "error" : "success"}&action=service`); }} className="admin-request-form">
               <input type="hidden" name="requestId" value={request.id} />
               <Field label="Estado" htmlFor={`request-status-${request.id}`}>
@@ -160,6 +170,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
               <Field label="Valor proposto" htmlFor={`request-price-${request.id}`} hint="Deixe em branco se ainda não houver orçamento.">
                 <Input id={`request-price-${request.id}`} name="requestedPrice" type="number" min="0" step="0.01" defaultValue={request.requested_price ?? ""} placeholder="Por definir" />
               </Field>
+              <Field label="Justificação obrigatória (mín. 8 caracteres)" htmlFor={`request-reason-${request.id}`}><Input id={`request-reason-${request.id}`} name="reason" required minLength={8} maxLength={500} placeholder="Motivo da decisão ou alteração do orçamento" /></Field>
               <p className="muted wide">A descrição enviada pelo solicitante é preservada durante as actualizações de estado e orçamento.</p>
               <Button variant="primary" type="submit">Actualizar pedido</Button>
             </form>
