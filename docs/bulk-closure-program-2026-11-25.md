@@ -124,3 +124,10 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 ### B8 — Opportunity lifecycle history error visibility
 - The Super Admin opportunity list now explicitly captures failures in the lifecycle-event history query and warns that the opportunity list may still render while the event history is unavailable.
 - Commit: `06b0a6d`.
+
+
+### B8 — Monetização: métricas de inventário e consultas parciais (25/11)
+- A central de monetização deixa de exibir zero ou totais parciais como se fossem completos quando falham consultas de planos, promoções ou inventário de anúncios.
+- Totais dependentes de consultas com erro agora mostram indisponível (—), com rótulos indicando catálogo/consulta incompleta; o aviso global de consultas falhadas permanece.
+- Commit: `1e9478c`.
+- Sem testes, validação final ou deploy.
