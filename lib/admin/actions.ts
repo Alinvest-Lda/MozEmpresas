@@ -12,38 +12,6 @@ const listingTransitions: Record<string, readonly string[]> = {
   ARCHIVED: [],
 };
 
-export async function moderateBusiness(formData: FormData) {
-  const id = String(formData.get("businessId") || "");
-  const rawVisibility = String(formData.get("isPublic") || "");
-  if (!z.string().uuid().safeParse(id).success || !["true", "false"].includes(rawVisibility)) {
-    return { error: "Empresa ou visibilidade inválida." };
-  }
-  const isPublic = rawVisibility === "true";
-
-  const { supabase, authorized } = await getSuperAdminContext();
-  if (!authorized) return { error: "Sem autorização para moderar empresas." };
-
-  // Archived businesses must remain outside the visibility workflow, even if the action is called directly.
-  const { data: updatedBusiness, error } = await supabase
-    .from("businesses")
-    .update({
-      is_public: isPublic,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .is("archived_at", null)
-    .select("id")
-    .maybeSingle();
-
-  if (error || !updatedBusiness) {
-    return { error: "Não foi possível actualizar a empresa. Confirme se existe e não está arquivada." };
-  }
-  revalidatePath("/dashboard/admin");
-  revalidatePath("/dashboard/admin/empresas");
-  revalidatePath("/empresas");
-  return { success: true };
-}
-
 export async function moderateListing(formData: FormData) {
   const id = String(formData.get("listingId") || "");
   const status = String(formData.get("status") || "").toUpperCase();
