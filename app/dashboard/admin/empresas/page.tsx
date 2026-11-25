@@ -21,7 +21,7 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return null;
 
-  const [{ data: adminUsers }, { data: auditRows, error: auditError }] = await Promise.all([supabase.rpc("admin_list_platform_users", { p_search:null,p_user_type:null,p_status:"ACTIVE",p_access:null,p_association:null,p_limit:100,p_offset:0 }),supabase.rpc("admin_list_business_audit", { p_business_id:null,p_limit:100 })]);
+  const [{ data: adminUsers, error: adminUsersError }, { data: auditRows, error: auditError }] = await Promise.all([supabase.rpc("admin_list_platform_users", { p_search:null,p_user_type:null,p_status:"ACTIVE",p_access:null,p_association:null,p_limit:100,p_offset:0 }),supabase.rpc("admin_list_business_audit", { p_business_id:null,p_limit:100 })]);
   const resultMessages:Record<string,string>={ "ownership-transferred":"Titularidade transferida e registada.","visibility-updated":"Visibilidade actualizada e registada.",archived:"Empresa arquivada; histórico preservado.",restored:"Empresa restaurada como privada.",invalid:"Dados inválidos ou justificação insuficiente.",forbidden:"Operação não autorizada.","not-found":"Empresa não encontrada.","owner-inactive":"O novo titular deve ter conta activa.",unchanged:"Não houve alteração.","operation-failed":"Não foi possível concluir a operação." };
   let query = supabase
     .from("businesses")
@@ -71,6 +71,7 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
           <span className={styles.heroDecoration} aria-hidden="true">M</span>
         </header>
 
+        {adminUsersError ? <div className="notice" role="alert">A consulta de titulares activos falhou. Os nomes e emails de titular apresentados podem estar indisponíveis; os dados de empresa continuam sujeitos ao estado da consulta principal.</div> : null}
         {result && resultMessages[result] ? <div className={styles.notice} role="status">{resultMessages[result]}</div> : null}
 
         <section className={styles.directory} aria-labelledby="business-directory-title">
