@@ -47,15 +47,15 @@ export default async function PartnerReconciliationPage(){
   <header className={styles.hero}><div><span>Backoffice institucional · F3.61</span><h1>Conciliação operacional</h1><p>Verificação transversal de contratos, execuções, campanhas, relatórios, benefícios, pagamentos e documentos financeiros. Esta consulta é apenas de leitura e não altera registos.</p></div><a href="/dashboard/admin/parceiros/gestao">Voltar à gestão de parceiros</a></header>
   {error?<div className={styles.error}>Não foi possível executar a conciliação. Confirme as permissões e tente novamente.</div>:null}
   <section className={styles.metrics}>
-   <article><span>Registos verificados</span><strong>{checked}</strong></article>
+   <article><span>Registos verificados</span><strong>{error?"—":checked}</strong></article>
    <article><span>Inconsistências</span><strong>{result.total_issues??"—"}</strong></article>
-   <article><span>Contratos</span><strong>{result.contracts_checked??0}</strong></article>
-   <article><span>Execuções e relatórios</span><strong>{(result.engagements_checked??0)+(result.reports_checked??0)}</strong></article>
-   <article><span>Pagamentos e documentos</span><strong>{(result.partner_payments_checked??0)+(result.partner_financial_documents_checked??0)}</strong></article>
+   <article><span>Contratos</span><strong>{error?"—":result.contracts_checked??0}</strong></article>
+   <article><span>Execuções e relatórios</span><strong>{error?"—":(result.engagements_checked??0)+(result.reports_checked??0)}</strong></article>
+   <article><span>Pagamentos e documentos</span><strong>{error?"—":(result.partner_payments_checked??0)+(result.partner_financial_documents_checked??0)}</strong></article>
   </section>
   <section className={styles.panel}><div className={styles.panelHead}><div><h2>Inconsistências detectadas</h2><p>Máximo de 250 ocorrências por execução. Os totais por tipo abrangem todos os registos encontrados.</p></div><span>{result.generated_at?new Date(result.generated_at).toLocaleString("pt-MZ",{timeZone:"Africa/Maputo"}):"—"}</span></div>
    {error?null:issues.length===0?<p className={styles.clean}>Não foram detectadas inconsistências nos registos actualmente existentes.</p>:<div className={styles.tableWrap}><table><thead><tr><th>Tipo de inconsistência</th><th>Registo</th><th>Entidade</th><th>Detalhes</th></tr></thead><tbody>{issues.map(x=><tr key={x.issue_code+x.record_id}><td>{labels[x.issue_code]??x.issue_code}</td><td>{x.entity_type} · {x.record_id.slice(0,8)}</td><td>{x.account_id??"—"}</td><td><code>{JSON.stringify(x.details)}</code></td></tr>)}</tbody></table></div>}
   </section>
-  <section className={styles.panel}><h2>Contagem por tipo</h2><div className={styles.counts}>{Object.entries(result.issue_counts??{}).sort((a,b)=>b[1]-a[1]).map(([code,count])=><div key={code}><span>{labels[code]??code}</span><strong>{count}</strong></div>)}</div></section>
+  <section className={styles.panel}><h2>Contagem por tipo</h2>{error?<p className={styles.error}>Contagem indisponível porque a consulta de reconciliação falhou.</p>:<div className={styles.counts}>{Object.entries(result.issue_counts??{}).sort((a,b)=>b[1]-a[1]).map(([code,count])=><div key={code}><span>{labels[code]??code}</span><strong>{count}</strong></div>)}</div>}</section>
  </div></main>;
 }
