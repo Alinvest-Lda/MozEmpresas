@@ -38,8 +38,9 @@ async function updateStatus(table: "business_promotions" | "advertising_requests
     redirect("/dashboard/admin/publicidade?result=invalid-transition");
   }
   if (table === "business_promotions" && status === "ACTIVE") {
-    const creditSettled = current.payment_method === "CREDITS" && Number(current.credits_charged ?? 0) > 0;
-    const mpesaSettled = current.payment_method === "MPESA" && Boolean(current.paid_at);
+    const promotion = current as { payment_method?: string | null; credits_charged?: number | null; paid_at?: string | null };
+    const creditSettled = promotion.payment_method === "CREDITS" && Number(promotion.credits_charged ?? 0) > 0;
+    const mpesaSettled = promotion.payment_method === "MPESA" && Boolean(promotion.paid_at);
     if (!creditSettled && !mpesaSettled) redirect("/dashboard/admin/publicidade?result=payment-not-settled");
   }
   const { data: updated, error } = await supabase.from(table).update({ status, updated_at: new Date().toISOString() })
