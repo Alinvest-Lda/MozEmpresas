@@ -103,12 +103,16 @@ export async function createOpportunity(formData: FormData) {
   }).select("id").single();
 
   if (error) redirect("/dashboard/oportunidades?publish=error");
+  let attachmentFailure = false;
   try {
     await savePublicationAttachments(supabase, userId, "OPPORTUNITY", createdOpportunity?.id ?? "", formData.getAll("attachments"));
   } catch {
-    // The publication remains valid; attachments are optional and can be added later.
+    // Publication remains committed, but the user must be told that selected files were not attached.
+    attachmentFailure = formData.getAll("attachments").some((entry) => typeof File !== "undefined" && entry instanceof File && entry.size > 0);
   }
-  redirect("/dashboard/oportunidades?publish=success");
+  redirect(attachmentFailure
+    ? "/dashboard/oportunidades?publish=attachments-error"
+    : "/dashboard/oportunidades?publish=success");
 }
 
 export async function updateOpportunityStatus(formData: FormData) {
