@@ -79,7 +79,7 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 - Implementation evidence added: listing moderation now reads the current state, enforces an explicit forward-only transition map, and uses compare-and-set on the prior state to prevent stale concurrent overwrites. Opportunity moderation already uses its state machine and compare-and-set guard.
 - Commits: `28587dd` (listing lifecycle guard).
 - Task remains open; the remaining moderation, media/report, audit and notification elements require further implementation.
-**B8-T04 — Moderation and discovery governance (10/10):**
+
 1. company moderation; 2. profile state; 3. listing moderation; 4. listing lifecycle transitions; 5. opportunity moderation; 6. deadline/expiry controls; 7. duplicate/invalid submissions; 8. media/report handling; 9. status/audit history; 10. notifications tied to approved actions.
 
 **B8-T05 — Platform Services operations (10/10):**
@@ -89,14 +89,14 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 - Implementation evidence added: business promotion and advertising request updates now load the authoritative current state, enforce allowed transition maps, and compare-and-set against the prior state. Partner campaign transitions remain delegated to the database transition RPC, including settlement/date constraints.
 - Commit: `0190d52` (advertising request and promotion transition guards).
 - Task remains open; capacity, billing, telemetry, payment/refund and complete notification/audit coverage remain to be closed.
-**B8-T06 — Advertising operations (10/10):**
+
 1. business campaign intake; 2. partner campaign intake; 3. product/slot eligibility; 4. capacity; 5. date bounds; 6. moderation/review; 7. payment/credit settlement; 8. activation/pause/end; 9. telemetry/billing; 10. refund/cancel and audit/notification paths.
 
 **B8-T07 — Support and service accountability (10/10):**
 - Implementation evidence added: Super Admin support assignment now sources eligible staff from the secured `admin_list_platform_staff()` RPC rather than querying `platform_members` directly from the page; active Super Admin role is filtered from the RPC result.
 - Commit: `c2dd65b`.
 - Task remains open; queue completeness, SLA, delivery and audit controls require further closure.
-**B8-T07 — Support and service accountability (10/10):**
+
 1. ticket queue; 2. auxiliary profile/company lookup; 3. message thread; 4. event timeline; 5. assignment; 6. status transition; 7. response/resolution note; 8. SLA/ageing; 9. notifications; 10. incomplete-data/error state and safe retry.
 
 **B8-T08 — Audit, finance action reasons and notification governance (10/10):**
