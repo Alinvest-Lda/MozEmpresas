@@ -30,6 +30,15 @@ export default async function AdminOffersPage({ searchParams }: { searchParams?:
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const safePage = Math.min(page, pages);
   const result = params?.result === "success" || params?.result === "error" ? params.result : "";
+  const listingIds = (listings ?? []).map((listing) => listing.id);
+  const { data: moderationEvents, error: moderationEventsError } = listingIds.length
+    ? await supabase.from("listing_moderation_events").select("id,listing_id,old_status,new_status,action_reason,created_at").in("listing_id", listingIds).order("created_at", { ascending: false })
+    : { data: [], error: null };
+  const eventsByListing = new Map<string, typeof moderationEvents>();
+  for (const event of moderationEvents ?? []) {
+    const existing = eventsByListing.get(event.listing_id) ?? [];
+    eventsByListing.set(event.listing_id, [...existing, event]);
+  }
 
   return <main className="dashboard-main admin-workspace"><div className="dashboard-content">
     <section className="dashboard-section">
@@ -49,7 +58,7 @@ export default async function AdminOffersPage({ searchParams }: { searchParams?:
         <a className="ui-button ui-button-secondary" href="/dashboard/admin/ofertas">Limpar filtros</a>
       </form>
       <div className="directory-results-summary admin-offers-summary"><strong>{total.toLocaleString("pt-MZ")}</strong><span>ofertas encontradas · página {safePage} de {pages}</span></div>
-      {error ? <div className="notice" role="alert">Não foi possível carregar as ofertas. Tente novamente ou verifique as permissões.</div> : null}
+      {error || moderationEventsError ? <div className="notice" role="alert">Não foi possível carregar integralmente as ofertas ou o respectivo histórico de moderação. Reveja as permissões e tente novamente.</div> : null}
       <div className="admin-request-list">
         {listings?.length ? listings.map((listing) => {
           const business = Array.isArray(listing.businesses) ? listing.businesses[0] : listing.businesses;
@@ -66,6 +75,7 @@ export default async function AdminOffersPage({ searchParams }: { searchParams?:
               <Field label="Justificação obrigatória (mín. 8 caracteres)" htmlFor={`offer-reason-${listing.id}`}><Input id={`offer-reason-${listing.id}`} name="reason" required minLength={8} maxLength={500} placeholder="Motivo da decisão de moderação" /></Field>
               <Button variant="primary" type="submit">Actualizar estado</Button>
             </form>
+            <details className="admin-request-history"><summary>Histórico de moderação · {(eventsByListing.get(listing.id) ?? []).length} evento(s)</summary><div>{(eventsByListing.get(listing.id) ?? []).map((event) => <p key={event.id}><strong>{event.old_status} → {event.new_status}</strong> · {new Date(event.created_at).toLocaleString("pt-MZ")}<br />Motivo: {event.action_reason || "Registo anterior sem justificação disponível."}</p>)}</div></details>
           </article>;
         }) : !error ? <div className="admin-request-empty"><strong>Nenhuma oferta corresponde aos filtros.</strong><span>Altere o termo de pesquisa ou seleccione outro estado.</span></div> : null}
       </div>
