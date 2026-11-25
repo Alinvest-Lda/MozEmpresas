@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
-import { canTransitionSupportTicket, isSupportTicketStatus } from "@/lib/support/state-machine";
+import { isSupportTicketStatus } from "@/lib/support/state-machine";
 
 const replySchema = z.object({ ticketId: z.string().uuid(), body: z.string().trim().min(1).max(5000) });
 const statusSchema = z.object({ ticketId: z.string().uuid(), status: z.string().min(1) });
