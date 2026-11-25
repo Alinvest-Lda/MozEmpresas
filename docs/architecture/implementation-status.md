@@ -96,3 +96,10 @@ A F3.72 já tinha o trigger `capture_opportunity_application_event` a registar t
 ### Correcção cronológica adicional (25/11/2026)
 
 A leitura integral dos nomes das migrações posteriores confirmou que a sequência funcional avançou depois da F3.73: **F3.74** (`20261124182000_f374_atomic_commerce_order_transitions.sql`) e **F3.75** (`20261124214209_f375_enforce_single_active_partner_user_per_organization.sql`). Assim, F3.73 é um marco histórico confirmado, mas não o último marco. O último identificador funcional explícito localizado no histórico de migrações é **F3.75**. Os sufixos f337–f341 das migrações subsequentes continuam a ser identificadores técnicos locais e não devem ser usados para reiniciar a sequência. A referência global de fecho permanece em 89% provisórios.
+
+
+## E2E sweep — actual cleanup and unresolved reconciliation (25/11/2026)
+
+Removed the obsolete custom M-Pesa HMAC callback route/helper/test and the callback-only MPESA_MERCHANT_CODE example variable. Partner account page was changed from group-manager listing/placeholder to the single-active-user account view. Partner opportunity server guard now permits only the owner role. Tests remain deferred.
+
+Repo migration files (191) vs Supabase ledger entries (206) remains a reconciliation issue; exact-name matching is not a safe deletion criterion. Read-only privilege inspection found private.partner_access_grants is RLS-disabled but anon/authenticated lack private schema USAGE and all direct table privileges checked; it remains a defense-in-depth review item, not a confirmed direct exposure.
