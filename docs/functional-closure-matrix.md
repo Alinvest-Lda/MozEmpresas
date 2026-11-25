@@ -217,3 +217,13 @@ A F3.72 já combinava histórico de estado e notificação do candidato em `capt
 ### Correcção cronológica adicional (25/11/2026)
 
 A leitura integral dos nomes das migrações posteriores confirmou que a sequência funcional avançou depois da F3.73: **F3.74** (`20261124182000_f374_atomic_commerce_order_transitions.sql`) e **F3.75** (`20261124214209_f375_enforce_single_active_partner_user_per_organization.sql`). Assim, F3.73 é um marco histórico confirmado, mas não o último marco. O último identificador funcional explícito localizado no histórico de migrações é **F3.75**. Os sufixos f337–f341 das migrações subsequentes continuam a ser identificadores técnicos locais e não devem ser usados para reiniciar a sequência. A referência global de fecho permanece em 89% provisórios.
+
+
+## 3.6 — E2E cleanup/alignment tranche (25/11/2026)
+
+- Removed the legacy custom M-Pesa HMAC webhook route, helper and associated unit test because the custom payload/signature contract was not confirmed as Vodacom's callback contract. No callback listener is enabled.
+- Removed callback-only MPESA_MERCHANT_CODE example configuration; Open API routing continues to use MPESA_SERVICE_PROVIDER_CODE.
+- Partner account UI now reflects a single active user; opportunity actions require owner role only. Multi-manager UX/authorization is not a product feature under the current rule.
+- No mass migration deletion. Repo has 191 migration files vs 206 Supabase ledger entries; divergent names/versions require content-and-effect mapping.
+- Read-only privilege check: private.partner_access_grants has RLS disabled, but anon/authenticated lack schema USAGE and all tested direct table privileges. Review remains; this is not a confirmed direct API exposure.
+- Partner Intelligence limited to factual activity metrics until external data sources and methodology are implemented; Marketplace remains off-platform intent/negotiation; Contests remain removed.
