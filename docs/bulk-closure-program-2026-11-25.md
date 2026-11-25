@@ -136,3 +136,8 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - A página de reconciliação institucional de parceiros agora oculta os totais de verificação quando o RPC falha e mostra a contagem por tipo como indisponível, em vez de renderizar zeros/contagens vazias.
 - Commit: `8d73f80`.
 - Sem testes, validação final ou deploy.
+
+### B8 — Controlo institucional: falha na fila de acções (25/11)
+- A página de controlo/continuidade de parceiros agora distingue a falha de consulta da lista de acções de relacionamento de uma fila realmente vazia e apresenta aviso de indisponibilidade; também alerta quando a lista de utilizadores internos não carrega, evitando campos de responsáveis interpretados como definitivos.
+- Commit: `b44722c`.
+- Sem testes, validação final ou deploy.
