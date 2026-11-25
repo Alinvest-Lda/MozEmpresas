@@ -87,7 +87,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const administrativeAdIds = [...allBusiness.map((campaign) => campaign.id), ...allRequests.map((request) => request.id)];
   const [{ data: partnerStatusEvents, error: partnerStatusEventsError }, { data: advertisingAdminEvents, error: advertisingAdminEventsError }] = await Promise.all([
     partnerCampaignIds.length
-      ? supabase.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,created_at").in("campaign_id", partnerCampaignIds).order("created_at", { ascending: false })
+      ? supabase.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,action_reason,created_at").in("campaign_id", partnerCampaignIds).order("created_at", { ascending: false })
       : Promise.resolve({ data: [], error: null }),
     administrativeAdIds.length
       ? supabase.from("advertising_admin_events").select("id,entity_type,entity_id,old_status,new_status,action_reason,created_at").in("entity_id", administrativeAdIds).order("created_at", { ascending: false })
@@ -210,7 +210,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
             <label><span>Justificação obrigatória</span><Input name="reason" minLength={8} maxLength={500} required placeholder="Motivo da decisão (mín. 8 caracteres)"/></label>
             <button className="btn primary" type="submit">Guardar estado</button>
           </form> : null}
-          {c.table === "business" ? <details className={styles.history}><summary>Histórico de decisões · {(eventsByAdvertisingEntity.get(c.id) ?? []).length}</summary>{(eventsByAdvertisingEntity.get(c.id) ?? []).map((event:any)=><p key={event.id}>{event.old_status} → {event.new_status} · {fmtDate(event.created_at)}<br/>Justificação: {event.action_reason}</p>)}</details> : null}
+          {c.table === "business" ? <details className={styles.history}><summary>Histórico de decisões · {(eventsByAdvertisingEntity.get(c.id) ?? []).length}</summary>{(eventsByAdvertisingEntity.get(c.id) ?? []).map((event:any)=><p key={event.id}>{event.old_status} → {event.new_status} · {fmtDate(event.created_at)}<br/>Justificação: {event.action_reason}</p>)}</details> : <details className={styles.history}><summary>Histórico de decisões · {(eventsByCampaign.get(c.id) ?? []).length}</summary>{(eventsByCampaign.get(c.id) ?? []).map((event:any)=><p key={event.id}>{event.old_status || "—"} → {event.new_status} · {fmtDate(event.created_at)}<br/>Justificação: {event.action_reason || "Registo anterior sem justificação capturada."}</p>)}</details>}
         </article>)}
         {filteredRequests.map((r) => <article className={styles.campaignCard} key={"request-" + r.id}>
           <div className={styles.campaignTop}><div className={styles.campaignMain}><span className={styles.campaignKicker}>Pedido de publicidade · {r.placement || "Posição não indicada"}</span><h3>{r.company_name}</h3><p>{r.contact_name} · {r.email}{r.phone ? " · " + r.phone : ""}</p></div><span className={styles.status}>{label(r.status)}</span></div>
