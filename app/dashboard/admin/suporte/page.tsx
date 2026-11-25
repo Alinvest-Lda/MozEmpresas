@@ -31,19 +31,20 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
   const rows = tickets ?? [];
   const businessIds = [...new Set(rows.map(t => t.business_id).filter((id): id is string => Boolean(id)))];
   const userIds = [...new Set(rows.map(t => t.user_id))];
-  const [{ data: businesses }, { data: profiles }] = await Promise.all([
-    businessIds.length ? supabase.from("businesses").select("id,name").in("id", businessIds) : Promise.resolve({ data: [] }),
-    userIds.length ? supabase.from("profiles").select("id,full_name").in("id", userIds) : Promise.resolve({ data: [] }),
+  const [{ data: businesses, error: businessesError }, { data: profiles, error: profilesError }] = await Promise.all([
+    businessIds.length ? supabase.from("businesses").select("id,name").in("id", businessIds) : Promise.resolve({ data: [], error: null }),
+    userIds.length ? supabase.from("profiles").select("id,full_name").in("id", userIds) : Promise.resolve({ data: [], error: null }),
   ]);
   const ids = rows.map(t => t.id);
-  const [{ data: events }, { data: staffRows }] = await Promise.all([
-    ids.length ? supabase.from("support_ticket_events").select("id,ticket_id,event_type,old_status,new_status,old_priority,new_priority,old_assigned_to,new_assigned_to,created_at").in("ticket_id", ids).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+  const [{ data: events, error: eventsError }, { data: staffRows, error: staffError }] = await Promise.all([
+    ids.length ? supabase.from("support_ticket_events").select("id,ticket_id,event_type,old_status,new_status,old_priority,new_priority,old_assigned_to,new_assigned_to,created_at").in("ticket_id", ids).order("created_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
     supabase.from("platform_members").select("user_id").eq("active", true).eq("role", "super_admin"),
   ]);
   const staffIds = [...new Set((staffRows ?? []).map(x => x.user_id))];
-  const { data: staffProfiles } = staffIds.length ? await supabase.from("profiles").select("id,full_name").in("id", staffIds) : { data: [] };
+  const { data: staffProfiles, error: staffProfilesError } = staffIds.length ? await supabase.from("profiles").select("id,full_name").in("id", staffIds) : { data: [], error: null };
   const staff = staffProfiles ?? [];
-  const { data: messages } = ids.length ? await supabase.from("support_messages").select("id,ticket_id,sender_role,body,created_at").in("ticket_id", ids).order("created_at", { ascending: true }) : { data: [] };
+  const { data: messages, error: messagesError } = ids.length ? await supabase.from("support_messages").select("id,ticket_id,sender_role,body,created_at").in("ticket_id", ids).order("created_at", { ascending: true }) : { data: [], error: null };
+  const supportDataError = Boolean(error || businessesError || profilesError || eventsError || staffError || staffProfilesError || messagesError);
   const openCount = rows.filter(t => t.status === "OPEN").length;
   const activeCount = rows.filter(t => t.status === "IN_PROGRESS").length;
   const waitingCount = rows.filter(t => t.status === "WAITING_USER").length;
@@ -61,11 +62,12 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
 
         {result ? <div className={`${styles.notice} ${result === "error" ? styles.noticeError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Operação concluída com sucesso." : result === "stale" ? "O atendimento foi actualizado por outra operação. Actualize a página e reveja o estado antes de repetir." : result === "partial" ? "A resposta foi registada, mas o estado mudou em simultâneo. Consulte o histórico; não envie a mesma resposta novamente." : "Não foi possível concluir a operação. Confirme o histórico antes de tentar novamente."}</div> : null}
 
+        {supportDataError ? <div className={styles.notice} role="alert">Uma ou mais consultas do suporte falharam. Os indicadores podem estar incompletos e não são apresentados como totais fiáveis.</div> : null}
         <section className={styles.metrics} aria-label="Resumo da fila">
-          <article><span>Em aberto</span><strong>{openCount}</strong><small>Precisam de triagem</small></article>
-          <article><span>Em atendimento</span><strong>{activeCount}</strong><small>Em acompanhamento pelo backoffice</small></article>
-          <article><span>A aguardar utilizador</span><strong>{waitingCount}</strong><small>Resposta externa pendente</small></article>
-          <article><span>Prioridade alta</span><strong>{urgentCount}</strong><small>Alta ou urgente, não resolvidos</small></article>
+          <article><span>Em aberto</span><strong>{supportDataError ? "—" : openCount}</strong><small>Precisam de triagem</small></article>
+          <article><span>Em atendimento</span><strong>{supportDataError ? "—" : activeCount}</strong><small>Em acompanhamento pelo backoffice</small></article>
+          <article><span>A aguardar utilizador</span><strong>{supportDataError ? "—" : waitingCount}</strong><small>Resposta externa pendente</small></article>
+          <article><span>Prioridade alta</span><strong>{supportDataError ? "—" : urgentCount}</strong><small>Alta ou urgente, não resolvidos</small></article>
         </section>
 
         <section className={styles.panel} aria-labelledby="support-filters-title">
@@ -82,6 +84,7 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
         <section className={styles.queue} aria-labelledby="support-queue-title">
           <div className={styles.queueHead}><div><span className={styles.kicker}>Fila operacional</span><h2 id="support-queue-title">Atendimentos</h2><p>Conversas ordenadas pela actualização mais recente.</p></div><strong>{rows.length} <span>registos</span></strong></div>
           {error ? <div className={styles.empty}><strong>Não foi possível carregar a fila.</strong><p>Verifique a ligação à base de dados e tente novamente.</p></div> :
+          error ? <div className={styles.empty} role="alert"><strong>Não foi possível carregar a fila.</strong><p>Verifique a ligação à base de dados e tente novamente.</p></div> :
           rows.length ? <div className={styles.ticketList}>{rows.map(t => {
             const business = businessOptions.find(x => x.id === t.business_id)?.name || "Sem empresa associada";
             const profile = (profiles ?? []).find(x => x.id === t.user_id)?.full_name || "Utilizador";
