@@ -102,14 +102,15 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 1. business campaign intake; 2. partner campaign intake; 3. product/slot eligibility; 4. capacity; 5. date bounds; 6. moderation/review; 7. payment/credit settlement; 8. activation/pause/end; 9. telemetry/billing; 10. refund/cancel and audit/notification paths.
 
 **B8-T07 — Support and service accountability (10/10):**
-- Implementation evidence added: Super Admin support assignment sources eligible staff from the secured `admin_list_platform_staff()` RPC; the database now independently rejects assignment to an inactive/non-Super-Admin account, closing the race between UI lookup and assignment. The duplicated queue error branch was removed; dependent-query failures are surfaced rather than silently presented as complete metrics.
-- Commits: `c2dd65b` (secured staff lookup), `709fe20` (single accessible queue error state), `9c950ec` (database assignment guard).
-- Task remains open; queue completeness/pagination, SLA policy, explicit action reasons and delivery/retry visibility require further closure.
+- Implementation evidence added: Super Admin support assignment sources eligible staff from the secured `admin_list_platform_staff()` RPC; the database independently rejects inactive/non-Super-Admin assignees. Assignment and status mutations now pass through Super Admin-only RPCs, require an 8–500 character reason, lock the ticket row and write the reason atomically into immutable operational history. The status RPC independently enforces the lifecycle map. The duplicated queue error branch was removed; dependent-query failures are surfaced rather than silently presented as complete metrics.
+- Commits: `c2dd65b` (secured staff lookup), `709fe20` (single accessible queue error state), `9c950ec` (database assignment guard), `7f885ac` (reasoned mutation RPCs), `6f21d4e` (server actions use RPCs), `5bf799e` (reason capture/display).
+- Task remains open; queue pagination, defined SLA policy and delivery/retry visibility require further closure.
 
 1. ticket queue; 2. auxiliary profile/company lookup; 3. message thread; 4. event timeline; 5. assignment; 6. status transition; 7. response/resolution note; 8. SLA/ageing; 9. notifications; 10. incomplete-data/error state and safe retry.
 
 **B8-T08 — Audit, finance action reasons and notification governance (10/10):**
 - Implementation evidence: account governance uses immutable account audit records, reason-required administrative status changes, actor/target attribution, previous/next status, and a protected last-active-Super-Admin rule. Account and Partner-access revocation flows also preserve reasoned audit history. Canonical account audit notification wiring exists in the 25 Nov migration set. Listing moderation now also records immutable actor/before/after status events; this closes listing event integrity but does not yet provide an administrator reason field.
+- Support assignment and status changes now capture mandatory reason, actor and before/after values in the operational event log via transaction-local context, atomically with the mutation. The reason is exposed in the Super Admin event history. This is a further module-specific audit closure, not yet a canonical cross-module writer/event matrix.
 - Task remains open pending canonical cross-module writer/event matrix, recipient privacy, deduplication, delivery failure/retry and complete review surface.
 1. canonical audit writer inventory; 2. critical-action reason; 3. actor attribution; 4. before/after state; 5. event integrity; 6. recipient matrix; 7. message/link privacy; 8. dedupe; 9. failed delivery/retry visibility; 10. history and admin review surfaces.
 
