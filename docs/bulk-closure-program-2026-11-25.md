@@ -71,6 +71,9 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 
 **B8-T03 — User, staff and access administration (10/10):**
 1. user list/query states; 2. staff listing and role source; 3. activation/deactivation; 4. suspension/ban; 5. account recovery controls; 6. session/security actions; 7. staff removal/revocation; 8. owner/super-admin escalation protections; 9. audit and reason coverage; 10. revalidation of access after mutation.
+- **Implementation progress: 7/10 evidence-backed controls; task remains open.** Existing Super Admin user directory includes search/type/status/global-access/company filters, pagination, account state mutation via authoritative RPC, reason-required form input, self-account mutation protection, surfaced last-active-Super-Admin protection, password recovery flow, route revalidation, and account action history. Audit-query failure now explicitly warns that the history is unavailable and does not render an incomplete table as authoritative.
+- Remaining controls not yet traced/closed: platform-staff listing and role source; session revocation semantics; staff revocation/removal and escalation safeguards; access revalidation after role/staff mutations.
+- Implementation commit: `cff1c9c` (account audit failure state clarity). This is source review only, not runtime verified.
 
 **B8-T04 — Moderation and discovery governance (10/10):**
 1. company moderation; 2. profile state; 3. listing moderation; 4. listing lifecycle transitions; 5. opportunity moderation; 6. deadline/expiry controls; 7. duplicate/invalid submissions; 8. media/report handling; 9. status/audit history; 10. notifications tied to approved actions.
