@@ -84,3 +84,23 @@ Keep 89% as the prior provisional baseline until a comprehensive evidence-based 
 
 ### Work not yet safe to delete
 Migration SQL/ledger history, old account roles stored in historical rows, financial callback audit tables/RPCs, and compatibility redirects remain until dependency, data-retention and operational-use tracing is complete. No broad deletion was performed.
+
+## B8 — Super Admin intervention tranche (25/11/2026)
+
+### Implemented
+- The central Super Admin overview now captures query errors for its operational queue and alert counters instead of silently treating failed count queries as zero.
+- If any of the overview's operational queries fail, the page displays a warning and suppresses the affected dashboard numbers as unavailable.
+- The service-request list now distinguishes a failed query from a genuinely empty queue, avoiding a false “no requests” state.
+- Executive analytics totals now render unavailable when their underlying count query fails; daily activity chart is suppressed if any of its four source queries fail rather than displaying an all-zero chart.
+
+### Commits
+- `ce3d0e3` — hide failed operational dashboard metrics instead of false zeros.
+- `e115794` — distinguish service-request query errors from an empty queue.
+- `7680ea9` — prevent analytics failures from appearing as zero totals or activity.
+
+### Still open within B8
+- Full Super Admin route/action inventory and review across all administrative modules is not complete.
+- Confirm error-state handling for all admin subpages and mutation actions, including partner institutional backoffice, financial reconciliation, advertising, opportunities, support, users, and business governance.
+- Review global audit coverage and required reasons for critical administrative actions; verify notification ownership and event-recipient matrix.
+- Reconcile Admin navigation against the actual route set and product contract, including notification governance/system configuration.
+- No tests, smoke checks, deployment, or final validation were run, in accordance with the implementation-only closure instruction.
