@@ -82,9 +82,9 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 - No tests, validation or deployment performed (per closure directive).
 
 **B8-T04 — Moderation and discovery governance (10/10):**
-- Implementation evidence added: listing moderation now reads the current state, enforces an explicit forward-only transition map, and uses compare-and-set on the prior state to prevent stale concurrent overwrites. Opportunity moderation already uses its state machine and compare-and-set guard.
-- Commits: `28587dd` (listing lifecycle guard).
-- Task remains open; the remaining moderation, media/report, audit and notification elements require further implementation.
+- Implementation evidence added: listing moderation reads current state, enforces an explicit transition map and compare-and-set; an immutable listing status-event table/trigger records actor and before/after state with owner/business-manager/Super-Admin read boundaries; committed status changes notify the listing owner. Opportunity moderation retains its state machine and compare-and-set guard; deadline expiry is covered by the existing scheduled close migration.
+- Commits: `28587dd` (listing lifecycle guard), `1aa1d61` (correct transition-map validation), `55ba647` (immutable listing moderation history), `c7747ba` (owner notification after status change).
+- Task remains open; company/profile moderation audit and reason coverage, duplicate/invalid submission handling and media/report operations still require implementation.
 
 1. company moderation; 2. profile state; 3. listing moderation; 4. listing lifecycle transitions; 5. opportunity moderation; 6. deadline/expiry controls; 7. duplicate/invalid submissions; 8. media/report handling; 9. status/audit history; 10. notifications tied to approved actions.
 
@@ -101,8 +101,8 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 1. business campaign intake; 2. partner campaign intake; 3. product/slot eligibility; 4. capacity; 5. date bounds; 6. moderation/review; 7. payment/credit settlement; 8. activation/pause/end; 9. telemetry/billing; 10. refund/cancel and audit/notification paths.
 
 **B8-T07 — Support and service accountability (10/10):**
-- Implementation evidence added: Super Admin support assignment now sources eligible staff from the secured `admin_list_platform_staff()` RPC rather than querying `platform_members` directly from the page; active Super Admin role is filtered from the RPC result.
-- Commit: `c2dd65b`.
+- Implementation evidence added: Super Admin support assignment now sources eligible staff from the secured `admin_list_platform_staff()` RPC rather than querying `platform_members` directly from the page; active Super Admin role is filtered from the RPC result. The duplicated queue error branch was removed so the single failure state is accessible and unambiguous.
+- Commits: `c2dd65b` (secured staff lookup), `709fe20` (single accessible queue error state).
 - Task remains open; queue completeness, SLA, delivery and audit controls require further closure.
 
 1. ticket queue; 2. auxiliary profile/company lookup; 3. message thread; 4. event timeline; 5. assignment; 6. status transition; 7. response/resolution note; 8. SLA/ageing; 9. notifications; 10. incomplete-data/error state and safe retry.
@@ -118,8 +118,8 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 1. environment/secret state (without exposing secrets); 2. payment configuration; 3. feature/catalog settings; 4. role/RBAC source; 5. route/action guard consistency; 6. rate-limit settings; 7. storage access governance; 8. system-level error reporting; 9. auditability of configuration changes; 10. remove or clearly label unsafe/unimplemented controls.
 
 **B8-T10 — Admin UX and consolidation (10/10):**
-- Implementation evidence added: removed a confirmed duplicate block of `.operations` and `.table` CSS rules from the Super Admin users module. Loading and error segment boundaries already provide shared loading, retry and error fallback states.
-- Commit: `eda0f52` (remove duplicate admin users layout rules).
+- Implementation evidence added: removed a confirmed duplicate block of `.operations` and `.table` CSS rules from the Super Admin users module; removed a duplicated support queue error branch. Loading and error segment boundaries already provide shared loading, retry and error fallback states.
+- Commits: `eda0f52` (remove duplicate admin users layout rules), `709fe20` (remove duplicate support error branch).
 - Task remains open pending broader duplicate navigation/style/code tracing and remaining accessibility/mobile consolidation.
 
 1. loading states; 2. true-empty states; 3. error states; 4. retry paths; 5. forbidden states; 6. consistent Portuguese-MZ terms; 7. mobile layout; 8. keyboard/focus; 9. duplicate admin entry points/navigation; 10. stale/unused admin code removal after dependency tracing.
