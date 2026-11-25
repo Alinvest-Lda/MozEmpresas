@@ -120,3 +120,7 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - Advertising Admin now captures failures from campaign/request queries, event counters, partner catalogue and partner campaign history. When any query fails, derived counts and CTR are suppressed, a warning explains possible partial lists, and an empty-filter state is not shown as conclusive.
 - Company governance now explicitly surfaces failure in the active-owner lookup; company data may still be present, but owner names/emails are marked as potentially unavailable rather than silently blank.
 - Commits: `f539ebf` (advertising metrics/query error handling); `17a4123` (company owner lookup warning).
+
+### B8 — Opportunity lifecycle history error visibility
+- The Super Admin opportunity list now explicitly captures failures in the lifecycle-event history query and warns that the opportunity list may still render while the event history is unavailable.
+- Commit: `06b0a6d`.
