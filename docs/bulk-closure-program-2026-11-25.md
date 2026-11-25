@@ -71,8 +71,8 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 
 **B8-T03 — User, staff and access administration (10/10):**
 1. user list/query states; 2. staff listing and role source; 3. activation/deactivation; 4. suspension/ban; 5. account recovery controls; 6. session/security actions; 7. staff removal/revocation; 8. owner/super-admin escalation protections; 9. audit and reason coverage; 10. revalidation of access after mutation.
-- **Implementation progress: 7/10 evidence-backed controls; task remains open.** Existing Super Admin user directory includes search/type/status/global-access/company filters, pagination, account state mutation via authoritative RPC, reason-required form input, self-account mutation protection, surfaced last-active-Super-Admin protection, password recovery flow, route revalidation, and account action history. Audit-query failure now explicitly warns that the history is unavailable and does not render an incomplete table as authoritative.
-- Remaining controls not yet traced/closed: platform-staff listing and role source; session revocation semantics; staff revocation/removal and escalation safeguards; access revalidation after role/staff mutations.
+- **Implementation progress: 9/10 evidence-backed controls; task remains open.** Existing Super Admin user directory includes search/type/status/global-access/company filters, pagination, account state mutation via authoritative RPC, reason-required form input, self-account mutation protection, surfaced last-active-Super-Admin protection, password recovery flow, route revalidation, and account action history. Audit-query failure now explicitly warns that the history is unavailable and does not render an incomplete table as authoritative.
+- Remaining controls not yet fully closed: platform-staff listing/role source is implemented through the restricted staff-directory RPC; account session revocation and last-Super-Admin protections are implemented in the account-governance RPCs; single-user Partner access revocation is implemented through an audited RPC. The remaining gap is platform staff role removal/revocation and revalidation after staff-role changes.
 - Implementation commit: `cff1c9c` (account audit failure state clarity). This is source review only, not runtime verified.
 
 **B8-T04 — Moderation and discovery governance (10/10):**
@@ -106,6 +106,10 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 1. environment/secret state (without exposing secrets); 2. payment configuration; 3. feature/catalog settings; 4. role/RBAC source; 5. route/action guard consistency; 6. rate-limit settings; 7. storage access governance; 8. system-level error reporting; 9. auditability of configuration changes; 10. remove or clearly label unsafe/unimplemented controls.
 
 **B8-T10 — Admin UX and consolidation (10/10):**
+- Implementation evidence added: removed a confirmed duplicate block of `.operations` and `.table` CSS rules from the Super Admin users module. Loading and error segment boundaries already provide shared loading, retry and error fallback states.
+- Commit: `eda0f52` (remove duplicate admin users layout rules).
+- Task remains open pending broader duplicate navigation/style/code tracing and remaining accessibility/mobile consolidation.
+
 1. loading states; 2. true-empty states; 3. error states; 4. retry paths; 5. forbidden states; 6. consistent Portuguese-MZ terms; 7. mobile layout; 8. keyboard/focus; 9. duplicate admin entry points/navigation; 10. stale/unused admin code removal after dependency tracing.
 
 Central RBAC/server guards. Work queue/overview/SLA. User/account/session governance. Company/listing/opportunity moderation. Partner lifecycle. Service/ad/credit/payment backoffice. Atomic support. Canonical audit and reason-required critical actions. Event-recipient-message-link notification matrix.
