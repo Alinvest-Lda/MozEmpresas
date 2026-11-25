@@ -10,7 +10,7 @@ const groups=[
   {label:"Pedidos",links:[{label:"Publicidade",href:"/dashboard/admin/publicidade",mark:"A"},{label:"Créditos",href:"/dashboard/admin/monetizacao/creditos",mark:"C"},{label:"Atendimentos",href:"/dashboard/admin/suporte",mark:"S"}]},
   {label:"Comércio",links:[{label:"Monetização",href:"/dashboard/admin/monetizacao",mark:"M"}]},
   {label:"Pessoas",links:[{label:"Utilizadores",href:"/dashboard/admin/usuarios",mark:"U"},{label:"Acessos de parceiros",href:"/dashboard/admin/parceiros",mark:"R"},{label:"Gestão institucional",href:"/dashboard/admin/parceiros/gestao",mark:"G"},{label:"Controlo de parceiros",href:"/dashboard/admin/parceiros/controlo",mark:"C"},{label:"Conciliação de parceiros",href:"/dashboard/admin/parceiros/reconciliacao",mark:"F"}]},
-  {label:"Sistema",links:[{label:"Biblioteca visual",href:"/dashboard/admin/design-system",mark:"D"}]},
+  {label:"Sistema",links:[{label:"Notificações",href:"/dashboard/admin/notificacoes",mark:"N"},{label:"Biblioteca visual",href:"/dashboard/admin/design-system",mark:"D"}]},
 ];
 
 export function AdminShell({children}:{children:ReactNode}){
