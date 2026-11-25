@@ -4,7 +4,13 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
-const listingStatuses = ["DRAFT", "PUBLISHED", "PAUSED", "SOLD_OUT", "ARCHIVED"] as const;
+const listingTransitions: Record<string, readonly string[]> = {
+  DRAFT: ["PUBLISHED", "ARCHIVED"],
+  PUBLISHED: ["PAUSED", "SOLD_OUT", "ARCHIVED"],
+  PAUSED: ["PUBLISHED", "SOLD_OUT", "ARCHIVED"],
+  SOLD_OUT: ["PUBLISHED", "ARCHIVED"],
+  ARCHIVED: [],
+};
 
 export async function moderateBusiness(formData: FormData) {
   const id = String(formData.get("businessId") || "");
@@ -48,17 +54,25 @@ export async function moderateListing(formData: FormData) {
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return { error: "Sem autorização para moderar ofertas." };
 
+  const { data: currentListing, error: lookupError } = await supabase
+    .from("listings")
+    .select("id,status")
+    .eq("id", id)
+    .maybeSingle();
+  if (lookupError || !currentListing) return { error: "Não foi possível localizar a oferta. Confirme o registo e tente novamente." };
+  if (!(listingTransitions[currentListing.status] ?? []).includes(status)) {
+    return { error: "A transição solicitada não é permitida a partir do estado actual da oferta." };
+  }
+
   const { data: updatedListing, error } = await supabase
     .from("listings")
-    .update({
-      status,
-      updated_at: new Date().toISOString(),
-    })
+    .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id)
+    .eq("status", currentListing.status)
     .select("id")
     .maybeSingle();
 
-  if (error || !updatedListing) return { error: "Não foi possível actualizar a oferta. Confirme se existe e tente novamente." };
+  if (error || !updatedListing) return { error: "A oferta foi alterada em simultâneo ou não foi possível actualizar. Reveja o estado antes de repetir." };
   revalidatePath("/dashboard/admin");
   revalidatePath("/marketplace");
   return { success: true };
