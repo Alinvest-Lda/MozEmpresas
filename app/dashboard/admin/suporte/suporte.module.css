@@ -20,3 +20,5 @@
 .moderationForm{display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px;margin-top:14px;padding:12px;border:1px solid var(--palette-e7efeb);border-radius:10px;background:var(--palette-f8fbfa)}
 .moderationForm label{display:grid;gap:6px;min-width:180px;color:var(--palette-526c66);font-size:11px;font-weight:750}
 .moderationForm select{min-width:180px;height:38px;border:1px solid var(--palette-dce7e2);border-radius:8px;padding:0 10px;background:var(--palette-fff);color:var(--palette-23423d);font:inherit;font-size:12px}
+
+.pagination{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 0;color:var(--muted,#64748b);font-size:.875rem}.pagination>div{display:flex;gap:.5rem;flex-wrap:wrap}@media(max-width:640px){.pagination{align-items:flex-start;flex-direction:column}.pagination>div{width:100%}.pagination a{flex:1;text-align:center}}
