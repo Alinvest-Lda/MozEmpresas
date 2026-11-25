@@ -139,7 +139,7 @@ export default async function AdminPage({ searchParams }: { searchParams?: Searc
       </div>
 
       <div className="admin-request-list">
-        {prioritizedRequests.length ? prioritizedRequests.map((request) => {
+        {requestsResult.error ? <div className="admin-request-empty" role="alert"><strong>Não foi possível carregar os pedidos.</strong><span>O painel não apresenta um estado vazio quando a consulta falha.</span></div> : prioritizedRequests.length ? prioritizedRequests.map((request) => {
           const service = Array.isArray(request.platform_services) ? request.platform_services[0] : request.platform_services;
           const business = Array.isArray(request.businesses) ? request.businesses[0] : request.businesses;
           return <article className="admin-request-card" key={request.id}>
