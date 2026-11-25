@@ -242,3 +242,10 @@ Migration SQL/ledger history, old account roles stored in historical rows, finan
 - Support tickets now expose factual ageing (days since creation and last update). This is operational visibility only; it does not define or promise an SLA.
 - Commits: `fd6b822` (global security headers), `0db925e` (opportunity reason/history error visibility), `a8c6bf9` and `f367e69` (support ageing and styling).
 - No tests, validation, smoke checks or deployment performed.
+
+### B8 — Publicidade: decisões administrativas justificadas (26/11)
+- Os estados de campanhas empresariais e pedidos comerciais de publicidade passaram a ser alterados por RPC Super Admin com bloqueio de linha, transições autorizadas, verificação de liquidação antes de activar campanhas e justificação obrigatória.
+- Foi criada a tabela `advertising_admin_events`, com leitura restrita ao Super Admin e histórico de actor, estado anterior/novo e motivo. A captura é transaccional com a alteração.
+- O backoffice passou a exigir motivo para estas decisões e apresenta o histórico por campanha/pedido.
+- Migration: `20261126100000_f366_reasoned_advertising_admin_actions.sql`; commits `76ad046` (RPC/auditoria), `912e1f2` (server actions), `baffc86` (formulários), `693bacc` (histórico).
+- O fluxo de campanhas de parceiros continua a usar o RPC próprio e o histórico próprio; a inclusão de motivo nesse fluxo permanece uma intervenção distinta. Não foram executados testes nem validação da migration.
