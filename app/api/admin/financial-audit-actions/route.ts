@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 const ISSUE_KEY = /^[a-f0-9]{32}$/i;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const STATES = new Set(["OPEN","IN_PROGRESS","RESOLVED","IGNORED"]);
 
 export async function GET(request: Request) {
+  const rate = await enforceRateLimit(request, { scope: "admin-financial-audit-read", limit: 60, windowSeconds: 60 });
+  if (!rate.allowed) return rateLimitResponse(rate.unavailable);
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return NextResponse.json({ error: "Acesso não autorizado." }, { status: 403 });
   const issueKey = new URL(request.url).searchParams.get("issue_key") ?? "";
@@ -16,8 +19,12 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const rate = await enforceRateLimit(request, { scope: "admin-financial-audit-write", limit: 20, windowSeconds: 60 });
+  if (!rate.allowed) return rateLimitResponse(rate.unavailable);
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) return NextResponse.json({ error: "Acesso não autorizado." }, { status: 403 });
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (contentLength > 16_384) return NextResponse.json({ error: "Pedido demasiado grande." }, { status: 413 });
   let body: unknown;
   try { body = await request.json(); } catch { return NextResponse.json({ error: "JSON inválido." }, { status: 400 }); }
   if (!body || typeof body !== "object") return NextResponse.json({ error: "Payload inválido." }, { status: 400 });
