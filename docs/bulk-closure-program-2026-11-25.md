@@ -60,3 +60,27 @@ Complete implementation, DB, RPC, UI, permissions, error handling, audit, notifi
 
 ## Progress accounting
 Keep 89% as the prior provisional baseline until a comprehensive evidence-based recalculation. Count net closure of unique gaps, not migration counts or cleanup alone.
+
+## E2E sweep — configuration, obsolete paths and product alignment (25/11/2026)
+
+### Removed now-obsolete runtime code
+- Removed the legacy custom M-Pesa HMAC webhook route, helper and test. The route expected custom headers/payload not established by the supplied Vodacom callback documentation and was not a valid provider listener.
+- Removed the unused MPESA_MERCHANT_CODE example variable and its legacy explanation; current Open API routing uses MPESA_SERVICE_PROVIDER_CODE. M-Pesa remains sandbox-only.
+- Partner account UI no longer queries/lists group managers or offers the placeholder for adding them. It shows the organization and current single authorized user instead.
+- Partner opportunity authorization now accepts only owner; manager is no longer an active authorization path.
+
+### Configuration/duplication findings
+- The Next server client and isolated Deno Sandbox Edge Function have separate RSA/request transport implementations because they execute in different runtimes. This is retained intentional duplication for now, not a cleanup target until a runtime-compatible shared module can be introduced safely.
+- The old /publicar-oportunidade route is a redirect to Contacts and is retained as a compatibility redirect, not active publishing functionality; deleting it would remove old-link handling.
+- Migration ledger has 206 entries while repository has 191 SQL migration files. Exact name/version comparison shows divergence, but the set includes renamed/rebased historical migrations. Do not delete SQL files, reset ledger, or replay migrations. A content-and-effect reconciliation is still required.
+- Supabase inventory reports private.partner_access_grants with RLS disabled, but read-only privilege checks show anon and authenticated have no USAGE on schema private and no SELECT/INSERT/UPDATE/DELETE table grants. This corrects the generic advisor exposure warning: direct API exposure was not found through those roles. Review remains a defense-in-depth item; do not enable RLS without a policy plan.
+- Current trigger inventory shows several event, guard, notification and audit triggers on the same tables. Coexistence is not proof of duplication; keep guards/audit/history/notification functions distinct unless their effect is proven redundant.
+
+### Product/business alignment actions
+- Current single-user-per-Partner rule supersedes multi-manager assumptions. The Partner product document and implementation status were updated; old role labels are not a feature to re-enable.
+- Partner Intelligence must be limited to factual activity indicators until external sources, methodology and privacy-safe aggregation exist.
+- Marketplace remains interest/negotiation only; payment and delivery are external.
+- Contests remain removed. Partner opportunities remain active product functionality.
+
+### Work not yet safe to delete
+Migration SQL/ledger history, old account roles stored in historical rows, financial callback audit tables/RPCs, and compatibility redirects remain until dependency, data-retention and operational-use tracing is complete. No broad deletion was performed.
