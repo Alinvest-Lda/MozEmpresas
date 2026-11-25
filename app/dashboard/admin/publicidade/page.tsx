@@ -69,7 +69,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     { data: businessCampaigns, error: businessError },
     { data: partnerCampaigns, error: partnerError },
     { data: requests, error: requestError },
-    { count: impressionEvents }, { count: clickEvents },
+    { count: impressionEvents, error: impressionEventsError }, { count: clickEvents, error: clickEventsError },
     { data: partnerProducts, error: partnerProductsError },
   ] = await Promise.all([
     supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,impressions_count,clicks_count,target_url,business:business_id(name)").order("created_at", { ascending: false }).limit(100),
@@ -84,9 +84,9 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const allPartner = (partnerCampaigns ?? []) as Campaign[];
   const allRequests = (requests ?? []) as AdvertisingRequest[];
   const partnerCampaignIds = allPartner.map((campaign) => campaign.id);
-  const { data: partnerStatusEvents } = partnerCampaignIds.length
+  const { data: partnerStatusEvents, error: partnerStatusEventsError } = partnerCampaignIds.length
     ? await supabase.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,created_at").in("campaign_id", partnerCampaignIds).order("created_at", { ascending: false })
-    : { data: [] };
+    : { data: [], error: null };
   const eventsByCampaign = new Map<string, any[]>();
   for (const event of partnerStatusEvents ?? []) {
     const list = eventsByCampaign.get(event.campaign_id) ?? [];
@@ -123,7 +123,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const totalImpressions = filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
   const totalClicks = filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
   const pendingCount = allBusiness.filter(c => c.status === "PENDING").length + allPartner.filter(c => ["REQUESTED", "PENDING", "UNDER_REVIEW"].includes(c.status ?? "")).length + allRequests.filter(r => ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT"].includes(r.status ?? "")).length;
-  const error = businessError || partnerError || requestError || partnerProductsError;
+  const error = businessError || partnerError || requestError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError;
 
   return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
     <header className={styles.hero}>
@@ -132,14 +132,14 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
       <span className={styles.heroDecoration} aria-hidden="true">↗</span>
     </header>
     {result ? <div className={`${styles.resultNotice} ${result === "error" ? styles.resultError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Estado actualizado com sucesso." : result === "invalid-transition" || result === "ADMIN_PARTNER_CAMPAIGN_STATUS_TRANSITION_INVALID" ? "A transição de estado solicitada não é permitida." : result === "CAMPAIGN_PAYMENT_NOT_SETTLED" ? "A campanha só pode ser activada ou retomada após liquidação confirmada." : result === "CAMPAIGN_PAYMENT_STILL_PENDING" ? "Existe uma cobrança pendente. Não é possível rejeitar ou encerrar este pedido enquanto o pagamento estiver em processamento." : result === "CAMPAIGN_END_DATE_NOT_REACHED" ? "A data final da campanha ainda não foi atingida." : result === "payment-issued" ? "Cobrança emitida. Referência: " + (params.reference ?? "") + (params.method === "CREDITS" ? " · Créditos debitados e campanha activada." : " · Aguarda confirmação M-Pesa.") : result === "PARTNER_CREDIT_WALLET_NOT_LINKED" ? "Esta conta de parceiro ainda não está associada a uma empresa com carteira de créditos. Utilize M-Pesa ou configure a associação empresarial." : result === "INSUFFICIENT_CREDITS" ? "Saldo de créditos insuficiente para esta campanha." : result === "CAMPAIGN_PAYMENT_ALREADY_ISSUED" ? "Já existe uma cobrança activa para esta campanha." : result === "payment-error" ? "Não foi possível emitir a cobrança da campanha." : result === "partner-cancel-success" ? (params.refundType === "BANK_TRANSFER_REFUND" ? "Campanha cancelada. Estorno bancário registado: " + (params.reference ?? "") : params.refundType === "MPESA_REFUND" ? "Campanha cancelada. Reembolso M-Pesa registado: " + (params.reference ?? "") : "Campanha de parceiro cancelada. Créditos devolvidos: " + (params.refund ?? "0")) : result === "MPESA_REFUND_REFERENCE_REQUIRED" || result === "EXTERNAL_REFUND_REFERENCE_REQUIRED" ? "Introduza a referência do reembolso externo já executado fora da plataforma." : result === "INVALID_EXTERNAL_REFUND_REFERENCE" ? "A referência de estorno não pode ser igual à referência do pagamento original." : result === "CAMPAIGN_NOT_SETTLED" ? "Só é possível estornar campanhas efectivamente pagas." : result === "CAMPAIGN_ALREADY_REFUNDED" ? "Esta campanha já foi estornada." : result === "CANCELLATION_NOT_ALLOWED" ? "Só é possível cancelar campanhas futuras ainda não iniciadas." : result === "partner-cancel-error" ? "Não foi possível cancelar/estornar a campanha." : result === "credit-price-saved" ? "Preço em créditos actualizado." : result === "credit-price-invalid" ? "Indique um preço em créditos inteiro e superior a zero, ou deixe vazio para desactivar." : result === "credit-price-error" ? "Não foi possível actualizar o preço em créditos." : result === "PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED" ? "Este formato ainda não tem preço em créditos configurado." : result === "FIXED_PRODUCT_PRICE_CANNOT_BE_OVERRIDDEN" ? "O preço deste formato é fixo no catálogo e não pode ser alterado na cobrança." : result === "cancel-success" ? "Campanha cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "mpesa-refund-required" ? "Campanha M-Pesa activa: o reembolso externo deve ser executado e registado antes do cancelamento." : result === "cancel-not-allowed" ? "Cancelamento não permitido: campanha já iniciada, expirada ou num estado não elegível." : "Não foi possível actualizar o estado. Confirme permissões e elegibilidade."}</div> : null}
+    {error ? <div className={styles.resultNotice + " " + styles.resultError} role="alert">Uma ou mais consultas falharam. As contagens agregadas são ocultadas; as listas podem estar incompletas, pelo que um estado vazio não é conclusivo.</div> : null}
     <section className={styles.metrics} aria-label="Resumo do módulo">
-      <article className={styles.metric}><span>Campanhas empresariais</span><strong>{allBusiness.length}</strong><small>Até 100 registos carregados</small></article>
-      <article className={styles.metric}><span>Campanhas de parceiros</span><strong>{allPartner.length}</strong><small>Até 100 registos carregados</small></article>
-      <article className={styles.metric}><span>Pedidos de publicidade</span><strong>{allRequests.length}</strong><small>Solicitações comerciais recebidas</small></article>
-      <article className={styles.metric}><span>Impressões / cliques</span><strong>{fmtNumber(totalImpressions)} / {fmtNumber(totalClicks)}</strong><small>CTR na selecção filtrada: {ctr(totalClicks, totalImpressions)}</small></article>
+      <article className={styles.metric}><span>Campanhas empresariais</span><strong>{error ? "—" : allBusiness.length}</strong><small>Até 100 registos carregados</small></article>
+      <article className={styles.metric}><span>Campanhas de parceiros</span><strong>{error ? "—" : allPartner.length}</strong><small>Até 100 registos carregados</small></article>
+      <article className={styles.metric}><span>Pedidos de publicidade</span><strong>{error ? "—" : allRequests.length}</strong><small>Solicitações comerciais recebidas</small></article>
+      <article className={styles.metric}><span>Impressões / cliques</span><strong>{error ? "—" : fmtNumber(totalImpressions) + " / " + fmtNumber(totalClicks)}</strong><small>{error ? "CTR indisponível" : "CTR na selecção filtrada: " + ctr(totalClicks, totalImpressions)}</small></article>
     </section>
-    <p className={styles.dataNote}>Eventos registados na plataforma: {fmtNumber(impressionEvents)} impressões e {fmtNumber(clickEvents)} cliques. São contagens separadas dos contadores por campanha.</p>
-    {error ? <div className={styles.resultNotice + " " + styles.resultError} role="alert">Uma ou mais consultas não foram concluídas. Os registos que não carregaram podem estar ocultos; confirme as permissões e a estrutura da base de dados.</div> : null}
+    {error ? null : <p className={styles.dataNote}>Eventos registados na plataforma: {fmtNumber(impressionEvents)} impressões e {fmtNumber(clickEvents)} cliques. São contagens separadas dos contadores por campanha.</p>}
     <section className={styles.section}>
       <div className={styles.sectionHead}><div><span className={styles.sectionKicker}>Catálogo comercial</span><h2>Preços de publicidade para parceiros</h2><p>O preço em créditos é independente do preço directo em MZN, seguindo a mesma lógica de preços diferenciados já usada nos produtos publicitários empresariais. Não se presume equivalência de 1 MZN por crédito.</p></div></div>
       {partnerProductsError ? <div className={styles.resultNotice + " " + styles.resultError}>Não foi possível carregar o catálogo de espaços publicitários.</div> : <div className={styles.campaignList}>
@@ -207,7 +207,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
             <button className="btn primary" type="submit">Actualizar pedido</button>
           </form>
         </article>)}
-        {!filteredCampaigns.length && !filteredRequests.length ? <div className={styles.emptyState}><strong>Nenhum registo corresponde aos filtros.</strong><span>Altere a pesquisa ou limpe os filtros para consultar outras campanhas e pedidos.</span></div> : null}
+        {!error && !filteredCampaigns.length && !filteredRequests.length ? <div className={styles.emptyState}><strong>Nenhum registo corresponde aos filtros.</strong><span>Altere a pesquisa ou limpe os filtros para consultar outras campanhas e pedidos.</span></div> : null}
       </div>
     </section>
   </div></main>;
