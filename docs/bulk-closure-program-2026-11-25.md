@@ -95,8 +95,8 @@ Tasks are executed as cohesive batches; individual micro-interventions are not r
 1. service request queue; 2. request status guard; 3. quote/price; 4. acceptance; 5. assignment/execution; 6. completion; 7. cancellation/expiry; 8. credit-payment boundary; 9. M-Pesa-payment boundary; 10. atomic/audit/notification and retry behavior.
 
 **B8-T06 — Advertising operations (10/10):**
-- Implementation evidence added: business promotion and advertising request updates now load the authoritative current state, enforce allowed transition maps, and compare-and-set against the prior state. Partner campaign transitions remain delegated to the database transition RPC, including settlement/date constraints.
-- Commit: `0190d52` (advertising request and promotion transition guards).
+- Implementation evidence added: business promotion and advertising request updates load the authoritative current state, enforce allowed transition maps and compare-and-set against the prior state. Promotion activation additionally requires evidence of credit debit or M-Pesa settlement (`paid_at`); partner campaign transitions remain delegated to the database transition RPC, including settlement/date constraints. Draft promotion transition was aligned with the persisted lifecycle.
+- Commits: `0190d52` (request/promotion transition guards), `6f03fc8` and `0a25ed9`/`19e7109` (settlement gate and status/type alignment).
 - Task remains open; capacity, billing, telemetry, payment/refund and complete notification/audit coverage remain to be closed.
 
 1. business campaign intake; 2. partner campaign intake; 3. product/slot eligibility; 4. capacity; 5. date bounds; 6. moderation/review; 7. payment/credit settlement; 8. activation/pause/end; 9. telemetry/billing; 10. refund/cancel and audit/notification paths.
