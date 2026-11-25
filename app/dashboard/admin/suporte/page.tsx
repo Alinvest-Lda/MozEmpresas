@@ -83,8 +83,7 @@ export default async function AdminSupport({ searchParams }: { searchParams?: Se
 
         <section className={styles.queue} aria-labelledby="support-queue-title">
           <div className={styles.queueHead}><div><span className={styles.kicker}>Fila operacional</span><h2 id="support-queue-title">Atendimentos</h2><p>Conversas ordenadas pela actualização mais recente.</p></div><strong>{rows.length} <span>registos</span></strong></div>
-          {error ? <div className={styles.empty}><strong>Não foi possível carregar a fila.</strong><p>Verifique a ligação à base de dados e tente novamente.</p></div> :
-          error ? <div className={styles.empty} role="alert"><strong>Não foi possível carregar a fila.</strong><p>Verifique a ligação à base de dados e tente novamente.</p></div> :
+          {error ? <div className={styles.empty} role="alert"><strong>Não foi possível carregar a fila.</strong><p>Verifique a ligação à base de dados e tente novamente.</p></div> :
           rows.length ? <div className={styles.ticketList}>{rows.map(t => {
             const business = businessOptions.find(x => x.id === t.business_id)?.name || "Sem empresa associada";
             const profile = (profiles ?? []).find(x => x.id === t.user_id)?.full_name || "Utilizador";
