@@ -28,9 +28,9 @@ export default async function PartnerHome() {
   const name = account?.account_name || user.email?.split("@")[0] || "Parceiro";
   const published = opportunitiesError ? null : (opportunities ?? []).filter((x) => x.status === "PUBLISHED").length;
   const drafts = opportunitiesError ? null : (opportunities ?? []).filter((x) => x.status === "DRAFT").length;
-  const pending = (requests ?? []).filter((x) => ["REQUESTED", "UNDER_REVIEW", "QUOTED"].includes(x.status)).length;
-  const activeCampaigns = (campaigns ?? []).filter((x: any) => ["ACTIVE", "RUNNING", "PUBLISHED"].includes(x.status)).length;
-  const benefits = (entitlements ?? []).filter((x: any) => x.status === "ACTIVE").length;
+  const pending = requestsError ? null : (requests ?? []).filter((x) => ["REQUESTED", "UNDER_REVIEW", "QUOTED"].includes(x.status)).length;
+  const activeCampaigns = campaignsError ? null : (campaigns ?? []).filter((x: any) => ["ACTIVE", "RUNNING", "PUBLISHED"].includes(x.status)).length;
+  const benefits = entitlementsError ? null : (entitlements ?? []).filter((x: any) => x.status === "ACTIVE").length;
   const date = (v: string) => new Date(v).toLocaleDateString("pt-MZ", { day: "2-digit", month: "short" });
   const next = opportunitiesError
     ? { label: "Tentar carregar as publicações", href: "/parceiro", kind: "DADOS" }
@@ -38,7 +38,7 @@ export default async function PartnerHome() {
       ? { label: "Rever e publicar rascunhos", href: "/parceiro/oportunidades", kind: "ACTIVIDADE" }
       : !published
         ? { label: "Publicar a primeira oportunidade", href: "/parceiro/oportunidades/nova", kind: "ACTIVIDADE" }
-        : !activeCampaigns
+        : activeCampaigns === 0
         ? { label: "Escolher um formato de exposição", href: "/parceiro/publicidade", kind: "EXPOSIÇÃO" }
         : { label: "Consultar indicadores da actividade", href: "/parceiro/inteligencia", kind: "INDICADORES" };
 
@@ -73,9 +73,9 @@ export default async function PartnerHome() {
 
         <section className="partner-home-metrics">
           <article><span>Publicações activas da conta</span><strong>{opportunitiesError ? "—" : published}</strong><small>{opportunitiesError ? "Dados indisponíveis" : drafts + " rascunho(s)"}</small></article>
-          <article><span>Campanhas activas</span><strong>{campaignsError ? "—" : activeCampaigns}</strong><small>Publicidade e exposição</small></article>
-          <article><span>Pedidos submetidos por si</span><strong>{requestsError ? "—" : pending}</strong><small>Pedidos do responsável único</small></article>
-          <article><span>Benefícios activos da conta</span><strong>{entitlementsError ? "—" : benefits}</strong><small>Benefícios atribuídos à organização</small></article>
+          <article><span>Campanhas activas</span><strong>{activeCampaigns === null ? "—" : activeCampaigns}</strong><small>Publicidade e exposição</small></article>
+          <article><span>Pedidos submetidos por si</span><strong>{pending === null ? "—" : pending}</strong><small>Pedidos do responsável único</small></article>
+          <article><span>Benefícios activos da conta</span><strong>{benefits === null ? "—" : benefits}</strong><small>Benefícios atribuídos à organização</small></article>
         </section>
 
         <div className="partner-home-columns">
