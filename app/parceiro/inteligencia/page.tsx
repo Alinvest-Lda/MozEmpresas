@@ -20,10 +20,10 @@ export default async function PartnerInsights() {
     supabase.rpc("partner_entitlements_list"),
   ]);
 
-  const published = (opportunities ?? []).filter((item: any) => item.status === "PUBLISHED").length;
-  const closed = (opportunities ?? []).filter((item: any) => ["CLOSED", "ARCHIVED"].includes(item.status)).length;
-  const activeRequests = (requests ?? []).filter((item: any) => !["COMPLETED", "CANCELLED"].includes(item.status)).length;
-  const benefits = (entitlements ?? []).filter((item: any) => item.status === "ACTIVE").length;
+  const published = opportunitiesError ? null : (opportunities ?? []).filter((item: any) => item.status === "PUBLISHED").length;
+  const closed = opportunitiesError ? null : (opportunities ?? []).filter((item: any) => ["CLOSED", "ARCHIVED"].includes(item.status)).length;
+  const activeRequests = requestsError ? null : (requests ?? []).filter((item: any) => !["COMPLETED", "CANCELLED"].includes(item.status)).length;
+  const benefits = entitlementsError ? null : (entitlements ?? []).filter((item: any) => item.status === "ACTIVE").length;
   const loadErrors = [
     accountError && "identificação da conta",
     opportunitiesError && "publicações",
