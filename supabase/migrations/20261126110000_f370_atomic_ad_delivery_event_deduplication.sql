@@ -32,6 +32,19 @@ begin
   v_lock_key := p_visitor_key || ':' || p_campaign_source || ':' || p_campaign_id::text || ':' || p_surface || ':' || p_slot;
   perform pg_advisory_xact_lock(hashtextextended(v_lock_key, 0));
 
+  if p_event_type = 'IMPRESSION' and exists (
+    select 1 from public.ad_delivery_events e
+    where e.visitor_key = p_visitor_key
+      and e.campaign_source = p_campaign_source
+      and e.campaign_id = p_campaign_id
+      and e.surface = p_surface
+      and e.slot = p_slot
+      and e.event_type = 'IMPRESSION'
+      and e.created_at >= v_now - interval '5 minutes'
+  ) then
+    return false;
+  end if;
+
   if p_event_type = 'CLICK' then
     if not exists (
       select 1 from public.ad_delivery_events e
