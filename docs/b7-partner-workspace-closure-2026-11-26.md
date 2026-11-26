@@ -16,8 +16,10 @@
 **Initial implementation:** the Partner opportunity list now suppresses publication metrics when its source query fails, and reports lifecycle-history query failure instead of presenting a zero-event history. Commit 2887eb3. Not validated.
 1. owned-opportunity list; 2. create; 3. draft; 4. publication; 5. edit guards; 6. close/archive; 7. deadline/expiry; 8. application/candidate view; 9. history; 10. notifications and error recovery.
 ### B7-T03 — Candidate management and applicant integrity
+**Initial implementation:** the candidate-management page now exposes auxiliary-query failures for candidate identities and event history and labels history unavailable rather than presenting a misleading empty event list. Commit 987e3d3. The atomic candidate/opportunity submission guard already exists in the prior B8 tranche. Not validated.
 1. applicant identity; 2. duplicate submission guard; 3. submit/edit state guard; 4. owner isolation; 5. statuses; 6. candidate notification; 7. application history; 8. pagination/limits; 9. failure states; 10. privacy boundaries.
 ### B7-T04 — Partner advertising
+**Initial implementation:** the advertising workspace now captures errors for product, campaign, payment, telemetry and lifecycle-event sources; dependent metrics are suppressed when their source failed, and campaign lists are not presented as conclusively empty when key queries are unavailable. Commit 3af4fdf. Not validated.
 1. product catalogue; 2. eligible slots; 3. request forms; 4. dates; 5. targeting; 6. pricing/credit; 7. payment states; 8. activation/pause/end; 9. delivery analytics; 10. cancellation/refund and history.
 ### B7-T05 — Platform services and entitlements
 1. service catalogue; 2. eligibility; 3. requests; 4. quotes; 5. acceptance; 6. execution; 7. completion/cancellation; 8. entitlement/exclusivity; 9. renewal/expiry; 10. audit and notifications.
