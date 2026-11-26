@@ -86,3 +86,5 @@ The partner workspace navigation is shared from `partnerNavGroups` across deskto
 - T02 remains open: the status compare-and-set is still a client-side Supabase update with RLS, not a dedicated transactional server-side lifecycle RPC; notifications and the remaining task elements are not fully closed. No tests or validation were run.
 
 - T03/T09: the partner opportunity applications page now defines and aggregates the auxiliary business/profile/event query errors before rendering its partial-data warning. This repairs an undefined reference in the page and makes the warning derive from the actual auxiliary query outcomes. Commit `3afdd1f`. No tests or build validation were run.
+
+- T07: partner document grouping labels now follow the canonical `partner_documents.parent_type` vocabulary (`GENERAL`, `CONTRACT`, `ENGAGEMENT`, `REPORT`, `CAMPAIGN`). The prior UI mapped non-existent values such as `PARTNER_ACCOUNT` and `SERVICE_REQUEST`, leaving valid `GENERAL`/`REPORT` records in generic fallback labels. Commit `45d0c0a`.
