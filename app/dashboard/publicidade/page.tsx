@@ -28,9 +28,9 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
   const {data:managed,error:managedError}=ids.length ? await supabase.from("businesses").select("id,name").in("id",ids).is("archived_at",null).order("name") : {data:[] as {id:string;name:string}[],error:null};
   const businesses=[...(owned??[]),...(managed??[]).filter(b=>!(owned??[]).some(o=>o.id===b.id))];
   const businessIds=businesses.map((business)=>business.id);
-  const {data:promotions}=businessIds.length
+  const {data:promotions,error:promotionsError}=businessIds.length
     ? await supabase.from("business_promotions").select("id,title,placement,status,starts_at,ends_at,payment_method,price_mzn,credits_charged,business_id,businesses:business_id(name)").in("business_id",businessIds).order("created_at",{ascending:false}).limit(100)
-    : {data:[] as {id:string;title:string|null;placement:string;status:string;starts_at:string;ends_at:string|null;payment_method:string|null;price_mzn:number|null;credits_charged:number|null;business_id:string;businesses:{name:string}|{name:string}[]|null}[]};
+    : {data:[] as {id:string;title:string|null;placement:string;status:string;starts_at:string;ends_at:string|null;payment_method:string|null;price_mzn:number|null;credits_charged:number|null;business_id:string;businesses:{name:string}|{name:string}[]|null}[],error:null};
   const {data:wallets,error:walletsError}=businesses.length ? await supabase.from("business_credit_wallets").select("business_id,balance_credits").in("business_id",businesses.map(b=>b.id)) : {data:[] as {business_id:string;balance_credits:number}[],error:null};
   const walletMap=Object.fromEntries((wallets??[]).map(w=>[w.business_id,w.balance_credits]));
   const paidProducts=(products??[]).filter(p=>p.access_type!=="FREE");
