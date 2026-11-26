@@ -117,6 +117,9 @@ export async function requestAdMpesaPayment(formData: FormData) {
     p_categories: input.categories,
   });
   if (error) redirect("/dashboard/publicidade?error=" + purchaseErrorCode(error.message));
+  if (!data || typeof data !== "object" || !isUuid(String((data as { promotion_id?: unknown }).promotion_id ?? ""))) {
+    redirect("/dashboard/publicidade?error=purchase");
+  }
 
   revalidatePath("/dashboard/publicidade");
   revalidatePath("/dashboard/admin/monetizacao");
