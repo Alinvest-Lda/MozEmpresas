@@ -78,3 +78,5 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - This removes the prior read-before-write race for click deduplication. It does not close all telemetry requirements: impression deduplication, attribution policy review, operational migration application and runtime validation remain open. No migration execution, tests, CI, E2E, RLS validation or deployment were performed.
 
 - B6-T05 follow-up: the same transaction now suppresses repeated impressions for the same visitor/campaign/surface/slot within five minutes, avoiding repeated refreshes from inflating delivery totals. Commit `4c3dad9`. This is a source-level deduplication policy; its suitability for reporting/billing still requires product and operational validation.
+
+- B6-T05 follow-up: the ad decision endpoint now records impressions through the same atomic database function, in both direct-Postgres and service-role fallback paths. This closes the bypass where decision-generated impressions were still inserted directly and escaped the five-minute deduplication rule. Commit `5722a71`.
