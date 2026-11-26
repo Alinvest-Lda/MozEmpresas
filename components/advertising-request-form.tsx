@@ -8,7 +8,7 @@ const creative=[["BANNER","Banner"],["NATIVE","Conteúdo nativo"],["CARD","Cart�
 
 export function AdvertisingRequestForm(){
  const[sent,setSent]=useState(false),[pending,setPending]=useState(false),[error,setError]=useState("");
- async function submit(formData:FormData){setPending(true);setError("");const response=await fetch("/api/publicidade",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.fromEntries(formData.entries()))});const result=await response.json();setPending(false);if(!response.ok){setError(result.error||"Não foi possível enviar o pedido.");return}setSent(true)}
+ async function submit(formData:FormData){if(pending||sent)return;setPending(true);setError("");try{const response=await fetch("/api/publicidade",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.fromEntries(formData.entries()))});const result=await response.json().catch(()=>null);if(!response.ok){setError(result?.error||"Não foi possível enviar o pedido.");return}setSent(true)}catch{setError("Não foi possível contactar o servidor. Verifique a ligação e tente novamente.")}finally{setPending(false)}}
  if(sent)return <div className="notice"><strong>Pedido recebido.</strong><br/>A equipa comercial confirmará o espaço, formato, período e materiais antes da activação.</div>;
  return <form action={submit} className="auth-card" style={{maxWidth:760}}>
   <div className="toolbar"><div className="field" style={{flex:1}}><label>Empresa</label><input name="companyName" required/></div><div className="field" style={{flex:1}}><label>Pessoa de contacto</label><input name="contactName" required/></div></div>
