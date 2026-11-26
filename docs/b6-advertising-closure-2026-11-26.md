@@ -64,3 +64,5 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 
 - B6-T02: aggregate investment, impressions, clicks, CTR and history are now suppressed when the advertiser's owned/member/managed-business scope query is incomplete; this prevents apparently complete totals over a partial business set. Commit `4bfa7d4`.
 - B6 implementation batch commits since the prior ledger update: decision endpoint hardening `f6105f1`, bounded interests `ae0487a`, partner workspace payment/metrics/history integrity `bb12525` and `d3f1e2b`, business advertiser scope integrity `4bfa7d4`. Documentation update only records implementation; tasks remain open.
+
+- B6-T09 public advertising intake: the request form now guards against repeated submission while pending and recovers from network/invalid-JSON failures with an actionable error instead of remaining permanently stuck in a pending state. Commit `ced000b`.
