@@ -37,12 +37,18 @@ export default function NewPartnerOpportunity(){
     if(opens&&closes&&new Date(closes).getTime()<new Date(opens).getTime()){setError("A data de encerramento não pode anteceder a abertura.");setPending(false);return}
     if(status==="PUBLISHED"&&closes&&new Date(closes).getTime()<=Date.now()){setError("Uma publicação não pode ser publicada com a data de encerramento no passado.");setPending(false);return}
     if(editId&&record&&status!==record.status&&!canTransitionOpportunity(record.status,status)){setError("A alteração de estado não é permitida a partir do estado actual.");setPending(false);return}
+    try {
     const s=createClient(),{data:{user}}=await s.auth.getUser();
     if(!user){setError("Sessão expirada.");setPending(false);return}
     const payload={title,type:selectedType,status,description,organization,location:String(f.get("location")||"").trim()||null,opens_at:opens?new Date(opens).toISOString():null,closes_at:closes?new Date(closes).toISOString():null,requirements:String(f.get("requirements")||"").trim()||null};
     if(editId){const{data:account}=await s.rpc("current_partner_account_id");if(!account){setError("Conta de parceiro não identificada.");setPending(false);return}const{data:updated,error}=await s.from("opportunities").update(payload).eq("id",editId).eq("partner_account_id",account).eq("status",record?.status).select("id").maybeSingle();if(error||!updated){setError(error?"Não foi possível guardar: "+error.message:"A publicação mudou de estado ou já não está disponível. Actualize e reveja antes de editar.");setPending(false);return}}
     else{const{data:account,error:accountError}=await s.rpc("current_partner_account_id");if(accountError||!account){setError("Conta de parceiro não identificada.");setPending(false);return}const slug=title.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-"+crypto.randomUUID().slice(0,8);const{error}=await s.from("opportunities").insert({...payload,owner_id:user.id,partner_account_id:account,slug});if(error){setError("Não foi possível publicar: "+error.message);setPending(false);return}}
-    r.push("/parceiro/oportunidades?saved=1");r.refresh();setPending(false);
+    r.push("/parceiro/oportunidades?saved=1");r.refresh();
+    } catch {
+      setError("Não foi possível concluir a operação por uma falha de comunicação. Os dados não foram confirmados; reveja a publicação antes de repetir.");
+    } finally {
+      setPending(false);
+    }
   }
 
   const selected=types.find(([v])=>v===type)||null;
