@@ -40,3 +40,8 @@
 
 ## Initial task state
 B7-T01 has begun with three focused implementation fixes above. B7-T02–T10 are queued by dependency, but existing implementations will be reused rather than recreated. This document is an execution ledger, not validation evidence.
+
+### B7-T07 investigation — document access boundary (implementation checkpoint)
+**Traced existing vault:** the institutional document vault is private and restricted to Super Admin in both `partner_documents` row-level policies and `partner-documents` storage-object read policies. The upload trigger verifies the account-prefixed storage path, object existence, document-parent/account ownership, and immutable version sequencing. This is an intentional security boundary; no direct partner SELECT/storage policy or client-side signed-link path was added.
+
+**Closure gap:** partner-facing document retrieval is not yet implemented. Next implementation must use a server-side account/user authorization check (active partner account, portal enabled, exactly-one authorized user/member association), retrieve only that account's metadata, issue short-lived signed download URLs after authorization, and audit access. Before coding, trace the canonical membership/auth schema and existing secure server-action/storage helpers; do not broaden vault RLS or expose raw storage paths. Check access-expiry/revocation behavior and failure states. This checkpoint is investigation only; no tests or migration execution.
