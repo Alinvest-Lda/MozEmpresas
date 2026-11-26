@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { createPartnerDocumentDownload, type PartnerDocumentItem } from "@/lib/partner/documents";
 
 const typeLabel: Record<string,string> = { SIGNED_CONTRACT:"Contrato assinado", REPORT:"Relatório", SUPPORTING:"Documento de apoio", OTHER:"Outro" };
-const parentLabel: Record<string,string> = { PARTNER_ACCOUNT:"Organização", ENGAGEMENT:"Engajamento", CONTRACT:"Contrato", CAMPAIGN:"Campanha", SERVICE_REQUEST:"Pedido de serviço", OTHER:"Documentação geral" };
+const parentLabel: Record<string,string> = { GENERAL:"Documentação geral", CONTRACT:"Contrato", ENGAGEMENT:"Engajamento", REPORT:"Relatório", CAMPAIGN:"Campanha" };
 const sizeLabel = (n:number) => !Number.isFinite(n) || n < 0 ? "Tamanho indisponível" : n < 1024 ? n+" B" : n < 1048576 ? (n/1024).toFixed(1)+" KB" : (n/1048576).toFixed(1)+" MB";
 const dateLabel = (v:string) => { const d=new Date(v); return Number.isNaN(d.getTime()) ? "Data indisponível" : d.toLocaleDateString("pt-MZ"); };
 
@@ -12,11 +12,11 @@ export default function PartnerDocumentsList({documents}:{documents:PartnerDocum
   const [pending,setPending] = useState<string|null>(null);
   const [error,setError] = useState<string|null>(null);
   const [busy, startTransition] = useTransition();
-  const groups = documents.reduce<Record<string,PartnerDocumentItem[]>>((acc,doc)=>{const key=doc.parent_type||"OTHER"; (acc[key] ||= []).push(doc); return acc;}, {});
+  const groups = documents.reduce<Record<string,PartnerDocumentItem[]>>((acc,doc)=>{const key=doc.parent_type||"GENERAL"; (acc[key] ||= []).push(doc); return acc;}, {});
   return <div className="partner-document-list" aria-label="Arquivo de documentos da organização">
     {error && <p role="alert" className="notice">{error}</p>}
     {Object.entries(groups).map(([group,items])=><section key={group} aria-labelledby={"partner-docs-"+group}>
-      <h3 id={"partner-docs-"+group}>{parentLabel[group]||"Documentos relacionados"}</h3>
+      <h3 id={"partner-docs-"+group}>{parentLabel[group]||"Documentação geral"}</h3>
       <ul className="partner-document-group" style={{listStyle:"none",padding:0,margin:0}}>
       {items.map(doc=><li key={doc.id}><article className="partner-document-row">
         <div className="partner-document-main"><span>{typeLabel[doc.document_type] || doc.document_type} · Versão {doc.version_number}</span>
