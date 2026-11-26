@@ -84,3 +84,5 @@ The partner workspace navigation is shared from `partnerNavGroups` across deskto
 
 - T02: the server action for publishing/reopening an opportunity now reloads its opening and closing dates and rejects a transition to PUBLISHED when the opening is still in the future or the closing deadline has passed; the workspace explains the date-specific rejection. This protects status changes even when the action is submitted outside the editor. Commits `64e1aee`, `eb4e7fb`.
 - T02 remains open: the status compare-and-set is still a client-side Supabase update with RLS, not a dedicated transactional server-side lifecycle RPC; notifications and the remaining task elements are not fully closed. No tests or validation were run.
+
+- T03/T09: the partner opportunity applications page now defines and aggregates the auxiliary business/profile/event query errors before rendering its partial-data warning. This repairs an undefined reference in the page and makes the warning derive from the actual auxiliary query outcomes. Commit `3afdd1f`. No tests or build validation were run.
