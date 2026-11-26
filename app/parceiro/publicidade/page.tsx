@@ -31,13 +31,15 @@ export default async function PartnerAds(){
   const ctr=impressions!==null&&clicks!==null&&impressions>0?clicks/impressions*100:null;
   const money=(value:number)=>value.toLocaleString("pt-MZ",{maximumFractionDigits:2})+" MZN";
 
-  const loadErrors=[productsError&&"catálogo",campaignsError&&"campanhas",metricsError&&"métricas",paymentsError&&"pagamentos",statusEventsError&&"histórico"].filter(Boolean);\n  return <PartnerPage
+  const loadErrors=[productsError&&"catálogo",campaignsError&&"campanhas",metricsError&&"métricas",paymentsError&&"pagamentos",statusEventsError&&"histórico"].filter(Boolean);
+  return <PartnerPage
     eyebrow="Posicionar · Exposição"
     title="Publicidade e campanhas"
     description="Transforme uma publicação, marca, produto, serviço ou oportunidade em presença visível dentro do ecossistema MozEmpresas."
     action={{href:"#espacos",label:"Ver espaços"}}
   >
-    {loadErrors.length>0&&<div className="notice" role="alert">Consultas incompletas ({loadErrors.join(", ")}). Valores indisponíveis não significam zero.</div>}\n    <section className="partner-metrics-grid">
+    {loadErrors.length>0&&<div className="notice" role="alert">Consultas incompletas ({loadErrors.join(", ")}). Valores indisponíveis não significam zero.</div>}
+    <section className="partner-metrics-grid">
       <PartnerMetric label="Espaços disponíveis" value={productsError?"—":products?.length??0} detail="Formatos actualmente activos" featured/>
       <PartnerMetric label="Campanhas activas" value={active??"—"} detail="Em execução ou publicadas"/>
       <PartnerMetric label="Em análise" value={pending??"—"} detail="Pedidos aguardam seguimento"/>
@@ -98,6 +100,7 @@ export default async function PartnerAds(){
         ? <div className="partner-record-list">{measuredCampaigns.map((x:any)=><div key={x.id}>
             <div><strong>{x.title||"Campanha sem título"}</strong><span>{x.product_name||"Espaço publicitário"} · {statusLabel(x.status)}</span><span>{x.impressions===null?"—":x.impressions.toLocaleString("pt-MZ")} impressões · {x.clicks===null?"—":x.clicks.toLocaleString("pt-MZ")} cliques · CTR {x.impressions!==null&&x.clicks!==null&&x.impressions>0?(x.clicks/x.impressions*100).toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"}</span></div>
             <div><b>{x.price_mzn!=null?money(Number(x.price_mzn)):"Em análise"}</b>{x.payment===undefined?<small>Estado do pagamento indisponível</small>:x.payment?<small>Pagamento: {x.payment.status==="PAID"?"Liquidado":x.payment.status==="PENDING"?"A aguardar M-Pesa":x.payment.status==="FAILED"?"Falhado":"Estornado"} · {x.payment.payment_method} · {x.payment.payment_reference}</small>:<small>Sem cobrança emitida</small>}</div>
+            <details className="partner-ad-status-history"><summary>Histórico {statusEventsError?"(indisponível)":"("+ (eventsByCampaign.get(x.id)??[]).length +")"}</summary>{statusEventsError?<p>Não foi possível carregar o histórico de decisões.</p>:<ol>{(eventsByCampaign.get(x.id)??[]).map((event:any)=><li key={event.id}><strong>{event.event_type==="CREATED"?"Pedido criado":"Estado actualizado"}</strong><span>{event.old_status?statusLabel(event.old_status)+" → ":""}{statusLabel(event.new_status)}</span><small>{event.action_reason||"Sem justificação registada"} · {new Date(event.created_at).toLocaleString("pt-MZ")}</small></li>)}</ol>}</details>
           </div>)}</div>
         : campaignsError ? <PartnerEmpty title="Campanhas indisponíveis" text="Não foi possível consultar as campanhas desta entidade. Actualize a página mais tarde."/> : <PartnerEmpty title="Ainda sem campanhas" text="Escolha um espaço acima para iniciar uma proposta de exposição." href="#espacos" label="Ver espaços"/>
       }
