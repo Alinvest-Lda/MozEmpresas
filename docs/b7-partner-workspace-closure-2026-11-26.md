@@ -56,3 +56,8 @@ Implemented the initial partner document workspace at `/parceiro/documentos`, ad
 - The UI surfaces loading/download errors and filename, type, version, size, and upload date.
 Commits: `f321426` (server actions), `fbab066` (page), `4297e1b` (list component), `f5ff1a5` (canonical account status check), `e3e2d52` (navigation).
 **Remaining T07 gaps:** access-download audit event, explicit document grouping/parent context and history UX, partner-side access expiry display, further consistency checks. This is partial implementation, not closure; no validation/test run.
+
+
+### B7-T08 — account/access lifecycle trace checkpoint
+Traced the existing one-user partner access lifecycle: the active membership/owner is verified in `requirePartnerAccount`; access claims bind an invitee identity, account status, portal-enabled state and single-active-member invariant; admin revocation is reasoned, transactional, audited in `partner_relationship_audit`, and emits a partner notification. Existing code and migrations include `admin_partner_access_members_list`, `admin_partner_access_revoke`, `partner_access_claim`, and notification governance. This is reused rather than duplicated.
+**Remaining T08 gaps:** session revocation behavior should be explicitly documented/confirmed; restore/replacement pathway and recovery communications need a single coherent evidence trail; ensure suspended account and revoked member are consistently rejected across all portal/server actions. No runtime or security verification performed.
