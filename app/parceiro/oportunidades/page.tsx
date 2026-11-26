@@ -72,7 +72,7 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
       {!canManage && !contextError && <div className="notice">O seu papel permite consultar as publicações, mas a criação, edição e alteração de estado estão reservadas ao responsável único da conta.</div>}
       {params.saved && <div className="notice" role="status">A oportunidade foi guardada com sucesso.</div>}
       {params.updated && <div className="notice" role="status">O estado da publicação foi actualizado.</div>}
-      {params.error && <div className="notice" role="alert">Não foi possível actualizar a publicação. Confirme as permissões e tente novamente.</div>}
+      {params.error && <div className="notice" role="alert">{params.error === "deadline" ? "Não é possível publicar ou reabrir esta oportunidade: a data de abertura ainda não chegou ou o prazo de encerramento já passou." : "Não foi possível actualizar a publicação. Confirme as permissões e tente novamente."}</div>}
       <div className="partner-pub-toolbar">
         <Link className="btn" href="/parceiro/oportunidades/candidaturas">Ver candidaturas recebidas →</Link>
       </div>
