@@ -11,12 +11,12 @@ export type PartnerDocumentItem = {
 
 export async function listPartnerDocuments(): Promise<{ documents: PartnerDocumentItem[]; error: boolean }> {
   const context = await requirePartnerAccount();
-  const partner = context.partnerContext as { account_id?: string; account_status?: string; portal_enabled?: boolean };
-  if (!partner?.account_id || partner.account_status !== "ACTIVE" || partner.portal_enabled !== true) {
-    return { documents: [], error: true };
-  }
+  const partner = context.partnerContext as { account_id?: string };
+  if (!partner?.account_id) return { documents: [], error: true };
   try {
     const admin = createServiceRoleClient();
+    const { data: account, error: accountError } = await admin.from("partner_accounts").select("status,portal_enabled").eq("id", partner.account_id).maybeSingle();
+    if (accountError || !account || account.status !== "ACTIVE" || account.portal_enabled !== true) return { documents: [], error: true };
     const { data, error } = await admin.from("partner_documents")
       .select("id,title,document_type,parent_type,original_filename,mime_type,size_bytes,version_number,created_at,notes")
       .eq("account_id", partner.account_id)
@@ -31,15 +31,15 @@ export async function listPartnerDocuments(): Promise<{ documents: PartnerDocume
 
 export async function createPartnerDocumentDownload(documentId: string): Promise<{ url: string | null; error: string | null }> {
   const context = await requirePartnerAccount();
-  const partner = context.partnerContext as { account_id?: string; account_status?: string; portal_enabled?: boolean };
-  if (!partner?.account_id || partner.account_status !== "ACTIVE" || partner.portal_enabled !== true) {
-    return { url: null, error: "Acesso documental não autorizado." };
-  }
+  const partner = context.partnerContext as { account_id?: string };
+  if (!partner?.account_id) return { url: null, error: "Acesso documental não autorizado." };
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(documentId)) {
     return { url: null, error: "Documento inválido." };
   }
   try {
     const admin = createServiceRoleClient();
+    const { data: account, error: accountError } = await admin.from("partner_accounts").select("status,portal_enabled").eq("id", partner.account_id).maybeSingle();
+    if (accountError || !account || account.status !== "ACTIVE" || account.portal_enabled !== true) return { url: null, error: "Acesso documental não autorizado." };
     const { data: doc, error: docError } = await admin.from("partner_documents")
       .select("storage_path,original_filename")
       .eq("id", documentId).eq("account_id", partner.account_id).maybeSingle();
