@@ -36,7 +36,7 @@ export default async function PartnerResultsPage() {
     <PartnerPage eyebrow="Compreender · Histórico" title="Actividade e histórico" description="Consulte as publicações e campanhas da conta, bem como os pedidos de serviço submetidos pelo seu utilizador. Os pedidos do responsável único são apresentados nesta linha temporal." action={{ href: "/parceiro", label: "Voltar à visão geral" }}>
       {loadErrors.length > 0 && <div className="notice" role="alert">Não foi possível carregar todos os dados ({loadErrors.join(", ")}). A lista pode estar incompleta; tente novamente.</div>}
       <section className="partner-metrics-grid">
-        <PartnerMetric label="Registos visíveis" value={activity.length} detail="Actividade disponível" featured />
+        <PartnerMetric label="Registos visíveis" value={loadErrors.length ? "—" : activity.length} detail="Actividade disponível" featured />
         <PartnerMetric label="Publicações da conta" value={opportunitiesError ? "—" : opportunities?.length ?? 0} detail="Registos da conta" />
         <PartnerMetric label="Pedidos submetidos por si" value={requestsError ? "—" : requests?.length ?? 0} detail="Pedidos do responsável único" />
         <PartnerMetric label="Campanhas da conta" value={campaignsError ? "—" : campaigns?.length ?? 0} detail="Publicidade registada" />
