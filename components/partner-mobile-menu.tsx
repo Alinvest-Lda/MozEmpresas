@@ -22,7 +22,7 @@ export function PartnerMobileMenu(){
   return <>
     <button className={"partner-mobile-trigger"+(open?" open":"")} type="button" onClick={()=>setOpen(v=>!v)} aria-label={open?"Fechar menu":"Abrir menu"} aria-expanded={open} aria-controls="partner-mobile-menu"><span/><span/><span/></button>
     {open&&<button type="button" className="partner-mobile-backdrop" onClick={()=>setOpen(false)} aria-label="Fechar menu"/>}
-    <aside id="partner-mobile-menu" className={"partner-mobile-panel"+(open?" open":"")} aria-label="Menu do parceiro">
+    <aside id="partner-mobile-menu" className={"partner-mobile-panel"+(open?" open":"")} aria-label="Menu do parceiro" role="dialog" aria-modal="true" aria-hidden={!open} inert={!open}>
       <div className="partner-mobile-head"><div><small>MOZEMPRESAS</small><b>ÁREA DE PARCEIROS</b></div><button type="button" onClick={()=>setOpen(false)} aria-label="Fechar">×</button></div>
       <nav>{partnerNavGroups.map(g=><div key={g.label}><span>{g.label}</span>{g.links.map(([h,l])=><Link key={h} href={h} className={active(h)?"active":""}><i aria-hidden="true"/><span>{l}</span></Link>)}</div>)}</nav>
       <div className="partner-mobile-foot"><form action={signOut}><button type="submit">Terminar sessão</button></form></div>
