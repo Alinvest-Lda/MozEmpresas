@@ -7,7 +7,7 @@ export const adEventSchema = z.object({
   surface: z.enum(["HOME", "DIRECTORY", "MARKETPLACE", "OPPORTUNITIES"]),
   slot: z.enum(["HERO", "BILLBOARD", "EXCLUSIVE", "FEATURED", "INFEED", "CONTEXT"]),
   eventType: z.enum(["IMPRESSION", "CLICK"]),
-  context: z.record(z.string(), z.string()).optional(),
+  context: z.record(z.string().max(80), z.string().max(160)).refine((value) => Object.keys(value).length <= 20).optional(),
 });
 
 export type AdEventPayload = z.infer<typeof adEventSchema>;
