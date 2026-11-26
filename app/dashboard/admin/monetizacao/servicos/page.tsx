@@ -44,8 +44,9 @@ export default async function AdminServiceReconciliationPage({
 
   const { data, error } = await supabase.rpc("admin_service_payment_reconciliation", { p_limit: 500 });
   const rows = (Array.isArray(data) ? data : []) as ServicePaymentRow[];
+  const reconciliationUnavailable = Boolean(error);
   const orderIds = rows.map(row => row.order_id);
-  const { data: adjustmentRows } = orderIds.length
+  const { data: adjustmentRows, error: adjustmentError } = orderIds.length
     ? await supabase.from("platform_service_adjustments")
         .select("order_id,adjustment_type,amount_mzn,credits,currency,external_refund_reference,reason,created_at")
         .in("order_id", orderIds)
@@ -57,10 +58,10 @@ export default async function AdminServiceReconciliationPage({
     (!onlyIssues || Boolean(row.reconciliation_issue)) &&
     (selectedStatus === "ALL" || row.order_status === selectedStatus)
   );
-  const issueCount = rows.filter(row => row.reconciliation_issue).length;
-  const paidCount = rows.filter(row => ["PAID", "PROCESSING", "COMPLETED"].includes(row.order_status)).length;
-  const pendingCount = rows.filter(row => row.order_status === "PENDING_PAYMENT").length;
-  const failedCount = rows.filter(row => ["FAILED", "CANCELLED"].includes(row.order_status)).length;
+  const issueCount = reconciliationUnavailable ? null : rows.filter(row => row.reconciliation_issue).length;
+  const paidCount = reconciliationUnavailable ? null : rows.filter(row => ["PAID", "PROCESSING", "COMPLETED"].includes(row.order_status)).length;
+  const pendingCount = reconciliationUnavailable ? null : rows.filter(row => row.order_status === "PENDING_PAYMENT").length;
+  const failedCount = reconciliationUnavailable ? null : rows.filter(row => ["FAILED", "CANCELLED"].includes(row.order_status)).length;
 
   return (
     <main className="dashboard-main admin-workspace">
@@ -77,14 +78,15 @@ export default async function AdminServiceReconciliationPage({
         {params.resultado === "success" ? <div className={styles.notice}>Ajustamento concluído e registado no histórico financeiro.</div> : null}
         {params.resultado && params.resultado !== "success" ? <div className={styles.notice} role="alert">A operação não foi concluída ({label(params.resultado)}). Confirme as condições da ordem e os dados do reembolso.</div> : null}
         {error ? <div className={styles.notice} role="alert">Não foi possível carregar a reconciliação. Verifique a função de administração e tente novamente.</div> : null}
+        {adjustmentError ? <div className={styles.notice} role="alert">O histórico de ajustamentos não foi carregado. Os pagamentos estão visíveis, mas os dados de reembolso/ajustamento podem estar incompletos.</div> : null}
 
         <section className={styles.metrics} aria-label="Indicadores de contratação">
-          <article><span>Ordens analisadas</span><strong>{rows.length}</strong><small>Máximo de 500 registos recentes</small></article>
-          <article><span>Pagas / activas</span><strong>{paidCount}</strong><small>Serviços com pagamento confirmado</small></article>
-          <article><span>A aguardar pagamento</span><strong>{pendingCount}</strong><small>Ordens pendentes</small></article>
-          <article><span>Falhadas / canceladas</span><strong>{failedCount}</strong><small>Sem activação</small></article>
-          <article><span>Exigem análise</span><strong>{issueCount}</strong><small>Inconsistências detectadas</small></article>
-          <article><span>Valor das ordens</span><strong>{money(rows.reduce((sum,row)=>sum+Number(row.amount_mzn||0),0))}</strong><small>Valor bruto do conjunto carregado</small></article>
+          <article><span>Ordens analisadas</span><strong>{reconciliationUnavailable ? "—" : rows.length}</strong><small>Máximo de 500 registos recentes</small></article>
+          <article><span>Pagas / activas</span><strong>{paidCount ?? "—"}</strong><small>Serviços com pagamento confirmado</small></article>
+          <article><span>A aguardar pagamento</span><strong>{pendingCount ?? "—"}</strong><small>Ordens pendentes</small></article>
+          <article><span>Falhadas / canceladas</span><strong>{failedCount ?? "—"}</strong><small>Sem activação</small></article>
+          <article><span>Exigem análise</span><strong>{issueCount ?? "—"}</strong><small>Inconsistências detectadas</small></article>
+          <article><span>Valor das ordens</span><strong>{reconciliationUnavailable ? "—" : money(rows.reduce((sum,row)=>sum+Number(row.amount_mzn||0),0))}</strong><small>Valor bruto do conjunto carregado</small></article>
         </section>
 
         <section className={styles.panel}>
