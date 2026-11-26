@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { PartnerPage } from "@/components/partner-workspace";\nimport { canTransitionOpportunity } from "@/lib/opportunities/state-machine";
+import { PartnerPage } from "@/components/partner-workspace";
+import { canTransitionOpportunity } from "@/lib/opportunities/state-machine";
 
 const types = [
   ["FUNDING", "Financiamento", "Linhas de crédito, fundos, grants ou outros apoios financeiros."],
@@ -33,7 +34,9 @@ export default function NewPartnerOpportunity(){
     const opens=String(f.get("opens_at")||""),closes=String(f.get("closes_at")||"");
     if(!title||!description||!organization){setError("Preencha o título, a descrição e a entidade publicadora.");setPending(false);return}
     if(!types.some(([value])=>value===selectedType)){setError("Seleccione uma categoria válida para esta oportunidade.");setPending(false);return}
-    if(opens&&closes&&new Date(closes).getTime()<new Date(opens).getTime()){setError("A data de encerramento não pode anteceder a abertura.");setPending(false);return}\n    if(status==="PUBLISHED"&&closes&&new Date(closes).getTime()<=Date.now()){setError("Uma publicação não pode ser publicada com a data de encerramento no passado.");setPending(false);return}\n    if(editId&&record&&status!==record.status&&!canTransitionOpportunity(record.status,status)){setError("A alteração de estado não é permitida a partir do estado actual.");setPending(false);return}
+    if(opens&&closes&&new Date(closes).getTime()<new Date(opens).getTime()){setError("A data de encerramento não pode anteceder a abertura.");setPending(false);return}
+    if(status==="PUBLISHED"&&closes&&new Date(closes).getTime()<=Date.now()){setError("Uma publicação não pode ser publicada com a data de encerramento no passado.");setPending(false);return}
+    if(editId&&record&&status!==record.status&&!canTransitionOpportunity(record.status,status)){setError("A alteração de estado não é permitida a partir do estado actual.");setPending(false);return}
     const s=createClient(),{data:{user}}=await s.auth.getUser();
     if(!user){setError("Sessão expirada.");setPending(false);return}
     const payload={title,type:selectedType,status,description,organization,location:String(f.get("location")||"").trim()||null,opens_at:opens?new Date(opens).toISOString():null,closes_at:closes?new Date(closes).toISOString():null,requirements:String(f.get("requirements")||"").trim()||null};
