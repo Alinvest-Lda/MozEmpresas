@@ -91,10 +91,13 @@ export async function purchaseAdCredits(formData: FormData) {
     p_categories: input.categories,
   });
   if (error) redirect("/dashboard/publicidade?error=" + purchaseErrorCode(error.message));
+  if (!data || typeof data !== "object" || !isUuid(String((data as { promotion_id?: unknown }).promotion_id ?? ""))) {
+    redirect("/dashboard/publicidade?error=purchase");
+  }
 
   revalidatePath("/dashboard/publicidade");
   revalidatePath("/dashboard/admin/monetizacao");
-  redirect("/dashboard/publicidade?success=credits&promotion=" + String(data?.promotion_id ?? ""));
+  redirect("/dashboard/publicidade?success=credits&promotion=" + encodeURIComponent(String((data as { promotion_id: string }).promotion_id)));
 }
 
 export async function requestAdMpesaPayment(formData: FormData) {
@@ -117,5 +120,5 @@ export async function requestAdMpesaPayment(formData: FormData) {
 
   revalidatePath("/dashboard/publicidade");
   revalidatePath("/dashboard/admin/monetizacao");
-  redirect("/dashboard/publicidade?success=mpesa&promotion=" + String(data?.promotion_id ?? ""));
+  redirect("/dashboard/publicidade?success=mpesa&promotion=" + encodeURIComponent(String((data as { promotion_id: string }).promotion_id)));
 }
