@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { PartnerPage } from "@/components/partner-workspace";
+import { PartnerPage } from "@/components/partner-workspace";\nimport { canTransitionOpportunity } from "@/lib/opportunities/state-machine";
 
 const types = [
   ["FUNDING", "Financiamento", "Linhas de crédito, fundos, grants ou outros apoios financeiros."],
@@ -33,11 +33,11 @@ export default function NewPartnerOpportunity(){
     const opens=String(f.get("opens_at")||""),closes=String(f.get("closes_at")||"");
     if(!title||!description||!organization){setError("Preencha o título, a descrição e a entidade publicadora.");setPending(false);return}
     if(!types.some(([value])=>value===selectedType)){setError("Seleccione uma categoria válida para esta oportunidade.");setPending(false);return}
-    if(opens&&closes&&new Date(closes).getTime()<new Date(opens).getTime()){setError("A data de encerramento não pode anteceder a abertura.");setPending(false);return}
+    if(opens&&closes&&new Date(closes).getTime()<new Date(opens).getTime()){setError("A data de encerramento não pode anteceder a abertura.");setPending(false);return}\n    if(status==="PUBLISHED"&&closes&&new Date(closes).getTime()<=Date.now()){setError("Uma publicação não pode ser publicada com a data de encerramento no passado.");setPending(false);return}\n    if(editId&&record&&status!==record.status&&!canTransitionOpportunity(record.status,status)){setError("A alteração de estado não é permitida a partir do estado actual.");setPending(false);return}
     const s=createClient(),{data:{user}}=await s.auth.getUser();
     if(!user){setError("Sessão expirada.");setPending(false);return}
     const payload={title,type:selectedType,status,description,organization,location:String(f.get("location")||"").trim()||null,opens_at:opens?new Date(opens).toISOString():null,closes_at:closes?new Date(closes).toISOString():null,requirements:String(f.get("requirements")||"").trim()||null};
-    if(editId){const{data:account}=await s.rpc("current_partner_account_id");if(!account){setError("Conta de parceiro não identificada.");setPending(false);return}const{data:updated,error}=await s.from("opportunities").update(payload).eq("id",editId).eq("partner_account_id",account).select("id").maybeSingle();if(error||!updated){setError(error?"Não foi possível guardar: "+error.message:"Não foi possível localizar a publicação para edição.");setPending(false);return}}
+    if(editId){const{data:account}=await s.rpc("current_partner_account_id");if(!account){setError("Conta de parceiro não identificada.");setPending(false);return}const{data:updated,error}=await s.from("opportunities").update(payload).eq("id",editId).eq("partner_account_id",account).eq("status",record?.status).select("id").maybeSingle();if(error||!updated){setError(error?"Não foi possível guardar: "+error.message:"A publicação mudou de estado ou já não está disponível. Actualize e reveja antes de editar.");setPending(false);return}}
     else{const{data:account,error:accountError}=await s.rpc("current_partner_account_id");if(accountError||!account){setError("Conta de parceiro não identificada.");setPending(false);return}const slug=title.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-"+crypto.randomUUID().slice(0,8);const{error}=await s.from("opportunities").insert({...payload,owner_id:user.id,partner_account_id:account,slug});if(error){setError("Não foi possível publicar: "+error.message);setPending(false);return}}
     r.push("/parceiro/oportunidades?saved=1");r.refresh();setPending(false);
   }
