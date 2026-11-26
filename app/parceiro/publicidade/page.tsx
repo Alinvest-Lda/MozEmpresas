@@ -10,7 +10,7 @@ const statusLabel=(status:string)=>{
 
 export default async function PartnerAds(){
   const {supabase:s}=await requirePartnerAccount();
-  const [{data:products},{data:campaigns},{data:campaignMetrics},{data:paymentOrders}]=await Promise.all([
+  const [{data:products,error:productsError},{data:campaigns,error:campaignsError},{data:campaignMetrics,error:metricsError},{data:paymentOrders,error:paymentsError}]=await Promise.all([
     s.rpc("partner_ad_products_list"),
     s.rpc("partner_ad_campaigns_list"),
     s.rpc("partner_ad_campaign_metrics"),
@@ -20,28 +20,28 @@ export default async function PartnerAds(){
   const paymentsByCampaign=new Map<string,any>();(paymentOrders??[]).forEach((x:any)=>{if(!paymentsByCampaign.has(x.campaign_id))paymentsByCampaign.set(x.campaign_id,x)});
   const measuredCampaigns=(campaigns??[]).map((x:any)=>({...x,payment:paymentsByCampaign.get(x.id)||null,...(metricsByCampaign.get(x.id)||{impressions:0,clicks:0})}));
   const campaignIds=measuredCampaigns.map((x:any)=>x.id);
-  const {data:statusEvents}=campaignIds.length?await s.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,created_at").in("campaign_id",campaignIds).order("created_at",{ascending:false}):{data:[]};
+  const {data:statusEvents,error:statusEventsError}=campaignIds.length?await s.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,created_at").in("campaign_id",campaignIds).order("created_at",{ascending:false}):{data:[]};
   const eventsByCampaign=new Map<string,any[]>();
   (statusEvents??[]).forEach((event:any)=>{const list=eventsByCampaign.get(event.campaign_id)||[];list.push(event);eventsByCampaign.set(event.campaign_id,list)});
-  const active=(campaigns??[]).filter((x:any)=>x.status==="ACTIVE").length;
-  const pending=(campaigns??[]).filter((x:any)=>["REQUESTED","APPROVED"].includes(x.status)).length;
-  const impressions=measuredCampaigns.reduce((sum:number,x:any)=>sum+x.impressions,0);
-  const clicks=measuredCampaigns.reduce((sum:number,x:any)=>sum+x.clicks,0);
-  const investment=measuredCampaigns.reduce((sum:number,x:any)=>sum+(x.payment?.status==="PAID"?Number(x.payment.amount_mzn??0):0),0);
-  const ctr=impressions>0?clicks/impressions*100:0;
+  const active=campaignsError?null:(campaigns??[]).filter((x:any)=>x.status==="ACTIVE").length;
+  const pending=campaignsError?null:(campaigns??[]).filter((x:any)=>["REQUESTED","APPROVED"].includes(x.status)).length;
+  const impressions=metricsError?null:measuredCampaigns.reduce((sum:number,x:any)=>sum+x.impressions,0);
+  const clicks=metricsError?null:measuredCampaigns.reduce((sum:number,x:any)=>sum+x.clicks,0);
+  const investment=paymentsError?null:measuredCampaigns.reduce((sum:number,x:any)=>sum+(x.payment?.status==="PAID"?Number(x.payment.amount_mzn??0):0),0);
+  const ctr=impressions!==null&&clicks!==null&&impressions>0?clicks/impressions*100:null;
   const money=(value:number)=>value.toLocaleString("pt-MZ",{maximumFractionDigits:2})+" MZN";
 
-  return <PartnerPage
+  const loadErrors=[productsError&&"catálogo",campaignsError&&"campanhas",metricsError&&"métricas",paymentsError&&"pagamentos",statusEventsError&&"histórico"].filter(Boolean);\n  return <PartnerPage
     eyebrow="Posicionar · Exposição"
     title="Publicidade e campanhas"
     description="Transforme uma publicação, marca, produto, serviço ou oportunidade em presença visível dentro do ecossistema MozEmpresas."
     action={{href:"#espacos",label:"Ver espaços"}}
   >
-    <section className="partner-metrics-grid">
-      <PartnerMetric label="Espaços disponíveis" value={products?.length??0} detail="Formatos actualmente activos" featured/>
-      <PartnerMetric label="Campanhas activas" value={active} detail="Em execução ou publicadas"/>
-      <PartnerMetric label="Em análise" value={pending} detail="Pedidos aguardam seguimento"/>
-      <PartnerMetric label="Campanhas" value={campaigns?.length??0} detail="Registo da sua entidade"/>
+    {loadErrors.length>0&&<div className="notice" role="alert">Consultas incompletas ({loadErrors.join(", ")}). Valores indisponíveis não significam zero.</div>}\n    <section className="partner-metrics-grid">
+      <PartnerMetric label="Espaços disponíveis" value={productsError?"—":products?.length??0} detail="Formatos actualmente activos" featured/>
+      <PartnerMetric label="Campanhas activas" value={active??"—"} detail="Em execução ou publicadas"/>
+      <PartnerMetric label="Em análise" value={pending??"—"} detail="Pedidos aguardam seguimento"/>
+      <PartnerMetric label="Campanhas" value={campaignsError?"—":campaigns?.length??0} detail="Registo da sua entidade"/>
     </section>
 
     <PartnerSection
@@ -72,7 +72,7 @@ export default async function PartnerAds(){
           <Link href={"/parceiro/publicidade/pedido?produto="+encodeURIComponent(x.id)} className="btn">Solicitar este espaço</Link>
         </article>)}
       </div>
-      {!products?.length&&<PartnerEmpty title="Nenhum espaço disponível" text="Os formatos serão apresentados aqui quando estiverem activos."/>}
+      {!productsError&&!products?.length&&<PartnerEmpty title="Nenhum espaço disponível" text="Os formatos serão apresentados aqui quando estiverem activos."/>}
     </PartnerSection>
 
     <PartnerSection
@@ -81,10 +81,10 @@ export default async function PartnerAds(){
       description="Acompanhe investimento contratado, exposição e interacções registadas. O retorno financeiro só será calculado quando a plataforma registar conversões atribuíveis."
     >
       <div className="partner-metrics-grid">
-        <PartnerMetric label="Investimento liquidado" value={money(investment)} detail="Pagamentos efectivamente confirmados"/>
-        <PartnerMetric label="Impressões" value={impressions.toLocaleString("pt-MZ")} detail="Exibições contabilizadas"/>
-        <PartnerMetric label="Cliques" value={clicks.toLocaleString("pt-MZ")} detail="Interacções contabilizadas"/>
-        <PartnerMetric label="CTR" value={impressions>0?ctr.toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"} detail="Cliques ÷ impressões" featured/>
+        <PartnerMetric label="Investimento liquidado" value={investment===null?"—":money(investment)} detail="Pagamentos efectivamente confirmados"/>
+        <PartnerMetric label="Impressões" value={impressions===null?"—":impressions.toLocaleString("pt-MZ")} detail="Exibições contabilizadas"/>
+        <PartnerMetric label="Cliques" value={clicks===null?"—":clicks.toLocaleString("pt-MZ")} detail="Interacções contabilizadas"/>
+        <PartnerMetric label="CTR" value={ctr===null?"—":ctr.toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%"} detail="Cliques ÷ impressões" featured/>
       </div>
       <div className="partner-empty"><strong>ROI financeiro ainda não disponível</strong><p>O sistema regista exposição e cliques, mas não tem ainda conversões comerciais atribuídas para calcular vendas, receita incremental ou retorno real do investimento. Não confunda CTR com ROI.</p></div>
     </PartnerSection>
