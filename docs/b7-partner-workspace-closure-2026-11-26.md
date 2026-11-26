@@ -76,3 +76,8 @@ The partner workspace navigation is shared from `partnerNavGroups` across deskto
 ### B7-T07 additional refinement — contextual document grouping
 - Partner document list now groups files by their parent context (organization, engagement, contract, campaign, service request, or generic) instead of presenting one undifferentiated list. Document size/date rendering now handles malformed metadata safely, and download buttons expose pending state to assistive technology. Commit `ee2cf4c`.
 - Still not closed: download audit evidence, actual parent-context values/schema consistency, version history UX, expiry/revocation visibility and validation.
+
+### Additional B7-T02 implementation refinements
+- Repaired three literal escaped-newline sequences in the partner opportunity editor source that interrupted normal TypeScript/JSX source layout. Commit `15fb25b`.
+- The opportunity editor now catches thrown network/runtime failures during session, account, read, update or insert operations and always clears its pending state; it tells the user that the write was not confirmed and asks them to review before retrying. Commit `4448c4b`.
+- These changes improve source integrity and recovery but do not close T02: atomic server-side lifecycle enforcement, notifications, and remaining lifecycle elements are still open. No tests, CI, SQL execution, E2E, accessibility audit or deployment were performed.
