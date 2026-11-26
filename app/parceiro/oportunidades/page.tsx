@@ -47,7 +47,7 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
 
   const rows = data ?? [];
   const rowIds = rows.map((row: any) => row.id);
-  const { data: lifecycleEvents } = rowIds.length
+  const { data: lifecycleEvents, error: lifecycleEventsError } = rowIds.length
     ? await supabase.from("opportunity_events").select("id,opportunity_id,event_type,old_status,new_status,created_at").in("opportunity_id", rowIds).order("created_at", { ascending: false })
     : { data: [] };
   const eventsByOpportunity = new Map<string, any[]>();
@@ -56,9 +56,9 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
     list.push(event);
     eventsByOpportunity.set(event.opportunity_id, list);
   }
-  const published = rows.filter((row: any) => row.status === "PUBLISHED").length;
-  const drafts = rows.filter((row: any) => row.status === "DRAFT").length;
-  const closed = rows.filter((row: any) => ["CLOSED", "ARCHIVED"].includes(row.status)).length;
+  const published = opportunitiesError ? null : rows.filter((row: any) => row.status === "PUBLISHED").length;
+  const drafts = opportunitiesError ? null : rows.filter((row: any) => row.status === "DRAFT").length;
+  const closed = opportunitiesError ? null : rows.filter((row: any) => ["CLOSED", "ARCHIVED"].includes(row.status)).length;
 
   return (
     <PartnerPage
@@ -68,7 +68,7 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
       action={canManage ? { href: "/parceiro/oportunidades/nova", label: "Nova oportunidade" } : undefined}
     >
       {(contextError || accountError) && <div className="notice" role="alert">Não foi possível confirmar o contexto de acesso da sua conta. As operações de publicação ficam indisponíveis até a validação ser concluída.</div>}
-      {opportunitiesError && <div className="notice" role="alert">Não foi possível carregar as publicações. Não interprete a lista indisponível como ausência de registos.</div>}
+      {opportunitiesError && <div className="notice" role="alert">Não foi possível carregar as publicações. Não interprete a lista indisponível como ausência de registos.</div>}{lifecycleEventsError && !opportunitiesError && <div className="notice" role="alert">O histórico de publicações não foi carregado; as contagens de eventos não estão disponíveis.</div>}
       {!canManage && !contextError && <div className="notice">O seu papel permite consultar as publicações, mas a criação, edição e alteração de estado estão reservadas ao responsável único da conta.</div>}
       {params.saved && <div className="notice" role="status">A oportunidade foi guardada com sucesso.</div>}
       {params.updated && <div className="notice" role="status">O estado da publicação foi actualizado.</div>}
@@ -78,10 +78,10 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
       </div>
 
       <section className="partner-metrics-grid">
-        <PartnerMetric label="Publicadas" value={published} detail="Actualmente visíveis" featured />
-        <PartnerMetric label="Rascunhos" value={drafts} detail="Ainda por publicar" />
-        <PartnerMetric label="Encerradas" value={closed} detail="No histórico" />
-        <PartnerMetric label="Total" value={rows.length} detail="Registos" />
+        <PartnerMetric label="Publicadas" value={published ?? "—"} detail="Actualmente visíveis" featured />
+        <PartnerMetric label="Rascunhos" value={drafts ?? "—"} detail="Ainda por publicar" />
+        <PartnerMetric label="Encerradas" value={closed ?? "—"} detail="No histórico" />
+        <PartnerMetric label="Total" value={opportunitiesError ? "—" : rows.length} detail="Registos" />
       </section>
 
       <PartnerSection
@@ -120,7 +120,7 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
                       </Link>
                     </strong>
                     <small>{row.organization || "A sua entidade"} · {row.location || "Localização não indicada"}</small>
-                    <details className="partner-opportunity-history"><summary>Histórico ({(eventsByOpportunity.get(row.id) ?? []).length})</summary><ol>{(eventsByOpportunity.get(row.id) ?? []).map((event: any) => <li key={event.id}><strong>{event.event_type === "CREATED" ? "Publicação criada" : event.event_type === "BASELINE" ? "Histórico inicial" : "Estado actualizado"}</strong><span>{event.old_status ? statusLabel(event.old_status) + " → " : ""}{statusLabel(event.new_status)}</span><small>{new Date(event.created_at).toLocaleString("pt-MZ")}</small></li>)}</ol></details>
+                    <details className="partner-opportunity-history"><summary>Histórico ({lifecycleEventsError ? "—" : (eventsByOpportunity.get(row.id) ?? []).length})</summary>{lifecycleEventsError ? <p>Histórico indisponível.</p> : <ol>{(eventsByOpportunity.get(row.id) ?? []).map((event: any) => <li key={event.id}><strong>{event.event_type === "CREATED" ? "Publicação criada" : event.event_type === "BASELINE" ? "Histórico inicial" : "Estado actualizado"}</strong><span>{event.old_status ? statusLabel(event.old_status) + " → " : ""}{statusLabel(event.new_status)}</span><small>{new Date(event.created_at).toLocaleString("pt-MZ")}</small></li>)}</ol>}</details>
                   </div>
 
                   <div className="partner-pub-cell">{labels[row.type] || row.type || "—"}</div>
