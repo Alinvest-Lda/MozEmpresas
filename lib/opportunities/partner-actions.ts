@@ -25,12 +25,21 @@ export async function changeOpportunityStatus(formData: FormData) {
 
   const { data: currentOpportunity, error: readError } = await supabase
     .from("opportunities")
-    .select("id,status")
+    .select("id,status,opens_at,closes_at")
     .eq("id", id)
     .eq("partner_account_id", accountId)
     .maybeSingle();
   if (readError || !currentOpportunity || !canTransitionOpportunity(currentOpportunity.status, status)) {
     redirect("/parceiro/oportunidades?error=status");
+  }
+  if (status === "PUBLISHED") {
+    const now = Date.now();
+    const opensAt = currentOpportunity.opens_at ? new Date(currentOpportunity.opens_at).getTime() : null;
+    const closesAt = currentOpportunity.closes_at ? new Date(currentOpportunity.closes_at).getTime() : null;
+    if ((opensAt !== null && (!Number.isFinite(opensAt) || opensAt > now)) ||
+      (closesAt !== null && (!Number.isFinite(closesAt) || closesAt <= now))) {
+      redirect("/parceiro/oportunidades?error=deadline");
+    }
   }
 
   const { data: updatedOpportunity, error } = await supabase
