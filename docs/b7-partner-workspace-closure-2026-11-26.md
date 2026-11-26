@@ -11,8 +11,9 @@
 ## B7 tasks — 10 cohesive batches
 ### B7-T01 — Account identity, authorization and workspace shell
 1. active partner account lookup; 2. single-active-user invariant; 3. account/profile status; 4. no multi-user manager path; 5. account entry and route protection; 6. workspace navigation; 7. mobile navigation; 8. account/security view; 9. forbidden/error/empty states; 10. route-link and terminology alignment.
-**Initial implementation:** Partner overview, Intelligence and Services now suppress activity/catalogue counts when their underlying queries fail, instead of presenting failed queries as zero. Commits: 545e58a, 2a97687, 45a4350. Not validated.
+**Implementation status:** identity, account/security, single-user policy and workspace shell already exist. Partner overview, Intelligence and Services now suppress activity/catalogue counts when their underlying queries fail, instead of presenting failed queries as zero. Commits: 545e58a, 2a97687, 45a4350. Not validated.
 ### B7-T02 — Opportunity publishing and lifecycle
+**Initial implementation:** the Partner opportunity list now suppresses publication metrics when its source query fails, and reports lifecycle-history query failure instead of presenting a zero-event history. Commit 2887eb3. Not validated.
 1. owned-opportunity list; 2. create; 3. draft; 4. publication; 5. edit guards; 6. close/archive; 7. deadline/expiry; 8. application/candidate view; 9. history; 10. notifications and error recovery.
 ### B7-T03 — Candidate management and applicant integrity
 1. applicant identity; 2. duplicate submission guard; 3. submit/edit state guard; 4. owner isolation; 5. statuses; 6. candidate notification; 7. application history; 8. pagination/limits; 9. failure states; 10. privacy boundaries.
