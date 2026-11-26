@@ -25,7 +25,7 @@ export function PartnerMobileMenu(){
     <aside id="partner-mobile-menu" className={"partner-mobile-panel"+(open?" open":"")} aria-label="Menu do parceiro">
       <div className="partner-mobile-head"><div><small>MOZEMPRESAS</small><b>ÁREA DE PARCEIROS</b></div><button type="button" onClick={()=>setOpen(false)} aria-label="Fechar">×</button></div>
       <nav>{partnerNavGroups.map(g=><div key={g.label}><span>{g.label}</span>{g.links.map(([h,l])=><Link key={h} href={h} className={active(h)?"active":""}><i aria-hidden="true"/><span>{l}</span></Link>)}</div>)}</nav>
-      <div className="partner-mobile-foot"><Link href="/parceiro/conta">Conta e acesso</Link><form action={signOut}><button type="submit">Terminar sessão</button></form></div>
+      <div className="partner-mobile-foot"><form action={signOut}><button type="submit">Terminar sessão</button></form></div>
     </aside>
   </>;
 }
