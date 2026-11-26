@@ -10,7 +10,7 @@ export const partnerNavGroups=[
   {label:"Posicionar",links:[["/parceiro/publicidade","Publicidade e campanhas"]]},
   {label:"Compreender",links:[["/parceiro/inteligencia","Indicadores da actividade"],["/parceiro/resultados","Actividade e histórico"]]},
   {label:"Contratar",links:[["/parceiro/servicos","Serviços e estudos"]]},
-  {label:"Organização",links:[["/parceiro/conta","Conta e segurança"]]}
+  {label:"Organização",links:[["/parceiro/conta","Conta e segurança"],["/parceiro/documentos","Documentos institucionais"]]}
 ] as const;
 
 export function PartnerMobileMenu(){
