@@ -61,3 +61,6 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - B6-T05 decision endpoint correction: bounded context and interest payloads, explicit failure handling for preference persistence and impression event insertion. Commits `f6105f1`, `ae0487a`.
 - B6-T02 history query error capture and previous metrics correction: `c8d08d1`.
 - These interventions improve integrity and observability but do not close T02, T03 or T05. Remaining checklist elements require implementation and evidence. No tests, CI, E2E, SQL execution, RLS checks or deployment were performed.
+
+- B6-T02: aggregate investment, impressions, clicks, CTR and history are now suppressed when the advertiser's owned/member/managed-business scope query is incomplete; this prevents apparently complete totals over a partial business set. Commit `4bfa7d4`.
+- B6 implementation batch commits since the prior ledger update: decision endpoint hardening `f6105f1`, bounded interests `ae0487a`, partner workspace payment/metrics/history integrity `bb12525` and `d3f1e2b`, business advertiser scope integrity `4bfa7d4`. Documentation update only records implementation; tasks remain open.
