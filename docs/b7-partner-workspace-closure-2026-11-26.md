@@ -66,3 +66,8 @@ Traced the existing one-user partner access lifecycle: the active membership/own
 ### B7-T10 — consolidation trace checkpoint
 The partner workspace navigation is shared from `partnerNavGroups` across desktop sidebar and mobile menu; the institutional documents route was added to this canonical navigation rather than duplicating menu definitions. Existing redirect-only routes were retained pending call-site/reference confirmation, avoiding destructive removal. The documents page/actions are isolated into `app/parceiro/documentos/page.tsx`, `components/partner-documents-list.tsx`, and server-only `lib/partner/documents.ts`.
 **Remaining T10:** deeper duplicate-query/status-helper consolidation requires a cross-page call-site review; no tests/validation were run. No cleanup was claimed beyond changes specifically reviewed.
+
+
+### Additional B7 refinements
+- T07: document-vault entry surfaced from the partner overview value stack (commit `17a8ee1`).
+- T09: mobile partner navigation panel now declares dialog semantics and is inert/hidden from accessibility interaction when closed (commit `3b70516`). This is a code-level improvement, not accessibility validation.
