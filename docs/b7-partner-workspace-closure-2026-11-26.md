@@ -71,3 +71,8 @@ The partner workspace navigation is shared from `partnerNavGroups` across deskto
 ### Additional B7 refinements
 - T07: document-vault entry surfaced from the partner overview value stack (commit `17a8ee1`).
 - T09: mobile partner navigation panel now declares dialog semantics and is inert/hidden from accessibility interaction when closed (commit `3b70516`). This is a code-level improvement, not accessibility validation.
+
+
+### B7-T07 additional refinement — contextual document grouping
+- Partner document list now groups files by their parent context (organization, engagement, contract, campaign, service request, or generic) instead of presenting one undifferentiated list. Document size/date rendering now handles malformed metadata safely, and download buttons expose pending state to assistive technology. Commit `ee2cf4c`.
+- Still not closed: download audit evidence, actual parent-context values/schema consistency, version history UX, expiry/revocation visibility and validation.
