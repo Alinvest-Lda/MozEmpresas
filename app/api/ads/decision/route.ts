@@ -8,7 +8,7 @@ const schema=z.object({
  visitorKey:z.string().min(16).max(120),
  surface:z.enum(["HOME","DIRECTORY","MARKETPLACE","OPPORTUNITIES"]),
  slot:z.enum(["HERO","BILLBOARD","EXCLUSIVE","FEATURED","INFEED","CONTEXT"]),
- context:z.record(z.string(),z.string()).optional(),
+ context:z.record(z.string().max(80),z.string().max(160)).refine(v=>Object.keys(v).length<=20).optional(),
  interests:z.array(z.string()).max(20).optional(),
 });
 
@@ -22,10 +22,12 @@ export const POST = withApiObservability("api.ads_decision", async (request: Req
  try{
   const payload=parsed.data;
   const supabase=await createClient();
-  const {data:{user}}=await supabase.auth.getUser();
+  const {data:{user},error:userError}=await supabase.auth.getUser();
+  if(userError) return NextResponse.json({error:"Não foi possível validar a sessão."},{status:500});
   const context=payload.context||{};
   const interests=(payload.interests||[]).map(v=>v.trim().toLowerCase()).filter(Boolean);
-  await supabase.rpc("record_ad_interest",{p_visitor_key:payload.visitorKey,p_user_id:user?.id??null,p_interests:interests,p_context:context});
+  const {error:interestError}=await supabase.rpc("record_ad_interest",{p_visitor_key:payload.visitorKey,p_user_id:user?.id??null,p_interests:interests,p_context:context});
+  if(interestError) return NextResponse.json({error:"Não foi possível registar as preferências de publicidade."},{status:500});
   const {data,error}=await supabase.rpc("get_ad_decision",{p_visitor_key:payload.visitorKey,p_user_id:user?.id??null,p_surface:payload.surface,p_slot:payload.slot,p_context:context});
   if(error) return NextResponse.json({error:"Não foi possível seleccionar a publicidade."},{status:500});
   const ad=data?.[0]??null;
@@ -39,10 +41,11 @@ export const POST = withApiObservability("api.ads_decision", async (request: Req
     } else {
       const admin = createAdminClient();
       if (!admin) return rateLimitResponse(true);
-      await admin.from("ad_delivery_events").insert({
+      const {error:impressionError}=await admin.from("ad_delivery_events").insert({
         visitor_key:payload.visitorKey,user_id:user?.id??null,campaign_source:ad.campaign_source,
         campaign_id:ad.campaign_id,surface:payload.surface,slot:payload.slot,event_type:"IMPRESSION",context
       });
+      if(impressionError) return NextResponse.json({error:"Não foi possível registar a impressão publicitária."},{status:500});
     }
   }
   return NextResponse.json({ad});
