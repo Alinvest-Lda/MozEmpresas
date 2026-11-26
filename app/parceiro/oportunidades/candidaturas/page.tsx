@@ -29,6 +29,7 @@ export default async function PartnerOpportunityApplicationsPage({searchParams}:
  const businessById=new Map((businesses||[]).map((x:any)=>[x.id,x.name]));
  const profileById=new Map((profiles||[]).map((x:any)=>[x.id,x.full_name]));
  const rows=applications||[];
+ const auxiliaryErrors=[businessesError,profilesError,eventsError].filter(Boolean);
  return <PartnerPage eyebrow="Oportunidades · Respostas" title="Candidaturas recebidas" description="Consulte as respostas submetidas às suas oportunidades e actualize o estado de acompanhamento." action={{href:"/parceiro/oportunidades",label:"Voltar às publicações"}}>
   {(contextError||accountError)&&<div className="notice" role="alert">Não foi possível confirmar as permissões da sua conta. As alterações ficam indisponíveis até a validação ser concluída.</div>}
   {!canManage&&!contextError&&<div className="notice">O seu papel permite consultar candidaturas, mas apenas o responsável único pode actualizar o estado.</div>}
