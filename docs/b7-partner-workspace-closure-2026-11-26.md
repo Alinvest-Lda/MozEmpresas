@@ -33,7 +33,7 @@
 ### B7-T08 — Account and access lifecycle
 1. single-user view; 2. owner identity; 3. active status; 4. replacement via admin; 5. revoked access; 6. suspension handling; 7. session revocation; 8. no duplicate account membership; 9. audit trail; 10. recoverability/communication.
 ### B7-T09 — Workspace UX and accessibility
-**Additional implementation:** shared partner workspace header marks its decorative status icon as hidden from assistive technology and labels the brand container. Commit 0bc4509. Redirect-only legacy partner routes were identified (`empresas`, `indicacoes`, `radar`, `rede`) and retained rather than removed. Not validated.
+**Additional implementation:** shared partner workspace header marks its decorative status icon as hidden from assistive technology and labels the brand container. Commit 0bc4509. Redirect-only legacy partner routes were identified (`empresas`, `indicacoes`, `radar`, `rede`) and retained rather than removed. Duplicate Account and access footer links were removed from desktop/mobile navigation because the same route already exists in the primary navigation. Commits 8eb91a8 and 22130cb. Not validated.
 1. shared shell; 2. navigation dedupe; 3. responsive/mobile; 4. keyboard/focus; 5. screen reader labels; 6. contrast; 7. page hierarchy; 8. loading/empty/error states; 9. consistent PT-MZ terms; 10. stale/unused code removal only after tracing.
 ### B7-T10 — Cross-module consolidation and implementation readiness
 1. shared partner identity helpers; 2. duplicate queries; 3. shared status labels; 4. canonical audit/history; 5. notifications; 6. upload/storage; 7. route/action guards; 8. configuration; 9. docs updated; 10. implementation-only readiness record.
