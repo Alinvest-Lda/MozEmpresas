@@ -6,12 +6,12 @@
 - The workspace supports opportunities, advertising, Platform Services/entitlements, factual activity indicators, relationship documents and account/access.
 - Market Intelligence must not be represented as market-wide analytics without external data sources and methodology. Current indicators are limited to factual account activity.
 - No duplicate functionality should be built when existing pages/actions already meet the element; review call sites and preserve the existing implementation.
-- Work on `main`; implementation only until B8/B7 implementation scope is complete. Do not run tests, validation or deploy without explicit authorization.
+- Work on main; implementation only until scope is complete. Do not run tests, validation or deploy without explicit authorization.
 
 ## B7 tasks — 10 cohesive batches
 ### B7-T01 — Account identity, authorization and workspace shell
 1. active partner account lookup; 2. single-active-user invariant; 3. account/profile status; 4. no multi-user manager path; 5. account entry and route protection; 6. workspace navigation; 7. mobile navigation; 8. account/security view; 9. forbidden/error/empty states; 10. route-link and terminology alignment.
-**Initial implementation:** Partner overview, Intelligence and Services now suppress activity/catalogue counts when their underlying queries fail, instead of presenting failed queries as zero. Commits: `545e58a`, `2a97687`, `45a4350`. Not validated.
+**Initial implementation:** Partner overview, Intelligence and Services now suppress activity/catalogue counts when their underlying queries fail, instead of presenting failed queries as zero. Commits: 545e58a, 2a97687, 45a4350. Not validated.
 ### B7-T02 — Opportunity publishing and lifecycle
 1. owned-opportunity list; 2. create; 3. draft; 4. publication; 5. edit guards; 6. close/archive; 7. deadline/expiry; 8. application/candidate view; 9. history; 10. notifications and error recovery.
 ### B7-T03 — Candidate management and applicant integrity
@@ -30,5 +30,6 @@
 1. shared shell; 2. navigation dedupe; 3. responsive/mobile; 4. keyboard/focus; 5. screen reader labels; 6. contrast; 7. page hierarchy; 8. loading/empty/error states; 9. consistent PT-MZ terms; 10. stale/unused code removal only after tracing.
 ### B7-T10 — Cross-module consolidation and implementation readiness
 1. shared partner identity helpers; 2. duplicate queries; 3. shared status labels; 4. canonical audit/history; 5. notifications; 6. upload/storage; 7. route/action guards; 8. configuration; 9. docs updated; 10. implementation-only readiness record.
+
 ## Initial task state
 B7-T01 has begun with three focused implementation fixes above. B7-T02–T10 are queued by dependency, but existing implementations will be reused rather than recreated. This document is an execution ledger, not validation evidence.
