@@ -18,7 +18,7 @@ export default async function PartnerAds(){
   ]);
   const metricsByCampaign=new Map<string,{impressions:number;clicks:number}>((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}] as [string,{impressions:number;clicks:number}]));
   const paymentsByCampaign=new Map<string,any>();(paymentOrders??[]).forEach((x:any)=>{if(!paymentsByCampaign.has(x.campaign_id))paymentsByCampaign.set(x.campaign_id,x)});
-  const measuredCampaigns=(campaigns??[]).map((x:any)=>({...x,payment:paymentsByCampaign.get(x.id)||null,...(metricsByCampaign.get(x.id)||{impressions:0,clicks:0})}));
+  const measuredCampaigns=(campaigns??[]).map((x:any)=>({...x,payment:paymentsByCampaign.get(x.id)||null,impressions:metricsError?null:(metricsByCampaign.get(x.id)?.impressions??0),clicks:metricsError?null:(metricsByCampaign.get(x.id)?.clicks??0)}));
   const campaignIds=measuredCampaigns.map((x:any)=>x.id);
   const {data:statusEvents,error:statusEventsError}=campaignIds.length?await s.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,action_reason,created_at").in("campaign_id",campaignIds).order("created_at",{ascending:false}):{data:[]};
   const eventsByCampaign=new Map<string,any[]>();
@@ -96,7 +96,7 @@ export default async function PartnerAds(){
     >
       {measuredCampaigns.length
         ? <div className="partner-record-list">{measuredCampaigns.map((x:any)=><div key={x.id}>
-            <div><strong>{x.title||"Campanha sem título"}</strong><span>{x.product_name||"Espaço publicitário"} · {statusLabel(x.status)}</span><span>{x.impressions.toLocaleString("pt-MZ")} impressões · {x.clicks.toLocaleString("pt-MZ")} cliques · CTR {x.impressions>0?(x.clicks/x.impressions*100).toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"}</span></div>
+            <div><strong>{x.title||"Campanha sem título"}</strong><span>{x.product_name||"Espaço publicitário"} · {statusLabel(x.status)}</span><span>{x.impressions===null?"—":x.impressions.toLocaleString("pt-MZ")} impressões · {x.clicks===null?"—":x.clicks.toLocaleString("pt-MZ")} cliques · CTR {x.impressions!==null&&x.clicks!==null&&x.impressions>0?(x.clicks/x.impressions*100).toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"}</span></div>
             <div><b>{x.price_mzn!=null?money(Number(x.price_mzn)):"Em análise"}</b>{x.payment?<small>Pagamento: {x.payment.status==="PAID"?"Liquidado":x.payment.status==="PENDING"?"A aguardar M-Pesa":x.payment.status==="FAILED"?"Falhado":"Estornado"} · {x.payment.payment_method} · {x.payment.payment_reference}</small>:<small>Sem cobrança emitida</small>}</div>
           </div>)}</div>
         : <PartnerEmpty title="Ainda sem campanhas" text="Escolha um espaço acima para iniciar uma proposta de exposição." href="#espacos" label="Ver espaços"/>
