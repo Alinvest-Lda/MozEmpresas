@@ -9,7 +9,7 @@ const schema=z.object({
  surface:z.enum(["HOME","DIRECTORY","MARKETPLACE","OPPORTUNITIES"]),
  slot:z.enum(["HERO","BILLBOARD","EXCLUSIVE","FEATURED","INFEED","CONTEXT"]),
  context:z.record(z.string().max(80),z.string().max(160)).refine(v=>Object.keys(v).length<=20).optional(),
- interests:z.array(z.string()).max(20).optional(),
+ interests:z.array(z.string().trim().min(1).max(100)).max(20).optional(),
 });
 
 export const POST = withApiObservability("api.ads_decision", async (request: Request) => {
