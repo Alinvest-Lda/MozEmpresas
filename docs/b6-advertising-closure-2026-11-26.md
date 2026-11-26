@@ -66,3 +66,9 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - B6 implementation batch commits since the prior ledger update: decision endpoint hardening `f6105f1`, bounded interests `ae0487a`, partner workspace payment/metrics/history integrity `bb12525` and `d3f1e2b`, business advertiser scope integrity `4bfa7d4`. Documentation update only records implementation; tasks remain open.
 
 - B6-T09 public advertising intake: the request form now guards against repeated submission while pending and recovers from network/invalid-JSON failures with an actionable error instead of remaining permanently stuck in a pending state. Commit `ced000b`.
+
+- B6-T02: both business checkout server actions now reject a malformed or missing RPC success payload unless it contains a valid promotion UUID; this prevents redirecting the advertiser to a false success state without a campaign reference. Commit `e7c6cf5`.
+- B6-T01/T05: the business catalogue now excludes paid products with invalid price, duration or capacity configuration; formats without a positive credit price remain visible for MZN checkout but the credit-payment action is disabled and explained. Commits `8bfc40c`, `4a0ddd9`, `9080d03`.
+- B6-T05/T09: the business campaign history no longer substitutes zero impressions/clicks when its metrics query fails; it explicitly displays unavailable metrics. Commit `8bfc40c`.
+- B6-T03/T09: partner campaign request deep-links no longer silently fall back to a different product when the requested product is unavailable; the user receives a clear return-to-catalogue state. Commit `fa371c8`.
+- These are implementation corrections, not closure of their full 10-element tasks. No tests, CI, SQL execution, RLS validation, E2E, accessibility audit or deployment were performed.
