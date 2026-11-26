@@ -35,15 +35,16 @@ export const POST = withApiObservability("api.ads_decision", async (request: Req
     const sql = getPostgresClient();
     if (sql) {
       await sql.unsafe(
-        "insert into public.ad_delivery_events (visitor_key, user_id, campaign_source, campaign_id, surface, slot, event_type, context) values ($1, $2, $3, $4, $5, $6, 'IMPRESSION', $7::jsonb)",
+        "select public.record_ad_delivery_event_f370($1,$2,$3,$4,$5,$6,'IMPRESSION',$7::jsonb)",
         [payload.visitorKey, user?.id ?? null, ad.campaign_source, ad.campaign_id, payload.surface, payload.slot, JSON.stringify(context)],
       );
     } else {
       const admin = createAdminClient();
       if (!admin) return rateLimitResponse(true);
-      const {error:impressionError}=await admin.from("ad_delivery_events").insert({
-        visitor_key:payload.visitorKey,user_id:user?.id??null,campaign_source:ad.campaign_source,
-        campaign_id:ad.campaign_id,surface:payload.surface,slot:payload.slot,event_type:"IMPRESSION",context
+      const {error:impressionError}=await admin.rpc("record_ad_delivery_event_f370",{
+        p_visitor_key:payload.visitorKey,p_user_id:user?.id??null,
+        p_campaign_source:ad.campaign_source,p_campaign_id:ad.campaign_id,
+        p_surface:payload.surface,p_slot:payload.slot,p_event_type:"IMPRESSION",p_context:context
       });
       if(impressionError) return NextResponse.json({error:"Não foi possível registar a impressão publicitária."},{status:500});
     }
