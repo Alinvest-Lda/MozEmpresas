@@ -52,3 +52,7 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - B6-T05: ad decision endpoint now treats interest-preference persistence failure and impression-event insert failure as errors, rather than returning a seemingly successful ad decision with incomplete telemetry. Decision and event payloads also bound context key/value lengths and key counts; interest values are trimmed and length-bounded. Commits `e236a25`, `26647da`, `9e4cff8`.
 - B6-T01 inventory remains in progress; no catalogue schema or pricing policy was changed. B6-T02/T04/T05 remain open until all ten elements of each task are implemented and documented.
 - No tests, CI, E2E, SQL execution, RLS validation, accessibility audit or deployment were run.
+
+- Follow-up integrity correction: business advertiser page now captures the promotion-history query error used by its metric guards and history state; the empty-business branch explicitly returns `error: null`. Commit `c8d08d1`.
+- Follow-up integrity correction: partner campaign cards now suppress per-campaign impressions, clicks and CTR when the metrics source query fails, instead of rendering fallback zeroes. Commit `75ccf10`.
+- These are corrective increments within B6-T02 and B6-T03; neither task is closed. Remaining elements still require implementation-level closure. No tests or validation were run.
