@@ -89,6 +89,7 @@ export default async function PartnerHome() {
               <Link href="/parceiro/publicidade"><span>01 · EXPOSIÇÃO</span><strong>{campaignsError ? "Dados indisponíveis" : activeCampaigns ? activeCampaigns + " campanha(s) activa(s)" : "Ainda sem campanha activa"}</strong><small>Publicidade, patrocínios e posicionamento perante o público.</small></Link>
               <Link href="/parceiro/inteligencia"><span>02 · INDICADORES</span><strong>Actividade e dados disponíveis</strong><small>Consulte os indicadores operacionais existentes, sem confundi-los com estudos de mercado.</small></Link>
               <Link href="/parceiro/resultados"><span>03 · HISTÓRICO</span><strong>Publicações e actividade registada</strong><small>Consulte os registos disponíveis e identifique o que exige seguimento.</small></Link>
+              <Link href="/parceiro/documentos"><span>04 · DOCUMENTAÇÃO</span><strong>Documentos institucionais</strong><small>Consulte contratos, relatórios e documentos disponibilizados à sua organização.</small></Link>
             </div>
           </section>
         </div>
