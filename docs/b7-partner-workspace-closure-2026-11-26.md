@@ -45,3 +45,14 @@ B7-T01 has begun with three focused implementation fixes above. B7-T02–T10 are
 **Traced existing vault:** the institutional document vault is private and restricted to Super Admin in both `partner_documents` row-level policies and `partner-documents` storage-object read policies. The upload trigger verifies the account-prefixed storage path, object existence, document-parent/account ownership, and immutable version sequencing. This is an intentional security boundary; no direct partner SELECT/storage policy or client-side signed-link path was added.
 
 **Closure gap:** partner-facing document retrieval is not yet implemented. Next implementation must use a server-side account/user authorization check (active partner account, portal enabled, exactly-one authorized user/member association), retrieve only that account's metadata, issue short-lived signed download URLs after authorization, and audit access. Before coding, trace the canonical membership/auth schema and existing secure server-action/storage helpers; do not broaden vault RLS or expose raw storage paths. Check access-expiry/revocation behavior and failure states. This checkpoint is investigation only; no tests or migration execution.
+
+
+### B7-T07 — partner-facing document access implementation (partial closure)
+Implemented the initial partner document workspace at `/parceiro/documentos`, added it to the shared partner navigation, and created server-only actions in `lib/partner/documents.ts`.
+- The page is gated by `requirePartnerAccount()`, which resolves the authenticated active partner owner.
+- Privileged service-role reads are kept server-side; the partner account is rechecked against the canonical `partner_accounts` row for ACTIVE status and `portal_enabled=true`.
+- Document metadata is scoped to that account only and capped to the newest 100 entries.
+- Downloads require a valid UUID, re-check the canonical account status and portal flag, query the document by both ID and account ID, then issue a 120-second signed URL from the private bucket. Raw storage paths are never returned to the browser.
+- The UI surfaces loading/download errors and filename, type, version, size, and upload date.
+Commits: `f321426` (server actions), `fbab066` (page), `4297e1b` (list component), `f5ff1a5` (canonical account status check), `e3e2d52` (navigation).
+**Remaining T07 gaps:** access-download audit event, explicit document grouping/parent context and history UX, partner-side access expiry display, further consistency checks. This is partial implementation, not closure; no validation/test run.
