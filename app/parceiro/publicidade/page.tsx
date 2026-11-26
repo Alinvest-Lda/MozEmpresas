@@ -20,7 +20,7 @@ export default async function PartnerAds(){
   const paymentsByCampaign=new Map<string,any>();(paymentOrders??[]).forEach((x:any)=>{if(!paymentsByCampaign.has(x.campaign_id))paymentsByCampaign.set(x.campaign_id,x)});
   const measuredCampaigns=(campaigns??[]).map((x:any)=>({...x,payment:paymentsByCampaign.get(x.id)||null,...(metricsByCampaign.get(x.id)||{impressions:0,clicks:0})}));
   const campaignIds=measuredCampaigns.map((x:any)=>x.id);
-  const {data:statusEvents,error:statusEventsError}=campaignIds.length?await s.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,created_at").in("campaign_id",campaignIds).order("created_at",{ascending:false}):{data:[]};
+  const {data:statusEvents,error:statusEventsError}=campaignIds.length?await s.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,action_reason,created_at").in("campaign_id",campaignIds).order("created_at",{ascending:false}):{data:[]};
   const eventsByCampaign=new Map<string,any[]>();
   (statusEvents??[]).forEach((event:any)=>{const list=eventsByCampaign.get(event.campaign_id)||[];list.push(event);eventsByCampaign.set(event.campaign_id,list)});
   const active=campaignsError?null:(campaigns??[]).filter((x:any)=>x.status==="ACTIVE").length;
