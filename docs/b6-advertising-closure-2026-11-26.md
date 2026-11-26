@@ -56,3 +56,8 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - Follow-up integrity correction: business advertiser page now captures the promotion-history query error used by its metric guards and history state; the empty-business branch explicitly returns `error: null`. Commit `c8d08d1`.
 - Follow-up integrity correction: partner campaign cards now suppress per-campaign impressions, clicks and CTR when the metrics source query fails, instead of rendering fallback zeroes. Commit `75ccf10`.
 - These are corrective increments within B6-T02 and B6-T03; neither task is closed. Remaining elements still require implementation-level closure. No tests or validation were run.
+
+- B6-T03 advertiser workspace correction: payment-query failure is now distinct from a campaign with no issued payment; campaign metrics and empty campaign states remain unavailable when their source query fails. Campaign history is exposed per campaign, with an explicit unavailable state on history-query failure. Commits `75ccf10`, `bb12525`, `d3f1e2b`.
+- B6-T05 decision endpoint correction: bounded context and interest payloads, explicit failure handling for preference persistence and impression event insertion. Commits `f6105f1`, `ae0487a`.
+- B6-T02 history query error capture and previous metrics correction: `c8d08d1`.
+- These interventions improve integrity and observability but do not close T02, T03 or T05. Remaining checklist elements require implementation and evidence. No tests, CI, E2E, SQL execution, RLS checks or deployment were performed.
