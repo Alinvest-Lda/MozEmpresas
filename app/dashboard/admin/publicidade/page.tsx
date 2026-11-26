@@ -132,8 +132,8 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     if (deadline === "futuro" && !(Number.isFinite(end) && end > now.getTime() + 7 * 86400000)) return false;
     return true;
   });
-  const totalImpressions = filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
-  const totalClicks = filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
+  const totalImpressions = businessError || partnerError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
+  const totalClicks = businessError || partnerError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
   const pendingCount = allBusiness.filter(c => c.status === "PENDING").length + allPartner.filter(c => ["REQUESTED", "PENDING", "UNDER_REVIEW"].includes(c.status ?? "")).length + allRequests.filter(r => ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT"].includes(r.status ?? "")).length;
   const error = businessError || partnerError || requestError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError;
 
