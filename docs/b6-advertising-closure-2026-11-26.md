@@ -44,3 +44,11 @@ Advertising is a paid visibility product in the MozEmpresas marketplace. Busines
 
 ## Execution note
 B6 is now initiated with the above grounded inventory and 10-task closure structure. Start with T01 and proceed in bulk tasks; reuse B8/B7 advertising-related changes already present. Keep B7 open until its remaining tasks are implemented. No tests or validation without explicit permission.
+
+
+## Executed implementation batches — 26/11/2026
+- B6-T02: advertiser workspace now distinguishes failed catalogue, category, business, wallet, promotion and metric queries. It suppresses the purchase form when required inputs are incomplete, does not convert failed metric queries into zero impressions/clicks/investment, and shows an explicit partial-data warning. Commit `14a7df5`.
+- B6-T04: administrative campaign delivery totals/CTR are suppressed when either campaign source query fails, rather than summing an incomplete source as if complete. Existing warning and pending-count suppression remain. Commit `695c47f`.
+- B6-T05: ad decision endpoint now treats interest-preference persistence failure and impression-event insert failure as errors, rather than returning a seemingly successful ad decision with incomplete telemetry. Commit `e236a25`.
+- B6-T01 inventory remains in progress; no catalogue schema or pricing policy was changed. B6-T02/T04/T05 remain open until all ten elements of each task are implemented and documented.
+- No tests, CI, E2E, SQL execution, RLS validation, accessibility audit or deployment were run.
