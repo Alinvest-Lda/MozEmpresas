@@ -35,15 +35,18 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
   const walletMap=Object.fromEntries((wallets??[]).map(w=>[w.business_id,w.balance_credits]));
   const paidProducts=(products??[]).filter(p=>p.access_type!=="FREE");
   const metricsByCampaign=new Map<string,{impressions:number;clicks:number}>((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}] as [string,{impressions:number;clicks:number}]));
-  const campaignImpressions=campaignMetricsError||promotionsError?null:(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.impressions??0),0);
-  const campaignClicks=campaignMetricsError||promotionsError?null:(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.clicks??0),0);
-  const campaignInvestment=promotionsError?null:(promotions??[]).reduce((sum,p)=>sum+Number(p.price_mzn??0),0);
-  const campaignCtr=campaignImpressions!==null&&campaignClicks!==null&&campaignImpressions>0?campaignClicks/campaignImpressions*100:null;\n  const loadErrors=[ownedError,membersError,managedError,productsError,categoriesError,campaignMetricsError,promotionsError,walletsError].filter(Boolean);
+  const businessScopeIncomplete=Boolean(ownedError||membersError||managedError);
+  const campaignImpressions=businessScopeIncomplete||campaignMetricsError||promotionsError?null:(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.impressions??0),0);
+  const campaignClicks=businessScopeIncomplete||campaignMetricsError||promotionsError?null:(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.clicks??0),0);
+  const campaignInvestment=businessScopeIncomplete||promotionsError?null:(promotions??[]).reduce((sum,p)=>sum+Number(p.price_mzn??0),0);
+  const campaignCtr=campaignImpressions!==null&&campaignClicks!==null&&campaignImpressions>0?campaignClicks/campaignImpressions*100:null;
+  const loadErrors=[ownedError,membersError,managedError,productsError,categoriesError,campaignMetricsError,promotionsError,walletsError].filter(Boolean);
 
   const flash=params.success==="credits"?"Publicidade activada e créditos debitados.":params.success==="mpesa"?"Pedido M-Pesa criado e aguarda confirmação.":params.error==="credits"?"Créditos insuficientes.":params.error==="availability"?"O espaço está ocupado nesse período.":params.error==="setup"?"O pedido M-Pesa ainda não está disponível: a reserva segura aguarda activação da migração necessária. Pode usar créditos ou tentar mais tarde.":params.error?"Não foi possível concluir a operação.":"";
 
   return <main className="dashboard-main"><div className="dashboard-content">
-    {flash && <div className="card" style={{marginBottom:18}}><strong>{flash}</strong></div>}\n    {loadErrors.length>0&&<div className="notice" role="alert">Não foi possível carregar integralmente os dados de publicidade. As listas ou indicadores afectados são apresentados como indisponíveis; um resultado vazio não confirma ausência de registos.</div>}
+    {flash && <div className="card" style={{marginBottom:18}}><strong>{flash}</strong></div>}
+    {loadErrors.length>0&&<div className="notice" role="alert">Não foi possível carregar integralmente os dados de publicidade. As listas ou indicadores afectados são apresentados como indisponíveis; um resultado vazio não confirma ausência de registos.</div>}
     <header className="dashboard-topbar">
       <div><span className="dashboard-kicker">Trabalho · Publicidade</span><h1>Publicidade</h1><p>Visibilidade adicional nos espaços publicitários limitados do MozEmpresas. A presença normal no Directório e no Marketplace continua gratuita.</p></div>
 
@@ -76,7 +79,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
 
     <section className="dashboard-section" style={{marginTop:18}}>
       <div className="dashboard-section-head"><div><span className="dashboard-kicker">Campanhas</span><h2>Histórico publicitário</h2><p className="muted">Aqui ficam apenas campanhas publicitárias. Os Serviços MozEmpresas têm espaço próprio.</p></div><Link href="/dashboard/servicos" className="text-link">Ver Serviços MozEmpresas →</Link></div>
-      {promotionsError ? <div className="notice" role="alert">O histórico não está disponível neste momento.</div> : (promotions??[]).length ? (promotions??[]).map(p=>{const b=Array.isArray(p.businesses)?p.businesses[0]:p.businesses;const m=metricsByCampaign.get(p.id)??{impressions:0,clicks:0};return <div key={p.id} style={{display:"flex",justifyContent:"space-between",gap:16,padding:"14px 0",borderTop:"1px solid #eee"}}><div><strong>{p.title}</strong><div className="muted">{b?.name||"Empresa"} · {placement[p.placement]||p.placement} · {p.payment_method==="CREDITS"?String(p.credits_charged??0)+" créditos":money(p.price_mzn)}</div><div className="muted">{m.impressions.toLocaleString("pt-MZ")} impressões · {m.clicks.toLocaleString("pt-MZ")} cliques · CTR {m.impressions>0?(m.clicks/m.impressions*100).toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"}</div></div><span>{p.status}</span></div>}) : <p className="muted">Ainda não existem campanhas publicitárias.</p>}
+      {businessScopeIncomplete||promotionsError ? <div className="notice" role="alert">O histórico não está disponível integralmente porque falhou uma consulta de empresas ou campanhas.</div> : (promotions??[]).length ? (promotions??[]).map(p=>{const b=Array.isArray(p.businesses)?p.businesses[0]:p.businesses;const m=metricsByCampaign.get(p.id)??{impressions:0,clicks:0};return <div key={p.id} style={{display:"flex",justifyContent:"space-between",gap:16,padding:"14px 0",borderTop:"1px solid #eee"}}><div><strong>{p.title}</strong><div className="muted">{b?.name||"Empresa"} · {placement[p.placement]||p.placement} · {p.payment_method==="CREDITS"?String(p.credits_charged??0)+" créditos":money(p.price_mzn)}</div><div className="muted">{m.impressions.toLocaleString("pt-MZ")} impressões · {m.clicks.toLocaleString("pt-MZ")} cliques · CTR {m.impressions>0?(m.clicks/m.impressions*100).toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"}</div></div><span>{p.status}</span></div>}) : <p className="muted">Ainda não existem campanhas publicitárias.</p>}
     </section>
   </div></main>;
 }
