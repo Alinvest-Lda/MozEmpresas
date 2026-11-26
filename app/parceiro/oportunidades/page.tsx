@@ -125,7 +125,7 @@ export default async function PartnerOpportunitiesPage({ searchParams }: { searc
 
                   <div className="partner-pub-cell">{labels[row.type] || row.type || "—"}</div>
                   <div className="partner-pub-cell">
-                    {row.closes_at ? new Date(row.closes_at).toLocaleDateString("pt-MZ") : "Sem prazo"}
+                    {row.closes_at ? (row.status === "PUBLISHED" && new Date(row.closes_at).getTime() <= Date.now() ? "Prazo vencido · " : "Encerra · ") + new Date(row.closes_at).toLocaleDateString("pt-MZ") : "Sem prazo"}
                   </div>
                   <div>
                     <span className={"partner-pub-status " + (row.status === "PUBLISHED" ? "published" : row.status === "DRAFT" ? "draft" : "closed")}>
