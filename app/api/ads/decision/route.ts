@@ -50,5 +50,10 @@ export const POST = withApiObservability("api.ads_decision", async (request: Req
     }
   }
   return NextResponse.json({ad});
- }catch{return NextResponse.json({error:"Não foi possível seleccionar a publicidade."},{status:500});}
+ }catch(error){
+  if(error instanceof Error && error.message.includes("AD_CAMPAIGN_NOT_ELIGIBLE")) {
+    return NextResponse.json({error:"A campanha deixou de estar activa para este espaço e período."},{status:409});
+  }
+  return NextResponse.json({error:"Não foi possível seleccionar a publicidade."},{status:500});
+ }
 });
