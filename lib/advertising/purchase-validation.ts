@@ -36,3 +36,13 @@ export function calculateCampaignPrice(
   const factor = 1 + (locations.length ? 0.1 : 0) + (categories.length ? 0.1 : 0);
   return Number((base * factor).toFixed(2));
 }
+export function calculateCampaignCredits(
+  baseCredits: unknown,
+  locations: readonly string[],
+  categories: readonly string[],
+): number | null {
+  const base = Number(baseCredits);
+  if (!Number.isFinite(base) || base < 0) return null;
+  const factor = 1 + (locations.length ? 0.1 : 0) + (categories.length ? 0.1 : 0);
+  return Math.ceil(base * factor);
+}
