@@ -190,3 +190,8 @@ No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, access
 ### B6-T02 / T09 — advertiser duplicate-submit prevention (27/11/2026)
 - The business advertiser campaign form now switches to a processing state on submission and disables both credit and M-Pesa request actions until the server action completes navigation. This reduces accidental duplicate campaign/payment requests from repeated clicks; the database locking and payment guards remain the authoritative protection. Commit `8d534e0`.
 - Remaining payment retry, gateway callback and ambiguity-recovery gaps are not represented as solved by this client guard.
+
+### B6-T03 / T04 / T08 — paid partner campaign activation path (27/11/2026)
+- Static source review identified a dead transition: a partner campaign settled by bank transfer could remain `APPROVED`, while the administrative state selector offered no `ACTIVE` transition and the RPC state machine rejected that transition. Migration `f391` adds reason-required `APPROVED → ACTIVE` only when payment is confirmed and the current time is inside the contracted start/end window. Paused campaigns can resume only within that same valid window.
+- The Super Admin queue now exposes activation only for paid campaigns currently inside their delivery window and reports start-date/window errors explicitly. Commits `3e8a32d`, `92f3796`, `52ab7a6`, `8e22524`.
+- This closes the source-level activation dead-end for bank-transfer campaigns; the migration is not applied and the lifecycle still requires deployed-state verification.
