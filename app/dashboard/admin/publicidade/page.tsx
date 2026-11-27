@@ -5,6 +5,7 @@ import { Input, Select } from "@/components/ui";
 import { moderateBusinessPromotion, moderatePartnerCampaign, updateAdvertisingRequest, cancelBusinessPromotion, confirmBusinessPromotionMpesaPayment, issuePartnerAdPayment, cancelPartnerAdCampaign, confirmPartnerAdBankTransfer } from "@/lib/admin/advertising-actions";
 import { updatePartnerAdCreditPrice } from "@/lib/admin/partner-billing-actions";
 import styles from "./publicidade.module.css";
+import { getAdvertisingRequestNextStatuses, getBusinessCampaignNextStatuses, getPartnerCampaignNextStatuses } from "@/lib/advertising/state-machine";
 
 type Campaign = {
   id: string; title: string | null; headline: string | null; status: string | null;
@@ -23,17 +24,6 @@ type AdvertisingRequest = {
 };
 const promotionStatuses = ["PENDING", "ACTIVE", "PAUSED", "EXPIRED"];
 const partnerStatuses = ["DRAFT", "REQUESTED", "APPROVED", "ACTIVE", "PAUSED", "ENDED", "REJECTED", "CANCELLED"];
-function businessNextStatuses(campaign:Campaign,now:Date) {
-  const startsAt=campaign.starts_at?new Date(campaign.starts_at).getTime():NaN;
-  const endsAt=campaign.ends_at?new Date(campaign.ends_at).getTime():NaN;
-  const settled=(campaign.payment_method==="CREDITS"&&Number(campaign.credits_charged??0)>0)||(campaign.payment_method==="MPESA"&&Boolean(campaign.paid_at));
-  const inWindow=Number.isFinite(startsAt)&&Number.isFinite(endsAt)&&startsAt<=now.getTime()&&endsAt>now.getTime();
-  if(campaign.status==="DRAFT") return ["PENDING"];
-  if(campaign.status==="PENDING") return [...(settled&&inWindow?["ACTIVE"]:[]),"PAUSED","EXPIRED"];
-  if(campaign.status==="ACTIVE") return ["PAUSED","EXPIRED"];
-  if(campaign.status==="PAUSED") return [...(settled&&inWindow?["ACTIVE"]:[]),"EXPIRED"];
-  return [];
-}
 function canCancelPartnerCampaign(campaign:Campaign,now:Date) {
   const payment=campaign.payment?.[0];
   if(!payment||payment.status!=="PAID"||!["APPROVED","ACTIVE","PAUSED"].includes(campaign.status??"")) return false;
@@ -45,25 +35,8 @@ function canCancelPartnerCampaign(campaign:Campaign,now:Date) {
   const endsAt=campaign.ends_at?new Date(campaign.ends_at).getTime():NaN;
   return Number.isFinite(startsAt)&&(startsAt>now.getTime()||(campaign.status==="APPROVED"&&Number.isFinite(endsAt)&&endsAt<=now.getTime()));
 }
-function partnerNextStatuses(status: string | null, paymentStatus?: string | null, endsAt?: string | null, startsAt?: string | null) {
-  const now = Date.now();
-  const starts = startsAt ? new Date(startsAt).getTime() : NaN;
-  const ends = endsAt ? new Date(endsAt).getTime() : NaN;
-  const withinWindow = Number.isFinite(starts) && Number.isFinite(ends) && starts <= now && ends > now;
-  if (status === "REQUESTED") return ["APPROVED", "REJECTED"];
-  if (status === "APPROVED") return paymentStatus === "PAID" && withinWindow ? ["ACTIVE"] : !paymentStatus || paymentStatus === "FAILED" ? ["REJECTED"] : [];
-  if (status === "ACTIVE") return ["PAUSED", ...(Number.isFinite(ends) && ends <= now ? ["ENDED"] : [])];
-  if (status === "PAUSED") return [...(paymentStatus === "PAID" && withinWindow ? ["ACTIVE"] : []), ...(Number.isFinite(ends) && ends <= now ? ["ENDED"] : [])];
-  return [];
-}
 const requestStatuses = ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT", "PAID", "APPROVED", "REJECTED", "CANCELLED"];
-const requestNextStatuses:Record<string,string[]> = {
-  NEW:["CONTACTED","CANCELLED"],
-  CONTACTED:["PROPOSAL","CANCELLED"],
-  PROPOSAL:["AWAITING_PAYMENT","REJECTED","CANCELLED"],
-  AWAITING_PAYMENT:["AWAITING_PAYMENT","PAID","REJECTED","CANCELLED"],
-  PAID:["APPROVED"],
-};
+
 const statusLabels: Record<string, string> = {
   PENDING: "Pendente", REQUESTED: "Solicitada", UNDER_REVIEW: "Em análise", NEW: "Novo pedido", ENDED: "Encerrada",
   ACTIVE: "Activa", RUNNING: "Em execução", PUBLISHED: "Publicada", PAUSED: "Pausada",
@@ -223,8 +196,8 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     eventsByAdvertisingEntity.set(event.entity_id, list);
   }
   const campaigns = [
-    ...allBusiness.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.price_mzn == null && c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.price_mzn ?? c.budget) + " MZN", table: "business", allowed: businessNextStatuses(c,now) }); }),
-    ...allPartner.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: partnerNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at, c.starts_at) }); }),
+    ...allBusiness.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.price_mzn == null && c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.price_mzn ?? c.budget) + " MZN", table: "business", allowed: getBusinessCampaignNextStatuses(c,now.getTime()) }); }),
+    ...allPartner.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: getPartnerCampaignNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at, c.starts_at, now.getTime()) }); }),
   ].sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
   // Query-level filters are authoritative. Avoid a second client-side pass with a
   // different searchable-field set or clock, which would make page totals disagree.
@@ -332,7 +305,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
           {r.payment_reference?<p className={styles.destination}>Pagamento: {r.payment_method||"—"} · Referência {r.payment_reference}</p>:null}
           <form action={updateAdvertisingRequest} className={styles.moderationForm}>
             <input type="hidden" name="id" value={r.id}/>
-            <label><span>Estado comercial</span><Select name="status" defaultValue={r.status ?? "NEW"}>{[r.status ?? "NEW",...(requestNextStatuses[r.status ?? "NEW"] ?? [])].map(s=><option key={s} value={s}>{s==="AWAITING_PAYMENT"&&s===(r.status??"NEW")?"Renovar prazo de pagamento (24h)":label(s)}</option>)}</Select></label>
+            <label><span>Estado comercial</span><Select name="status" defaultValue={r.status ?? "NEW"}>{[r.status ?? "NEW",...getAdvertisingRequestNextStatuses(r.status)].map(s=><option key={s} value={s}>{s==="AWAITING_PAYMENT"&&s===(r.status??"NEW")?"Renovar prazo de pagamento (24h)":label(s)}</option>)}</Select></label>
             <label><span>Forma de pagamento (obrigatória para marcar Pago)</span><Select name="payment_method" defaultValue={r.payment_method||"MPESA"}><option value="MPESA">M-Pesa</option><option value="BANK_TRANSFER">Transferência bancária</option><option value="CASH">Numerário</option><option value="OTHER">Outro meio</option></Select></label>
             <label><span>Referência do pagamento (mín. 4 caracteres)</span><Input name="payment_reference" minLength={4} maxLength={160} defaultValue={r.payment_reference||""} placeholder="Referência comprovativa"/></label>
             <label><span>Valor liquidado (MZN)</span><Input name="paid_amount_mzn" type="number" min={0.01} step="0.01" defaultValue={r.paid_amount_mzn??""} placeholder="Valor efectivamente recebido"/></label>
