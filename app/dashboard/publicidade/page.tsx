@@ -38,7 +38,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
   const businessScopeIncomplete=Boolean(ownedError||membersError||managedError);
   const campaignImpressions=businessScopeIncomplete||campaignMetricsError||promotionsError?null:(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.impressions??0),0);
   const campaignClicks=businessScopeIncomplete||campaignMetricsError||promotionsError?null:(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.clicks??0),0);
-  const campaignInvestment=businessScopeIncomplete||promotionsError?null:(promotions??[]).reduce((sum,p)=>sum+Number(p.price_mzn??0),0);
+  const campaignInvestment=businessScopeIncomplete||promotionsError?null:(promotions??[]).reduce((sum,p)=>sum+(["MPESA","DIRECT"].includes(p.payment_method??"")&&Boolean(p.paid_at)?Number(p.price_mzn??0):0),0);
   const campaignCtr=campaignImpressions!==null&&campaignClicks!==null&&campaignImpressions>0?campaignClicks/campaignImpressions*100:null;
   const loadErrors=[ownedError,membersError,managedError,productsError,categoriesError,campaignMetricsError,promotionsError,walletsError].filter(Boolean);
 
@@ -69,7 +69,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
     <section className="dashboard-section" style={{marginTop:18}}>
       <div className="dashboard-section-head"><div><span className="dashboard-kicker">Desempenho e investimento</span><h2>Análise das campanhas</h2><p className="muted">Indicadores agregados das campanhas visíveis no histórico (até 100 registos recentes).</p></div></div>
       <div className="grid advertising-performance-grid" style={{gridTemplateColumns:"repeat(4,minmax(0,1fr))"}}>
-        <div className="card"><span className="dashboard-kicker">Investimento registado</span><h3>{campaignInvestment===null?"—":money(campaignInvestment)}</h3><p className="muted">Soma dos valores em MZN registados; campanhas pagas em créditos sem valor monetário não são convertidas.</p></div>
+        <div className="card"><span className="dashboard-kicker">Investimento registado</span><h3>{campaignInvestment===null?"—":money(campaignInvestment)}</h3><p className="muted">Soma apenas pagamentos M-Pesa/directos com liquidação confirmada; compras por créditos não são convertidas para MZN.</p></div>
         <div className="card"><span className="dashboard-kicker">Impressões</span><h3>{campaignImpressions===null?"—":campaignImpressions.toLocaleString("pt-MZ")}</h3><p className="muted">Exibições registadas</p></div>
         <div className="card"><span className="dashboard-kicker">Cliques</span><h3>{campaignClicks===null?"—":campaignClicks.toLocaleString("pt-MZ")}</h3><p className="muted">Interacções registadas</p></div>
         <div className="card"><span className="dashboard-kicker">CTR</span><h3>{campaignCtr===null?"—":campaignCtr.toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%"}</h3><p className="muted">Cliques ÷ impressões</p></div>
