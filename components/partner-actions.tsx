@@ -1,23 +1,27 @@
 "use client";import{useState}from"react";import type{FormEvent}from"react";import{useRouter}from"next/navigation";import{createClient}from"@/lib/supabase/client";function F({error,ok}:{error:string;ok:string}){return <>{error&&<p className="partner-form-error">{error}</p>}{ok&&<p className="partner-form-ok">{ok}</p>}</>}export function PartnerAdRequestForm({productId,productName,productPrice,durationDays,creditPrice,creditPaymentAvailable}:{productId:string;productName:string;productPrice:number|null;durationDays:number|null;creditPrice:number|null;creditPaymentAvailable:boolean}){
  const r=useRouter();const[p,setP]=useState(false),[e,setE]=useState(""),[ok,setOk]=useState("");
  async function sub(x:FormEvent<HTMLFormElement>){
-  x.preventDefault();setP(true);setE("");setOk("");
-  const f=new FormData(x.currentTarget);
-  const startRaw=String(f.get("starts_at")||""),endRaw=String(f.get("ends_at")||"");
-  const start=new Date(startRaw),end=new Date(endRaw);
-  if(!startRaw||!endRaw||Number.isNaN(start.getTime())||Number.isNaN(end.getTime())||start.getTime()<Date.now()||end<=start){
-   setE("Indique um período válido, com início futuro e fim posterior ao início.");setP(false);return;
-  }
-  if(durationDays&&((end.getTime()-start.getTime())/86400000)>durationDays+0.02){
-   setE("Este formato permite no máximo "+durationDays+" dias.");setP(false);return;
-  }
-  const ts=String(f.get("targets")||"").split("\n").map(v=>v.trim()).filter(Boolean).map(v=>{const[t,...z]=v.split(":");return{type:t.trim().toUpperCase(),value:z.join(":").trim()}}).filter(v=>v.value);
-  const{error}=await createClient().rpc("partner_ad_request",{p_product_id:productId,p_title:String(f.get("title")||""),p_objective:String(f.get("objective")||""),p_starts_at:start.toISOString(),p_ends_at:end.toISOString(),p_targets:ts,p_payment_method:String(f.get("payment_method")||"MPESA")});
-  if(error){
-   const messages:Record<string,string>={FORBIDDEN:"O seu papel não permite solicitar campanhas.",INVALID_CAMPAIGN_DATES:"O período indicado não é válido.",CAMPAIGN_EXCEEDS_PRODUCT_DURATION:"O período excede a duração deste formato.",AD_SPACE_UNAVAILABLE:"Este espaço já tem uma campanha sobreposta. Escolha outro período.",PARTNER_ACCOUNT_REQUIRED:"Não foi possível identificar a conta Parceiro.",PARTNER_CREDIT_WALLET_NOT_LINKED:"A conta Parceiro ainda não está associada a uma empresa com carteira de créditos.",PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED:"Este formato ainda não tem preço em créditos configurado.",PARTNER_CREDIT_WALLET_NOT_FOUND:"Não foi encontrada uma carteira empresarial associada.",INSUFFICIENT_CREDITS:"O saldo de créditos disponível é insuficiente.",INVALID_PAYMENT_METHOD:"Seleccione M-Pesa ou créditos."};
-   setE(messages[error.message]||"Não foi possível enviar o pedido. Verifique os dados, confirme se o formato ainda está disponível ou contacte o suporte.");
-  }else{setOk("Pedido enviado para análise. A activação depende de confirmação da equipa MozEmpresas.");x.currentTarget.reset();r.refresh();}
-  setP(false);
+  x.preventDefault();if(p)return;setP(true);setE("");setOk("");
+  const form=x.currentTarget;
+  try{
+   const f=new FormData(form);
+   const startRaw=String(f.get("starts_at")||""),endRaw=String(f.get("ends_at")||"");
+   const start=new Date(startRaw),end=new Date(endRaw);
+   if(!startRaw||!endRaw||Number.isNaN(start.getTime())||Number.isNaN(end.getTime())||start.getTime()<Date.now()||end<=start){
+    setE("Indique um período válido, com início futuro e fim posterior ao início.");return;
+   }
+   if(durationDays&&((end.getTime()-start.getTime())/86400000)>durationDays+0.02){
+    setE("Este formato permite no máximo "+durationDays+" dias.");return;
+   }
+   const ts=String(f.get("targets")||"").split("\n").map(v=>v.trim()).filter(Boolean).map(v=>{const[t,...z]=v.split(":");return{type:t.trim().toUpperCase(),value:z.join(":").trim()}}).filter(v=>v.value);
+   const{error}=await createClient().rpc("partner_ad_request",{p_product_id:productId,p_title:String(f.get("title")||""),p_objective:String(f.get("objective")||""),p_starts_at:start.toISOString(),p_ends_at:end.toISOString(),p_targets:ts,p_payment_method:String(f.get("payment_method")||"MPESA")});
+   if(error){
+    const messages:Record<string,string>={FORBIDDEN:"O seu papel não permite solicitar campanhas.",INVALID_CAMPAIGN_DATES:"O período indicado não é válido.",CAMPAIGN_EXCEEDS_PRODUCT_DURATION:"O período excede a duração deste formato.",AD_SPACE_UNAVAILABLE:"Este espaço já tem uma campanha sobreposta. Escolha outro período.",PARTNER_ACCOUNT_REQUIRED:"Não foi possível identificar a conta Parceiro.",PARTNER_CREDIT_WALLET_NOT_LINKED:"A conta Parceiro ainda não está associada a uma empresa com carteira de créditos.",PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED:"Este formato ainda não tem preço em créditos configurado.",PARTNER_CREDIT_WALLET_NOT_FOUND:"Não foi encontrada uma carteira empresarial associada.",INSUFFICIENT_CREDITS:"O saldo de créditos disponível é insuficiente.",INVALID_PAYMENT_METHOD:"Seleccione M-Pesa ou créditos."};
+    setE(messages[error.message]||"Não foi possível enviar o pedido. Verifique os dados, confirme se o formato ainda está disponível ou contacte o suporte.");
+   }else{setOk("Pedido enviado para análise. A activação depende de confirmação da equipa MozEmpresas.");form.reset();r.refresh();}
+  }catch{
+   setE("Não foi possível contactar o servidor. Verifique a ligação e tente novamente.");
+  }finally{setP(false);}
  }
  return <form className="partner-form-card" onSubmit={sub}>
   <div className="partner-form-head"><div><span className="dashboard-kicker">Pedido de campanha</span><h3>{productName}</h3><p>{productPrice!=null?Number(productPrice).toLocaleString("pt-MZ")+" MZN":"Preço sob proposta"}{durationDays?" · até "+durationDays+" dias":""}</p></div></div>
