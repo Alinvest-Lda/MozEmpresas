@@ -37,6 +37,8 @@ set search_path=pg_catalog,public,pg_temp
 as $function$
 declare
   v_old_status text;
+  v_business_id uuid;
+  v_campaign_title text;
   v_allowed boolean:=false;
   v_reason text:=trim(coalesce(p_reason,''));
   v_reference text:=nullif(trim(coalesce(p_payment_reference,'')),'');
@@ -52,7 +54,8 @@ begin
     if p_payment_method is not null or v_reference is not null or p_paid_amount_mzn is not null then
       raise exception 'UNEXPECTED_SETTLEMENT_EVIDENCE' using errcode='22023';
     end if;
-    select status::text into v_old_status from public.business_promotions where id=p_entity_id for update;
+    select status::text,business_id,title into v_old_status,v_business_id,v_campaign_title
+    from public.business_promotions where id=p_entity_id for update;
     if not found then raise exception 'ADVERTISING_ENTITY_NOT_FOUND' using errcode='P0002'; end if;
     v_allowed:=case v_old_status
       when 'DRAFT' then p_new_status='PENDING'
@@ -72,6 +75,22 @@ begin
     if not v_allowed then raise exception 'INVALID_ADVERTISING_STATUS_TRANSITION' using errcode='23514'; end if;
     perform set_config('app.advertising_admin_reason',v_reason,true);
     update public.business_promotions set status=p_new_status,updated_at=now() where id=p_entity_id;
+
+    if p_new_status in ('ACTIVE','PAUSED','EXPIRED') then
+      insert into public.notifications(user_id,type,title,body,resource_type,resource_id)
+      select recipients.user_id,'ADVERTISING',
+        case p_new_status when 'ACTIVE' then 'Campanha publicitária activada'
+          when 'PAUSED' then 'Campanha publicitária pausada' else 'Campanha publicitária expirada' end,
+        'A campanha "'||left(v_campaign_title,120)||'" passou para o estado "'||lower(p_new_status)||'".',
+        'BUSINESS_PROMOTION',p_entity_id
+      from (
+        select b.owner_id as user_id from public.businesses b where b.id=v_business_id
+        union
+        select bm.user_id from public.business_members bm
+        where bm.business_id=v_business_id and bm.role in ('owner','admin','operator')
+      ) recipients
+      where recipients.user_id is not null;
+    end if;
 
   elsif p_entity_type='ADVERTISING_REQUEST' then
     select status into v_old_status from public.advertising_requests where id=p_entity_id for update;
