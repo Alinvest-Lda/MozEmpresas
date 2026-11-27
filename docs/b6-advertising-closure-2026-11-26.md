@@ -186,3 +186,7 @@ No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, access
 - Super Admin campaign search input now removes PostgREST structural/wildcard characters and control characters before constructing the OR/ILIKE expression, reducing the risk that punctuation changes the search expression. Commit `fc79c6e`.
 - The administrative queue now treats its database query filters as authoritative and no longer re-applies a different client-side search/deadline filter to the fetched page. This removes the previous mismatch where company/display fields and a second clock could cause the visible page to disagree with query-level counts. Commit `252f0a7`.
 - These source changes improve query scoping and filter/count consistency. They do not constitute database execution, tests, security validation, or deployment evidence.
+
+### B6-T02 / T09 — advertiser duplicate-submit prevention (27/11/2026)
+- The business advertiser campaign form now switches to a processing state on submission and disables both credit and M-Pesa request actions until the server action completes navigation. This reduces accidental duplicate campaign/payment requests from repeated clicks; the database locking and payment guards remain the authoritative protection. Commit `8d534e0`.
+- Remaining payment retry, gateway callback and ambiguity-recovery gaps are not represented as solved by this client guard.
