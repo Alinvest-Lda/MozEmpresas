@@ -89,6 +89,7 @@ export async function moderatePartnerCampaign(formData: FormData) {
       "CAMPAIGN_PAYMENT_STILL_PENDING",
       "CAMPAIGN_END_DATE_NOT_REACHED",
       "CAMPAIGN_START_DATE_NOT_REACHED",
+      "AD_PRODUCT_NOT_DELIVERABLE",
       "ADVERTISING_CAMPAIGN_WINDOW_CLOSED",
       "CAMPAIGN_NOT_FOUND",
     ].find((code) => error.message.includes(code));
@@ -175,7 +176,7 @@ export async function issuePartnerAdPayment(formData: FormData) {
       "PARTNER_CREDIT_WALLET_NOT_LINKED", "PARTNER_CREDIT_WALLET_NOT_FOUND",
       "INSUFFICIENT_CREDITS", "CAMPAIGN_PAYMENT_ALREADY_ISSUED",
       "CAMPAIGN_NOT_PAYABLE", "CAMPAIGN_PRICE_NOT_CONFIGURED",
-      "PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED", "INVALID_CAMPAIGN_PRICE", "FIXED_PRODUCT_PRICE_CANNOT_BE_OVERRIDDEN",
+      "PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED", "AD_PRODUCT_NOT_DELIVERABLE", "INVALID_CAMPAIGN_PRICE", "FIXED_PRODUCT_PRICE_CANNOT_BE_OVERRIDDEN",
     ].find((code) => error.message.includes(code));
     redirect("/dashboard/admin/publicidade?result=" + (known || "payment-error"));
   }
