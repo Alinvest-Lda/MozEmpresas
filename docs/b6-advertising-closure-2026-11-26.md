@@ -230,3 +230,8 @@ No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, access
 ### B6-T09 — Event validation fallback correction
 - Static inspection of the ad event endpoint found a fallback-mode schema mismatch: business promotions were fetched without their `placement` field, while eligibility requires a normalized surface. The fallback now fetches `placement` and maps it to the eligibility surface; partner campaigns continue to use their explicit `surface`. This prevents valid business ad events from being rejected when the direct Postgres connection is unavailable. Commit `0b9c345`.
 - Source-only; no runtime or database validation.
+
+### B6-T02 / T03 — checkout date parsing and partner workspace runtime correction (27/11/2026)
+- Corrected the Maputo-local start-date parser for date-only inputs. The previous parser appended a timezone directly to `YYYY-MM-DD`, which is not a valid ISO date-time representation; date-only values now resolve to local midnight in the Maputo UTC+02:00 zone, while explicit timestamps/timezones retain their supplied time semantics. Commit `101872c1be9c562388890b7adae54ff7ee0bf4ba`.
+- Corrected the partner advertising workspace payment lookup. Its previous `Promise.all` initializer referenced the `campaigns` binding before the destructuring assignment had completed, triggering a temporal-dead-zone runtime error. Campaigns are now loaded first and payment orders are queried only for those campaign IDs. Commit `131f5dc38f359e4fec95b6b84de595223ea2978f`.
+- Both corrections are source-only. No tests, builds, SQL execution, migration application, or deployment were performed.
