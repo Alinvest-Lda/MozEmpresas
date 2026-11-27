@@ -25,28 +25,6 @@ type Category = {
   slug: string;
 };
 
-type Promotion = {
-  id: string;
-  business_id: string;
-  placement: string;
-  slot: string;
-  title: string;
-  headline: string | null;
-  body: string | null;
-  image_url: string | null;
-  target_url: string | null;
-  cta_label: string | null;
-  alt_text: string | null;
-  businesses: {
-    id: string;
-    name: string;
-    slug: string;
-    description: string | null;
-    location: string | null;
-    logo_url: string | null;
-  } | null;
-};
-
 export default async function Empresas({
   searchParams,
 }: {
@@ -62,32 +40,19 @@ export default async function Empresas({
 
   let data: Business[] = [];
   let categories: Category[] = [];
-  let featured: Promotion[] = [];
   let error = false;
   let totalResults = 0;
 
   try {
     const supabase = await createClient();
-    const [categoryResult, promotionResult] = await Promise.all([
-      supabase.from("business_categories").select("id,name,slug").order("name").limit(24),
-      supabase
-        .from("business_promotions")
-        .select("id,business_id,placement,slot,title,headline,body,image_url,target_url,cta_label,alt_text,businesses!inner(id,name,slug,description,location,logo_url)")
-        .eq("status", "ACTIVE")
-        .lte("starts_at", new Date().toISOString())
-        .gt("ends_at", new Date().toISOString())
-        .eq("placement", "DIRECTORY")
-        .eq("businesses.is_public", true)
-        .is("businesses.archived_at", null)
-        .in("slot", ["BILLBOARD", "FEATURED"])
-        .order("created_at", { ascending: false })
-        .limit(12),
-    ]);
+    const categoryResult = await supabase
+      .from("business_categories")
+      .select("id,name,slug")
+      .order("name")
+      .limit(24);
 
     categories = (categoryResult.data ?? []) as Category[];
-    const promotions = (promotionResult.data ?? []) as unknown as Promotion[];
-
-    featured = promotions.filter((item) => item.slot === "FEATURED").slice(0, 3);
+    error = error || Boolean(categoryResult.error);
 
 
 
@@ -127,11 +92,6 @@ export default async function Empresas({
 
     if (category) {
       query = query.eq("category_id", category);
-    }
-
-    const sponsoredIds = featured.map((item) => item.business_id);
-    if (sponsoredIds.length > 0) {
-      query = query.not("id", "in", `(${sponsoredIds.join(",")})`);
     }
 
     const result = await query;
@@ -229,44 +189,16 @@ export default async function Empresas({
 
         <PublicAd surface="DIRECTORY" slot="BILLBOARD" context={{query:q,location,category}} interests={[q,category].filter(Boolean)} />
 
-        {featured.length > 0 && (
-          <section className="directory-featured">
-            <div className="directory-section-head">
-              <div>
-                <span className="eyebrow">Publicidade empresarial</span>
-                <h2>Empresas em destaque</h2>
-              </div>
-              <span className="directory-section-note">Posições patrocinadas</span>
+        <section className="directory-featured">
+          <div className="directory-section-head">
+            <div>
+              <span className="eyebrow">Publicidade empresarial</span>
+              <h2>Empresas em destaque</h2>
             </div>
-            <div className="directory-featured-grid">
-              {featured.map((item) => {
-                const business = item.businesses;
-                if (!business) return null;
-                return (
-                  <Link
-                    href={item.target_url || "/empresas/" + business.slug}
-                    className="directory-featured-card"
-                    rel={item.target_url ? "sponsored" : undefined}
-                    key={item.id}
-                  >
-                    <div className="directory-sponsored-label">Patrocinado</div>
-                    <div className="directory-featured-main">
-                      <div className="directory-business-logo">
-                        {business.logo_url ? <img src={business.logo_url} alt="" /> : business.name.charAt(0)}
-                      </div>
-                      <div>
-                        <h3>{business.name}</h3>
-                        {business.location && <span>{business.location}</span>}
-                      </div>
-                    </div>
-                    <p>{item.headline || item.body || item.title || business.description || "Conheça esta empresa em destaque."}</p>
-                    <span className="directory-business-action">Ver empresa →</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-        )}
+            <span className="directory-section-note">Posições patrocinadas</span>
+          </div>
+          <PublicAd surface="DIRECTORY" slot="FEATURED" context={{query:q,location,category}} interests={[q,category].filter(Boolean)} />
+        </section>
 
         <section className="directory-results">
           <div className="directory-results-head">
