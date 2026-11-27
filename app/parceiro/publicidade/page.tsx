@@ -15,13 +15,19 @@ export default async function PartnerAds(){
     s.rpc("partner_ad_campaigns_list"),
     s.rpc("partner_ad_campaign_metrics"),
   ]);
-  const campaignIds=(campaigns??[]).map((campaign:any)=>campaign.id);
-  const {data:paymentOrders,error:paymentsError}=campaignIds.length
-    ? await s.from("partner_ad_payment_orders").select("campaign_id,status,payment_method,payment_reference,amount_mzn,credits_charged,confirmed_at").in("campaign_id",campaignIds).order("created_at",{ascending:false})
+  const paymentCampaignIds=(campaigns??[]).map((campaign:any)=>campaign.id);
+  const {data:paymentOrders,error:paymentsError}=paymentCampaignIds.length
+    ? await s.from("partner_ad_payment_orders").select("campaign_id,status,payment_method,payment_reference,amount_mzn,credits_charged,confirmed_at,financial_payment_id,created_at").in("campaign_id",paymentCampaignIds).order("created_at",{ascending:false})
     : {data:[],error:null};
+  const financialPaymentIds=[...new Set((paymentOrders??[]).map((x:any)=>x.financial_payment_id).filter(Boolean))];
+  const {data:financialPayments,error:financialPaymentsError}=financialPaymentIds.length
+    ? await s.from("financial_payments").select("id,expires_at").in("id",financialPaymentIds)
+    : {data:[],error:null};
+  const expiryByFinancialPayment=new Map((financialPayments??[]).map((x:any)=>[x.id,x.expires_at]));
+  const paymentLoadError=Boolean(paymentsError||financialPaymentsError);
   const metricsByCampaign=new Map<string,{impressions:number;clicks:number}>((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}] as [string,{impressions:number;clicks:number}]));
-  const paymentsByCampaign=new Map<string,any>();(paymentOrders??[]).forEach((x:any)=>{if(!paymentsByCampaign.has(x.campaign_id))paymentsByCampaign.set(x.campaign_id,x)});
-  const measuredCampaigns=(campaigns??[]).map((x:any)=>({...x,payment:paymentsError?undefined:(paymentsByCampaign.get(x.id)||null),impressions:metricsError?null:(metricsByCampaign.get(x.id)?.impressions??0),clicks:metricsError?null:(metricsByCampaign.get(x.id)?.clicks??0)}));
+  const paymentsByCampaign=new Map<string,any>();(paymentOrders??[]).forEach((x:any)=>{if(!paymentsByCampaign.has(x.campaign_id))paymentsByCampaign.set(x.campaign_id,{...x,expires_at:x.financial_payment_id?expiryByFinancialPayment.get(x.financial_payment_id)??null:null})});
+  const measuredCampaigns=(campaigns??[]).map((x:any)=>({...x,payment:paymentLoadError?undefined:(paymentsByCampaign.get(x.id)||null),impressions:metricsError?null:(metricsByCampaign.get(x.id)?.impressions??0),clicks:metricsError?null:(metricsByCampaign.get(x.id)?.clicks??0)}));
   const campaignIds=measuredCampaigns.map((x:any)=>x.id);
   const {data:statusEvents,error:statusEventsError}=campaignIds.length?await s.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,action_reason,created_at").in("campaign_id",campaignIds).order("created_at",{ascending:false}):{data:[]};
   const eventsByCampaign=new Map<string,any[]>();
@@ -30,11 +36,11 @@ export default async function PartnerAds(){
   const pending=campaignsError?null:(campaigns??[]).filter((x:any)=>["REQUESTED","APPROVED"].includes(x.status)).length;
   const impressions=metricsError?null:measuredCampaigns.reduce((sum:number,x:any)=>sum+x.impressions,0);
   const clicks=metricsError?null:measuredCampaigns.reduce((sum:number,x:any)=>sum+x.clicks,0);
-  const investment=paymentsError?null:measuredCampaigns.reduce((sum:number,x:any)=>sum+(x.payment?.status==="PAID"?Number(x.payment.amount_mzn??0):0),0);
+  const investment=paymentLoadError?null:measuredCampaigns.reduce((sum:number,x:any)=>sum+(x.payment?.status==="PAID"?Number(x.payment.amount_mzn??0):0),0);
   const ctr=impressions!==null&&clicks!==null&&impressions>0?clicks/impressions*100:null;
   const money=(value:number)=>value.toLocaleString("pt-MZ",{maximumFractionDigits:2})+" MZN";
 
-  const loadErrors=[productsError&&"catálogo",campaignsError&&"campanhas",metricsError&&"métricas",paymentsError&&"pagamentos",statusEventsError&&"histórico"].filter(Boolean);
+  const loadErrors=[productsError&&"catálogo",campaignsError&&"campanhas",metricsError&&"métricas",paymentLoadError&&"pagamentos",statusEventsError&&"histórico"].filter(Boolean);
   return <PartnerPage
     eyebrow="Posicionar · Exposição"
     title="Publicidade e campanhas"
@@ -102,7 +108,7 @@ export default async function PartnerAds(){
       {measuredCampaigns.length
         ? <div className="partner-record-list">{measuredCampaigns.map((x:any)=><div key={x.id}>
             <div><strong>{x.title||"Campanha sem título"}</strong><span>{x.product_name||"Espaço publicitário"} · {statusLabel(x.status)}</span><span>{x.impressions===null?"—":x.impressions.toLocaleString("pt-MZ")} impressões · {x.clicks===null?"—":x.clicks.toLocaleString("pt-MZ")} cliques · CTR {x.impressions!==null&&x.clicks!==null&&x.impressions>0?(x.clicks/x.impressions*100).toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"}</span></div>
-            <div><b>{x.price_mzn!=null?money(Number(x.price_mzn)):"Em análise"}</b>{x.payment===undefined?<small>Estado do pagamento indisponível</small>:x.payment?<small>Pagamento: {x.payment.status==="PAID"?"Liquidado":x.payment.status==="PENDING"?"A aguardar M-Pesa":x.payment.status==="FAILED"?"Falhado":"Estornado"} · {x.payment.payment_method} · {x.payment.payment_reference}</small>:<small>Sem cobrança emitida</small>}</div>
+            <div><b>{x.price_mzn!=null?money(Number(x.price_mzn)):"Em análise"}</b>{x.payment===undefined?<small>Estado do pagamento indisponível</small>:x.payment?<small>Pagamento: {x.payment.status==="PAID"?"Liquidado":x.payment.status==="PENDING"?(x.payment.payment_method==="BANK_TRANSFER"?"A aguardar confirmação bancária":"A aguardar M-Pesa"):x.payment.status==="FAILED"?"Falhado":"Estornado"} · {x.payment.payment_method} · {x.payment.payment_reference}{x.payment.payment_method==="BANK_TRANSFER"&&x.payment.status==="PENDING"&&x.payment.expires_at?" · Confirmar até "+new Date(x.payment.expires_at).toLocaleString("pt-MZ"):""}</small>:<small>Sem cobrança emitida</small>}</div>
             <details className="partner-ad-status-history"><summary>Histórico {statusEventsError?"(indisponível)":"("+ (eventsByCampaign.get(x.id)??[]).length +")"}</summary>{statusEventsError?<p>Não foi possível carregar o histórico de decisões.</p>:<ol>{(eventsByCampaign.get(x.id)??[]).map((event:any)=><li key={event.id}><strong>{event.event_type==="CREATED"?"Pedido criado":"Estado actualizado"}</strong><span>{event.old_status?statusLabel(event.old_status)+" → ":""}{statusLabel(event.new_status)}</span><small>{event.action_reason||"Sem justificação registada"} · {new Date(event.created_at).toLocaleString("pt-MZ")}</small></li>)}</ol>}</details>
           </div>)}</div>
         : campaignsError ? <PartnerEmpty title="Campanhas indisponíveis" text="Não foi possível consultar as campanhas desta entidade. Actualize a página mais tarde."/> : <PartnerEmpty title="Ainda sem campanhas" text="Escolha um espaço acima para iniciar uma proposta de exposição." href="#espacos" label="Ver espaços"/>
