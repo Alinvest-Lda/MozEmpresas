@@ -474,3 +474,5 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - A mesma pesquisa por empresa foi estendida às campanhas de parceiros através da associação `partner_accounts.business_id`, para que a fila administrativa use o nome da empresa tanto em campanhas empresariais como em campanhas de contas parceiras. Commit `38e28f01c0dcd62c36d2875e12040bbc390565ab`.
 
 - A fila de campanhas de parceiros passou também a resolver o nome da empresa associada à conta parceira, substituindo o rótulo genérico sempre que existe associação empresarial. Falhas nesta consulta são sinalizadas como dados incompletos. Commit `6c6f8da030054810b2b8b00bb808df5018d7b980`.
+
+- O limite de resolução de contas parceiras por empresa passou também a ser contado; quando excedido, a fila assinala explicitamente que a pesquisa não é exaustiva. Commit `e825459dc8dea8648ae0fab51db5f3bcbe1ae0ad`.
