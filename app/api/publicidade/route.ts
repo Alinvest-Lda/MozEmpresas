@@ -29,6 +29,15 @@ const schema = z.object({
   targetInterests: z.string().trim().max(1000).optional(),
   targetLocations: z.string().trim().max(500).optional(),
 }).superRefine((payload,ctx)=>{
+  const validSlots:Record<string,string[]>={
+    HOME:["HERO","BILLBOARD","EXCLUSIVE"],
+    DIRECTORY:["BILLBOARD","FEATURED","INFEED","CONTEXT"],
+    MARKETPLACE:["BILLBOARD","FEATURED","EXCLUSIVE","INFEED"],
+    OPPORTUNITIES:["BILLBOARD","FEATURED","INFEED"],
+  };
+  if(!validSlots[payload.surface]?.includes(payload.slot)){
+    ctx.addIssue({code:z.ZodIssueCode.custom,message:"A posição não está disponível no espaço seleccionado.",path:["slot"]});
+  }
   if(payload.startsAt && payload.endsAt){
     const start=new Date(payload.startsAt).getTime();
     const end=new Date(payload.endsAt).getTime();
