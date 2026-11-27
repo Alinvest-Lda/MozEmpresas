@@ -455,3 +455,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - O mínimo de data/hora dos campos foi arredondado para o minuto seguinte quando o relógio contém segundos, evitando que a própria opção mínima já esteja no passado no momento da submissão. Commits `8563658894c906162b86dda8542a323a07134e3c` e `496584f3c45b35f732c858353e9b85e9606afbb3`.
 
 - As notificações de liquidação/expiração foram isoladas em blocos de melhor esforço: uma falha no serviço de notificações não pode reverter a confirmação financeira, o callback M-Pesa ou a expiração de uma cobrança. A reconciliação financeira permanece autoritativa e regista aviso operacional se a notificação falhar. Commits `d41157d6790e3a94ed40c4774d9dea8bc3950acf`, `5bd4b8a42a5e0cc7bbfac7bc71180c66a2a0fd47`, `d3adb977955bd7040b5e2500520e68446e148fad` e `9312f251017b0c191f6bba4c069a63b17c82077f`.
+
+### B6 — lote de resiliência: notificações não bloqueiam liquidações nem transições auditadas (27/11/2026)
+- A confirmação M-Pesa empresarial e os triggers de estado de campanhas empresariais/parceiros ainda executavam inserções de notificações dentro da transacção principal. Uma indisponibilidade da tabela/serviço de notificações podia reverter a liquidação ou a transição, apesar da evidência e do estado serem válidos.
+- F413 e F414 isolam a entrega de notificações em blocos de melhor esforço, mantendo os registos financeiros e os eventos de auditoria como operações transaccionais obrigatórias. Falhas de notificação geram avisos operacionais, mas não revertem pagamentos nem moderação.
+- Commits `271386fc516f09bb5c370123bcb44a4e0f959aa8` e `20a47ad6bc403167938946c97f24a84f7050ff6e`. Migrações não aplicadas.
