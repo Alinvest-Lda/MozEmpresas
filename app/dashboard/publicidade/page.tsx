@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { purchaseAdCredits, requestAdMpesaPayment } from "@/lib/advertising/actions";
 import { AdvertisingPurchaseForm } from "@/components/advertising-purchase-form";
+import { isValidAdSurfaceSlot } from "@/lib/advertising/placements";
 
 const placement: Record<string, string> = { DIRECTORY:"Directório", MARKETPLACE:"Marketplace", HOME:"Página inicial", OPPORTUNITIES:"Oportunidades" };
 
@@ -39,8 +40,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
     : {data:[] as {id:string;title:string|null;placement:string;status:string;starts_at:string;ends_at:string|null;payment_method:string|null;price_mzn:number|null;credits_charged:number|null;business_id:string;businesses:{name:string}|{name:string}[]|null}[],error:null};
   const {data:wallets,error:walletsError}=businesses.length ? await supabase.from("business_credit_wallets").select("business_id,balance_credits").in("business_id",businesses.map(b=>b.id)) : {data:[] as {business_id:string;balance_credits:number}[],error:null};
   const walletMap=Object.fromEntries((wallets??[]).map(w=>[w.business_id,w.balance_credits]));
-  const validAdSlotsByPlacement:Record<string,string[]>={HOME:["HERO","BILLBOARD","EXCLUSIVE"],DIRECTORY:["BILLBOARD","FEATURED","INFEED","CONTEXT"],MARKETPLACE:["BILLBOARD","FEATURED","EXCLUSIVE","INFEED"],OPPORTUNITIES:["BILLBOARD","FEATURED","INFEED"]};
-  const paidProducts=(products??[]).filter(p=>p.access_type==="PAID" && Boolean(validAdSlotsByPlacement[p.placement]?.includes(p.slot)) && Number.isFinite(Number(p.direct_price_mzn)) && Number(p.direct_price_mzn)>0 && Number.isInteger(Number(p.duration_days)) && Number(p.duration_days)>0 && Number.isInteger(Number(p.capacity)) && Number(p.capacity)>0 && Number.isFinite(Number(p.credit_price)) && Number(p.credit_price)>=0);
+  const paidProducts=(products??[]).filter(p=>p.access_type==="PAID" && isValidAdSurfaceSlot(p.placement,p.slot) && Number.isFinite(Number(p.direct_price_mzn)) && Number(p.direct_price_mzn)>0 && Number.isInteger(Number(p.duration_days)) && Number(p.duration_days)>0 && Number.isInteger(Number(p.capacity)) && Number(p.capacity)>0 && Number.isFinite(Number(p.credit_price)) && Number(p.credit_price)>=0);
   const metricsByCampaign=new Map<string,{impressions:number;clicks:number}>((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}] as [string,{impressions:number;clicks:number}]));
   const businessScopeIncomplete=Boolean(ownedError||membersError||managedError);
   const campaignImpressions=businessScopeIncomplete||campaignMetricsError||promotionsError?null:(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.impressions??0),0);
