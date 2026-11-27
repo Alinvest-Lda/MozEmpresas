@@ -1,14 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { AD_SURFACES, AD_SURFACE_SLOTS } from "@/lib/advertising/placements";
 
-const surfaces=[["HOME","Página inicial"],["DIRECTORY","Directório"],["MARKETPLACE","Produtos e serviços"],["OPPORTUNITIES","Oportunidades"]] as const;
-const slotsBySurface:Record<(typeof surfaces)[number][0],readonly (readonly [string,string])[]>={
- HOME:[["HERO","Hero / topo"],["BILLBOARD","Billboard / faixa"],["EXCLUSIVE","Exclusivo"]],
- DIRECTORY:[["BILLBOARD","Billboard / faixa"],["FEATURED","Destaque contextual"],["INFEED","Dentro do conteúdo"],["CONTEXT","Contextual"]],
- MARKETPLACE:[["BILLBOARD","Billboard / faixa"],["FEATURED","Destaque contextual"],["EXCLUSIVE","Exclusivo"],["INFEED","Dentro do conteúdo"]],
- OPPORTUNITIES:[["BILLBOARD","Billboard / faixa"],["FEATURED","Destaque contextual"],["INFEED","Dentro do conteúdo"]],
-};
+const surfaces=AD_SURFACES;
+const slotsBySurface=AD_SURFACE_SLOTS;
 const creative=[["BANNER","Banner"],["NATIVE","Conteúdo nativo"],["CARD","Cartão patrocinado"],["TEXT","Texto patrocinado"]] as const;
 
 export function AdvertisingRequestForm(){
