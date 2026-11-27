@@ -25,5 +25,5 @@ $migration$;
 alter function public.purchase_promotion_with_credits(uuid,uuid,uuid,text,timestamptz,text[],text[])
   set search_path = pg_catalog, public, pg_temp;
 
-revoke all on function public.purchase_promotion_with_credits(uuid,uuid,uuid,text,timestamptz,text[],text[]) from public,anon;
+revoke all on function public.purchase_promotion_with_credits(uuid,uuid,uuid,text,timestamptz,text[],text[]) from public,anon,authenticated;
 grant execute on function public.purchase_promotion_with_credits(uuid,uuid,uuid,text,timestamptz,text[],text[]) to authenticated;
