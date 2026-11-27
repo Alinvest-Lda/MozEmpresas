@@ -198,3 +198,12 @@ No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, access
 
 ### B6-T03 / T09 — partner request error disclosure (27/11/2026)
 - Unknown partner campaign request errors now return a neutral, actionable Portuguese message instead of exposing the raw Supabase/PostgreSQL RPC error text in the form. Known errors remain mapped to specific user guidance. Commit `86c1788`.
+
+
+### B6-T07 / T08 — 24-hour bank transfer confirmation/activation deadline (27/11/2026)
+- F392 adds `expires_at` to financial payments and automatically assigns pending `BANK_TRANSFER` intents a deadline anchored to `created_at` plus 24 hours. Existing pending transfer records receive the same deterministic expiry.
+- The Super Admin partner bank-transfer settlement RPC now rejects late confirmation and returns `BANK_TRANSFER_CONFIRMATION_EXPIRED`; it validates the payment remains pending and the transfer expiry is still in the future before mutating payment, invoice or campaign state.
+- Public advertising requests cannot be marked `PAID` by bank transfer if the request is older than 24 hours; the admin action/UI displays a specific expired-confirmation message.
+- Paid, approved partner campaigns awaiting activation have a separate activation deadline of 24 hours from recorded bank-transfer settlement. After that deadline, cancellation/refund becomes eligible, with external refund reference required for bank transfer and cancellation/refund evidence retained. The admin campaign card shows the activation deadline and whether the window has expired.
+- Implementation commits: `3dfef54`, `2c8a2f2`, `8713c69`, `4f7d2d3`, `d4a52cb`, `7e91674`, `26fe496`.
+- F392 is source-only at this stage: migration application, SQL behaviour, deadline display under real payment records, and operational refund execution remain unverified. No deadline is represented as an automatic refund or automatic campaign activation.
