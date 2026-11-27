@@ -17,12 +17,14 @@ alter table public.partner_ad_products
 alter table public.partner_ad_products
   add constraint partner_ad_products_public_surface_slot_pair_f408
   check (
-    not active or surface='PARTNER_INTELLIGENCE' or
-    (surface is not null and slot is not null and (
-    (surface='HOME' and slot in ('HERO','BILLBOARD','EXCLUSIVE')) or
-    (surface='DIRECTORY' and slot in ('BILLBOARD','FEATURED','INFEED','CONTEXT')) or
-    (surface='MARKETPLACE' and slot in ('BILLBOARD','FEATURED','EXCLUSIVE','INFEED')) or
-    (surface='OPPORTUNITIES' and slot in ('BILLBOARD','FEATURED','INFEED'))
+    not active or (surface is not null and (
+      surface='PARTNER_INTELLIGENCE' or
+      (slot is not null and (
+        (surface='HOME' and slot in ('HERO','BILLBOARD','EXCLUSIVE')) or
+        (surface='DIRECTORY' and slot in ('BILLBOARD','FEATURED','INFEED','CONTEXT')) or
+        (surface='MARKETPLACE' and slot in ('BILLBOARD','FEATURED','EXCLUSIVE','INFEED')) or
+        (surface='OPPORTUNITIES' and slot in ('BILLBOARD','FEATURED','INFEED'))
+      ))
     )) not valid;
 
 -- Guard the two business checkout RPCs as well as the partner request RPC;
