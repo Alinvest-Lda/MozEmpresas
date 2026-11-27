@@ -14,7 +14,7 @@ where placement in ('DIRECTORY_BILLBOARD','DIRECTORY_FEATURED','DIRECTORY_SIDEBA
 -- instead of retaining an older campaign snapshot.
 update public.business_promotions bp
 set placement=p.placement,
-    slot=coalesce(bp.slot,p.slot),
+    slot=p.slot,
     updated_at=now()
 from public.ad_products p
 where bp.ad_product_id=p.id
