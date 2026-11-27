@@ -460,3 +460,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - A confirmação M-Pesa empresarial e os triggers de estado de campanhas empresariais/parceiros ainda executavam inserções de notificações dentro da transacção principal. Uma indisponibilidade da tabela/serviço de notificações podia reverter a liquidação ou a transição, apesar da evidência e do estado serem válidos.
 - F413 e F414 isolam a entrega de notificações em blocos de melhor esforço, mantendo os registos financeiros e os eventos de auditoria como operações transaccionais obrigatórias. Falhas de notificação geram avisos operacionais, mas não revertem pagamentos nem moderação.
 - Commits `271386fc516f09bb5c370123bcb44a4e0f959aa8` e `20a47ad6bc403167938946c97f24a84f7050ff6e`. Migrações não aplicadas.
+
+### B6 — consolidação das máquinas de estado administrativas (27/11/2026)
+- Os mapas de transição de pedidos, campanhas empresariais e campanhas de parceiros estavam duplicados entre o painel e as Server Actions, com risco de divergência entre opções apresentadas e transições aceites.
+- Foi criada uma máquina de estado partilhada para pedidos, campanhas empresariais e campanhas de parceiros; o painel e as Server Actions reutilizam agora os mesmos mapas e regras de elegibilidade. Foi acrescentada cobertura para pagamento, janela contratada e renovação do prazo.
+- Commits `a45a9a8e6dd5c1df6d05f7bce89c8146ed7d3f4c`, `915bc4c24cc33d782cbc4633bb71fba8d4927c5e`, `2b7c037b16b5829737c0504d3fb19ef9258540df` e `6b9ea6d86d807d0c9a8106def024f2f983ff6915`. Testes não executados.
