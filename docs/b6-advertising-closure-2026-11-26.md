@@ -148,12 +148,12 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 1. T01: reconcile every active product with a real public surface/slot and verify catalogue invariants in the deployed database.
 2. T02: finish the business M-Pesa request/callback and recovery trace, including ambiguous outcomes and duplicate retries.
 3. T03: finish partner campaign payment retry, payment method reconciliation, and user-visible cancellation/refund outcomes.
-4. T04: move search/status/deadline filters and global counts to database-side pagination; expose a complete settlement and audit trail in the back office.
+4. T04: database-side search/status/deadline filters, exact per-origin totals and bounded pagination are implemented at source level. Remaining gate: complete settlement and audit trail coverage across every business/partner/request action, plus deployed verification.
 5. T05: finalize attribution/conversion policy and verify event counts against the deployed event pipeline; current CTR is interaction, not ROI.
 6. T06: source-level placement coverage is now implemented for HOME (HERO/BILLBOARD/EXCLUSIVE), DIRECTORY (BILLBOARD/FEATURED/CONTEXT/INFEED), MARKETPLACE (BILLBOARD/FEATURED/EXCLUSIVE/INFEED) and OPPORTUNITIES (BILLBOARD/FEATURED/INFEED). Remaining T06 gate is deployment/runtime verification and confirming there are no external consumers of the retained `home_ad_slots` compatibility RPC before removal.
 7. T07: reconcile partner financial documents, M-Pesa, bank transfers, credit ledger and compensating refunds end-to-end.
-8. T08: close expired/paused/cancelled campaign transitions and scheduling automation, including race-safe expiry.
+8. T08: race-safe expiry transitions and a consolidated 15-minute scheduler are implemented at source level. Remaining gate: apply migrations, confirm the single cron job is registered, and reconcile legacy expired/paused/cancelled rows.
 9. T09: complete the advertiser recovery journey for failed, pending, rejected and expired campaigns.
 10. T10: finish cross-module consolidation and collect operational evidence.
 
-No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, accessibility audit or deployment were run. New migrations `f371` through `f375` are committed as source only and have not been applied.
+No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, accessibility audit or deployment were run. New B6 migrations `f373` through `f388` are committed as source only and have not been applied; earlier B6 migrations `f370` and `f372` are also pending application where not already deployed.
