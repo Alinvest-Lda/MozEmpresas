@@ -182,6 +182,28 @@ export async function issuePartnerAdPayment(formData: FormData) {
   redirect("/dashboard/admin/publicidade?result=payment-issued&method=" + method + "&reference=" + encodeURIComponent(String(data?.payment_reference || "")) + "&credits=" + String(data?.credits_charged || 0));
 }
 
+export async function confirmPartnerAdBankTransfer(formData: FormData) {
+  const paymentId=String(formData.get("payment_id")||"");
+  const notes=String(formData.get("notes")||"").trim();
+  if(!z.string().uuid().safeParse(paymentId).success||notes.length>500){
+    redirect("/dashboard/admin/publicidade?result=bank-transfer-confirmation-error");
+  }
+  const {supabase,authorized}=await getSuperAdminContext();
+  if(!authorized) redirect("/login?next=/dashboard/admin/publicidade");
+  const {error}=await supabase.rpc("admin_confirm_partner_bank_transfer",{
+    p_payment_id:paymentId,
+    p_notes:notes||null,
+  });
+  if(error){
+    const known=["BANK_TRANSFER_CONFIRMATION_EXPIRED","PAYMENT_NOT_FOUND","INVALID_PAYMENT_METHOD","PAYMENT_NOT_PENDING","CAMPAIGN_PAYMENT_ORDER_MISMATCH","FINANCIAL_DOCUMENT_NOT_FOUND","FINANCIAL_DOCUMENT_PARTNER_MISMATCH","FINANCIAL_DOCUMENT_NOT_PAYABLE","FINANCIAL_DOCUMENT_OVERPAID","CAMPAIGN_NOT_FOUND","CAMPAIGN_PARTNER_MISMATCH","CAMPAIGN_PAYMENT_AMOUNT_MISMATCH"].find(code=>error.message.includes(code));
+    redirect("/dashboard/admin/publicidade?result="+(known||"bank-transfer-confirmation-error"));
+  }
+  revalidatePath("/dashboard/admin/publicidade");
+  revalidatePath("/parceiro/publicidade");
+  revalidatePath("/dashboard/admin/monetizacao");
+  redirect("/dashboard/admin/publicidade?result=partner-bank-transfer-confirmed");
+}
+
 export async function cancelPartnerAdCampaign(formData: FormData) {
   const id = String(formData.get("id") || "");
   const reason = String(formData.get("reason") || "").trim();
