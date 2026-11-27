@@ -10,7 +10,7 @@ const schema = z.object({
   email: z.string().trim().email().max(180),
   phone: z.string().trim().max(40).optional(),
   surface: z.enum(["HOME","DIRECTORY","MARKETPLACE","OPPORTUNITIES"]),
-  slot: z.enum(["HERO","BILLBOARD","FEATURED","INFEED"]),
+  slot: z.enum(["HERO","BILLBOARD","FEATURED","INFEED","EXCLUSIVE","CONTEXT"]),
   creativeType: z.enum(["BANNER","NATIVE","CARD","TEXT"]),
   packageName: z.string().trim().min(2).max(120),
   startsAt: z.string().max(40).optional(),
