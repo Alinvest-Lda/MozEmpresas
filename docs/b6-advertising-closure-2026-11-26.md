@@ -88,6 +88,8 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 
 ### B6-T04 — operational queue and decision controls
 - Both public advertising API endpoints now stream-limit request bodies to 16 KiB before JSON parsing, including chunked requests; decision and event payloads still undergo strict schema validation.
+- The event endpoint now distinguishes an explicit database deduplication result (`false`) from a missing/malformed RPC result, which is treated as an error rather than silently acknowledged. Commit `e392529`.
+
 - The public advertising proposal intake also now streams a 16 KiB body limit before JSON parsing, rejects invalid date windows (end must be after start when both are supplied), and caps budget/CPM inputs to avoid pathological values.
 - The same intake now requires HTTPS for creative-image and destination URLs, and bounds the supplied date string length. Commit `fb926b6`.
  Commit `a31085b`.
