@@ -160,6 +160,8 @@ export default async function Marketplace({
           </div>
         </section>
 
+        <PublicAd surface="MARKETPLACE" slot="BILLBOARD" context={{query:q,type,location,category}} interests={[q,type,location,category].filter(Boolean)} />
+        <PublicAd surface="MARKETPLACE" slot="FEATURED" context={{query:q,type,location,category,placement:"featured"}} interests={[q,type,location,category,"featured"].filter(Boolean)} />
         <PublicAd surface="MARKETPLACE" slot="EXCLUSIVE" variant="billboard" className="marketplace-exclusive-billboard" context={{query:q,type,location,category,placement:"exclusive_partner"}} interests={[q,type,location,category,"exclusive_partner"].filter(Boolean)} />
 
         <section className="marketplace-section marketplace-results-section">
