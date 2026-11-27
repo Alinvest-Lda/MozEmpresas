@@ -333,3 +333,7 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - A mesma activação prematura encontrada no fluxo de créditos existia no callback M-Pesa: a confirmação do operador mudava qualquer campanha `APPROVED` para `ACTIVE`, mesmo que o início contratado ainda fosse futuro ou o período já tivesse terminado.
 - F400 mantém a liquidação idempotente, mas só activa a campanha se o instante estiver dentro do intervalo contratado; nos restantes casos conserva `APPROVED` para activação administrativa no momento correcto ou cancelamento/estorno se o período já tiver expirado. A função também recebe configuração catalog-first de `search_path`.
 - Commit `7ceec52758f674e66b4c428451bc225cff92a070`. Migração não aplicada nem validada.
+
+### B6 — lote de segurança das rotinas de pagamento de publicidade (27/11/2026)
+- A revisão das funções privilegiadas de emissão, confirmação e falha de pagamentos de campanhas identificou que ainda mantinham o caminho de resolução herdado `public, pg_temp`. F401 define explicitamente `pg_catalog, public, pg_temp` nas três RPCs, sem alterar a lógica de liquidação ou as permissões de execução.
+- Commit `6063f6fb2dd9aa7fad7ef2386c40e654b3b84437`. Migração não aplicada.
