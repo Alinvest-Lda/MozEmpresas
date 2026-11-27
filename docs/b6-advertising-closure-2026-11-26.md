@@ -156,4 +156,4 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 9. T09: complete the advertiser recovery journey for failed, pending, rejected and expired campaigns.
 10. T10: finish cross-module consolidation and collect operational evidence.
 
-No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, accessibility audit or deployment were run. New B6 migrations `f373` through `f388` are committed as source only and have not been applied; earlier B6 migrations `f370` and `f372` are also pending application where not already deployed.
+No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, accessibility audit or deployment were run. New B6 migrations `f373` through `f388` are committed as source only and have not been applied; earlier B6 telemetry migration `f370` is also pending application where not already deployed.
