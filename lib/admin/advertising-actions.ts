@@ -157,7 +157,7 @@ export async function issuePartnerAdPayment(formData: FormData) {
   const method = String(formData.get("payment_method") || "").toUpperCase();
   const rawPrice = String(formData.get("price_mzn") || "").trim();
   const price = rawPrice === "" ? null : Number(rawPrice);
-  if (!z.string().uuid().safeParse(id).success || !["MPESA", "CREDITS"].includes(method)
+  if (!z.string().uuid().safeParse(id).success || !["MPESA", "CREDITS", "BANK_TRANSFER"].includes(method)
     || (price !== null && (!Number.isFinite(price) || price <= 0))) {
     redirect("/dashboard/admin/publicidade?result=payment-error");
   }
