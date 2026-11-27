@@ -57,6 +57,10 @@ describe("isEligibleCampaign", () => {
     expect(isEligibleCampaign({ ...eligibleCampaign, surface: "DIRECTORY" }, validPayload, now)).toBe(false);
   });
 
+  it("rejects a known slot on the wrong public surface", () => {
+    expect(isEligibleCampaign(eligibleCampaign, { ...validPayload, surface: "HOME", slot: "CONTEXT" }, now)).toBe(false);
+  });
+
   it("rejects campaigns without a canonical slot or surface", () => {
     expect(isEligibleCampaign({ ...eligibleCampaign, slot: null, surface: null }, validPayload, now)).toBe(false);
     expect(isEligibleCampaign({ ...eligibleCampaign, slot: null }, validPayload, now)).toBe(false);
