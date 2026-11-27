@@ -342,3 +342,7 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - A criação do agendador dependia de instalar `pg_cron` num schema explicitamente indicado como `pg_catalog`, embora a rotina utilize o schema próprio `cron`. A criação passou a respeitar o schema predefinido da extensão e F402 garante a instalação quando disponível, remove a duplicação do job pelo nome e agenda uma única reconciliação a cada 15 minutos.
 - Quando `pg_cron` ou `cron.job` não estão disponíveis, a migração deixa um aviso explícito de que é necessário um agendador externo; não declara o processo activo.
 - Commits `30270f35f9cc87660a2f92891c163545110ec164` e `3d552febdbddb46b809de8428289f7d4455a2a44`. A existência efectiva da extensão/job só poderá ser confirmada após aplicação e verificação no ambiente.
+
+### B6 — robustez da identidade de visitante para medição publicitária (27/11/2026)
+- A chave de visitante podia ser reutilizada sem validar o tamanho e o fallback sem `crypto.randomUUID` não garantia o mínimo exigido pela API. A geração agora valida chaves existentes e garante um identificador dentro dos limites aceites pelo contrato de eventos.
+- Commit `4a9139d14196a287a447b5976cbfc927062bf49a`.
