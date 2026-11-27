@@ -36,6 +36,7 @@ begin
     raise exception 'CANCELLATION_NOT_ALLOWED';
   end if;
   if v_promotion.payment_method='CREDITS' then
+    if v_external_reference is not null then raise exception 'UNEXPECTED_MPESA_REFUND_REFERENCE'; end if;
     v_refund := coalesce(v_promotion.credits_charged,0);
     if v_refund<=0 then raise exception 'CREDIT_REFUND_NOT_AVAILABLE'; end if;
     select * into v_wallet from public.business_credit_wallets where business_id=v_promotion.business_id for update;
