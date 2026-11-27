@@ -3,6 +3,7 @@ import { withApiObservability } from "@/lib/observability/api";
 import { z } from "zod";
 import { createAdminClient, enforceRateLimit, getPostgresClient, rateLimitResponse } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
+import { isValidAdSurfaceSlot } from "@/lib/advertising/placements";
 
 const schema = z.object({
   companyName: z.string().trim().min(2).max(160),
@@ -29,13 +30,7 @@ const schema = z.object({
   targetInterests: z.string().trim().max(1000).optional(),
   targetLocations: z.string().trim().max(500).optional(),
 }).superRefine((payload,ctx)=>{
-  const validSlots:Record<string,string[]>={
-    HOME:["HERO","BILLBOARD","EXCLUSIVE"],
-    DIRECTORY:["BILLBOARD","FEATURED","INFEED","CONTEXT"],
-    MARKETPLACE:["BILLBOARD","FEATURED","EXCLUSIVE","INFEED"],
-    OPPORTUNITIES:["BILLBOARD","FEATURED","INFEED"],
-  };
-  if(!validSlots[payload.surface]?.includes(payload.slot)){
+  if(!isValidAdSurfaceSlot(payload.surface,payload.slot)){
     ctx.addIssue({code:z.ZodIssueCode.custom,message:"A posição não está disponível no espaço seleccionado.",path:["slot"]});
   }
   const parseCampaignDate=(value:string|undefined,isEnd=false):number|null=>{
