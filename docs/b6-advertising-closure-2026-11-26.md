@@ -476,3 +476,5 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - A fila de campanhas de parceiros passou também a resolver o nome da empresa associada à conta parceira, substituindo o rótulo genérico sempre que existe associação empresarial. Falhas nesta consulta são sinalizadas como dados incompletos. Commit `6c6f8da030054810b2b8b00bb808df5018d7b980`.
 
 - O limite de resolução de contas parceiras por empresa passou também a ser contado; quando excedido, a fila assinala explicitamente que a pesquisa não é exaustiva. Commit `e825459dc8dea8648ae0fab51db5f3bcbe1ae0ad`.
+
+- O formulário de parceiro removia a validação de duração com uma tolerância de `0,02` dias (cerca de 29 minutos), enquanto a RPC aplicava o limite exacto do produto. A tolerância foi removida para que a validação cliente e servidor usem o mesmo limite. Commit `e30836177a0ebba3a0c4148a994097fad3d25bbc`.
