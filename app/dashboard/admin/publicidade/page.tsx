@@ -23,9 +23,9 @@ type AdvertisingRequest = {
 };
 const promotionStatuses = ["PENDING", "ACTIVE", "PAUSED", "EXPIRED"];
 const partnerStatuses = ["DRAFT", "REQUESTED", "APPROVED", "ACTIVE", "PAUSED", "ENDED", "REJECTED", "CANCELLED"];
-function partnerNextStatuses(status: string | null, paymentStatus?: string | null, endsAt?: string | null) {
+function partnerNextStatuses(status: string | null, paymentStatus?: string | null, endsAt?: string | null, startsAt?: string | null) {
   if (status === "REQUESTED") return ["APPROVED", "REJECTED"];
-  if (status === "APPROVED") return !paymentStatus || paymentStatus === "FAILED" ? ["REJECTED"] : [];
+  if (status === "APPROVED") return paymentStatus === "PAID" && endsAt && new Date(endsAt).getTime() > Date.now() && (!startsAt || new Date(campaignStartDate).getTime() <= Date.now()) ? ["ACTIVE"] : !paymentStatus || paymentStatus === "FAILED" ? ["REJECTED"] : [];
   if (status === "ACTIVE") return ["PAUSED", ...(endsAt && new Date(endsAt).getTime() <= Date.now() ? ["ENDED"] : [])];
   if (status === "PAUSED") return [...(paymentStatus === "PAID" ? ["ACTIVE"] : []), ...(endsAt && new Date(endsAt).getTime() <= Date.now() ? ["ENDED"] : [])];
   return [];
@@ -170,7 +170,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   }
   const campaigns = [
     ...allBusiness.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.price_mzn == null && c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.price_mzn ?? c.budget) + " MZN", table: "business", allowed: promotionStatuses }); }),
-    ...allPartner.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: partnerNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at) }); }),
+    ...allPartner.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: partnerNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at, c.starts_at) }); }),
   ].sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
   // Query-level filters are authoritative. Avoid a second client-side pass with a
   // different searchable-field set or clock, which would make page totals disagree.
