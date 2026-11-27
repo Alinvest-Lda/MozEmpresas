@@ -423,3 +423,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 ### B6 — consolidação da matriz de posições publicitárias (27/11/2026)
 - A mesma matriz de superfície/posição estava duplicada no formulário comercial, API de pedidos, API de decisão, validação de eventos e filtro do catálogo empresarial. Foi criada uma definição TypeScript partilhada e os cinco consumidores passaram a reutilizá-la; as migrações SQL mantêm a cópia equivalente necessária no lado da base de dados.
 - Commits `17c83f5d113d0174a0e4e37b28b1579e5caaa69b`, `67e842e354757d74d331ba66330a3401465d59ed`, `ee144f13db0b3800952530b1d79cb1ba1b1b3f7d`, `7484ff3c6288d41094905433f42a8bbacec67aad`, `d7d63e15dc04dde32b80dee5f16f706b2e614678`, `2bbcd7b6258973f8eab7164e5ae34352c8c09e7c` e `1296aceb3a977b31f62e72bcff40d189846af07f`.
+
+### B6 — consolidação da lógica de preço no checkout empresarial (27/11/2026)
+- O formulário calculava localmente o acréscimo por segmentação, enquanto a biblioteca de validação mantinha uma segunda implementação apenas para MZN. A lógica TypeScript foi consolidada na biblioteca partilhada para preço em MZN e créditos, com a mesma regra de acréscimo e tratamento explícito de preço ausente.
+- O checkout passou a reutilizar os dois cálculos e os testes de regressão cobrem a equivalência do factor de segmentação e a indisponibilidade de preço ausente. Os testes não foram executados.
+- Commits `155b5195834f776458f72058f2b7719b9037f559`, `00f997fc367bcd5039ee4cc0cd1553d26b0ea58b`, `5d7e9700a8dcb9ef097bdbae5635df970d6eda17`, `9f70d1860df319a7a423e2f0225a6a632a64c46c` e `94c86133f76d143ab1a06eae2c719ff0335d4289`.
