@@ -142,7 +142,9 @@ export async function cancelBusinessPromotion(formData: FormData) {
     redirect("/dashboard/admin/publicidade?result=" + code);
   }
   revalidatePath("/dashboard/admin"); revalidatePath("/dashboard/admin/publicidade"); revalidatePath("/dashboard/admin/monetizacao"); revalidatePath("/dashboard/publicidade");
-  redirect("/dashboard/admin/publicidade?result=cancel-success&refund=" + String(data?.credits_refunded ?? 0));
+  redirect("/dashboard/admin/publicidade?result=cancel-success&refund=" + String(data?.credits_refunded ?? 0)
+    + "&refundType=" + encodeURIComponent(String(data?.refund_type ?? ""))
+    + "&reference=" + encodeURIComponent(String(data?.external_reference ?? "")));
 }
 
 export async function issuePartnerAdPayment(formData: FormData) {
