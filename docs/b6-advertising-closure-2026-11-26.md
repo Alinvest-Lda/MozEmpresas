@@ -101,6 +101,15 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - Business credit-backed ad purchases now count `PAUSED` campaigns in product-capacity checks, preventing a paused campaign from releasing inventory while it can still be resumed. Commit `28cee94`.
 - The partner and business changes are source-level database implementations; they remain dependent on migration application and operational verification.
 
+### B6-T05 — attribution integrity and authoritative admin metrics
+- Ad event validation now requires an exact campaign surface and slot match. Business events are validated against the campaign's persisted `placement` (aliased as its surface), rather than accepting any surface when the source was a business campaign. Commits `16e500b` and `582b5e2`.
+- The Super Admin campaign table no longer relies on denormalized `impressions_count` / `clicks_count` columns for its per-campaign totals. A bounded, role-checked RPC aggregates the authoritative `ad_delivery_events` rows for the campaigns on the current page, with a supporting index. If the RPC fails, campaign metrics and CTR are suppressed rather than shown as zero. Commits `0c53dfc`, `8c2d0cb`, `b867b3b`, `4c27770`.
+- This aligns the admin campaign view with the event pipeline, but does not yet establish commercial conversion attribution or ROI.
+
+### B6-T08 — expiry reconciliation
+- Added service-role-only, idempotent database function `reconcile_advertising_campaign_expiry_f376()`. It transitions expired active business promotions to `EXPIRED` and expired active/paused partner campaigns to `ENDED`, setting explicit system reasons so the existing immutable lifecycle event triggers capture automated expiry. Commit `c33c0bf`.
+- The function is not scheduled or executed. A production scheduler/cron invocation and deployed operational verification remain open.
+
 ### Remaining B6 Definition of Done gates
 1. T01: reconcile every active product with a real public surface/slot and verify catalogue invariants in the deployed database.
 2. T02: finish the business M-Pesa request/callback and recovery trace, including ambiguous outcomes and duplicate retries.
