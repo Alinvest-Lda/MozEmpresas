@@ -265,3 +265,8 @@ Este lote fecha em conjunto três pontos de consistência entre formulário, API
 - A revisão das funções de liquidação identificou que a F392 redefiniu `admin_confirm_partner_bank_transfer` com `search_path=public,pg_temp`, abaixo do padrão catalog-first aplicado às restantes funções privilegiadas deste módulo.
 - A migração F394 altera a configuração persistente da função para `pg_catalog,public,pg_temp`, sem reescrever a lógica de liquidação, os controlos de prazo ou os efeitos contabilísticos. Commit `446f7ba3480ae33b42807fd021760cf57646791f`.
 - Migração ainda não aplicada; nenhuma execução ou validação SQL foi realizada.
+
+### B6 — lote funcional: estados comerciais e moderação de pedidos (27/11/2026)
+- A reconciliação entre interface, Server Action e RPC identificou que o painel oferecia `CANCELLED` para pedidos já marcados como `PAID`, embora a função transaccional F392 só permita a transição `PAID → APPROVED` para preservar a evidência de liquidação.
+- Alinhada a matriz de transições da Server Action com a regra transaccional e limitada a lista de opções do painel aos estados permitidos para o estado actual do pedido. O operador deixa de poder seleccionar transições que o servidor necessariamente rejeitaria. Commits `239240b1e47ea395185fd776fae167b67e007483` e `f0125e9436cd3f7e29e18d92e801bb17865b04e5`.
+- Fonte apenas; não foram executados testes, builds ou operações de base de dados.
