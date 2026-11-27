@@ -279,3 +279,8 @@ Este lote fecha em conjunto três pontos de consistência entre formulário, API
 ### B6 — correcção de dados necessários à elegibilidade de reembolso (27/11/2026)
 - A implementação da regra de visibilidade das acções de cancelamento revelou que a consulta da fila administrativa não carregava `confirmed_at` da cobrança de parceiro. Sem esse campo, a interface não conseguiria determinar o fim das 24 horas, mesmo depois de o prazo ter expirado.
 - A consulta agora inclui `confirmed_at`, permitindo ao painel aplicar a mesma referência temporal usada pela regra de reembolso. Commit `761386fbcdc6abae7dc198938db513debf534cce`.
+
+### B6 — lote funcional: reconciliação de cobranças e histórico de campanhas de parceiros (27/11/2026)
+- A fila administrativa carregava a relação de cobranças sem ordenação garantida e utilizava o primeiro elemento como se fosse sempre a cobrança mais recente. Com reemissões após falhas, isso podia apresentar um estado antigo, permitir uma nova emissão indevida ou ocultar a cobrança efectivamente paga.
+- A consulta foi separada e passou a carregar as ordens de pagamento dos IDs da página, ordenadas por `created_at DESC`; o painel associa apenas a cobrança mais recente a cada campanha. Falhas nesta consulta também passam a marcar a fila como incompleta e a ocultar os indicadores agregados. Commits `e372865767508c014ad67ec2208f8380ab6c2297` e `eed7de43d509b88c0f58498af7dcb2f4a4b325c6`.
+- Correcção de fonte; sem execução de testes, builds ou consultas à base de dados.
