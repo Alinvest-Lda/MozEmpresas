@@ -453,3 +453,5 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - Commits `653d3d2a043a027a9cbcecb3c3bdecf50303089d`, `cedc4ffd90fc23160c36ed8db7df65e13201982a`, `c250df21f49d32b80b97ee62dd4da40da79d738d` e `28b036d1c4d463f19208169b696db28e0801f600`. Testes actualizados, não executados.
 
 - O mínimo de data/hora dos campos foi arredondado para o minuto seguinte quando o relógio contém segundos, evitando que a própria opção mínima já esteja no passado no momento da submissão. Commits `8563658894c906162b86dda8542a323a07134e3c` e `496584f3c45b35f732c858353e9b85e9606afbb3`.
+
+- As notificações de liquidação/expiração foram isoladas em blocos de melhor esforço: uma falha no serviço de notificações não pode reverter a confirmação financeira, o callback M-Pesa ou a expiração de uma cobrança. A reconciliação financeira permanece autoritativa e regista aviso operacional se a notificação falhar. Commits `d41157d6790e3a94ed40c4774d9dea8bc3950acf`, `5bd4b8a42a5e0cc7bbfac7bc71180c66a2a0fd47`, `d3adb977955bd7040b5e2500520e68446e148fad` e `9312f251017b0c191f6bba4c069a63b17c82077f`.
