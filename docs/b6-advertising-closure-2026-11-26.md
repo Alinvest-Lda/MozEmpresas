@@ -97,6 +97,8 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - Commits: migration `f373` `8e0caa7`, follow-up RPC hardening `173e1be`, immutable evidence guard `0390ea3`, server action `7610ce2` and compatibility correction `aaec750`, admin UI `9fb3506` and conditional evidence payload `06e5989`.
 
 ### B6-T02 / T09 — advertiser payment state and investment integrity
+- Business advertisers now receive in-platform notifications for campaign activation, pause, expiry and cancellation from the same status trigger that writes the immutable admin event. The trigger covers both manual decisions and the scheduled expiry reconciler, avoiding a separate notification path and duplicate messages. Migration `f388` commit `872f226`; duplicate manual notification path removed from `f373` in commit `47f53ad`.
+
 - The business advertiser history now distinguishes an M-Pesa request awaiting payment from a payment confirmed and awaiting campaign activation. The investment total excludes unpaid requests and credit purchases instead of treating every campaign price as settled MZN investment. Commits `066554a`, `df2846c`.
 
 ### B6-T02 / T04 / T07 — business M-Pesa settlement and refund evidence
