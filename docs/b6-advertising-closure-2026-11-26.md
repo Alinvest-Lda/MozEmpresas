@@ -441,3 +441,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - Commits `2e214d38cd5effe8dcd4c4321e6e77ab383772ac`, `6f1a2a9371683c6a14b455837a255750cd5e99cb`, `b55b83f1d9ec712405a5ada117d371a2806d1299` e `ec2bba6ccfcadb10fab93221a80e697a789ccb94`. Migração e job não aplicados/confirmados em ambiente.
 
 - A renovação do prazo de um pedido que já estava em `AWAITING_PAYMENT` não alterava o estado e, por isso, não era capturada pelo trigger histórico de transições. A F405 passou também a registar a renovação em `advertising_admin_events`, com actor, razão e estado anterior/novo, sem duplicar eventos de transição normal. Commit `024d2c45c921f24eb2c733db444ec633770ca951`.
+
+### B6 — alinhamento da experiência de compra de créditos com o prazo bancário (27/11/2026)
+- Os pedidos de compra de créditos por transferência já eram bloqueados pela RPC depois de 24 horas, mas o painel administrativo continuava a apresentar o botão de aprovação e o cliente via apenas a data limite.
+- A área administrativa agora oculta a aprovação depois do prazo e orienta a recusa do pedido expirado para libertar uma nova solicitação; a área da empresa identifica explicitamente o prazo expirado e informa o passo seguinte.
+- Commits `4184693b3c35279cc0586c44ff98d0a3aed83fdf` e `9556a328cc752de737cb1a093d885e687ff78b24`.
