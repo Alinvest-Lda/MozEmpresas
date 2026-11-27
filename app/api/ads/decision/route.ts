@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { withApiObservability } from "@/lib/observability/api";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
-import { isValidAdSurfaceSlot } from "@/lib/advertising/event-validation";
+import { isValidAdSurfaceSlot } from "@/lib/advertising/placements";
 import { createAdminClient, enforceRateLimit, getPostgresClient, rateLimitResponse } from "@/lib/security/rate-limit";
 
 const schema=z.object({
