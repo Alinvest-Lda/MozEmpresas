@@ -275,3 +275,7 @@ Este lote fecha em conjunto três pontos de consistência entre formulário, API
 - O painel apresentava a acção de cancelamento de campanhas de parceiros pagas por transferência bancária antes de terminar a janela de activação de 24 horas. A base de dados recusava correctamente a operação, mas a interface permitia iniciar uma acção inelegível.
 - A elegibilidade passou a considerar o método de pagamento, estado da campanha e hora de confirmação: para campanhas `APPROVED` pagas por transferência bancária, o formulário de cancelamento só aparece depois de decorridas 24 horas; para os restantes casos mantém-se a regra de campanha futura ou aprovada já expirada. Commit `d8e0cc579408f9993f3acb79b88c3fe6362b0cee`.
 - Código-fonte actualizado; sem testes, build, execução SQL ou aplicação de migrações.
+
+### B6 — correcção de dados necessários à elegibilidade de reembolso (27/11/2026)
+- A implementação da regra de visibilidade das acções de cancelamento revelou que a consulta da fila administrativa não carregava `confirmed_at` da cobrança de parceiro. Sem esse campo, a interface não conseguiria determinar o fim das 24 horas, mesmo depois de o prazo ter expirado.
+- A consulta agora inclui `confirmed_at`, permitindo ao painel aplicar a mesma referência temporal usada pela regra de reembolso. Commit `761386fbcdc6abae7dc198938db513debf534cce`.
