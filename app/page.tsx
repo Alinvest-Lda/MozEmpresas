@@ -15,19 +15,6 @@ const categories = [
 export default async function Home() {
   const supabase = (await import("@/lib/supabase/server")).createClient;
   const s = await supabase();
-  const now = new Date().toISOString();
-  const { data: featuredPromotions } = await s
-    .from("business_promotions")
-    .select("business_id")
-    .eq("status", "ACTIVE")
-    .eq("slot", "FEATURED")
-    .lte("starts_at", now)
-    .gt("ends_at", now)
-    .order("created_at", { ascending: false })
-    .limit(10);
-
-  const featuredIds = [...new Set((featuredPromotions ?? []).map((item) => item.business_id).filter(Boolean))];
-
   const { data: presenceBusinesses } = await s
     .from("businesses")
     .select("id,name,slug,logo_url,updated_at")
@@ -180,25 +167,19 @@ export default async function Home() {
         <div className="container">
           <div className="home-v2-presence-head">
             <div><span className="eyebrow">Presença empresarial</span><h2>Quem Está Aqui</h2></div>
-            <span>Empresas em destaque no MozEmpresas</span>
+            <span>Empresas com presença no directório</span>
           </div>
           <div className="home-v2-logo-track">
-            {(() => {
-              const featured = (presenceBusinesses ?? []).filter((business) => featuredIds.includes(business.id));
-              const rest = (presenceBusinesses ?? []).filter((business) => !featuredIds.includes(business.id));
-              const ordered = [...featured, ...rest];
-              return ordered.map((business) => {
-                const isPartner = (partnerBusinessIds ?? []).some(
-                  (relationship) => relationship.business_id === business.id || relationship.partner_business_id === business.id
-                );
-                const isFeatured = featuredIds.includes(business.id);
-                return (
-                  <Link href={"/empresas/" + business.slug} key={business.id} className={"home-v2-logo-pill" + (isFeatured ? " home-v2-featured-presence" : "") + (isPartner ? " home-v2-partner-presence" : "")} title={business.name}>
-                    {business.logo_url ? <img src={business.logo_url} alt={business.name} /> : <span>{business.name}</span>}
-                  </Link>
-                );
-              });
-            })()}
+            {(presenceBusinesses ?? []).map((business) => {
+              const isPartner = (partnerBusinessIds ?? []).some(
+                (relationship) => relationship.business_id === business.id || relationship.partner_business_id === business.id
+              );
+              return (
+                <Link href={"/empresas/" + business.slug} key={business.id} className={"home-v2-logo-pill" + (isPartner ? " home-v2-partner-presence" : "")} title={business.name}>
+                  {business.logo_url ? <img src={business.logo_url} alt={business.name} /> : <span>{business.name}</span>}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
