@@ -108,7 +108,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
       clicks:Number(row.clicks_count??0),
     }] as [string,{impressions:number;clicks:number}])
   );
-  const withDeliveryMetrics = (campaign:Campaign,source:"business"|"partner"):Campaign => {
+  const withDeliveryMetrics = (campaign:Campaign):Campaign => {
     if(deliveryMetricsError) return {...campaign,impressions_count:null,clicks_count:null};
     const metrics=deliveryMetricsByCampaign.get(campaign.id);
     return {...campaign,impressions_count:metrics?.impressions??0,clicks_count:metrics?.clicks??0};
@@ -134,8 +134,8 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     eventsByAdvertisingEntity.set(event.entity_id, list);
   }
   const campaigns = [
-    ...allBusiness.map((raw) => { const c=withDeliveryMetrics(raw,"business"); return ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.budget) + " " + (c.currency || ""), table: "business", allowed: promotionStatuses }); }),
-    ...allPartner.map((raw) => { const c=withDeliveryMetrics(raw,"partner"); return ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: partnerNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at) }); }),
+    ...allBusiness.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.budget) + " " + (c.currency || ""), table: "business", allowed: promotionStatuses }); }),
+    ...allPartner.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: partnerNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at) }); }),
   ].sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
   const matchesQuery = (value: string) => !q || value.toLocaleLowerCase("pt").includes(q.toLocaleLowerCase("pt"));
   const filteredCampaigns = campaigns.filter((c) => {
