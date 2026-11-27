@@ -80,14 +80,14 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const queueFutureIso=new Date(queueNow.getTime()+7*24*60*60*1000).toISOString();
   const safeQueueSearch=q;
   const businessNameSearch=safeQueueSearch
-    ? await supabase.from("businesses").select("id",{count:"exact"}).ilike("name","%"+safeQueueSearch+"%").limit(1000)
+    ? await supabase.from("businesses").select("id",{count:"exact"}).ilike("name","%"+safeQueueSearch+"%").limit(200)
     : {data:[],count:0,error:null};
-  const businessNameSearchError=Boolean(businessNameSearch.error)||(businessNameSearch.count??0)>1000;
+  const businessNameSearchError=Boolean(businessNameSearch.error)||(businessNameSearch.count??0)>200;
   const businessNameFilters=(businessNameSearch.data??[]).map(row=>row.id).filter(Boolean);
   const partnerAccountSearch=businessNameFilters.length
-    ? await supabase.from("partner_accounts").select("id",{count:"exact"}).in("business_id",businessNameFilters).limit(1000)
+    ? await supabase.from("partner_accounts").select("id",{count:"exact"}).in("business_id",businessNameFilters).limit(200)
     : {data:[],error:null};
-  const partnerAccountSearchError=Boolean(partnerAccountSearch.error)||(partnerAccountSearch.count??0)>1000;
+  const partnerAccountSearchError=Boolean(partnerAccountSearch.error)||(partnerAccountSearch.count??0)>200;
   const partnerAccountFilters=(partnerAccountSearch.data??[]).map(row=>row.id).filter(Boolean);
   const applyQueueFilters=(initial:any,fields:string[],extraOrFilters:string[]=[] )=>{
     let query=initial;
