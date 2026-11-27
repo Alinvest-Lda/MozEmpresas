@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculateCampaignCredits,
   calculateCampaignPrice,
   isUuid,
   normalizeCampaignTargets,
@@ -23,6 +24,11 @@ describe("advertising purchase validation", () => {
     const now = new Date("2026-11-01T12:00:00.000Z");
     expect(parseMaputoCampaignStart("2026-11-02", now)).toBe("2026-11-01T22:00:00.000Z");
     expect(parseMaputoCampaignStart("2026-11-01", now)).toBeNull();
+  });
+
+  it("calculates credit cost with the same targeting factor as the MZN price", () => {
+    expect(calculateCampaignCredits(100, ["Maputo"], ["Construção"])).toBe(120);
+    expect(calculateCampaignCredits(null, [], [])).toBe(0);
   });
 
   it("trims, de-duplicates and bounds target values", () => {
