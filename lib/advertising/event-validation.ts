@@ -30,7 +30,7 @@ export function isEligibleCampaign(
   const endsAt = new Date(campaign.ends_at);
   if (!Number.isFinite(startsAt.getTime()) || !Number.isFinite(endsAt.getTime())) return false;
   if (startsAt.getTime() > now.getTime() || endsAt.getTime() <= now.getTime()) return false;
-  if (campaign.slot && campaign.slot !== payload.slot) return false;
-  if (campaign.surface && campaign.surface !== payload.surface) return false;
+  if (!campaign.slot || campaign.slot !== payload.slot) return false;
+  if (!campaign.surface || campaign.surface !== payload.surface) return false;
   return true;
 }
