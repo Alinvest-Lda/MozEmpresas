@@ -124,3 +124,16 @@ begin
 end; $function$;
 revoke all on function public.admin_cancel_partner_ad_campaign(uuid,text,text) from public,anon;
 grant execute on function public.admin_cancel_partner_ad_campaign(uuid,text,text) to authenticated;
+
+-- Public advertiser requests also expire for bank-transfer confirmation after 24h.
+do $migration$
+declare v_definition text;
+begin
+ select pg_get_functiondef('public.admin_update_advertising_status(text,uuid,text,text,text,text,numeric)'::regprocedure) into v_definition;
+ v_definition:=replace(v_definition,
+  'if p_new_status=''PAID'' then',
+  'if p_new_status=''PAID'' then if p_payment_method=''BANK_TRANSFER'' and exists(select 1 from public.advertising_requests ar where ar.id=p_entity_id and ar.created_at+interval ''24 hours''<=now()) then raise exception ''BANK_TRANSFER_CONFIRMATION_EXPIRED'' using errcode=''23514''; end if;');
+ if position('BANK_TRANSFER_CONFIRMATION_EXPIRED' in v_definition)=0 then raise exception 'F392_REQUEST_CONFIRMATION_GUARD_REWRITE_FAILED'; end if;
+ execute v_definition;
+end
+$migration$;
