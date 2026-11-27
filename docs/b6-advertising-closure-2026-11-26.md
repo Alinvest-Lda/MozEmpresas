@@ -386,3 +386,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - O painel empresarial apresentava todos os estados possíveis independentemente do estado actual, liquidação e período contratado. Isso permitia seleccionar `ACTIVE` antes do pagamento ou antes da data de início, mesmo que a RPC recusasse a transição.
 - A fila passou a calcular as transições empresariais apresentadas com base no estado, prova de liquidação, data de início e data final; a consulta inclui agora `credits_charged` para distinguir compras por créditos efectivamente liquidadas.
 - Commit `e8ddaeee51899b9229e32cf8fea0f2a9d03016f3`.
+
+### B6 — lote funcional: prevenção de submissões empresariais inelegíveis (27/11/2026)
+- O checkout permitia seleccionar mais de 10 critérios de localização/categoria, embora a validação do servidor limite cada grupo a 10; também apresentava o pagamento por créditos como disponível sem comparar o saldo da empresa com o custo segmentado.
+- O formulário limita cada grupo a 10 selecções, calcula a disponibilidade de créditos com base no saldo da empresa actualmente seleccionada e apresenta um estado específico quando não existe empresa associada à conta.
+- Commit `bbd5306bd51ce2a08aed5291c77b0fdf0d7a3dcf`.
