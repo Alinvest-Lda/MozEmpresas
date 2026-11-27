@@ -8,9 +8,15 @@ export const POST = withApiObservability("api.ads_event", async (request: Reques
   const rate = await enforceRateLimit(request, { scope: "ads-event", limit: 60, windowSeconds: 60 });
   if (!rate.allowed) return rateLimitResponse(rate.unavailable);
 
+  const declaredLength=Number(request.headers.get("content-length")||0);
+  if(declaredLength>16_384) return NextResponse.json({error:"Evento de publicidade demasiado grande."},{status:413});
+  const rawBody=await request.text().catch(()=>"");
+  if(rawBody.length>16_384) return NextResponse.json({error:"Evento de publicidade demasiado grande."},{status:413});
+  let body:unknown=null;
+  try{body=JSON.parse(rawBody);}catch{}
   let payload: AdEventPayload;
   try {
-    payload = adEventSchema.parse(await request.json());
+    payload = adEventSchema.parse(body);
   } catch {
     return NextResponse.json({ error: "Evento de publicidade inválido." }, { status: 400 });
   }
