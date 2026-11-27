@@ -81,11 +81,11 @@ begin
   where id = v_wallet.id;
 
   insert into public.business_promotions(
-    business_id,listing_id,title,placement,status,starts_at,ends_at,budget,currency,
+    business_id,listing_id,title,placement,slot,status,starts_at,ends_at,budget,currency,
     ad_product_id,payment_method,price_mzn,credits_charged,audience_mode
   ) values (
     p_business_id,p_listing_id,coalesce(nullif(trim(p_title),''),v_product.name),
-    v_product.placement,'ACTIVE',p_starts_at,v_end,v_price,'MZN',
+    v_product.placement,v_product.slot,'ACTIVE',p_starts_at,v_end,v_price,'MZN',
     v_product.id,'CREDITS',v_price,v_credits,
     case when cardinality(v_locations)+cardinality(v_categories)>0 then 'TARGETED' else 'GENERAL' end
   ) returning id into v_promotion;
@@ -203,11 +203,11 @@ begin
   end if;
 
   insert into public.business_promotions(
-    business_id, listing_id, title, placement, status, starts_at, ends_at,
+    business_id, listing_id, title, placement, slot, status, starts_at, ends_at,
     budget, currency, ad_product_id, payment_method, price_mzn, audience_mode
   ) values (
     p_business_id, p_listing_id, coalesce(nullif(trim(p_title), ''), v_product.name),
-    v_product.placement, 'PENDING', p_starts_at, v_end, v_price, 'MZN',
+    v_product.placement, v_product.slot, 'PENDING', p_starts_at, v_end, v_price, 'MZN',
     v_product.id, 'DIRECT', v_price,
     case when cardinality(v_locations) + cardinality(v_categories) > 0 then 'TARGETED' else 'GENERAL' end
   ) returning id into v_promotion;
