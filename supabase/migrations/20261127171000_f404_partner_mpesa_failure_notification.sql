@@ -1,0 +1,37 @@
+-- F4.04: notify partner members when an M-Pesa campaign payment attempt fails.
+do $migration$
+declare
+  v_definition text;
+  v_old text;
+  v_new text;
+begin
+  select pg_get_functiondef('public.fail_mpesa_partner_ad_payment(text,text,numeric,text)'::regprocedure)
+    into v_definition;
+
+  v_old:=$old$
+  update public.partner_ad_payment_orders set status='FAILED',updated_at=now() where id=v_order.id;
+$old$;
+  v_new:=$new$
+  update public.partner_ad_payment_orders set status='FAILED',updated_at=now() where id=v_order.id;
+  insert into public.notifications(user_id,type,title,body,resource_type,resource_id)
+  select members.user_id,'ADVERTISING','Pagamento M-Pesa não confirmado',
+    'A tentativa de pagamento M-Pesa da campanha "'||left(c.title,120)||'" não foi concluída. A equipa responsável pode emitir uma nova cobrança.',
+    'PARTNER_AD_CAMPAIGN',c.id
+  from public.partner_ad_campaigns c
+  join public.partner_account_members members on members.account_id=c.account_id
+  where c.id=v_order.campaign_id and members.active=true and members.user_id is not null;
+$new$;
+
+  if position(v_old in v_definition)=0 then
+    raise exception 'F404_MPESA_FAILURE_NOTIFICATION_ANCHOR_NOT_FOUND';
+  end if;
+  v_definition:=replace(v_definition,v_old,v_new);
+  if position('Pagamento M-Pesa não confirmado' in v_definition)=0 then
+    raise exception 'F404_REWRITE_INCOMPLETE';
+  end if;
+  execute v_definition;
+end
+$migration$;
+
+revoke all on function public.fail_mpesa_partner_ad_payment(text,text,numeric,text) from public,anon,authenticated;
+grant execute on function public.fail_mpesa_partner_ad_payment(text,text,numeric,text) to service_role;
