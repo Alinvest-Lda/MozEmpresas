@@ -83,22 +83,22 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     return query;
   };
   const businessQueueQuery=applyQueueFilters(
-    supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,price_mzn,payment_method,payment_reference,paid_at,impressions_count,clicks_count,target_url,business:business_id(name)").order("created_at",{ascending:false}),
+    supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,price_mzn,payment_method,payment_reference,paid_at,impressions_count,clicks_count,target_url,business:business_id(name)",{count:"exact"}).order("created_at",{ascending:false}),
     ["title","headline","target_url"]
   ).range(pageStart,pageStart+99);
   const partnerQueueQuery=applyQueueFilters(
-    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)").order("created_at",{ascending:false}),
+    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)",{count:"exact"}).order("created_at",{ascending:false}),
     ["title","headline","target_url"]
   ).range(pageStart,pageStart+99);
   const requestQueueQuery=applyQueueFilters(
-    supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at,payment_method,payment_reference,paid_amount_mzn,paid_at").order("created_at",{ascending:false}),
+    supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at,payment_method,payment_reference,paid_amount_mzn,paid_at",{count:"exact"}).order("created_at",{ascending:false}),
     ["company_name","contact_name","email","phone","package_name"]
   ).range(pageStart,pageStart+99);
 
   const [
-    { data: businessCampaigns, error: businessError },
-    { data: partnerCampaigns, error: partnerError },
-    { data: requests, error: requestError },
+    { data: businessCampaigns, error: businessError, count: businessTotalCount },
+    { data: partnerCampaigns, error: partnerError, count: partnerTotalCount },
+    { data: requests, error: requestError, count: requestTotalCount },
     { count: impressionEvents, error: impressionEventsError }, { count: clickEvents, error: clickEventsError },
     { data: partnerProducts, error: partnerProductsError },
   ] = await Promise.all([
@@ -113,7 +113,10 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const allBusiness = (businessCampaigns ?? []) as Campaign[];
   const allPartner = (partnerCampaigns ?? []) as Campaign[];
   const allRequests = (requests ?? []) as AdvertisingRequest[];
-  const hasMore = allBusiness.length === 100 || allPartner.length === 100 || allRequests.length === 100;
+  const totalRecords = businessTotalCount===null||partnerTotalCount===null||requestTotalCount===null?null:businessTotalCount+partnerTotalCount+requestTotalCount;
+  const hasMore = (businessTotalCount!==null&&pageStart+100<businessTotalCount)
+    || (partnerTotalCount!==null&&pageStart+100<partnerTotalCount)
+    || (requestTotalCount!==null&&pageStart+100<requestTotalCount);
   const pageHref = (nextPage:number) => {
     const query = new URLSearchParams();
     if (q) query.set("q", q);
