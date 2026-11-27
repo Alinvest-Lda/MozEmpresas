@@ -65,6 +65,10 @@ begin
       and ((bp.payment_method='CREDITS' and coalesce(bp.credits_charged,0)>0)
         or (bp.payment_method='MPESA' and bp.paid_at is not null))
     ) then raise exception 'ADVERTISING_PAYMENT_NOT_SETTLED' using errcode='23514'; end if;
+    if p_new_status='ACTIVE' and not exists(
+      select 1 from public.business_promotions bp where bp.id=p_entity_id
+        and bp.starts_at is not null and bp.ends_at is not null and bp.ends_at>now()
+    ) then raise exception 'ADVERTISING_CAMPAIGN_WINDOW_CLOSED' using errcode='23514'; end if;
     if not v_allowed then raise exception 'INVALID_ADVERTISING_STATUS_TRANSITION' using errcode='23514'; end if;
     perform set_config('app.advertising_admin_reason',v_reason,true);
     update public.business_promotions set status=p_new_status,updated_at=now() where id=p_entity_id;
