@@ -412,3 +412,5 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - Commits `78d73c7059aac9ec02b8c0d31525024306cbd6fd`, `e51d10354cfd2f4114cf9b80a19fbb6d0c0efb80` e `7806c1cff51eaf9c5c5eabc529d37aed15507efa`. Migração não aplicada.
 
 - A mesma mensagem de inventário não entregável foi ligada também às Server Actions de emissão de cobrança e transição de campanhas de parceiros, evitando que o erro SQL chegue ao operador como erro genérico. Commit `f81b25b6486900a906f308d9a1f1fbd200eef9fb`.
+
+- As guardas F408/F409 foram endurecidas para tratar explicitamente campos de superfície/posição nulos, evitando que a semântica SQL de `NULL` permita passar por uma condição `NOT (...)`. Commits `810b275a66ade5b0ae5d1a0384ee5f8edd0eec46`, `a92980f71d2ddfb6e4ed1505ae7aa88973783d28`, `3b9d2d80e2f1f3f1d0093dfed3bedb65c3f68875`, `51721efae89670c162ec6b28b5e5af3e3ae47ce6`, `4d0889028df8f30682905d86907711ad4c6690c5` e `a92bcd005a2958102761935b732185ec7fd90296`.
