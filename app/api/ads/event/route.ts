@@ -54,10 +54,10 @@ export const POST = withApiObservability("api.ads_event", async (request: Reques
       ) as CampaignEligibility[];
       campaign = rows[0] ?? null;
     } else if (admin) {
-      const columns = payload.campaignSource === "partner" ? "status,starts_at,ends_at,slot,surface" : "status,starts_at,ends_at,slot";
+      const columns = payload.campaignSource === "partner" ? "status,starts_at,ends_at,slot,surface" : "status,starts_at,ends_at,slot,placement";
       const { data, error } = await admin.from(table).select(columns).eq("id", payload.campaignId).maybeSingle();
       if (error) return NextResponse.json({ error: "Não foi possível validar a campanha." }, { status: 500 });
-      campaign = data as CampaignEligibility | null;
+      campaign = payload.campaignSource === "business" && data ? { ...data, surface: (data as { placement?: string }).placement } as CampaignEligibility : data as CampaignEligibility | null;
     }
 
     if (!isEligibleCampaign(campaign, payload, now)) {
