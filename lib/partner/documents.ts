@@ -6,7 +6,7 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
 export type PartnerDocumentItem = {
   id: string; title: string; document_type: string; parent_type: string;
   original_filename: string; mime_type: string; size_bytes: number;
-  version_number: number; created_at: string; notes: string | null;
+  version_number: number; series_key: string; created_at: string; notes: string | null;
 };
 
 export async function listPartnerDocuments(): Promise<{ documents: PartnerDocumentItem[]; error: boolean }> {
@@ -18,7 +18,7 @@ export async function listPartnerDocuments(): Promise<{ documents: PartnerDocume
     const { data: account, error: accountError } = await admin.from("partner_accounts").select("status,portal_enabled").eq("id", partner.account_id).maybeSingle();
     if (accountError || !account || account.status !== "ACTIVE" || account.portal_enabled !== true) return { documents: [], error: true };
     const { data, error } = await admin.from("partner_documents")
-      .select("id,title,document_type,parent_type,original_filename,mime_type,size_bytes,version_number,created_at,notes")
+      .select("id,title,document_type,parent_type,original_filename,mime_type,size_bytes,version_number,series_key,created_at,notes")
       .eq("account_id", partner.account_id)
       .order("created_at", { ascending: false })
       .limit(100);
