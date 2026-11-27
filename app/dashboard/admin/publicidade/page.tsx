@@ -10,7 +10,7 @@ type Campaign = {
   id: string; title: string | null; headline: string | null; status: string | null;
   starts_at: string | null; ends_at: string | null; created_at: string | null; payment_method_preference?: string | null;
   surface?: string | null; placement?: string | null; slot?: string | null;
-  price_mzn?: number | null; budget?: number | null; currency?: string | null; payment_method?: string | null; payment_reference?: string | null; paid_at?: string | null;
+  price_mzn?: number | null; budget?: number | null; currency?: string | null; payment_method?: string | null; payment_reference?: string | null; paid_at?: string | null; credits_charged?: number | null;
   impressions_count?: number | null; clicks_count?: number | null; target_url?: string | null;
   business?: { name?: string | null } | { name?: string | null }[] | null;
   payment?: { id: string; status: string; payment_method: string; payment_reference: string; amount_mzn: number; confirmed_at?: string | null; campaign_id?: string; created_at?: string; financial_payment_id?: string | null; expires_at?: string | null }[] | null;
@@ -23,6 +23,17 @@ type AdvertisingRequest = {
 };
 const promotionStatuses = ["PENDING", "ACTIVE", "PAUSED", "EXPIRED"];
 const partnerStatuses = ["DRAFT", "REQUESTED", "APPROVED", "ACTIVE", "PAUSED", "ENDED", "REJECTED", "CANCELLED"];
+function businessNextStatuses(campaign:Campaign,now:Date) {
+  const startsAt=campaign.starts_at?new Date(campaign.starts_at).getTime():NaN;
+  const endsAt=campaign.ends_at?new Date(campaign.ends_at).getTime():NaN;
+  const settled=(campaign.payment_method==="CREDITS"&&Number(campaign.credits_charged??0)>0)||(campaign.payment_method==="MPESA"&&Boolean(campaign.paid_at));
+  const inWindow=Number.isFinite(startsAt)&&Number.isFinite(endsAt)&&startsAt<=now.getTime()&&endsAt>now.getTime();
+  if(campaign.status==="DRAFT") return ["PENDING"];
+  if(campaign.status==="PENDING") return [...(settled&&inWindow?["ACTIVE"]:[]),"PAUSED","EXPIRED"];
+  if(campaign.status==="ACTIVE") return ["PAUSED","EXPIRED"];
+  if(campaign.status==="PAUSED") return [...(settled&&inWindow?["ACTIVE"]:[]),"EXPIRED"];
+  return [];
+}
 function canCancelPartnerCampaign(campaign:Campaign,now:Date) {
   const payment=campaign.payment?.[0];
   if(!payment||payment.status!=="PAID"||!["APPROVED","ACTIVE","PAUSED"].includes(campaign.status??"")) return false;
@@ -106,7 +117,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     return query;
   };
   const businessQueueQuery=applyQueueFilters(
-    supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,price_mzn,payment_method,payment_reference,paid_at,impressions_count,clicks_count,target_url,business:business_id(name)",{count:"exact"}).order("created_at",{ascending:false}),
+    supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,price_mzn,payment_method,payment_reference,paid_at,credits_charged,impressions_count,clicks_count,target_url,business:business_id(name)",{count:"exact"}).order("created_at",{ascending:false}),
     ["title","headline","target_url","placement"]
   ).range(pageStart,pageStart+99);
   const partnerQueueQuery=applyQueueFilters(
@@ -212,7 +223,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     eventsByAdvertisingEntity.set(event.entity_id, list);
   }
   const campaigns = [
-    ...allBusiness.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.price_mzn == null && c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.price_mzn ?? c.budget) + " MZN", table: "business", allowed: promotionStatuses }); }),
+    ...allBusiness.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.price_mzn == null && c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.price_mzn ?? c.budget) + " MZN", table: "business", allowed: businessNextStatuses(c,now) }); }),
     ...allPartner.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: partnerNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at, c.starts_at) }); }),
   ].sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
   // Query-level filters are authoritative. Avoid a second client-side pass with a
