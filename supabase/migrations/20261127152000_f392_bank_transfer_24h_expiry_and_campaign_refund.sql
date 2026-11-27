@@ -137,3 +137,16 @@ begin
  execute v_definition;
 end
 $migration$;
+
+-- Manual credit-purchase bank transfer confirmations also expire after 24h.
+do $migration$
+declare v_definition text;
+begin
+ select pg_get_functiondef('public.admin_decide_credit_purchase(uuid,text,text)'::regprocedure) into v_definition;
+ v_definition:=replace(v_definition,
+  'if p_decision = ''REJECT'' then',
+  'if p_decision = ''APPROVE'' and v_request.payment_method=''BANK_TRANSFER'' and v_request.created_at+interval ''24 hours''<=now() then raise exception ''BANK_TRANSFER_CONFIRMATION_EXPIRED''; end if; if p_decision = ''REJECT'' then');
+ if position('BANK_TRANSFER_CONFIRMATION_EXPIRED' in v_definition)=0 then raise exception 'F392_CREDIT_CONFIRMATION_GUARD_REWRITE_FAILED'; end if;
+ execute v_definition;
+end
+$migration$;
