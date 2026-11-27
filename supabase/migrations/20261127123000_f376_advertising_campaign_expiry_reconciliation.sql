@@ -15,7 +15,7 @@ begin
 
   update public.business_promotions
   set status='EXPIRED',updated_at=v_now
-  where status='ACTIVE' and ends_at<=v_now;
+  where status in ('ACTIVE','PAUSED') and ends_at<=v_now;
   get diagnostics v_business_count=row_count;
 
   update public.partner_ad_campaigns
