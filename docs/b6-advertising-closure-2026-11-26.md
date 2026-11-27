@@ -260,3 +260,8 @@ Este lote fecha em conjunto três pontos de consistência entre formulário, API
 - Adicionada a migração F393, que passa a encerrar campanhas empresariais em `ACTIVE` ou `PAUSED` quando `ends_at <= clock_timestamp()`, mantendo o encerramento idempotente das campanhas de parceiros e as permissões restritas a `service_role`. Commit `51288e335b5d3a3bc137eeba18108ebc5b4301db`.
 - A migração histórica F376 foi restaurada sem alteração permanente, preservando a sequência de migrações já existente. Commit de restauração `91716982e0ffa52379dc30e620a41e57105cce9f`.
 - A F393 está apenas no repositório; não foi aplicada. A execução efectiva depende da aplicação das migrações e da disponibilidade do agendador configurado.
+
+### B6 — lote de segurança das funções financeiras (27/11/2026)
+- A revisão das funções de liquidação identificou que a F392 redefiniu `admin_confirm_partner_bank_transfer` com `search_path=public,pg_temp`, abaixo do padrão catalog-first aplicado às restantes funções privilegiadas deste módulo.
+- A migração F394 altera a configuração persistente da função para `pg_catalog,public,pg_temp`, sem reescrever a lógica de liquidação, os controlos de prazo ou os efeitos contabilísticos. Commit `446f7ba3480ae33b42807fd021760cf57646791f`.
+- Migração ainda não aplicada; nenhuma execução ou validação SQL foi realizada.
