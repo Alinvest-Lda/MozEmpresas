@@ -350,3 +350,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 ### B6 — lote funcional: compatibilidade de segmentação nas superfícies públicas (27/11/2026)
 - As páginas públicas podiam passar consultas, localizações e interesses sem limite prático para o componente de publicidade, enquanto a API impõe limites de tamanho e cardinalidade. Uma pesquisa longa podia invalidar a decisão publicitária e também o evento de clique.
 - O componente passou a normalizar e limitar contexto e interesses antes de enviar a decisão e o clique, mantendo os mesmos valores seguros ao longo do ciclo de medição. Commit `f03151b6a6520cd0297dfd24beaf520e5cc54782`.
+
+### B6 — lote funcional: notificação de liquidação M-Pesa em campanhas futuras (27/11/2026)
+- A confirmação M-Pesa podia liquidar uma campanha sem alterar o estado quando a data de início era futura; nesse caso, o evento de estado não gerava notificação e o parceiro não recebia confirmação explícita do pagamento.
+- F403 acrescenta notificação de liquidação aos membros activos da conta parceira após a confirmação do callback, independentemente de a campanha poder ser activada imediatamente ou ter de aguardar a data contratada.
+- Commit `483a3f5f45a43f5c2cbc0a1d14b5dede86af95c4`. Migração não aplicada.
