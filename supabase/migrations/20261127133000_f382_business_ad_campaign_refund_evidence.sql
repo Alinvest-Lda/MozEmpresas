@@ -5,6 +5,8 @@ create unique index if not exists business_promotion_cancellations_external_refu
   on public.business_promotion_cancellations(external_refund_reference)
   where external_refund_reference is not null;
 
+drop function if exists public.admin_cancel_business_promotion(uuid,text);
+
 create or replace function public.admin_cancel_business_promotion(p_promotion_id uuid, p_reason text, p_external_refund_reference text default null)
 returns jsonb
 language plpgsql
