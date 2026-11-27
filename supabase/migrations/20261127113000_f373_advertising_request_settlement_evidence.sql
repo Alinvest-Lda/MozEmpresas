@@ -20,6 +20,8 @@ alter table public.advertising_requests
 create index if not exists advertising_requests_paid_at_idx
   on public.advertising_requests(paid_at desc) where status='PAID';
 
+drop function if exists public.admin_update_advertising_status(text,uuid,text,text);
+
 create or replace function public.admin_update_advertising_status(
   p_entity_type text,
   p_entity_id uuid,
