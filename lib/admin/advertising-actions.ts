@@ -52,6 +52,7 @@ async function updateStatus(table: "business_promotions" | "advertising_requests
       : error.message.includes("UNEXPECTED_SETTLEMENT_EVIDENCE") ? "request-settlement-evidence-unexpected"
       : error.message.includes("ADVERTISING_PAYMENT_NOT_SETTLED") ? "payment-not-settled"
       : error.message.includes("CAMPAIGN_START_DATE_NOT_REACHED") ? "CAMPAIGN_START_DATE_NOT_REACHED"
+      : error.message.includes("AD_PRODUCT_NOT_DELIVERABLE") ? "ad-product-not-deliverable"
       : error.message.includes("ADVERTISING_CAMPAIGN_WINDOW_CLOSED") ? "campaign-window-closed"
       : error.message.includes("BANK_TRANSFER_CONFIRMATION_EXPIRED") ? "bank-transfer-confirmation-expired"
       : error.message.includes("INVALID_ADVERTISING_STATUS_TRANSITION") ? "invalid-transition" : "error";
