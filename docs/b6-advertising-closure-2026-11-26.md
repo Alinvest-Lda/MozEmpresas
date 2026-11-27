@@ -405,3 +405,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - F408 introduz constraints de catálogo para pares válidos, valida o par nas RPCs de compra empresarial por créditos/M-Pesa e no pedido de campanha do parceiro, e filtra o catálogo do parceiro para devolver apenas formatos entregáveis.
 - O checkout empresarial também deixa de apresentar produtos pagos com combinações de superfície/posição sem destino público.
 - Commits `0c78ff7e25af8d264d158b318262ab32e25aacae` e `7d46749e3593a70831bd0041c084368a52b55f63`. Migração não aplicada.
+
+### B6 — lote funcional: protecção de inventário legado não entregável (27/11/2026)
+- As constraints de catálogo F408 protegem novas alterações, mas produtos legados inválidos ainda podiam ser apresentados, cobrados ou activados por funções administrativas que consultam directamente o produto/campanha.
+- F409 acrescenta guardas nas RPCs de emissão de cobrança e activação de campanhas empresariais e de parceiros; o painel traduz o erro para uma mensagem que identifica a combinação superfície/posição inválida.
+- Commits `78d73c7059aac9ec02b8c0d31525024306cbd6fd`, `e51d10354cfd2f4114cf9b80a19fbb6d0c0efb80` e `7806c1cff51eaf9c5c5eabc529d37aed15507efa`. Migração não aplicada.
