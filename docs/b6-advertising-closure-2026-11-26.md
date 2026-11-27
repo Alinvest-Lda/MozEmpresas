@@ -195,3 +195,6 @@ No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, access
 - Static source review identified a dead transition: a partner campaign settled by bank transfer could remain `APPROVED`, while the administrative state selector offered no `ACTIVE` transition and the RPC state machine rejected that transition. Migration `f391` adds reason-required `APPROVED → ACTIVE` only when payment is confirmed and the current time is inside the contracted start/end window. Paused campaigns can resume only within that same valid window.
 - The Super Admin queue now exposes activation only for paid campaigns currently inside their delivery window and reports start-date/window errors explicitly. Commits `3e8a32d`, `92f3796`, `52ab7a6`, `8e22524`.
 - This closes the source-level activation dead-end for bank-transfer campaigns; the migration is not applied and the lifecycle still requires deployed-state verification.
+
+### B6-T03 / T09 — partner request error disclosure (27/11/2026)
+- Unknown partner campaign request errors now return a neutral, actionable Portuguese message instead of exposing the raw Supabase/PostgreSQL RPC error text in the form. Known errors remain mapped to specific user guidance. Commit `86c1788`.
