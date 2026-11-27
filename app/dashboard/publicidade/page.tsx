@@ -10,6 +10,11 @@ const placement: Record<string, string> = { DIRECTORY:"Directório", MARKETPLACE
 function money(value: number | string | null | undefined) {
   return value == null ? "—" : Number(value).toLocaleString("pt-MZ") + " MZN";
 }
+function campaignStatusLabel(p:{status:string|null;payment_method:string|null;paid_at:string|null}) {
+  if(p.status==="PENDING"&&p.payment_method==="MPESA") return p.paid_at?"Pagamento confirmado · aguarda activação":"A aguardar pagamento";
+  const labels:Record<string,string>={DRAFT:"Rascunho",PENDING:"Pendente",ACTIVE:"Activa",PAUSED:"Pausada",EXPIRED:"Expirada",CANCELLED:"Cancelada"};
+  return labels[p.status||""]||p.status||"—";
+}
 
 export default async function PublicidadePage({ searchParams }: { searchParams: Promise<{success?:string;error?:string}> }) {
   const params = await searchParams;
@@ -79,7 +84,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
 
     <section className="dashboard-section" style={{marginTop:18}}>
       <div className="dashboard-section-head"><div><span className="dashboard-kicker">Campanhas</span><h2>Histórico publicitário</h2><p className="muted">Aqui ficam apenas campanhas publicitárias. Os Serviços MozEmpresas têm espaço próprio.</p></div><Link href="/dashboard/servicos" className="text-link">Ver Serviços MozEmpresas →</Link></div>
-      {businessScopeIncomplete||promotionsError ? <div className="notice" role="alert">O histórico não está disponível integralmente porque falhou uma consulta de empresas ou campanhas.</div> : (promotions??[]).length ? (promotions??[]).map(p=>{const b=Array.isArray(p.businesses)?p.businesses[0]:p.businesses;const m=metricsByCampaign.get(p.id);return <div key={p.id} style={{display:"flex",justifyContent:"space-between",gap:16,padding:"14px 0",borderTop:"1px solid #eee"}}><div><strong>{p.title}</strong><div className="muted">{b?.name||"Empresa"} · {placement[p.placement]||p.placement} · {p.payment_method==="CREDITS"?String(p.credits_charged??0)+" créditos":money(p.price_mzn)}{p.payment_method==="MPESA"?(p.paid_at?" · M-Pesa confirmado · "+(p.payment_reference||"referência registada"):" · A aguardar confirmação M-Pesa"):""}</div><div className="muted">{campaignMetricsError?"Métricas indisponíveis":`${(m?.impressions??0).toLocaleString("pt-MZ")} impressões · ${(m?.clicks??0).toLocaleString("pt-MZ")} cliques · CTR ${(m?.impressions??0)>0?((m?.clicks??0)/(m?.impressions??1)*100).toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"}`}</div></div><span>{p.status}</span></div>}) : <p className="muted">Ainda não existem campanhas publicitárias.</p>}
+      {businessScopeIncomplete||promotionsError ? <div className="notice" role="alert">O histórico não está disponível integralmente porque falhou uma consulta de empresas ou campanhas.</div> : (promotions??[]).length ? (promotions??[]).map(p=>{const b=Array.isArray(p.businesses)?p.businesses[0]:p.businesses;const m=metricsByCampaign.get(p.id);return <div key={p.id} style={{display:"flex",justifyContent:"space-between",gap:16,padding:"14px 0",borderTop:"1px solid #eee"}}><div><strong>{p.title}</strong><div className="muted">{b?.name||"Empresa"} · {placement[p.placement]||p.placement} · {p.payment_method==="CREDITS"?String(p.credits_charged??0)+" créditos":money(p.price_mzn)}{p.payment_method==="MPESA"?(p.paid_at?" · M-Pesa confirmado · "+(p.payment_reference||"referência registada"):" · A aguardar confirmação M-Pesa"):""}</div><div className="muted">{campaignMetricsError?"Métricas indisponíveis":`${(m?.impressions??0).toLocaleString("pt-MZ")} impressões · ${(m?.clicks??0).toLocaleString("pt-MZ")} cliques · CTR ${(m?.impressions??0)>0?((m?.clicks??0)/(m?.impressions??1)*100).toLocaleString("pt-MZ",{maximumFractionDigits:2})+"%":"—"}`}</div></div><span>{campaignStatusLabel(p)}</span></div>}) : <p className="muted">Ainda não existem campanhas publicitárias.</p>}
     </section>
   </div></main>;
 }
