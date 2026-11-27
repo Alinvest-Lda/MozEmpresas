@@ -10,8 +10,9 @@ const placement: Record<string, string> = { DIRECTORY:"Directório", MARKETPLACE
 function money(value: number | string | null | undefined) {
   return value == null ? "—" : Number(value).toLocaleString("pt-MZ") + " MZN";
 }
-function campaignStatusLabel(p:{status:string|null;payment_method:string|null;paid_at:string|null}) {
+function campaignStatusLabel(p:{status:string|null;payment_method:string|null;paid_at:string|null;credits_charged?:number|null}) {
   if(p.status==="PENDING"&&p.payment_method==="MPESA") return p.paid_at?"Pagamento confirmado · aguarda activação":"A aguardar pagamento";
+  if(p.status==="PENDING"&&p.payment_method==="CREDITS"&&Number(p.credits_charged??0)>0) return "Créditos debitados · aguarda activação";
   const labels:Record<string,string>={DRAFT:"Rascunho",PENDING:"Pendente",ACTIVE:"Activa",PAUSED:"Pausada",EXPIRED:"Expirada",CANCELLED:"Cancelada"};
   return labels[p.status||""]||p.status||"—";
 }
