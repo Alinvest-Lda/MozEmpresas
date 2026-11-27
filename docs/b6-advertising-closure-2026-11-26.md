@@ -312,3 +312,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - Corrigido um teste legado que aceitava campanhas sem superfície/posição canónica, em contradição com a regra de elegibilidade efectivamente aplicada pelo motor de entrega.
 - Acrescentado caso de regressão para datas de início sem hora, confirmando a interpretação de meia-noite no fuso de Maputo e a rejeição de datas locais já passadas.
 - Commits `599506ae9042f039a95fe6302db0707f91b60e51` e `6d2a1082170b32c9a39c2e1acf8681e005e50482`. Os testes foram actualizados, mas não executados.
+
+### B6 — lote funcional: cancelamento de campanhas empresariais pausadas (27/11/2026)
+- O ciclo de cancelamento empresarial aceitava apenas campanhas `PENDING` e `ACTIVE`, deixando uma campanha `PAUSED` com início futuro sem caminho administrativo para cancelamento e reembolso, apesar de continuar a reservar inventário.
+- F397 alarga a mesma função auditada de cancelamento a campanhas `PAUSED`, mantendo a restrição temporal: campanhas cujo período já começou continuam inelegíveis, excepto a regra existente para pedidos pendentes já expirados. O painel passa a expor a acção para campanhas pausadas elegíveis.
+- Commits `83fac08b6e77ebf1a46948b578f2db2cfff561bb`, `c9b773282628f583567895343a9a8bb614d5941d` e `d85de67f2ce457bb46585413625969c5557201c5`. Migração não aplicada.
