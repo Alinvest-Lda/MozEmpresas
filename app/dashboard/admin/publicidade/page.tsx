@@ -79,9 +79,14 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const queueNowIso=queueNow.toISOString();
   const queueFutureIso=new Date(queueNow.getTime()+7*24*60*60*1000).toISOString();
   const safeQueueSearch=q;
-  const applyQueueFilters=(initial:any,fields:string[] )=>{
+  const businessNameSearch=safeQueueSearch
+    ? await supabase.from("businesses").select("id",{count:"exact"}).ilike("name","%"+safeQueueSearch+"%").limit(1000)
+    : {data:[],count:0,error:null};
+  const businessNameSearchError=Boolean(businessNameSearch.error)||(businessNameSearch.count??0)>1000;
+  const businessNameFilters=(businessNameSearch.data??[]).map(row=>row.id).filter(Boolean);
+  const applyQueueFilters=(initial:any,fields:string[],extraOrFilters:string[]=[] )=>{
     let query=initial;
-    if(safeQueueSearch) query=query.or(fields.map(field=>field+".ilike.%"+safeQueueSearch+"%").join(","));
+    if(safeQueueSearch) query=query.or([...fields.map(field=>field+".ilike.%"+safeQueueSearch+"%"),...extraOrFilters].join(","));
     if(status) query=query.eq("status",status);
     if(deadline==="expirado") query=query.lt("ends_at",queueNowIso);
     else if(deadline==="proximo") query=query.gte("ends_at",queueNowIso).lte("ends_at",queueFutureIso);
@@ -91,7 +96,8 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   };
   const businessQueueQuery=applyQueueFilters(
     supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,price_mzn,payment_method,payment_reference,paid_at,credits_charged,impressions_count,clicks_count,target_url,business:business_id(name)",{count:"exact"}).order("created_at",{ascending:false}),
-    ["title","headline","target_url","placement"]
+    ["title","headline","target_url","placement"],
+    businessNameFilters.length?["business_id.in.("+businessNameFilters.join(",")+")"]:[]
   ).range(pageStart,pageStart+99);
   const partnerQueueQuery=applyQueueFilters(
     supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url",{count:"exact"}).order("created_at",{ascending:false}),
@@ -206,7 +212,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const totalImpressions = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
   const totalClicks = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
   const pendingCount = allBusiness.filter(c => c.status === "PENDING").length + allPartner.filter(c => ["REQUESTED", "PENDING", "UNDER_REVIEW"].includes(c.status ?? "")).length + allRequests.filter(r => ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT"].includes(r.status ?? "")).length;
-  const error = businessError || partnerError || requestError || partnerPaymentOrdersError || partnerFinancialPaymentsError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError || deliveryMetricsError;
+  const error = businessError || businessNameSearchError || partnerError || requestError || partnerPaymentOrdersError || partnerFinancialPaymentsError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError || deliveryMetricsError;
 
   return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
     <header className={styles.hero}>
