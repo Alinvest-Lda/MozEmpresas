@@ -99,6 +99,29 @@ export async function updateAdvertisingRequest(formData: FormData) {
   });
 }
 
+export async function confirmBusinessPromotionMpesaPayment(formData: FormData) {
+  const id=String(formData.get("id")||"");
+  const reference=String(formData.get("payment_reference")||"").trim();
+  const amount=Number(formData.get("amount_mzn"));
+  const notes=String(formData.get("notes")||"").trim();
+  if(!z.string().uuid().safeParse(id).success || reference.length<4 || reference.length>160
+    || !Number.isFinite(amount) || amount<=0 || amount>=1000000000000 || notes.length>500) {
+    redirect("/dashboard/admin/publicidade?result=business-payment-invalid");
+  }
+  const {supabase,authorized}=await getSuperAdminContext();
+  if(!authorized) redirect("/login?next=/dashboard/admin/publicidade");
+  const {error}=await supabase.rpc("admin_confirm_business_promotion_mpesa_payment",{
+    p_promotion_id:id,p_payment_reference:reference,p_amount_mzn:amount,p_notes:notes||null,
+  });
+  if(error) {
+    const code=["PROMOTION_NOT_AWAITING_MPESA_SETTLEMENT","BUSINESS_AD_PAYMENT_AMOUNT_MISMATCH","PROMOTION_NOT_FOUND"].find(x=>error.message.includes(x))||"business-payment-error";
+    redirect("/dashboard/admin/publicidade?result="+code);
+  }
+  revalidatePath("/dashboard/admin/publicidade");
+  revalidatePath("/dashboard/publicidade");
+  redirect("/dashboard/admin/publicidade?result=business-payment-confirmed");
+}
+
 export async function cancelBusinessPromotion(formData: FormData) {
   const id = String(formData.get("id") || "");
   const reason = String(formData.get("reason") || "").trim();
