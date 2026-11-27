@@ -346,3 +346,7 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 ### B6 — robustez da identidade de visitante para medição publicitária (27/11/2026)
 - A chave de visitante podia ser reutilizada sem validar o tamanho e o fallback sem `crypto.randomUUID` não garantia o mínimo exigido pela API. A geração agora valida chaves existentes e garante um identificador dentro dos limites aceites pelo contrato de eventos.
 - Commit `4a9139d14196a287a447b5976cbfc927062bf49a`.
+
+### B6 — lote funcional: compatibilidade de segmentação nas superfícies públicas (27/11/2026)
+- As páginas públicas podiam passar consultas, localizações e interesses sem limite prático para o componente de publicidade, enquanto a API impõe limites de tamanho e cardinalidade. Uma pesquisa longa podia invalidar a decisão publicitária e também o evento de clique.
+- O componente passou a normalizar e limitar contexto e interesses antes de enviar a decisão e o clique, mantendo os mesmos valores seguros ao longo do ciclo de medição. Commit `f03151b6a6520cd0297dfd24beaf520e5cc54782`.
