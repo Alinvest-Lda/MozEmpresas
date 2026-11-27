@@ -23,18 +23,51 @@ const schema = z.object({
   altText: z.string().trim().max(180).optional(),
   message: z.string().trim().max(3000).optional(),
   audienceMode: z.enum(["CONTEXTUAL","INTEREST","BROAD"]).default("CONTEXTUAL"),
-  budget: z.coerce.number().nonnegative().optional(),
-  bidCpm: z.coerce.number().nonnegative().optional(),
+  budget: z.coerce.number().nonnegative().max(1_000_000_000_000).optional(),
+  bidCpm: z.coerce.number().nonnegative().max(1_000_000_000_000).optional(),
   frequencyCap: z.coerce.number().int().min(1).max(20).default(2),
   targetInterests: z.string().trim().max(1000).optional(),
   targetLocations: z.string().trim().max(500).optional(),
+}).superRefine((payload,ctx)=>{
+  if(payload.startsAt && payload.endsAt){
+    const start=new Date(payload.startsAt).getTime();
+    const end=new Date(payload.endsAt).getTime();
+    if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start){
+      ctx.addIssue({code:z.ZodIssueCode.custom,message:"O período da campanha é inválido.",path:["endsAt"]});
+    }
+  }
+  for(const [field,value] of [["startsAt",payload.startsAt],["endsAt",payload.endsAt]] as const){
+    if(value && !Number.isFinite(new Date(value).getTime())){
+      ctx.addIssue({code:z.ZodIssueCode.custom,message:"Data inválida.",path:[field]});
+    }
+  }
 });
 
 export const POST = withApiObservability("api.advertising_request", async (request: Request) => {
   const rate = await enforceRateLimit(request, { scope: "public-advertising-request", limit: 5, windowSeconds: 60 });
   if (!rate.allowed) return rateLimitResponse(rate.unavailable);
 
-  const parsed = schema.safeParse(await request.json().catch(() => null));
+  const bodyLimit=16_384;
+  const declaredLength=Number(request.headers.get("content-length")||0);
+  if(declaredLength>bodyLimit) return NextResponse.json({error:"Pedido demasiado grande."},{status:413});
+  const reader=request.body?.getReader();
+  let chunks:Uint8Array[]=[];
+  let totalBytes=0;
+  if(reader){
+    while(true){
+      const {done,value}=await reader.read();
+      if(done) break;
+      totalBytes+=value.byteLength;
+      if(totalBytes>bodyLimit){await reader.cancel().catch(()=>{});return NextResponse.json({error:"Pedido demasiado grande."},{status:413});}
+      chunks.push(value);
+    }
+  }
+  const bytes=new Uint8Array(totalBytes);
+  let offset=0;
+  for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+  let body:unknown=null;
+  try{body=JSON.parse(new TextDecoder().decode(bytes));}catch{}
+  const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Verifique os dados preenchidos." }, { status: 400 });
 
   try {
