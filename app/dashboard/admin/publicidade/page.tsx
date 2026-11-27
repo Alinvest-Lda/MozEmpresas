@@ -8,7 +8,7 @@ import styles from "./publicidade.module.css";
 import { getAdvertisingRequestNextStatuses, getBusinessCampaignNextStatuses, getPartnerCampaignNextStatuses } from "@/lib/advertising/state-machine";
 
 type Campaign = {
-  id: string; title: string | null; headline: string | null; status: string | null;
+  id: string; account_id?: string | null; title: string | null; headline: string | null; status: string | null;
   starts_at: string | null; ends_at: string | null; created_at: string | null; payment_method_preference?: string | null;
   surface?: string | null; placement?: string | null; slot?: string | null;
   price_mzn?: number | null; budget?: number | null; currency?: string | null; payment_method?: string | null; payment_reference?: string | null; paid_at?: string | null; credits_charged?: number | null;
@@ -105,7 +105,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     businessNameFilters.length?["business_id.in.("+businessNameFilters.join(",")+")"]:[]
   ).range(pageStart,pageStart+99);
   const partnerQueueQuery=applyQueueFilters(
-    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url",{count:"exact"}).order("created_at",{ascending:false}),
+    supabase.from("partner_ad_campaigns").select("id,account_id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url",{count:"exact"}).order("created_at",{ascending:false}),
     ["title","headline","target_url","surface"],
     partnerAccountFilters.length?["account_id.in.("+partnerAccountFilters.join(",")+")"]:[]
   ).range(pageStart,pageStart+99);
@@ -132,6 +132,11 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const allBusiness = (businessCampaigns ?? []) as Campaign[];
   const partnerCampaignRows = (partnerCampaigns ?? []) as Campaign[];
   const partnerCampaignIds = partnerCampaignRows.map(campaign=>campaign.id);
+  const partnerAccountIds=[...new Set(partnerCampaignRows.map(campaign=>campaign.account_id).filter((id):id is string=>Boolean(id)))];
+  const {data:partnerAccounts,error:partnerAccountsError}=partnerAccountIds.length
+    ? await supabase.from("partner_accounts").select("id,business:business_id(name)").in("id",partnerAccountIds)
+    : {data:[],error:null};
+  const partnerBusinessNameByAccount=new Map((partnerAccounts??[]).map((account:any)=>[account.id,Array.isArray(account.business)?account.business[0]?.name:account.business?.name]));
   const {data:partnerPaymentOrders,error:partnerPaymentOrdersError}=partnerCampaignIds.length
     ? await supabase.from("partner_ad_payment_orders")
       .select("id,campaign_id,status,payment_method,payment_reference,amount_mzn,confirmed_at,created_at,financial_payment_id")
@@ -209,7 +214,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   }
   const campaigns = [
     ...allBusiness.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.price_mzn == null && c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.price_mzn ?? c.budget) + " MZN", table: "business", allowed: getBusinessCampaignNextStatuses(c,now.getTime()) }); }),
-    ...allPartner.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: getPartnerCampaignNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at, c.starts_at, now.getTime()) }); }),
+    ...allPartner.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: partnerBusinessNameByAccount.get(c.account_id??"") || "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: getPartnerCampaignNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at, c.starts_at, now.getTime()) }); }),
   ].sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
   // Query-level filters are authoritative. Avoid a second client-side pass with a
   // different searchable-field set or clock, which would make page totals disagree.
@@ -218,7 +223,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const totalImpressions = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
   const totalClicks = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
   const pendingCount = allBusiness.filter(c => c.status === "PENDING").length + allPartner.filter(c => ["REQUESTED", "PENDING", "UNDER_REVIEW"].includes(c.status ?? "")).length + allRequests.filter(r => ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT"].includes(r.status ?? "")).length;
-  const error = businessError || businessNameSearchError || partnerAccountSearchError || partnerError || requestError || partnerPaymentOrdersError || partnerFinancialPaymentsError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError || deliveryMetricsError;
+  const error = businessError || businessNameSearchError || partnerAccountSearchError || partnerAccountsError || partnerError || requestError || partnerPaymentOrdersError || partnerFinancialPaymentsError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError || deliveryMetricsError;
 
   return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
     <header className={styles.hero}>
