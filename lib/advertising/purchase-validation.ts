@@ -31,6 +31,7 @@ export function calculateCampaignPrice(
   locations: readonly string[],
   categories: readonly string[],
 ): number | null {
+  if (basePrice === null || basePrice === undefined || basePrice === "") return null;
   const base = Number(basePrice);
   if (!Number.isFinite(base) || base < 0) return null;
   const factor = 1 + (locations.length ? 0.1 : 0) + (categories.length ? 0.1 : 0);
@@ -41,6 +42,7 @@ export function calculateCampaignCredits(
   locations: readonly string[],
   categories: readonly string[],
 ): number | null {
+  if (baseCredits === null || baseCredits === undefined || baseCredits === "") return null;
   const base = Number(baseCredits);
   if (!Number.isFinite(base) || base < 0) return null;
   const factor = 1 + (locations.length ? 0.1 : 0) + (categories.length ? 0.1 : 0);
