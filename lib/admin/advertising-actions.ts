@@ -17,7 +17,7 @@ const requestTransitions: Record<string, readonly string[]> = {
   CONTACTED: ["PROPOSAL", "CANCELLED"],
   PROPOSAL: ["AWAITING_PAYMENT", "REJECTED", "CANCELLED"],
   AWAITING_PAYMENT: ["PAID", "REJECTED", "CANCELLED"],
-  PAID: ["APPROVED", "CANCELLED"],
+  PAID: ["APPROVED"],
   APPROVED: [],
   REJECTED: [],
   CANCELLED: [],
