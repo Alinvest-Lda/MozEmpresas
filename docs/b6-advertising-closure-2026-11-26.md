@@ -317,3 +317,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - O ciclo de cancelamento empresarial aceitava apenas campanhas `PENDING` e `ACTIVE`, deixando uma campanha `PAUSED` com início futuro sem caminho administrativo para cancelamento e reembolso, apesar de continuar a reservar inventário.
 - F397 alarga a mesma função auditada de cancelamento a campanhas `PAUSED`, mantendo a restrição temporal: campanhas cujo período já começou continuam inelegíveis, excepto a regra existente para pedidos pendentes já expirados. O painel passa a expor a acção para campanhas pausadas elegíveis.
 - Commits `83fac08b6e77ebf1a46948b578f2db2cfff561bb`, `c9b773282628f583567895343a9a8bb614d5941d` e `d85de67f2ce457bb46585413625969c5557201c5`. Migração não aplicada.
+
+### B6 — lote funcional: comunicação da liquidação bancária ao parceiro (27/11/2026)
+- A confirmação bancária altera a ordem e o documento financeiro, mas uma campanha já colocada em `APPROVED` não sofre nova transição de estado; por isso, a notificação de mudança de estado não informava os membros da conta de que o pagamento tinha sido confirmado.
+- F398 acrescenta notificação explícita aos membros activos da conta parceira após a confirmação bancária, sem duplicar a notificação de estado nem alterar as regras de liquidação. Commit `236f4ca50fd957a6d654d26280e20e951962a348`.
+- Migração não aplicada; notificação ainda não foi verificada em ambiente.
