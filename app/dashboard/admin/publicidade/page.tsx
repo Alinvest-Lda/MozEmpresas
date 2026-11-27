@@ -98,6 +98,21 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   };
   const partnerCampaignIds = allPartner.map((campaign) => campaign.id);
   const administrativeAdIds = [...allBusiness.map((campaign) => campaign.id), ...allRequests.map((request) => request.id)];
+  const { data: deliveryMetrics, error: deliveryMetricsError } = await supabase.rpc("admin_advertising_delivery_metrics_f377", {
+    p_business_campaign_ids: allBusiness.map((campaign) => campaign.id),
+    p_partner_campaign_ids: allPartner.map((campaign) => campaign.id),
+  });
+  const deliveryMetricsByCampaign = new Map<string,{impressions:number;clicks:number}>(
+    (deliveryMetrics ?? []).map((row:any)=>[row.campaign_id,{
+      impressions:Number(row.impressions_count??0),
+      clicks:Number(row.clicks_count??0),
+    }] as [string,{impressions:number;clicks:number}])
+  );
+  const withDeliveryMetrics = (campaign:Campaign,source:"business"|"partner"):Campaign => {
+    if(deliveryMetricsError) return {...campaign,impressions_count:null,clicks_count:null};
+    const metrics=deliveryMetricsByCampaign.get(campaign.id);
+    return {...campaign,impressions_count:metrics?.impressions??0,clicks_count:metrics?.clicks??0};
+  };
   const [{ data: partnerStatusEvents, error: partnerStatusEventsError }, { data: advertisingAdminEvents, error: advertisingAdminEventsError }] = await Promise.all([
     partnerCampaignIds.length
       ? supabase.from("partner_ad_campaign_status_events").select("id,campaign_id,old_status,new_status,event_type,action_reason,created_at").in("campaign_id", partnerCampaignIds).order("created_at", { ascending: false })
@@ -119,8 +134,8 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     eventsByAdvertisingEntity.set(event.entity_id, list);
   }
   const campaigns = [
-    ...allBusiness.map((c) => ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.budget) + " " + (c.currency || ""), table: "business", allowed: promotionStatuses })),
-    ...allPartner.map((c) => ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: partnerNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at) })),
+    ...allBusiness.map((raw) => { const c=withDeliveryMetrics(raw,"business"); return ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.budget) + " " + (c.currency || ""), table: "business", allowed: promotionStatuses }); }),
+    ...allPartner.map((raw) => { const c=withDeliveryMetrics(raw,"partner"); return ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: partnerNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at) }); }),
   ].sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
   const matchesQuery = (value: string) => !q || value.toLocaleLowerCase("pt").includes(q.toLocaleLowerCase("pt"));
   const filteredCampaigns = campaigns.filter((c) => {
@@ -145,10 +160,10 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     if (deadline === "futuro" && !(Number.isFinite(end) && end > now.getTime() + 7 * 86400000)) return false;
     return true;
   });
-  const totalImpressions = businessError || partnerError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
-  const totalClicks = businessError || partnerError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
+  const totalImpressions = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
+  const totalClicks = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
   const pendingCount = allBusiness.filter(c => c.status === "PENDING").length + allPartner.filter(c => ["REQUESTED", "PENDING", "UNDER_REVIEW"].includes(c.status ?? "")).length + allRequests.filter(r => ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT"].includes(r.status ?? "")).length;
-  const error = businessError || partnerError || requestError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError;
+  const error = businessError || partnerError || requestError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError || deliveryMetricsError;
 
   return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
     <header className={styles.hero}>
@@ -197,7 +212,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
       <div className={styles.campaignList}>
         {filteredCampaigns.map((c) => <article className={styles.campaignCard} key={c.table + c.id}>
           <div className={styles.campaignTop}><div className={styles.campaignMain}><span className={styles.campaignKicker}>{c.origin} · {c.position}{c.slot ? " · " + c.slot : ""}</span><h3>{c.headline || c.title || "Campanha sem título"}</h3><p>{c.advertiser} · Registada {fmtDate(c.created_at)}</p></div><span className={styles.status}>{label(c.status)}</span></div>
-          <div className={styles.campaignMeta}><span><small>Início</small><strong>{fmtDate(c.starts_at)}</strong></span><span><small>Fim</small><strong>{fmtDate(c.ends_at)}</strong></span><span><small>Impressões</small><strong>{fmtNumber(c.impressions_count)}</strong></span><span><small>Cliques / CTR</small><strong>{fmtNumber(c.clicks_count)} · {ctr(c.clicks_count,c.impressions_count)}</strong></span><span><small>Preço / orçamento</small><strong>{c.price}</strong></span></div>
+          <div className={styles.campaignMeta}><span><small>Início</small><strong>{fmtDate(c.starts_at)}</strong></span><span><small>Fim</small><strong>{fmtDate(c.ends_at)}</strong></span><span><small>Impressões</small><strong>{c.impressions_count===null?"—":fmtNumber(c.impressions_count)}</strong></span><span><small>Cliques / CTR</small><strong>{c.clicks_count===null||c.impressions_count===null?"—":fmtNumber(c.clicks_count)+" · "+ctr(c.clicks_count,c.impressions_count)}</strong></span><span><small>Preço / orçamento</small><strong>{c.price}</strong></span></div>
           {c.table === "partner" ? <details className={styles.campaignHistory}><summary>Histórico ({(eventsByCampaign.get(c.id) ?? []).length})</summary><ol>{(eventsByCampaign.get(c.id) ?? []).map((event: any) => <li key={event.id}><strong>{event.event_type === "CREATED" ? "Pedido criado" : "Estado actualizado"}</strong><span>{event.old_status ? label(event.old_status) + " → " : ""}{label(event.new_status)}</span><small>{new Date(event.created_at).toLocaleString("pt-MZ")}</small></li>)}</ol></details> : null}
           {c.table === "partner" ? (() => {
             const payment = c.payment?.[0];
