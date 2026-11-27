@@ -227,7 +227,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
                 </form> : null}
             </>;
           })() : null}
-          {c.table === "partner" && c.payment?.[0]?.status === "PAID" && c.starts_at && new Date(c.starts_at).getTime() > now.getTime() && ["APPROVED","ACTIVE","PAUSED"].includes(c.status ?? "") ? <form action={cancelPartnerAdCampaign} className={styles.cancelForm}>
+          {c.table === "partner" && c.payment?.[0]?.status === "PAID" && c.starts_at && ["APPROVED","ACTIVE","PAUSED"].includes(c.status ?? "") && (new Date(c.starts_at).getTime() > now.getTime() || (c.status==="APPROVED" && c.ends_at && new Date(c.ends_at).getTime() <= now.getTime())) ? <form action={cancelPartnerAdCampaign} className={styles.cancelForm}>
             <input type="hidden" name="id" value={c.id}/>
             <label><span>Motivo do cancelamento</span><Input name="reason" minLength={8} maxLength={1000} required placeholder="Motivo (mín. 8 caracteres)"/></label>
             {["MPESA","BANK_TRANSFER"].includes(c.payment?.[0]?.payment_method ?? "") ? <label><span>Referência do reembolso {c.payment?.[0]?.payment_method === "BANK_TRANSFER" ? "bancário" : "M-Pesa"}</span><Input name="external_refund_reference" minLength={4} maxLength={160} required placeholder="Referência da transferência de reembolso"/></label> : null}
