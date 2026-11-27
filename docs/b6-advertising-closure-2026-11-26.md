@@ -328,3 +328,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - F399 mantém o débito atómico dos créditos, mas coloca a campanha em `ACTIVE` apenas quando o instante actual está dentro do período contratado; antes do início ou depois do fim permanece `APPROVED`, permitindo a decisão administrativa adequada e a recuperação/refund quando aplicável.
 - A mensagem de sucesso do painel deixou de afirmar que toda a compra por créditos activa imediatamente a campanha.
 - Commits `9ccf08b002ca4ea01999fe1c64bb5decc8afa55c`, `3823a50bf4041fc188030f10535961af67924bbe` e `19020ddc85bd7df30817148af9abda4e00fc4039`. Migração não aplicada.
+
+### B6 — lote funcional: activação por confirmação M-Pesa alinhada com o período (27/11/2026)
+- A mesma activação prematura encontrada no fluxo de créditos existia no callback M-Pesa: a confirmação do operador mudava qualquer campanha `APPROVED` para `ACTIVE`, mesmo que o início contratado ainda fosse futuro ou o período já tivesse terminado.
+- F400 mantém a liquidação idempotente, mas só activa a campanha se o instante estiver dentro do intervalo contratado; nos restantes casos conserva `APPROVED` para activação administrativa no momento correcto ou cancelamento/estorno se o período já tiver expirado. A função também recebe configuração catalog-first de `search_path`.
+- Commit `7ceec52758f674e66b4c428451bc225cff92a070`. Migração não aplicada nem validada.
