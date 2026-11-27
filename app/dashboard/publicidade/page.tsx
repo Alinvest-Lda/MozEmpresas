@@ -25,7 +25,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
   const [{data:owned,error:ownedError},{data:members,error:membersError},{data:products,error:productsError},{data:categories,error:categoriesError},{data:campaignMetrics,error:campaignMetricsError}] = await Promise.all([
     supabase.from("businesses").select("id,name").eq("owner_id",user.id).is("archived_at",null).order("name"),
     supabase.from("business_members").select("business_id").eq("user_id",user.id).in("role",["owner","admin","operator"]),
-    supabase.from("ad_products").select("id,name,placement,description,duration_days,direct_price_mzn,credit_price,capacity,access_type,audience_level").eq("active",true).order("placement").order("duration_days"),
+    supabase.from("ad_products").select("id,name,placement,slot,description,duration_days,direct_price_mzn,credit_price,capacity,access_type,audience_level").eq("active",true).order("placement").order("duration_days"),
     supabase.from("business_categories").select("name").order("name"),
     supabase.rpc("business_ad_campaign_metrics"),
   ]);
@@ -38,7 +38,7 @@ export default async function PublicidadePage({ searchParams }: { searchParams: 
     : {data:[] as {id:string;title:string|null;placement:string;status:string;starts_at:string;ends_at:string|null;payment_method:string|null;price_mzn:number|null;credits_charged:number|null;business_id:string;businesses:{name:string}|{name:string}[]|null}[],error:null};
   const {data:wallets,error:walletsError}=businesses.length ? await supabase.from("business_credit_wallets").select("business_id,balance_credits").in("business_id",businesses.map(b=>b.id)) : {data:[] as {business_id:string;balance_credits:number}[],error:null};
   const walletMap=Object.fromEntries((wallets??[]).map(w=>[w.business_id,w.balance_credits]));
-  const paidProducts=(products??[]).filter(p=>p.access_type==="PAID" && Number.isFinite(Number(p.direct_price_mzn)) && Number(p.direct_price_mzn)>0 && Number.isInteger(Number(p.duration_days)) && Number(p.duration_days)>0 && Number.isInteger(Number(p.capacity)) && Number(p.capacity)>0 && Number.isFinite(Number(p.credit_price)) && Number(p.credit_price)>=0);
+  const paidProducts=(products??[]).filter(p=>p.access_type==="PAID" && ["HERO","BILLBOARD","EXCLUSIVE","FEATURED","INFEED","CONTEXT"].includes(p.slot) && Number.isFinite(Number(p.direct_price_mzn)) && Number(p.direct_price_mzn)>0 && Number.isInteger(Number(p.duration_days)) && Number(p.duration_days)>0 && Number.isInteger(Number(p.capacity)) && Number(p.capacity)>0 && Number.isFinite(Number(p.credit_price)) && Number(p.credit_price)>=0);
   const metricsByCampaign=new Map<string,{impressions:number;clicks:number}>((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}] as [string,{impressions:number;clicks:number}]));
   const businessScopeIncomplete=Boolean(ownedError||membersError||managedError);
   const campaignImpressions=businessScopeIncomplete||campaignMetricsError||promotionsError?null:(promotions??[]).reduce((sum,p)=>sum+(metricsByCampaign.get(p.id)?.impressions??0),0);
