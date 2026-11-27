@@ -381,3 +381,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - Depois de diferir campanhas empresariais pagas por créditos para `PENDING` quando têm início futuro, a revisão identificou que a RPC administrativa ainda verificava apenas a data final; um operador podia activá-las antes da data contratada.
 - F407 exige que `starts_at <= now() < ends_at` para activar campanhas empresariais e devolve um erro específico quando o início ainda não chegou. A Server Action converte esse erro numa mensagem operacional já suportada pelo painel.
 - Commits `1c48d34237dedd61f644158725507de13627ff70` e `2444ccaa3bc2cef5e5c565eaeb8026631a0303e8`. Migração não aplicada.
+
+### B6 — lote funcional: transições empresariais disponíveis no painel administrativo (27/11/2026)
+- O painel empresarial apresentava todos os estados possíveis independentemente do estado actual, liquidação e período contratado. Isso permitia seleccionar `ACTIVE` antes do pagamento ou antes da data de início, mesmo que a RPC recusasse a transição.
+- A fila passou a calcular as transições empresariais apresentadas com base no estado, prova de liquidação, data de início e data final; a consulta inclui agora `credits_charged` para distinguir compras por créditos efectivamente liquidadas.
+- Commit `e8ddaeee51899b9229e32cf8fea0f2a9d03016f3`.
