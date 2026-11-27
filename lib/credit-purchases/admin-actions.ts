@@ -28,6 +28,7 @@ export async function decideCreditPurchase(formData: FormData) {
     const code = error.message.includes("REQUEST_ALREADY_FINAL") ? "final"
       : error.message.includes("REQUEST_NOT_FOUND") ? "missing"
       : error.message.includes("FORBIDDEN") ? "forbidden"
+      : error.message.includes("BANK_TRANSFER_CONFIRMATION_EXPIRED") ? "bank-transfer-expired"
       : "failed";
     redirect("/dashboard/admin/monetizacao/creditos?decision=" + code);
   }
