@@ -1,4 +1,7 @@
 -- F3.77: authoritative campaign-level advertising metrics from immutable delivery events.
+create index if not exists ad_delivery_campaign_metrics_idx
+  on public.ad_delivery_events(campaign_source,campaign_id,event_type,created_at desc);
+
 create or replace function public.admin_advertising_delivery_metrics_f377(
   p_business_campaign_ids uuid[] default '{}',
   p_partner_campaign_ids uuid[] default '{}'
