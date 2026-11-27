@@ -28,7 +28,7 @@ begin
     (v_campaign.surface='DIRECTORY' and v_campaign.slot in ('BILLBOARD','FEATURED','INFEED','CONTEXT')) or
     (v_campaign.surface='MARKETPLACE' and v_campaign.slot in ('BILLBOARD','FEATURED','EXCLUSIVE','INFEED')) or
     (v_campaign.surface='OPPORTUNITIES' and v_campaign.slot in ('BILLBOARD','FEATURED','INFEED'))
-  ) then raise exception 'AD_PRODUCT_NOT_DELIVERABLE'; end if;$new$;
+  )) then raise exception 'AD_PRODUCT_NOT_DELIVERABLE'; end if;$new$;
   if position(v_old in v_definition)=0 then raise exception 'F409_PARTNER_ACTIVATION_GUARD_NOT_FOUND'; end if;
   v_definition:=replace(v_definition,v_old,v_new);
   execute v_definition;
