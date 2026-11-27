@@ -41,6 +41,9 @@ alter table public.partner_ad_campaigns
 alter table public.partner_ad_campaigns
   add constraint partner_ad_campaigns_inventory_contract
   check (
-    surface in ('HOME','DIRECTORY','MARKETPLACE','OPPORTUNITIES','PARTNER_INTELLIGENCE')
-    and slot in ('HERO','BILLBOARD','EXCLUSIVE','FEATURED','INFEED','CONTEXT')
+    status not in ('REQUESTED','PENDING','UNDER_REVIEW','APPROVED','ACTIVE','PAUSED','RUNNING','PUBLISHED')
+    or (
+      surface is not null and surface in ('HOME','DIRECTORY','MARKETPLACE','OPPORTUNITIES','PARTNER_INTELLIGENCE')
+      and slot is not null and slot in ('HERO','BILLBOARD','EXCLUSIVE','FEATURED','INFEED','CONTEXT')
+    )
   ) not valid;
