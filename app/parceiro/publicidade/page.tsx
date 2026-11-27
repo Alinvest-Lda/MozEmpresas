@@ -10,14 +10,15 @@ const statusLabel=(status:string)=>{
 
 export default async function PartnerAds(){
   const {supabase:s}=await requirePartnerAccount();
-  const [{data:products,error:productsError},{data:campaigns,error:campaignsError},{data:campaignMetrics,error:metricsError},{data:paymentOrders,error:paymentsError}]=await Promise.all([
+  const [{data:products,error:productsError},{data:campaigns,error:campaignsError},{data:campaignMetrics,error:metricsError}]=await Promise.all([
     s.rpc("partner_ad_products_list"),
     s.rpc("partner_ad_campaigns_list"),
     s.rpc("partner_ad_campaign_metrics"),
-    campaigns?.length
-      ? s.from("partner_ad_payment_orders").select("campaign_id,status,payment_method,payment_reference,amount_mzn,credits_charged,confirmed_at").in("campaign_id",campaigns.map((campaign:any)=>campaign.id)).order("created_at",{ascending:false})
-      : Promise.resolve({data:[],error:null})
   ]);
+  const campaignIds=(campaigns??[]).map((campaign:any)=>campaign.id);
+  const {data:paymentOrders,error:paymentsError}=campaignIds.length
+    ? await s.from("partner_ad_payment_orders").select("campaign_id,status,payment_method,payment_reference,amount_mzn,credits_charged,confirmed_at").in("campaign_id",campaignIds).order("created_at",{ascending:false})
+    : {data:[],error:null};
   const metricsByCampaign=new Map<string,{impressions:number;clicks:number}>((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}] as [string,{impressions:number;clicks:number}]));
   const paymentsByCampaign=new Map<string,any>();(paymentOrders??[]).forEach((x:any)=>{if(!paymentsByCampaign.has(x.campaign_id))paymentsByCampaign.set(x.campaign_id,x)});
   const measuredCampaigns=(campaigns??[]).map((x:any)=>({...x,payment:paymentsError?undefined:(paymentsByCampaign.get(x.id)||null),impressions:metricsError?null:(metricsByCampaign.get(x.id)?.impressions??0),clicks:metricsError?null:(metricsByCampaign.get(x.id)?.clicks??0)}));
