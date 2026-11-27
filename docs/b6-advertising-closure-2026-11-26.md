@@ -322,3 +322,9 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - A confirmação bancária altera a ordem e o documento financeiro, mas uma campanha já colocada em `APPROVED` não sofre nova transição de estado; por isso, a notificação de mudança de estado não informava os membros da conta de que o pagamento tinha sido confirmado.
 - F398 acrescenta notificação explícita aos membros activos da conta parceira após a confirmação bancária, sem duplicar a notificação de estado nem alterar as regras de liquidação. Commit `236f4ca50fd957a6d654d26280e20e951962a348`.
 - Migração não aplicada; notificação ainda não foi verificada em ambiente.
+
+### B6 — lote funcional: activação alinhada com a data contratada (27/11/2026)
+- A emissão por créditos activava imediatamente uma campanha de parceiro, mesmo quando a data de início contratada ainda era futura. Embora o motor de entrega respeitasse a data, o estado administrativo ficava prematuramente `ACTIVE`.
+- F399 mantém o débito atómico dos créditos, mas coloca a campanha em `ACTIVE` apenas quando o instante actual está dentro do período contratado; antes do início ou depois do fim permanece `APPROVED`, permitindo a decisão administrativa adequada e a recuperação/refund quando aplicável.
+- A mensagem de sucesso do painel deixou de afirmar que toda a compra por créditos activa imediatamente a campanha.
+- Commits `9ccf08b002ca4ea01999fe1c64bb5decc8afa55c`, `3823a50bf4041fc188030f10535961af67924bbe` e `19020ddc85bd7df30817148af9abda4e00fc4039`. Migração não aplicada.
