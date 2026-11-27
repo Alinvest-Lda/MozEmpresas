@@ -46,7 +46,10 @@ export const POST = withApiObservability("api.ads_decision", async (request: Req
         p_campaign_source:ad.campaign_source,p_campaign_id:ad.campaign_id,
         p_surface:payload.surface,p_slot:payload.slot,p_event_type:"IMPRESSION",p_context:context
       });
-      if(impressionError) return NextResponse.json({error:"Não foi possível registar a impressão publicitária."},{status:500});
+      if(impressionError) {
+        if(impressionError.message.includes("AD_CAMPAIGN_NOT_ELIGIBLE")) return NextResponse.json({error:"A campanha deixou de estar activa para este espaço e período."},{status:409});
+        return NextResponse.json({error:"Não foi possível registar a impressão publicitária."},{status:500});
+      }
     }
   }
   return NextResponse.json({ad});
