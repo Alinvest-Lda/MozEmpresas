@@ -79,7 +79,7 @@ grant execute on function public.admin_confirm_partner_bank_transfer(uuid,text) 
 -- Allow cancellation/refund of a paid, approved bank-transfer campaign only
 -- after 24 hours have elapsed from confirmed settlement, if it was not activated.
 create or replace function public.admin_cancel_partner_ad_campaign(p_campaign_id uuid,p_reason text,p_external_refund_reference text default null)
-returns jsonb language plpgsql security definer set search_path=pg_catalog,public,pg_temp as $
+returns jsonb language plpgsql security definer set search_path=pg_catalog,public,pg_temp as $function$
 declare
  v_actor uuid:=auth.uid(); v_campaign public.partner_ad_campaigns%rowtype; v_order public.partner_ad_payment_orders%rowtype;
  v_wallet public.business_credit_wallets%rowtype; v_adjustment uuid; v_reference text:=nullif(trim(coalesce(p_external_refund_reference,'')));
@@ -121,6 +121,6 @@ begin
  perform set_config('app.partner_ad_campaign_reason',trim(p_reason),true);
  update public.partner_ad_campaigns set status='CANCELLED',updated_at=now() where id=p_campaign_id;
  return jsonb_build_object('adjustment_id',v_adjustment,'refund_type',case when v_order.payment_method='CREDITS' then 'CREDIT_REFUND' when v_order.payment_method='MPESA' then 'MPESA_REFUND' else 'BANK_TRANSFER_REFUND' end,'credits_refunded',v_order.credits_charged,'external_reference',v_reference,'activation_deadline',v_activation_deadline);
-end; $;
+end; $function$;
 revoke all on function public.admin_cancel_partner_ad_campaign(uuid,text,text) from public,anon;
 grant execute on function public.admin_cancel_partner_ad_campaign(uuid,text,text) to authenticated;
