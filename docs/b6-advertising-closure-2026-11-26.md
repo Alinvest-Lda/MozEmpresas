@@ -395,3 +395,7 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 ### B6 — consistência de preço em créditos no catálogo empresarial (27/11/2026)
 - O catálogo podia apresentar um preço de `0 créditos` quando o campo estava ausente, porque a conversão de `null` para número produz zero. A interface agora distingue preço em créditos configurado de formato sem preço em créditos.
 - Commit `70140a567483ce338d8fffab8d06df259824ca69`.
+
+### B6 — melhoria de entrada de datas no checkout empresarial (27/11/2026)
+- O campo de início de campanha empresarial passa a impedir no próprio selector a escolha de datas/horas anteriores ao momento local do utilizador, mantendo a validação definitiva no servidor.
+- Commit `7e1c381db0f4b4c55dd3f81d978fa130fed903b3`.
