@@ -23,7 +23,7 @@ alter table public.partner_ad_products
     (surface='DIRECTORY' and slot in ('BILLBOARD','FEATURED','INFEED','CONTEXT')) or
     (surface='MARKETPLACE' and slot in ('BILLBOARD','FEATURED','EXCLUSIVE','INFEED')) or
     (surface='OPPORTUNITIES' and slot in ('BILLBOARD','FEATURED','INFEED'))
-  ) not valid;
+    )) not valid;
 
 -- Guard the two business checkout RPCs as well as the partner request RPC;
 -- legacy catalogue rows remain readable but cannot be newly sold.
