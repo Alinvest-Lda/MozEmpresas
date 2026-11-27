@@ -68,6 +68,33 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const { supabase, authorized } = await (await import("@/lib/auth/super-admin")).getSuperAdminContext();
   if (!authorized) return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}><div className="notice">Acesso reservado ao Super Admin.</div></div></main>;
 
+  const queueNow=new Date();
+  const queueNowIso=queueNow.toISOString();
+  const queueFutureIso=new Date(queueNow.getTime()+7*24*60*60*1000).toISOString();
+  const safeQueueSearch=q.replace(/[%,()]/g," ").replace(/\s+/g," ").trim().slice(0,120);
+  const applyQueueFilters=(initial:any,fields:string[])=>{
+    let query=initial;
+    if(safeQueueSearch) query=query.or(fields.map(field=>field+".ilike.%"+safeQueueSearch+"%").join(","));
+    if(status) query=query.eq("status",status);
+    if(deadline==="expirado") query=query.lt("ends_at",queueNowIso);
+    else if(deadline==="proximo") query=query.gte("ends_at",queueNowIso).lte("ends_at",queueFutureIso);
+    else if(deadline==="futuro") query=query.gt("ends_at",queueFutureIso);
+    else if(deadline==="sem-prazo") query=query.is("ends_at",null);
+    return query;
+  };
+  const businessQueueQuery=applyQueueFilters(
+    supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,price_mzn,payment_method,payment_reference,paid_at,impressions_count,clicks_count,target_url,business:business_id(name)").order("created_at",{ascending:false}),
+    ["title","headline","target_url"]
+  ).range(pageStart,pageStart+99);
+  const partnerQueueQuery=applyQueueFilters(
+    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)").order("created_at",{ascending:false}),
+    ["title","headline","target_url"]
+  ).range(pageStart,pageStart+99);
+  const requestQueueQuery=applyQueueFilters(
+    supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at,payment_method,payment_reference,paid_amount_mzn,paid_at").order("created_at",{ascending:false}),
+    ["company_name","contact_name","email","phone","package_name"]
+  ).range(pageStart,pageStart+99);
+
   const [
     { data: businessCampaigns, error: businessError },
     { data: partnerCampaigns, error: partnerError },
@@ -75,9 +102,9 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     { count: impressionEvents, error: impressionEventsError }, { count: clickEvents, error: clickEventsError },
     { data: partnerProducts, error: partnerProductsError },
   ] = await Promise.all([
-    supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,price_mzn,payment_method,payment_reference,paid_at,impressions_count,clicks_count,target_url,business:business_id(name)").order("created_at", { ascending: false }).range(pageStart, pageStart + 99),
-    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)").order("created_at", { ascending: false }).range(pageStart, pageStart + 99),
-    supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at,payment_method,payment_reference,paid_amount_mzn,paid_at").order("created_at", { ascending: false }).range(pageStart, pageStart + 99),
+    businessQueueQuery,
+    partnerQueueQuery,
+    requestQueueQuery,
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "IMPRESSION"),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "CLICK"),
     supabase.from("partner_ad_products").select("id,name,price_mzn,credit_price,active").order("name").limit(100),
