@@ -8,12 +8,26 @@ export const POST = withApiObservability("api.ads_event", async (request: Reques
   const rate = await enforceRateLimit(request, { scope: "ads-event", limit: 60, windowSeconds: 60 });
   if (!rate.allowed) return rateLimitResponse(rate.unavailable);
 
+  const bodyLimit=16_384;
   const declaredLength=Number(request.headers.get("content-length")||0);
-  if(declaredLength>16_384) return NextResponse.json({error:"Evento de publicidade demasiado grande."},{status:413});
-  const rawBody=await request.text().catch(()=>"");
-  if(rawBody.length>16_384) return NextResponse.json({error:"Evento de publicidade demasiado grande."},{status:413});
+  if(declaredLength>bodyLimit) return NextResponse.json({error:"Evento de publicidade demasiado grande."},{status:413});
+  const reader=request.body?.getReader();
+  let chunks:Uint8Array[]=[];
+  let totalBytes=0;
+  if(reader){
+    while(true){
+      const {done,value}=await reader.read();
+      if(done) break;
+      totalBytes+=value.byteLength;
+      if(totalBytes>bodyLimit){await reader.cancel().catch(()=>{});return NextResponse.json({error:"Evento de publicidade demasiado grande."},{status:413});}
+      chunks.push(value);
+    }
+  }
+  const bytes=new Uint8Array(totalBytes);
+  let offset=0;
+  for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
   let body:unknown=null;
-  try{body=JSON.parse(rawBody);}catch{}
+  try{body=JSON.parse(new TextDecoder().decode(bytes));}catch{}
   let payload: AdEventPayload;
   try {
     payload = adEventSchema.parse(body);
