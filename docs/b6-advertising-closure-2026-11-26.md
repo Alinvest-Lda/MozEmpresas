@@ -360,3 +360,9 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - O callback de falha M-Pesa actualizava a ordem para `FAILED`, mas não notificava os membros da conta; a falha podia ficar visível apenas quando o parceiro abrisse o painel.
 - F404 envia uma notificação após a transição efectiva para `FAILED`, informando que a tentativa não foi concluída e que pode ser emitida nova cobrança. Retornos idempotentes de falhas já processadas não geram notificações duplicadas.
 - Commit `0be97096fcfd9f882222c11077064cc1edc4a879`. Migração não aplicada.
+
+### B6 — correcção do marco inicial das 24 horas nos pedidos comerciais (27/11/2026)
+- A revisão identificou que a F392 contava as 24 horas de transferência bancária dos pedidos públicos de publicidade desde `advertising_requests.created_at`, que representa a entrada inicial do contacto comercial e pode anteceder em vários dias a proposta e a emissão das instruções de pagamento.
+- F405 cria `bank_transfer_expires_at`, inicia o prazo quando o pedido entra em `AWAITING_PAYMENT`, permite ao Super Admin renovar esse estado para emitir novo prazo de 24 horas e valida a confirmação contra esse prazo específico. Os pedidos já em `AWAITING_PAYMENT` recebem uma janela inicial de 24 horas na migração.
+- A fila administrativa passa a apresentar a data/hora limite e o estado expirado, e oferece explicitamente a renovação do prazo.
+- Commits `a8926c6cc1f47850673a7acd894b6f32f4715fab`, `53a81977e0cd479a7c1bbff2c60d1efda99f13ae` e `1fb2ad421f28ee9443ad93912a861c482ba0165c`. Migração não aplicada.
