@@ -96,6 +96,9 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - The business-promotion moderation RPC retains its business-specific call shape; the obsolete four-argument overload is removed to prevent ambiguous resolution against the evidence-aware function.
 - Commits: migration `f373` `8e0caa7`, follow-up RPC hardening `173e1be`, immutable evidence guard `0390ea3`, server action `7610ce2` and compatibility correction `aaec750`, admin UI `9fb3506` and conditional evidence payload `06e5989`.
 
+### B6-T02 / T09 — advertiser payment state and investment integrity
+- The business advertiser history now distinguishes an M-Pesa request awaiting payment from a payment confirmed and awaiting campaign activation. The investment total excludes unpaid requests and credit purchases instead of treating every campaign price as settled MZN investment. Commits `066554a`, `df2846c`.
+
 ### B6-T02 / T04 / T07 — business M-Pesa settlement and refund evidence
 - Dependency trace found that the business M-Pesa request RPC was persisting `payment_method='DIRECT'`, while cancellation and activation guards expected `MPESA`. The request path now persists `MPESA`, requires a paid catalogue product and non-archived business, and shares the same product-row lock/capacity map as credit purchases, including `PAUSED` reservations. Commit `611ed0c`.
 - Added an explicit Super Admin settlement-verification action. It requires the campaign's exact MZN amount and a unique payment reference, records an immutable confirmation record with actor/time, and sets `paid_at` without activating the campaign. Activation remains a separate reasoned administrative decision. Migration `f381` commit `20a5395`; action `d753b13`; admin interface `32ddf3f` and `fe83981`; advertiser status `2ddad67`.
