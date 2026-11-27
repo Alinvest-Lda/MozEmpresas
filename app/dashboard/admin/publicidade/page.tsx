@@ -23,6 +23,17 @@ type AdvertisingRequest = {
 };
 const promotionStatuses = ["PENDING", "ACTIVE", "PAUSED", "EXPIRED"];
 const partnerStatuses = ["DRAFT", "REQUESTED", "APPROVED", "ACTIVE", "PAUSED", "ENDED", "REJECTED", "CANCELLED"];
+function canCancelPartnerCampaign(campaign:Campaign,now:Date) {
+  const payment=campaign.payment?.[0];
+  if(!payment||payment.status!=="PAID"||!["APPROVED","ACTIVE","PAUSED"].includes(campaign.status??"")) return false;
+  if(payment.payment_method==="BANK_TRANSFER"&&campaign.status==="APPROVED"){
+    const confirmedAt=payment.confirmed_at?new Date(payment.confirmed_at).getTime():NaN;
+    return Number.isFinite(confirmedAt)&&confirmedAt+24*60*60*1000<=now.getTime();
+  }
+  const startsAt=campaign.starts_at?new Date(campaign.starts_at).getTime():NaN;
+  const endsAt=campaign.ends_at?new Date(campaign.ends_at).getTime():NaN;
+  return Number.isFinite(startsAt)&&(startsAt>now.getTime()||(campaign.status==="APPROVED"&&Number.isFinite(endsAt)&&endsAt<=now.getTime()));
+}
 function partnerNextStatuses(status: string | null, paymentStatus?: string | null, endsAt?: string | null, startsAt?: string | null) {
   const now = Date.now();
   const starts = startsAt ? new Date(startsAt).getTime() : NaN;
@@ -255,7 +266,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
                 </form> : null}
             </>;
           })() : null}
-          {c.table === "partner" && c.payment?.[0]?.status === "PAID" && c.starts_at && ["APPROVED","ACTIVE","PAUSED"].includes(c.status ?? "") && (new Date(c.starts_at).getTime() > now.getTime() || (c.status==="APPROVED" && c.ends_at && new Date(c.ends_at).getTime() <= now.getTime())) ? <form action={cancelPartnerAdCampaign} className={styles.cancelForm}>
+          {c.table === "partner" && canCancelPartnerCampaign(c,now) ? <form action={cancelPartnerAdCampaign} className={styles.cancelForm}>
             <input type="hidden" name="id" value={c.id}/>
             <label><span>Motivo do cancelamento</span><Input name="reason" minLength={8} maxLength={1000} required placeholder="Motivo (mín. 8 caracteres)"/></label>
             {["MPESA","BANK_TRANSFER"].includes(c.payment?.[0]?.payment_method ?? "") ? <label><span>Referência do reembolso {c.payment?.[0]?.payment_method === "BANK_TRANSFER" ? "bancário" : "M-Pesa"}</span><Input name="external_refund_reference" minLength={4} maxLength={160} required placeholder="Referência da transferência de reembolso"/></label> : null}
