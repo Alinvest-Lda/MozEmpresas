@@ -9,12 +9,12 @@ begin
     into v_definition;
   v_old:=$old$if not found then raise exception 'AD_PRODUCT_NOT_AVAILABLE'; end if;$old$;
   v_new:=$new$if not found then raise exception 'AD_PRODUCT_NOT_AVAILABLE'; end if;
-  if not (
+  if v_product.surface is null or v_product.slot is null or not (
     (v_product.surface='HOME' and v_product.slot in ('HERO','BILLBOARD','EXCLUSIVE')) or
     (v_product.surface='DIRECTORY' and v_product.slot in ('BILLBOARD','FEATURED','INFEED','CONTEXT')) or
     (v_product.surface='MARKETPLACE' and v_product.slot in ('BILLBOARD','FEATURED','EXCLUSIVE','INFEED')) or
     (v_product.surface='OPPORTUNITIES' and v_product.slot in ('BILLBOARD','FEATURED','INFEED'))
-  ) then raise exception 'AD_PRODUCT_NOT_DELIVERABLE'; end if;$new$;
+  )) then raise exception 'AD_PRODUCT_NOT_DELIVERABLE'; end if;$new$;
   if position(v_old in v_definition)=0 then raise exception 'F409_PARTNER_PAYMENT_PRODUCT_GUARD_NOT_FOUND'; end if;
   v_definition:=replace(v_definition,v_old,v_new);
   execute v_definition;
@@ -23,7 +23,7 @@ begin
     into v_definition;
   v_old:=$old$if not found then raise exception 'CAMPAIGN_NOT_FOUND' using errcode='P0002'; end if;$old$;
   v_new:=$new$if not found then raise exception 'CAMPAIGN_NOT_FOUND' using errcode='P0002'; end if;
-  if p_new_status='ACTIVE' and not (
+  if p_new_status='ACTIVE' and (v_campaign.surface is null or v_campaign.slot is null or not (
     (v_campaign.surface='HOME' and v_campaign.slot in ('HERO','BILLBOARD','EXCLUSIVE')) or
     (v_campaign.surface='DIRECTORY' and v_campaign.slot in ('BILLBOARD','FEATURED','INFEED','CONTEXT')) or
     (v_campaign.surface='MARKETPLACE' and v_campaign.slot in ('BILLBOARD','FEATURED','EXCLUSIVE','INFEED')) or
