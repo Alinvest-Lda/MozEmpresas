@@ -13,7 +13,14 @@
    if(durationDays&&((end.getTime()-start.getTime())/86400000)>durationDays+0.02){
     setE("Este formato permite no máximo "+durationDays+" dias.");return;
    }
-   const ts=String(f.get("targets")||"").split("\n").map(v=>v.trim()).filter(Boolean).map(v=>{const[t,...z]=v.split(":");return{type:t.trim().toUpperCase(),value:z.join(":").trim()}}).filter(v=>v.value);
+   const targetLines=String(f.get("targets")||"").split("\n").map(v=>v.trim()).filter(Boolean);
+   if(targetLines.length>20){setE("Indique no máximo 20 critérios de audiência.");return;}
+   const ts=targetLines.map(v=>{const[t,...z]=v.split(":");return{type:t.trim().toUpperCase(),value:z.join(":").trim()}});
+   const allowedTargetTypes=["SECTOR","PROVINCE","CITY","COMPANY_SIZE","INTENT","CATEGORY"];
+   if(ts.some(v=>!allowedTargetTypes.includes(v.type)||!v.value||v.value.length>160)){
+    setE("Cada critério deve usar um tipo válido (SECTOR, PROVINCE, CITY, COMPANY_SIZE, INTENT ou CATEGORY) e um valor até 160 caracteres.");
+    return;
+   }
    const{error}=await createClient().rpc("partner_ad_request",{p_product_id:productId,p_title:String(f.get("title")||""),p_objective:String(f.get("objective")||""),p_starts_at:start.toISOString(),p_ends_at:end.toISOString(),p_targets:ts,p_payment_method:String(f.get("payment_method")||"MPESA")});
    if(error){
     const messages:Record<string,string>={FORBIDDEN:"O seu papel não permite solicitar campanhas.",INVALID_CAMPAIGN_DATES:"O período indicado não é válido.",CAMPAIGN_EXCEEDS_PRODUCT_DURATION:"O período excede a duração deste formato.",AD_SPACE_UNAVAILABLE:"Este espaço já tem uma campanha sobreposta. Escolha outro período.",PARTNER_ACCOUNT_REQUIRED:"Não foi possível identificar a conta Parceiro.",PARTNER_CREDIT_WALLET_NOT_LINKED:"A conta Parceiro ainda não está associada a uma empresa com carteira de créditos.",PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED:"Este formato ainda não tem preço em créditos configurado.",PARTNER_CREDIT_WALLET_NOT_FOUND:"Não foi encontrada uma carteira empresarial associada.",INSUFFICIENT_CREDITS:"O saldo de créditos disponível é insuficiente.",INVALID_PAYMENT_METHOD:"Seleccione M-Pesa ou créditos."};
