@@ -414,3 +414,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - A mesma mensagem de inventário não entregável foi ligada também às Server Actions de emissão de cobrança e transição de campanhas de parceiros, evitando que o erro SQL chegue ao operador como erro genérico. Commit `f81b25b6486900a906f308d9a1f1fbd200eef9fb`.
 
 - As guardas F408/F409 foram endurecidas para tratar explicitamente campos de superfície/posição nulos, evitando que a semântica SQL de `NULL` permita passar por uma condição `NOT (...)`. Commits `810b275a66ade5b0ae5d1a0384ee5f8edd0eec46`, `a92980f71d2ddfb6e4ed1505ae7aa88973783d28`, `3b9d2d80e2f1f3f1d0093dfed3bedb65c3f68875`, `51721efae89670c162ec6b28b5e5af3e3ae47ce6`, `4d0889028df8f30682905d86907711ad4c6690c5` e `a92bcd005a2958102761935b732185ec7fd90296`.
+
+### B6 — lote funcional: pares canónicos também no motor de decisão e na medição (27/11/2026)
+- F408/F409 impediam novas vendas e activaçōes de inventário inválido, mas o motor de decisão e o escritor atómico de eventos ainda aceitavam qualquer par de valores enumerados se uma campanha legada tivesse a mesma combinação.
+- F410 filtra os candidatos do motor de decisão por pares canónicos e rejeita eventos com superfície/posição incompatível. A API de decisão e a validação TypeScript usam a mesma matriz; foi acrescentado um caso de regressão para uma posição conhecida na superfície errada.
+- Commits `53db1aa2835b17a9b44892787b36bbb0c266ad67`, `c55ad17970a6fc74ec85e39bd2e86a594b7f62a6`, `1056a852ffd301a80bb34ac097d60aece731d064` e `8269da0a7328f8425c9c724cc667c282edefa5ff`. Migração não aplicada; teste não executado.
