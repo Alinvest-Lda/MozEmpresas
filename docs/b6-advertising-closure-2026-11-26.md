@@ -284,3 +284,15 @@ Este lote fecha em conjunto três pontos de consistência entre formulário, API
 - A fila administrativa carregava a relação de cobranças sem ordenação garantida e utilizava o primeiro elemento como se fosse sempre a cobrança mais recente. Com reemissões após falhas, isso podia apresentar um estado antigo, permitir uma nova emissão indevida ou ocultar a cobrança efectivamente paga.
 - A consulta foi separada e passou a carregar as ordens de pagamento dos IDs da página, ordenadas por `created_at DESC`; o painel associa apenas a cobrança mais recente a cada campanha. Falhas nesta consulta também passam a marcar a fila como incompleta e a ocultar os indicadores agregados. Commits `e372865767508c014ad67ec2208f8380ab6c2297` e `eed7de43d509b88c0f58498af7dcb2f4a4b325c6`.
 - Correcção de fonte; sem execução de testes, builds ou consultas à base de dados.
+
+### B6 — lote funcional: transferência bancária de campanhas de parceiros, da emissão à confirmação (27/11/2026)
+A reconciliação da F392 revelou que a confirmação bancária estava parcialmente preparada, mas o fluxo de emissão não criava os vínculos necessários para a confirmação encontrar a campanha:
+- O catálogo de ordens de pagamento só aceitava `MPESA` e `CREDITS`, apesar de a rotina de confirmação exigir `BANK_TRANSFER`.
+- A emissão não preenchia `financial_payments.campaign_id`, pelo que a rotina F392 não conseguia localizar a ordem/campanha correspondente.
+- A administração não disponibilizava transferência bancária como método de emissão nem um formulário para confirmar a cobrança.
+
+**Intervenção integrada:**
+- F395 amplia o método permitido na ordem de pagamento, estende a RPC atómica existente para aceitar `BANK_TRANSFER` e grava o `campaign_id` na linha financeira, preservando o preço negociado e a protecção de preço fixo do catálogo. O gatilho de expiração F392 passa assim a atribuir o prazo de 24 horas à cobrança criada. Commit `da6ad6f4f9a2c12f519a39cc19a282ae698caf49`.
+- A Server Action passou a aceitar o método bancário e a chamar a rotina de confirmação com validação de Super Admin, tratamento de erros e revalidação das áreas relevantes. Commit `8990af0e106838ce749a2868d47f2123591bdb61`.
+- A fila administrativa passou a oferecer a emissão bancária, apresentar o prazo de confirmação e permitir confirmar apenas através do registo financeiro associado; a mensagem de sucesso/expiração foi alinhada. Commits `0b3055e1eed83ecd7debb4501b32639d10732ad9`, `43f6f9715655a485a519593ecdeb117444a78d3a`, `ec58a0a98db2377ba8b41e0ecafcf1ac47cc399f` e `30314e86e878dbefbac42446f86377bfbddddcbd`.
+- Migração e interface ainda não foram executadas em ambiente. O fluxo permanece por validar após aplicação da F395 e das migrações anteriores.
