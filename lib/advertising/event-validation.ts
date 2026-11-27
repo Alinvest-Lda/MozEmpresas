@@ -11,16 +11,8 @@ export const adEventSchema = z.object({
 });
 
 export type AdEventPayload = z.infer<typeof adEventSchema>;
-const validSlotsBySurface:Record<string,readonly string[]> = {
-  HOME:["HERO","BILLBOARD","EXCLUSIVE"],
-  DIRECTORY:["BILLBOARD","FEATURED","INFEED","CONTEXT"],
-  MARKETPLACE:["BILLBOARD","FEATURED","EXCLUSIVE","INFEED"],
-  OPPORTUNITIES:["BILLBOARD","FEATURED","INFEED"],
-};
-
-export function isValidAdSurfaceSlot(surface:string,slot:string):boolean {
-  return validSlotsBySurface[surface]?.includes(slot)??false;
-}
+import { isValidAdSurfaceSlot } from "@/lib/advertising/placements";
+export { isValidAdSurfaceSlot } from "@/lib/advertising/placements";
 
 
 export type CampaignEligibility = {
