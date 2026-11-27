@@ -53,13 +53,15 @@ function businessName(campaign: Campaign) {
 }
 function label(status: string | null) { return status ? (statusLabels[status] || status) : "Sem estado"; }
 
-type SearchParams = Promise<{ q?: string; origem?: string; estado?: string; prazo?: string; result?: string; refund?: string; refundType?: string; reference?: string; method?: string }>;
+type SearchParams = Promise<{ q?: string; origem?: string; estado?: string; prazo?: string; page?: string; result?: string; refund?: string; refundType?: string; reference?: string; method?: string }>;
 export default async function AdminAdvertisingPage({ searchParams }: { searchParams?: SearchParams }) {
   const params = searchParams ? await searchParams : {};
   const q = (params.q ?? "").trim().slice(0, 100);
   const origin = ["empresarial", "parceiro", "pedido"].includes(params.origem ?? "") ? params.origem ?? "" : "";
   const status = [...new Set([...promotionStatuses, ...partnerStatuses, ...requestStatuses])].includes((params.estado ?? "").toUpperCase()) ? (params.estado ?? "").toUpperCase() : "";
   const deadline = ["expirado", "proximo", "futuro", "sem-prazo"].includes(params.prazo ?? "") ? params.prazo ?? "" : "";
+  const pageNumber = Math.max(0, Math.min(999, Number.isInteger(Number(params.page)) ? Number(params.page) : 0));
+  const pageStart = pageNumber * 100;
   const result = params.result ?? "";
   const now = new Date();
   const nowIso = now.toISOString();
@@ -73,7 +75,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     { count: impressionEvents, error: impressionEventsError }, { count: clickEvents, error: clickEventsError },
     { data: partnerProducts, error: partnerProductsError },
   ] = await Promise.all([
-    supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,impressions_count,clicks_count,target_url,business:business_id(name)").order("created_at", { ascending: false }).limit(100),
+    supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,impressions_count,clicks_count,target_url,business:business_id(name)").order("created_at", { ascending: false }).range(pageStart, pageStart + 99),
     supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)").order("created_at", { ascending: false }).limit(100),
     supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at,payment_method,payment_reference,paid_amount_mzn,paid_at").order("created_at", { ascending: false }).limit(100),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "IMPRESSION"),
@@ -84,6 +86,16 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const allBusiness = (businessCampaigns ?? []) as Campaign[];
   const allPartner = (partnerCampaigns ?? []) as Campaign[];
   const allRequests = (requests ?? []) as AdvertisingRequest[];
+  const hasMore = allBusiness.length === 100 || allPartner.length === 100 || allRequests.length === 100;
+  const pageHref = (nextPage:number) => {
+    const query = new URLSearchParams();
+    if (q) query.set("q", q);
+    if (origin) query.set("origem", origin);
+    if (status) query.set("estado", status);
+    if (deadline) query.set("prazo", deadline);
+    if (nextPage > 0) query.set("page", String(nextPage));
+    return "/dashboard/admin/publicidade" + (query.size ? "?" + query.toString() : "");
+  };
   const partnerCampaignIds = allPartner.map((campaign) => campaign.id);
   const administrativeAdIds = [...allBusiness.map((campaign) => campaign.id), ...allRequests.map((request) => request.id)];
   const [{ data: partnerStatusEvents, error: partnerStatusEventsError }, { data: advertisingAdminEvents, error: advertisingAdminEventsError }] = await Promise.all([
@@ -141,7 +153,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
     <header className={styles.hero}>
       <div className={styles.heroCopy}><span className={styles.eyebrow}>Administração global</span><h1>Publicidade e campanhas</h1><p>Revise pedidos, modere campanhas e acompanhe prazos e desempenho num único espaço operacional.</p></div>
-      <div className={styles.heroSummary}><span className={styles.summaryLabel}>A aguardar atenção</span><strong>{error ? "—" : pendingCount}</strong><span className={styles.summaryCaption}>{error ? "Indicador indisponível" : "Registos na amostra carregada · até 100 por origem"}</span><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Até 100 registos por origem em cada consulta.</span></div>
+      <div className={styles.heroSummary}><span className={styles.summaryLabel}>A aguardar atenção</span><strong>{error ? "—" : pendingCount}</strong><span className={styles.summaryCaption}>{error ? "Indicador indisponível" : "Registos da página " + (pageNumber + 1) + " · até 100 por origem"}</span><div className={styles.summaryRule}/><span className={styles.summaryFoot}>Página {pageNumber + 1}: até 100 registos por origem.</span></div>
       <span className={styles.heroDecoration} aria-hidden="true">↗</span>
     </header>
     {result ? <div className={`${styles.resultNotice} ${result === "error" ? styles.resultError : ""}`} role={result === "error" ? "alert" : "status"}>{result === "success" ? "Estado actualizado com sucesso." : result === "invalid-transition" || result === "ADMIN_PARTNER_CAMPAIGN_STATUS_TRANSITION_INVALID" ? "A transição de estado solicitada não é permitida." : result === "CAMPAIGN_PAYMENT_NOT_SETTLED" ? "A campanha só pode ser activada ou retomada após liquidação confirmada." : result === "CAMPAIGN_PAYMENT_STILL_PENDING" ? "Existe uma cobrança pendente. Não é possível rejeitar ou encerrar este pedido enquanto o pagamento estiver em processamento." : result === "CAMPAIGN_END_DATE_NOT_REACHED" ? "A data final da campanha ainda não foi atingida." : result === "payment-issued" ? "Cobrança emitida. Referência: " + (params.reference ?? "") + (params.method === "CREDITS" ? " · Créditos debitados e campanha activada." : " · Aguarda confirmação M-Pesa.") : result === "PARTNER_CREDIT_WALLET_NOT_LINKED" ? "Esta conta de parceiro ainda não está associada a uma empresa com carteira de créditos. Utilize M-Pesa ou configure a associação empresarial." : result === "INSUFFICIENT_CREDITS" ? "Saldo de créditos insuficiente para esta campanha." : result === "CAMPAIGN_PAYMENT_ALREADY_ISSUED" ? "Já existe uma cobrança activa para esta campanha." : result === "payment-error" ? "Não foi possível emitir a cobrança da campanha." : result === "partner-cancel-success" ? (params.refundType === "BANK_TRANSFER_REFUND" ? "Campanha cancelada. Estorno bancário registado: " + (params.reference ?? "") : params.refundType === "MPESA_REFUND" ? "Campanha cancelada. Reembolso M-Pesa registado: " + (params.reference ?? "") : "Campanha de parceiro cancelada. Créditos devolvidos: " + (params.refund ?? "0")) : result === "MPESA_REFUND_REFERENCE_REQUIRED" || result === "EXTERNAL_REFUND_REFERENCE_REQUIRED" ? "Introduza a referência do reembolso externo já executado fora da plataforma." : result === "INVALID_EXTERNAL_REFUND_REFERENCE" ? "A referência de estorno não pode ser igual à referência do pagamento original." : result === "CAMPAIGN_NOT_SETTLED" ? "Só é possível estornar campanhas efectivamente pagas." : result === "CAMPAIGN_ALREADY_REFUNDED" ? "Esta campanha já foi estornada." : result === "CANCELLATION_NOT_ALLOWED" ? "Só é possível cancelar campanhas futuras ainda não iniciadas." : result === "partner-cancel-error" ? "Não foi possível cancelar/estornar a campanha." : result === "credit-price-saved" ? "Preço em créditos actualizado." : result === "credit-price-invalid" ? "Indique um preço em créditos inteiro e superior a zero, ou deixe vazio para desactivar." : result === "credit-price-error" ? "Não foi possível actualizar o preço em créditos." : result === "PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED" ? "Este formato ainda não tem preço em créditos configurado." : result === "FIXED_PRODUCT_PRICE_CANNOT_BE_OVERRIDDEN" ? "O preço deste formato é fixo no catálogo e não pode ser alterado na cobrança." : result === "cancel-success" ? "Campanha cancelada. Créditos devolvidos: " + (params.refund ?? "0") : result === "mpesa-refund-required" ? "Campanha M-Pesa activa: o reembolso externo deve ser executado e registado antes do cancelamento." : result === "cancel-not-allowed" ? "Cancelamento não permitido: campanha já iniciada, expirada ou num estado não elegível." : "Não foi possível actualizar o estado. Confirme permissões e elegibilidade."}</div> : null}
@@ -177,7 +189,11 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
         <label><span>Prazo</span><Select name="prazo" defaultValue={deadline}><option value="">Todos os prazos</option><option value="proximo">Termina nos próximos 7 dias</option><option value="expirado">Prazo ultrapassado</option><option value="futuro">Termina depois de 7 dias</option><option value="sem-prazo">Sem prazo definido</option></Select></label>
         <div className={styles.filterActions}><button className="btn primary" type="submit">Aplicar filtros</button>{q || origin || status || deadline ? <Link className="btn" href="/dashboard/admin/publicidade">Limpar</Link> : null}</div>
       </form>
-      <div className={styles.tableMeta}><span>Campanhas: <strong>{filteredCampaigns.length}</strong> · Pedidos: <strong>{filteredRequests.length}</strong></span><span>Máximo de 100 registos por origem</span></div>
+      <div className={styles.tableMeta}><span>Campanhas: <strong>{filteredCampaigns.length}</strong> · Pedidos: <strong>{filteredRequests.length}</strong></span><span>Página {pageNumber + 1} · até 100 registos por origem</span></div>
+      <div className={styles.filterActions} aria-label="Paginação da fila publicitária">
+        {pageNumber > 0 ? <Link className="btn" href={pageHref(pageNumber - 1)}>← Página anterior</Link> : null}
+        {hasMore ? <Link className="btn primary" href={pageHref(pageNumber + 1)}>Página seguinte →</Link> : null}
+      </div>
       <div className={styles.campaignList}>
         {filteredCampaigns.map((c) => <article className={styles.campaignCard} key={c.table + c.id}>
           <div className={styles.campaignTop}><div className={styles.campaignMain}><span className={styles.campaignKicker}>{c.origin} · {c.position}{c.slot ? " · " + c.slot : ""}</span><h3>{c.headline || c.title || "Campanha sem título"}</h3><p>{c.advertiser} · Registada {fmtDate(c.created_at)}</p></div><span className={styles.status}>{label(c.status)}</span></div>
