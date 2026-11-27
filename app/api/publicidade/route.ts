@@ -38,23 +38,29 @@ const schema = z.object({
   if(!validSlots[payload.surface]?.includes(payload.slot)){
     ctx.addIssue({code:z.ZodIssueCode.custom,message:"A posição não está disponível no espaço seleccionado.",path:["slot"]});
   }
-  if(payload.startsAt && payload.endsAt){
-    const start=new Date(payload.startsAt).getTime();
-    const end=new Date(payload.endsAt).getTime();
-    if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start){
-      ctx.addIssue({code:z.ZodIssueCode.custom,message:"O período da campanha é inválido.",path:["endsAt"]});
-    }
+  const parseCampaignDate=(value:string|undefined):number|null=>{
+    if(!value)return null;
+    const normalized=/^\d{4}-\d{2}-\d{2}$/.test(value)?value+"T00:00:00+02:00":value;
+    const timestamp=Date.parse(normalized);
+    return Number.isFinite(timestamp)?timestamp:null;
+  };
+  const start= parseCampaignDate(payload.startsAt);
+  const end=parseCampaignDate(payload.endsAt);
+  if(payload.startsAt && start===null){
+    ctx.addIssue({code:z.ZodIssueCode.custom,message:"Data inválida.",path:["startsAt"]});
   }
-  for(const [field,value] of [["startsAt",payload.startsAt],["endsAt",payload.endsAt]] as const){
-    if(value && !Number.isFinite(new Date(value).getTime())){
-      ctx.addIssue({code:z.ZodIssueCode.custom,message:"Data inválida.",path:[field]});
-    }
+  if(payload.endsAt && end===null){
+    ctx.addIssue({code:z.ZodIssueCode.custom,message:"Data inválida.",path:["endsAt"]});
   }
-  const today=new Date().toISOString().slice(0,10);
-  if(payload.startsAt && new Date(payload.startsAt).toISOString().slice(0,10)<today){
+  if(start!==null&&end!==null&&end<=start){
+    ctx.addIssue({code:z.ZodIssueCode.custom,message:"O período da campanha é inválido.",path:["endsAt"]});
+  }
+  const maputoToday=new Date(Date.now()+2*60*60*1000).toISOString().slice(0,10);
+  const maputoDate=(timestamp:number)=>new Date(timestamp+2*60*60*1000).toISOString().slice(0,10);
+  if(start!==null&&maputoDate(start)<maputoToday){
     ctx.addIssue({code:z.ZodIssueCode.custom,message:"A data de início não pode estar no passado.",path:["startsAt"]});
   }
-  if(payload.endsAt && new Date(payload.endsAt).toISOString().slice(0,10)<today){
+  if(end!==null&&maputoDate(end)<maputoToday){
     ctx.addIssue({code:z.ZodIssueCode.custom,message:"A data de fim não pode estar no passado.",path:["endsAt"]});
   }
 });
