@@ -34,7 +34,11 @@ begin
       set status=p_new_status,
           bank_transfer_expires_at=case when p_new_status='AWAITING_PAYMENT' then now()+interval '24 hours' else bank_transfer_expires_at end,
           updated_at=now()
-      where id=p_entity_id;$new$;
+      where id=p_entity_id;
+    if p_new_status='AWAITING_PAYMENT' and v_old_status='AWAITING_PAYMENT' then
+      insert into public.advertising_admin_events(entity_type,entity_id,actor_user_id,old_status,new_status,action_reason)
+      values('ADVERTISING_REQUEST',p_entity_id,auth.uid(),'AWAITING_PAYMENT','AWAITING_PAYMENT',v_reason);
+    end if;$new$;
 
   if position(v_old_guard in v_definition)=0 then raise exception 'F405_BANK_TRANSFER_GUARD_NOT_FOUND'; end if;
   if position(v_old_transition in v_definition)=0 then raise exception 'F405_PAYMENT_RENEWAL_TRANSITION_NOT_FOUND'; end if;
