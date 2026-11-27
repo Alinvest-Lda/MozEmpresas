@@ -48,7 +48,9 @@ async function updateStatus(table: "business_promotions" | "advertising_requests
   };
   const { error } = await supabase.rpc("admin_update_advertising_status", rpcArgs);
   if (error) {
-    const code = error.message.includes("ADVERTISING_PAYMENT_NOT_SETTLED") ? "payment-not-settled"
+    const code = error.message.includes("ADVERTISING_REQUEST_SETTLEMENT_EVIDENCE_REQUIRED") ? "request-settlement-evidence-required"
+      : error.message.includes("UNEXPECTED_SETTLEMENT_EVIDENCE") ? "request-settlement-evidence-unexpected"
+      : error.message.includes("ADVERTISING_PAYMENT_NOT_SETTLED") ? "payment-not-settled"
       : error.message.includes("ADVERTISING_CAMPAIGN_WINDOW_CLOSED") ? "campaign-window-closed"
       : error.message.includes("INVALID_ADVERTISING_STATUS_TRANSITION") ? "invalid-transition" : "error";
     redirect("/dashboard/admin/publicidade?result=" + code);
