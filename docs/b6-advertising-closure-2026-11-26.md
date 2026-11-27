@@ -94,7 +94,9 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - Corrective queue-search decision: removed the 100-name business lookup from campaign filtering because it could produce incomplete filtered totals for advertisers beyond that sample. Search now stays on fields available directly in the queue; company-name search remains intentionally unsupported until it can be implemented without truncation. Commit `c326da5`.
 
  Commits `d4e6c2a`, `17e0286`, `2326724`, `5fcefa5`, `e0c4527`.
-- Partner campaign moderation and lifecycle changes now notify active members of the partner account for approval, rejection, activation, pause and termination, including the reason captured by the admin action. Migration `f390`, commit `fde5995`.
+- Partner campaign moderation and lifecycle changes now notify active members of the partner account for approval, rejection, activation, pause and termination, including the reason captured by the admin action.
+- A migration-source defect was found during static review of the public partner catalogue RPC: the new eligibility guard referenced surface/slot variables that were not declared. Added both declarations before migration application. Commit `37e78da`.
+ Migration `f390`, commit `fde5995`.
 
 - The administrative advertising queue now supports bounded pagination by source (100 business campaigns, 100 partner campaigns and 100 public requests per page), with previous/next navigation while preserving active filters. Search, status and deadline filters are applied before pagination, and exact filtered totals are displayed per selected origin. This removes the previous hard stop at the first 100 records and makes older operational records reachable. Commits `9ad7e4c`, `ee23a69`, `acd77f6`, `1c98afb`, `2d56561`, `f13cd7e`, `3070d8e`, `b3805c9`, `f9d5ce5`.
 - The page-level counts remain explicitly sample/page counts; this is not represented as a global total. Search and filter evaluation still applies to the loaded page window, so a future refinement is needed for fully database-side filtering and global counts.
