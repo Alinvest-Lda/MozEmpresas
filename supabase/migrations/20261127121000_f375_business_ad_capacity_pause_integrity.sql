@@ -177,6 +177,9 @@ begin
   where id = p_ad_product_id and active = true and access_type = 'PAID'
   for update;
   if not found then raise exception 'PRODUCT_UNAVAILABLE'; end if;
+  if v_product.direct_price_mzn is null or v_product.direct_price_mzn<=0 then
+    raise exception 'INVALID_PRODUCT_PRICE';
+  end if;
 
   if p_listing_id is not null and not exists (
     select 1 from public.listings l
