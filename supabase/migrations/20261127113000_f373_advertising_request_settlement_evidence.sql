@@ -37,8 +37,6 @@ set search_path=pg_catalog,public,pg_temp
 as $function$
 declare
   v_old_status text;
-  v_business_id uuid;
-  v_campaign_title text;
   v_allowed boolean:=false;
   v_reason text:=trim(coalesce(p_reason,''));
   v_reference text:=nullif(trim(coalesce(p_payment_reference,'')),'');
@@ -54,8 +52,7 @@ begin
     if p_payment_method is not null or v_reference is not null or p_paid_amount_mzn is not null then
       raise exception 'UNEXPECTED_SETTLEMENT_EVIDENCE' using errcode='22023';
     end if;
-    select status::text,business_id,title into v_old_status,v_business_id,v_campaign_title
-    from public.business_promotions where id=p_entity_id for update;
+    select status::text into v_old_status from public.business_promotions where id=p_entity_id for update;
     if not found then raise exception 'ADVERTISING_ENTITY_NOT_FOUND' using errcode='P0002'; end if;
     v_allowed:=case v_old_status
       when 'DRAFT' then p_new_status='PENDING'
