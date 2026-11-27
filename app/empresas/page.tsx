@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { PublicAd } from "@/components/public-ad";
 import { SaveSearchButton } from "@/components/save-to-mozempresas";
@@ -237,11 +238,12 @@ export default async function Empresas({
           {data.length > 0 ? (
             <>
               <div className="directory-marketplace-grid">
-              {data.map((business) => {
+              {data.map((business,index) => {
                 const gallery = business.portfolio.length ? business.portfolio : business.cover_url ? [{ image_url: business.cover_url, title: "Imagem de capa" }] : [];
                 const leadImage = gallery[0]?.image_url;
                 return (
-                  <Link href={"/empresas/" + business.slug} className="directory-marketplace-card" key={business.id}>
+                  <Fragment key={business.id}>
+                  <Link href={"/empresas/" + business.slug} className="directory-marketplace-card">
                     <div className="directory-marketplace-visual">
                       {leadImage ? <img src={leadImage} alt="" loading="lazy" /> : <div className="directory-marketplace-placeholder"><span>{business.name.charAt(0)}</span><small>Perfil empresarial</small></div>}
                       <span className="directory-marketplace-type">{categories.find((item) => item.id === business.category_id)?.name || "Empresa"}</span>
@@ -262,6 +264,8 @@ export default async function Empresas({
                       </div>
                     </div>
                   </Link>
+                  {index===Math.min(5,data.length-1)?<div className="directory-infeed-ad"><PublicAd surface="DIRECTORY" slot="INFEED" context={{query:q,location,category,placement:"infeed"}} interests={[q,category,"infeed"].filter(Boolean)} /></div>:null}
+                  </Fragment>
                 );
               })}
             </div>
