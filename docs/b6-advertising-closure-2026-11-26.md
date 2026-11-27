@@ -301,3 +301,9 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - A conta parceira não apresentava o prazo de 24 horas da transferência bancária. O painel de parceiro passa a consultar o registo financeiro associado, apresentar a data/hora limite e distinguir transferência bancária pendente de M-Pesa pendente.
 - A mesma intervenção corrigiu a reutilização do identificador de campanhas no carregamento de pagamentos, evitando colisão de declaração no componente de página.
 - Commit `18238dbac01b61dc0a60fdd01efb643b7afc61a9`. Fonte apenas; não foram executados testes ou builds.
+
+### B6 — lote funcional: recuperação de transferências bancárias expiradas (27/11/2026)
+- A revisão do fluxo revelou que, embora a cobrança bancária expirasse após 24 horas, a ordem de campanha permanecia em `PENDING`; a emissão seguinte era bloqueada como cobrança já existente. A F396 permite à RPC de emissão reconhecer uma ordem `BANK_TRANSFER` pendente cujo registo financeiro já expirou, marcar a tentativa anterior como `FAILED`, anular o documento financeiro ainda emitido e reutilizar a ordem para uma nova tentativa com novo prazo.
+- O painel administrativo passa a disponibilizar “Reemitir cobrança” apenas quando a transferência expirou, mantendo bloqueada a reemissão enquanto a cobrança ainda está dentro do prazo. A conta parceira passa a distinguir o prazo expirado de uma transferência ainda pendente.
+- Commits `36a43178827923ab210646aabe9cb62033e0c05b`, `d9f82261addca536c5e57d593e323fabfcae9579`, `9d4b19e99b41e62b2f702231c5f67db6995a472d` e `caa85ec88c032aaf7ef04719551c044c904cab72`.
+- Migração ainda não aplicada; o fluxo necessita de validação integrada após aplicação de F395/F396.
