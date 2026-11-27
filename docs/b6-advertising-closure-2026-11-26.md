@@ -179,3 +179,10 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 10. T10: finish cross-module consolidation and collect operational evidence.
 
 No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, accessibility audit or deployment were run. New B6 migrations `f373` through `f388` are committed as source only and have not been applied; earlier B6 telemetry migration `f370` is also pending application where not already deployed.
+
+
+### B6-T03 / T04 — bounded partner payment lookup and queue filter integrity (27/11/2026)
+- Partner advertising workspace payment-order lookup is now restricted to the campaign IDs returned for the authenticated partner account, rather than requesting all payment orders visible through the table policy. Empty campaign lists skip the payment query. This reduces unnecessary payment-row retrieval and keeps the latest-order map scoped to the workspace. Commit `57e18cb`.
+- Super Admin campaign search input now removes PostgREST structural/wildcard characters and control characters before constructing the OR/ILIKE expression, reducing the risk that punctuation changes the search expression. Commit `fc79c6e`.
+- The administrative queue now treats its database query filters as authoritative and no longer re-applies a different client-side search/deadline filter to the fetched page. This removes the previous mismatch where company/display fields and a second clock could cause the visible page to disagree with query-level counts. Commit `252f0a7`.
+- These source changes improve query scoping and filter/count consistency. They do not constitute database execution, tests, security validation, or deployment evidence.
