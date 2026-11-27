@@ -125,12 +125,19 @@ export async function confirmBusinessPromotionMpesaPayment(formData: FormData) {
 export async function cancelBusinessPromotion(formData: FormData) {
   const id = String(formData.get("id") || "");
   const reason = String(formData.get("reason") || "").trim();
-  if (!z.string().uuid().safeParse(id).success || reason.length < 8 || reason.length > 500) redirect("/dashboard/admin/publicidade?result=cancel-error");
+  const externalRefundReference=String(formData.get("external_refund_reference")||"").trim();
+  if (!z.string().uuid().safeParse(id).success || reason.length < 8 || reason.length > 500
+    || externalRefundReference.length>160) redirect("/dashboard/admin/publicidade?result=cancel-error");
   const { supabase, authorized } = await getSuperAdminContext();
   if (!authorized) redirect("/login?next=/dashboard/admin/publicidade");
-  const { data, error } = await supabase.rpc("admin_cancel_business_promotion", { p_promotion_id: id, p_reason: reason });
+  const { data, error } = await supabase.rpc("admin_cancel_business_promotion", {
+    p_promotion_id: id, p_reason: reason,
+    p_external_refund_reference: externalRefundReference||null,
+  });
   if (error) {
-    const code = error.message.includes("MPESA_REFUND_REQUIRED") ? "mpesa-refund-required" : error.message.includes("CANCELLATION_NOT_ALLOWED") ? "cancel-not-allowed" : "cancel-error";
+    const code = ["MPESA_REFUND_REQUIRED","MPESA_REFUND_REFERENCE_REQUIRED"].some(x=>error.message.includes(x)) ? "mpesa-refund-required"
+      : error.message.includes("INVALID_MPESA_REFUND_REFERENCE") ? "mpesa-refund-invalid"
+      : error.message.includes("CANCELLATION_NOT_ALLOWED") ? "cancel-not-allowed" : "cancel-error";
     redirect("/dashboard/admin/publicidade?result=" + code);
   }
   revalidatePath("/dashboard/admin"); revalidatePath("/dashboard/admin/publicidade"); revalidatePath("/dashboard/admin/monetizacao"); revalidatePath("/dashboard/publicidade");
