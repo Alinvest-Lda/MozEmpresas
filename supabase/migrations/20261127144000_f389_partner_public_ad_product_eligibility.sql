@@ -4,7 +4,7 @@ create or replace function public.partner_ad_request(
  p_targets jsonb,p_payment_method text default 'MPESA'
 ) returns uuid
 language plpgsql security definer
-set search_path=public,pg_temp
+set search_path=pg_catalog,public,pg_temp
 as $function$
 declare
  v_account uuid:=public.current_partner_account_id();
