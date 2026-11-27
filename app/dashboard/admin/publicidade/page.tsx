@@ -113,10 +113,14 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const allBusiness = (businessCampaigns ?? []) as Campaign[];
   const allPartner = (partnerCampaigns ?? []) as Campaign[];
   const allRequests = (requests ?? []) as AdvertisingRequest[];
-  const totalRecords = businessTotalCount===null||partnerTotalCount===null||requestTotalCount===null?null:businessTotalCount+partnerTotalCount+requestTotalCount;
-  const hasMore = (businessTotalCount!==null&&pageStart+100<businessTotalCount)
-    || (partnerTotalCount!==null&&pageStart+100<partnerTotalCount)
-    || (requestTotalCount!==null&&pageStart+100<requestTotalCount);
+  const activeQueueCounts = origin==="empresarial" ? [businessTotalCount]
+    : origin==="parceiro" ? [partnerTotalCount]
+    : origin==="pedido" ? [requestTotalCount]
+    : [businessTotalCount,partnerTotalCount,requestTotalCount];
+  const totalRecords = activeQueueCounts.some(value=>value===null) ? null : activeQueueCounts.reduce((sum,value)=>sum+(value??0),0);
+  const hasMore = (origin===""||origin==="empresarial") && businessTotalCount!==null&&pageStart+100<businessTotalCount
+    || (origin===""||origin==="parceiro") && partnerTotalCount!==null&&pageStart+100<partnerTotalCount
+    || (origin===""||origin==="pedido") && requestTotalCount!==null&&pageStart+100<requestTotalCount;
   const pageHref = (nextPage:number) => {
     const query = new URLSearchParams();
     if (q) query.set("q", q);
