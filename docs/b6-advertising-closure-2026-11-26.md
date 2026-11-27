@@ -108,6 +108,11 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 
 - Partner campaigns paid but left in `APPROVED` until their contracted end date can now be cancelled/refunded after expiry even when their start date has passed. The action still requires a confirmed payment order and the existing external refund reference for M-Pesa/bank transfer; credit refunds remain ledger-compensated. Migration `f383` commits `3ee781b`, `b3ca7f4`; admin interface `a254e5b`.
 
+### B6-T01 / T02 — catalogue-to-delivery contract
+- A critical delivery gap was found: business credit and M-Pesa purchase RPCs persisted the product placement but omitted the product `slot`. The decision engine requires an exact surface/slot match, so newly purchased business campaigns could remain undeliverable despite successful purchase. Both purchase paths now persist `v_product.slot`; the M-Pesa override in `f381` carries the same fix. Commits `6c65691`, `b89f449`.
+- Legacy business placement values now normalize to canonical surfaces/slots, and product-backed campaign rows inherit the catalogue's authoritative surface/slot. Commits `e6b2220`, `0b24ca8`.
+- New NOT VALID catalogue constraints require positive direct prices and valid non-null slot/surface combinations for new or changed paid inventory while allowing legacy rows to be remediated without blocking migration. Commits `c5a4d11`, `769a12f`. Existing-row validation and cleanup remain open until the deployed data can be inspected.
+
 ### B6-T01 / T03 / T08 — capacity reservation integrity
 - Partner ad inventory capacity now includes `APPROVED` and `PAUSED` campaigns in overlap checks. An approved campaign reserves the contracted space while awaiting activation; pausing a campaign does not free capacity for a second sale. Commit `bac01aa`.
 - Business credit-backed ad purchases now count `PAUSED` campaigns in product-capacity checks, preventing a paused campaign from releasing inventory while it can still be resumed. Commit `28cee94`.
