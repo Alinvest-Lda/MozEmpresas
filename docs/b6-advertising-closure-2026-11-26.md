@@ -91,7 +91,9 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - The event endpoint now distinguishes an explicit database deduplication result (`false`) from a missing/malformed RPC result, which is treated as an error rather than silently acknowledged. Commit `e392529`.
 
 - The public advertising proposal intake also now streams a 16 KiB body limit before JSON parsing, rejects invalid date windows (end must be after start when both are supplied), and caps budget/CPM inputs to avoid pathological values.
-- The same intake now requires HTTPS for creative-image and destination URLs, and bounds the supplied date string length. Commit `fb926b6`.
+- The same intake now requires HTTPS for creative-image and destination URLs, and bounds the supplied date string length.
+- Public proposal intake now dynamically offers only slot choices compatible with the selected surface, with matching server-side validation so clients cannot submit impossible surface/slot combinations. Commits `7e22bb6`, `8cc60aa`.
+ Commit `fb926b6`.
  Commit `a31085b`.
 - Corrective queue-search decision: removed the 100-name business lookup from campaign filtering because it could produce incomplete filtered totals for advertisers beyond that sample. Search now stays on fields available directly in the queue; company-name search remains intentionally unsupported until it can be implemented without truncation. Commit `c326da5`.
 
