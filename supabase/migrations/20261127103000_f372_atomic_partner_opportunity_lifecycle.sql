@@ -43,7 +43,7 @@ begin
   end if;
 
   update public.opportunities
-  set status=p_new_status,updated_at=now()
+  set status=p_new_status::public.opportunity_status,updated_at=now()
   where id=p_opportunity_id;
 
   return jsonb_build_object('id',p_opportunity_id,'old_status',v_opportunity.status::text,'new_status',p_new_status);
