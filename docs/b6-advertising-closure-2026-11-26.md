@@ -391,3 +391,7 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - O checkout permitia seleccionar mais de 10 critérios de localização/categoria, embora a validação do servidor limite cada grupo a 10; também apresentava o pagamento por créditos como disponível sem comparar o saldo da empresa com o custo segmentado.
 - O formulário limita cada grupo a 10 selecções, calcula a disponibilidade de créditos com base no saldo da empresa actualmente seleccionada e apresenta um estado específico quando não existe empresa associada à conta.
 - Commit `bbd5306bd51ce2a08aed5291c77b0fdf0d7a3dcf`.
+
+### B6 — consistência de preço em créditos no catálogo empresarial (27/11/2026)
+- O catálogo podia apresentar um preço de `0 créditos` quando o campo estava ausente, porque a conversão de `null` para número produz zero. A interface agora distingue preço em créditos configurado de formato sem preço em créditos.
+- Commit `70140a567483ce338d8fffab8d06df259824ca69`.
