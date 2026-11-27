@@ -12,7 +12,7 @@ begin
         select cron.schedule(
           'mozempresas-advertising-expiry',
           '*/15 * * * *',
-          'select public.reconcile_advertising_campaign_expiry_f376();'
+          'select public.reconcile_advertising_and_bank_transfer_expiry_f412();'
         )
       $job$;
     else
