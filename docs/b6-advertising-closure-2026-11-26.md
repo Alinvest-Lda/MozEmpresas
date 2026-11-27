@@ -296,3 +296,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - A Server Action passou a aceitar o método bancário e a chamar a rotina de confirmação com validação de Super Admin, tratamento de erros e revalidação das áreas relevantes. Commit `8990af0e106838ce749a2868d47f2123591bdb61`.
 - A fila administrativa passou a oferecer a emissão bancária, apresentar o prazo de confirmação e permitir confirmar apenas através do registo financeiro associado; a mensagem de sucesso/expiração foi alinhada. Commits `0b3055e1eed83ecd7debb4501b32639d10732ad9`, `43f6f9715655a485a519593ecdeb117444a78d3a`, `ec58a0a98db2377ba8b41e0ecafcf1ac47cc399f` e `30314e86e878dbefbac42446f86377bfbddddcbd`.
 - Migração e interface ainda não foram executadas em ambiente. O fluxo permanece por validar após aplicação da F395 e das migrações anteriores.
+
+### B6 — lote funcional: ciclo bancário visível também para a conta parceira (27/11/2026)
+- A conta parceira não apresentava o prazo de 24 horas da transferência bancária. O painel de parceiro passa a consultar o registo financeiro associado, apresentar a data/hora limite e distinguir transferência bancária pendente de M-Pesa pendente.
+- A mesma intervenção corrigiu a reutilização do identificador de campanhas no carregamento de pagamentos, evitando colisão de declaração no componente de página.
+- Commit `18238dbac01b61dc0a60fdd01efb643b7afc61a9`. Fonte apenas; não foram executados testes ou builds.
