@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { Fragment } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PublicAd } from "@/components/public-ad";
@@ -184,8 +185,9 @@ export default async function Marketplace({
             {error && <div className="notice">Algumas funções comerciais estão temporariamente indisponíveis.</div>}
             {listings.length > 0 ? (
               <div className="directory-marketplace-grid marketplace-listing-cards">
-                {listings.map((item) => (
-                  <Link href={"/marketplace/" + item.id} className="directory-marketplace-card" key={item.id}>
+                {listings.map((item,index) => (
+                  <Fragment key={item.id}>
+                  <Link href={"/marketplace/" + item.id} className="directory-marketplace-card">
                     <div className="directory-marketplace-visual">
                       {item.image_url ? <img src={item.image_url} alt="" loading="lazy" /> : <div className="directory-marketplace-placeholder"><span>{item.type === "PRODUCT" ? "P" : "S"}</span><small>{item.type === "PRODUCT" ? "Produto" : "Serviço"}</small></div>}
                       <span className="directory-marketplace-type">{item.type === "PRODUCT" ? "Produto" : "Serviço"}</span>
@@ -205,6 +207,8 @@ export default async function Marketplace({
                       </div>
                     </div>
                   </Link>
+                  {index===Math.min(5,listings.length-1)?<div className="marketplace-infeed-ad"><PublicAd surface="MARKETPLACE" slot="INFEED" context={{query:q,type,location,category,placement:"infeed"}} interests={[q,type,location,category,"infeed"].filter(Boolean)} /></div>:null}
+                  </Fragment>
                 ))}
               </div>
             ) : (
