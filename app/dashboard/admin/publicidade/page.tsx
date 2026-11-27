@@ -172,29 +172,10 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     ...allBusiness.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.price_mzn == null && c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.price_mzn ?? c.budget) + " MZN", table: "business", allowed: promotionStatuses }); }),
     ...allPartner.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: partnerNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at) }); }),
   ].sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
-  const matchesQuery = (value: string) => !q || value.toLocaleLowerCase("pt").includes(q.toLocaleLowerCase("pt"));
-  const filteredCampaigns = campaigns.filter((c) => {
-    if (origin && origin !== c.originKey) return false;
-    if (status && c.status !== status) return false;
-    if (!matchesQuery([c.title, c.headline, c.advertiser, c.origin, c.position].join(" "))) return false;
-    const end = c.ends_at ? new Date(c.ends_at).getTime() : NaN;
-    if (deadline === "sem-prazo" && c.ends_at) return false;
-    if (deadline === "expirado" && !(Number.isFinite(end) && end < now.getTime())) return false;
-    if (deadline === "proximo" && !(Number.isFinite(end) && end >= now.getTime() && end <= now.getTime() + 7 * 86400000)) return false;
-    if (deadline === "futuro" && !(Number.isFinite(end) && end > now.getTime() + 7 * 86400000)) return false;
-    return true;
-  });
-  const filteredRequests = allRequests.filter((r) => {
-    if (origin && origin !== "pedido") return false;
-    if (status && r.status !== status) return false;
-    if (!matchesQuery([r.company_name, r.contact_name, r.email, r.package_name, r.placement].join(" "))) return false;
-    const end = r.ends_at ? new Date(r.ends_at).getTime() : NaN;
-    if (deadline === "sem-prazo" && r.ends_at) return false;
-    if (deadline === "expirado" && !(Number.isFinite(end) && end < now.getTime())) return false;
-    if (deadline === "proximo" && !(Number.isFinite(end) && end >= now.getTime() && end <= now.getTime() + 7 * 86400000)) return false;
-    if (deadline === "futuro" && !(Number.isFinite(end) && end > now.getTime() + 7 * 86400000)) return false;
-    return true;
-  });
+  // Query-level filters are authoritative. Avoid a second client-side pass with a
+  // different searchable-field set or clock, which would make page totals disagree.
+  const filteredCampaigns = campaigns.filter((c) => !origin || origin === c.originKey);
+  const filteredRequests = allRequests.filter((r) => !origin || origin === "pedido");
   const totalImpressions = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
   const totalClicks = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
   const pendingCount = allBusiness.filter(c => c.status === "PENDING").length + allPartner.filter(c => ["REQUESTED", "PENDING", "UNDER_REVIEW"].includes(c.status ?? "")).length + allRequests.filter(r => ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT"].includes(r.status ?? "")).length;
