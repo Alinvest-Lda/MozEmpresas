@@ -33,6 +33,7 @@ begin
  update public.financial_payments set status='REFUNDED' where id=v_order.financial_payment_id and status='CONFIRMED';
  update public.financial_documents set status='VOID' where id=v_order.financial_document_id and status in ('ISSUED','PAID');
  update public.partner_ad_payment_orders set status='REFUNDED',external_refund_reference=v_reference,updated_at=now() where id=v_order.id;
+ perform set_config('app.partner_ad_campaign_reason',trim(p_reason),true);
  update public.partner_ad_campaigns set status='CANCELLED',updated_at=now() where id=p_campaign_id;
  return jsonb_build_object('adjustment_id',v_adjustment,'refund_type',case when v_order.payment_method='CREDITS' then 'CREDIT_REFUND' when v_order.payment_method='MPESA' then 'MPESA_REFUND' else 'BANK_TRANSFER_REFUND' end,'credits_refunded',v_order.credits_charged,'external_reference',v_reference);
 end; $$;
