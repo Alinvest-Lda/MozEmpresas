@@ -19,6 +19,7 @@ type AdvertisingRequest = {
   id: string; company_name: string; contact_name: string; email: string; phone: string | null;
   placement: string | null; package_name: string | null; status: string | null;
   starts_at: string | null; ends_at: string | null; created_at: string | null;
+  payment_method?: string | null; payment_reference?: string | null; paid_amount_mzn?: number | null; paid_at?: string | null;
 };
 const promotionStatuses = ["PENDING", "ACTIVE", "PAUSED", "EXPIRED"];
 const partnerStatuses = ["DRAFT", "REQUESTED", "APPROVED", "ACTIVE", "PAUSED", "ENDED", "REJECTED", "CANCELLED"];
@@ -74,7 +75,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   ] = await Promise.all([
     supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,impressions_count,clicks_count,target_url,business:business_id(name)").order("created_at", { ascending: false }).limit(100),
     supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)").order("created_at", { ascending: false }).limit(100),
-    supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at").order("created_at", { ascending: false }).limit(100),
+    supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at,payment_method,payment_reference,paid_amount_mzn,paid_at").order("created_at", { ascending: false }).limit(100),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "IMPRESSION"),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "CLICK"),
     supabase.from("partner_ad_products").select("id,name,price_mzn,credit_price,active").order("name").limit(100),
@@ -214,12 +215,17 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
         </article>)}
         {filteredRequests.map((r) => <article className={styles.campaignCard} key={"request-" + r.id}>
           <div className={styles.campaignTop}><div className={styles.campaignMain}><span className={styles.campaignKicker}>Pedido de publicidade · {r.placement || "Posição não indicada"}</span><h3>{r.company_name}</h3><p>{r.contact_name} · {r.email}{r.phone ? " · " + r.phone : ""}</p></div><span className={styles.status}>{label(r.status)}</span></div>
-          <div className={styles.campaignMeta}><span><small>Pacote</small><strong>{r.package_name || "Não indicado"}</strong></span><span><small>Início solicitado</small><strong>{fmtDate(r.starts_at)}</strong></span><span><small>Fim solicitado</small><strong>{fmtDate(r.ends_at)}</strong></span><span><small>Recebido</small><strong>{fmtDate(r.created_at)}</strong></span></div>
+          <div className={styles.campaignMeta}><span><small>Pacote</small><strong>{r.package_name || "Não indicado"}</strong></span><span><small>Início solicitado</small><strong>{fmtDate(r.starts_at)}</strong></span><span><small>Fim solicitado</small><strong>{fmtDate(r.ends_at)}</strong></span><span><small>Recebido</small><strong>{fmtDate(r.created_at)}</strong></span>{r.paid_at?<span><small>Liquidação registada</small><strong>{fmtDate(r.paid_at)} · {fmtNumber(r.paid_amount_mzn)} MZN</strong></span>:null}</div>
+          {r.payment_reference?<p className={styles.destination}>Pagamento: {r.payment_method||"—"} · Referência {r.payment_reference}</p>:null}
           <form action={updateAdvertisingRequest} className={styles.moderationForm}>
             <input type="hidden" name="id" value={r.id}/>
             <label><span>Estado comercial</span><Select name="status" defaultValue={r.status ?? "NEW"}>{requestStatuses.map(s=><option key={s} value={s}>{label(s)}</option>)}</Select></label>
+            <label><span>Forma de pagamento (obrigatória para marcar Pago)</span><Select name="payment_method" defaultValue={r.payment_method||"MPESA"}><option value="MPESA">M-Pesa</option><option value="BANK_TRANSFER">Transferência bancária</option><option value="CASH">Numerário</option><option value="OTHER">Outro meio</option></Select></label>
+            <label><span>Referência do pagamento (mín. 4 caracteres)</span><Input name="payment_reference" minLength={4} maxLength={160} defaultValue={r.payment_reference||""} placeholder="Referência comprovativa"/></label>
+            <label><span>Valor liquidado (MZN)</span><Input name="paid_amount_mzn" type="number" min={0.01} step="0.01" defaultValue={r.paid_amount_mzn??""} placeholder="Valor efectivamente recebido"/></label>
             <label><span>Justificação obrigatória</span><Input name="reason" minLength={8} maxLength={500} required placeholder="Motivo da decisão (mín. 8 caracteres)"/></label>
             <button className="btn primary" type="submit">Actualizar pedido</button>
+            <small>O estado Pago exige referência, valor e meio de pagamento. Depois de Pago, só é permitida a aprovação; não se apaga a evidência de liquidação.</small>
           </form>
           <details className={styles.history}><summary>Histórico de decisões · {(eventsByAdvertisingEntity.get(r.id) ?? []).length}</summary>{(eventsByAdvertisingEntity.get(r.id) ?? []).map((event:any)=><p key={event.id}>{event.old_status} → {event.new_status} · {fmtDate(event.created_at)}<br/>Justificação: {event.action_reason}</p>)}</details>
         </article>)}
