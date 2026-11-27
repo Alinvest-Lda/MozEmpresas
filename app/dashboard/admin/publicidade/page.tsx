@@ -72,9 +72,13 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const queueNowIso=queueNow.toISOString();
   const queueFutureIso=new Date(queueNow.getTime()+7*24*60*60*1000).toISOString();
   const safeQueueSearch=q;
-  const applyQueueFilters=(initial:any,fields:string[])=>{
+  const {data:matchingBusinessNames,error:businessNameSearchError}=safeQueueSearch
+    ? await supabase.from("businesses").select("id").ilike("name","%"+safeQueueSearch+"%").is("archived_at",null).limit(100)
+    : {data:[] as {id:string}[],error:null};
+  const matchingBusinessIds=(matchingBusinessNames??[]).map((business)=>business.id);
+  const applyQueueFilters=(initial:any,fields:string[],extraFilters:string[]=[] )=>{
     let query=initial;
-    if(safeQueueSearch) query=query.or(fields.map(field=>field+".ilike.%"+safeQueueSearch+"%").join(","));
+    if(safeQueueSearch) query=query.or([...fields.map(field=>field+".ilike.%"+safeQueueSearch+"%"),...extraFilters].join(","));
     if(status) query=query.eq("status",status);
     if(deadline==="expirado") query=query.lt("ends_at",queueNowIso);
     else if(deadline==="proximo") query=query.gte("ends_at",queueNowIso).lte("ends_at",queueFutureIso);
@@ -84,15 +88,16 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   };
   const businessQueueQuery=applyQueueFilters(
     supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,price_mzn,payment_method,payment_reference,paid_at,impressions_count,clicks_count,target_url,business:business_id(name)",{count:"exact"}).order("created_at",{ascending:false}),
-    ["title","headline","target_url"]
+    ["title","headline","target_url","placement"],
+    matchingBusinessIds.length ? ["business_id.in.("+matchingBusinessIds.join(",")+")"] : []
   ).range(pageStart,pageStart+99);
   const partnerQueueQuery=applyQueueFilters(
     supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)",{count:"exact"}).order("created_at",{ascending:false}),
-    ["title","headline","target_url"]
+    ["title","headline","target_url","surface"]
   ).range(pageStart,pageStart+99);
   const requestQueueQuery=applyQueueFilters(
     supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at,payment_method,payment_reference,paid_amount_mzn,paid_at",{count:"exact"}).order("created_at",{ascending:false}),
-    ["company_name","contact_name","email","phone","package_name"]
+    ["company_name","contact_name","email","phone","package_name","placement"]
   ).range(pageStart,pageStart+99);
 
   const [
@@ -197,7 +202,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const totalImpressions = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
   const totalClicks = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
   const pendingCount = allBusiness.filter(c => c.status === "PENDING").length + allPartner.filter(c => ["REQUESTED", "PENDING", "UNDER_REVIEW"].includes(c.status ?? "")).length + allRequests.filter(r => ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT"].includes(r.status ?? "")).length;
-  const error = businessError || partnerError || requestError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError || deliveryMetricsError;
+  const error = businessError || partnerError || requestError || businessNameSearchError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError || deliveryMetricsError;
 
   return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
     <header className={styles.hero}>
