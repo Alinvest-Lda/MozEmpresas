@@ -84,6 +84,11 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     : {data:[],count:0,error:null};
   const businessNameSearchError=Boolean(businessNameSearch.error)||(businessNameSearch.count??0)>1000;
   const businessNameFilters=(businessNameSearch.data??[]).map(row=>row.id).filter(Boolean);
+  const partnerAccountSearch=businessNameFilters.length
+    ? await supabase.from("partner_accounts").select("id").in("business_id",businessNameFilters).limit(1000)
+    : {data:[],error:null};
+  const partnerAccountSearchError=Boolean(partnerAccountSearch.error);
+  const partnerAccountFilters=(partnerAccountSearch.data??[]).map(row=>row.id).filter(Boolean);
   const applyQueueFilters=(initial:any,fields:string[],extraOrFilters:string[]=[] )=>{
     let query=initial;
     if(safeQueueSearch) query=query.or([...fields.map(field=>field+".ilike.%"+safeQueueSearch+"%"),...extraOrFilters].join(","));
@@ -101,7 +106,8 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   ).range(pageStart,pageStart+99);
   const partnerQueueQuery=applyQueueFilters(
     supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url",{count:"exact"}).order("created_at",{ascending:false}),
-    ["title","headline","target_url","surface"]
+    ["title","headline","target_url","surface"],
+    partnerAccountFilters.length?["account_id.in.("+partnerAccountFilters.join(",")+")"]:[]
   ).range(pageStart,pageStart+99);
   const requestQueueQuery=applyQueueFilters(
     supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at,bank_transfer_expires_at,payment_method,payment_reference,paid_amount_mzn,paid_at",{count:"exact"}).order("created_at",{ascending:false}),
@@ -212,7 +218,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const totalImpressions = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
   const totalClicks = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
   const pendingCount = allBusiness.filter(c => c.status === "PENDING").length + allPartner.filter(c => ["REQUESTED", "PENDING", "UNDER_REVIEW"].includes(c.status ?? "")).length + allRequests.filter(r => ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT"].includes(r.status ?? "")).length;
-  const error = businessError || businessNameSearchError || partnerError || requestError || partnerPaymentOrdersError || partnerFinancialPaymentsError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError || deliveryMetricsError;
+  const error = businessError || businessNameSearchError || partnerAccountSearchError || partnerError || requestError || partnerPaymentOrdersError || partnerFinancialPaymentsError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError || deliveryMetricsError;
 
   return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
     <header className={styles.hero}>
