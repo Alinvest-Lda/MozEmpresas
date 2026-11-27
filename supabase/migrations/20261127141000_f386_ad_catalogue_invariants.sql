@@ -3,20 +3,21 @@ alter table public.ad_products
   drop constraint if exists ad_products_paid_price_positive;
 alter table public.ad_products
   add constraint ad_products_paid_price_positive
-  check (access_type<>'PAID' or direct_price_mzn>0) not valid;
+  check (not active or access_type<>'PAID' or direct_price_mzn>0) not valid;
 
 alter table public.ad_products
   drop constraint if exists ad_products_paid_slot_required;
 alter table public.ad_products
   add constraint ad_products_paid_slot_required
-  check (access_type<>'PAID' or (slot is not null and slot in ('HERO','BILLBOARD','EXCLUSIVE','FEATURED','INFEED','CONTEXT'))) not valid;
+  check (not active or access_type<>'PAID' or (slot is not null and slot in ('HERO','BILLBOARD','EXCLUSIVE','FEATURED','INFEED','CONTEXT'))) not valid;
 
 alter table public.business_promotions
   drop constraint if exists business_promotions_product_inventory_contract;
 alter table public.business_promotions
   add constraint business_promotions_product_inventory_contract
   check (
-    ad_product_id is null
+    status not in ('PENDING','ACTIVE','PAUSED')
+    or ad_product_id is null
     or (
       placement is not null and placement in ('DIRECTORY','MARKETPLACE','HOME','OPPORTUNITIES')
       and slot is not null and slot in ('HERO','BILLBOARD','EXCLUSIVE','FEATURED','INFEED','CONTEXT')
@@ -28,8 +29,11 @@ alter table public.partner_ad_products
 alter table public.partner_ad_products
   add constraint partner_ad_products_public_inventory_contract
   check (
-    surface is not null and surface in ('HOME','DIRECTORY','MARKETPLACE','OPPORTUNITIES','PARTNER_INTELLIGENCE')
-    and slot is not null and slot in ('HERO','BILLBOARD','EXCLUSIVE','FEATURED','INFEED','CONTEXT')
+    not active
+    or (
+      surface is not null and surface in ('HOME','DIRECTORY','MARKETPLACE','OPPORTUNITIES','PARTNER_INTELLIGENCE')
+      and slot is not null and slot in ('HERO','BILLBOARD','EXCLUSIVE','FEATURED','INFEED','CONTEXT')
+    )
   ) not valid;
 
 alter table public.partner_ad_campaigns
