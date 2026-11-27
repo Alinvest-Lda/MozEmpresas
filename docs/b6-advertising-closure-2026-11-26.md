@@ -470,3 +470,5 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - A pesquisa administrativa de campanhas empresariais cobria título, headline, URL e posição, mas não o nome da empresa associada, tornando a localização de campanhas por anunciante incompleta.
 - O painel passou a resolver primeiro os IDs de empresas correspondentes ao termo e a incluir esses IDs na mesma expressão OR da fila empresarial, preservando filtros, contagem e paginação. Se a pesquisa de empresas falhar ou ultrapassar o limite de resolução, o painel assinala os dados como incompletos em vez de apresentar um resultado como definitivo.
 - Commit `056672bd04681da22c1c4b93f4e8dd0de2f256ed`.
+
+- A mesma pesquisa por empresa foi estendida às campanhas de parceiros através da associação `partner_accounts.business_id`, para que a fila administrativa use o nome da empresa tanto em campanhas empresariais como em campanhas de contas parceiras. Commit `38e28f01c0dcd62c36d2875e12040bbc390565ab`.
