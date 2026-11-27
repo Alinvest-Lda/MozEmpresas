@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidAdSurfaceSlot } from "@/lib/advertising/placements";
 
 export const adEventSchema = z.object({
   visitorKey: z.string().min(16).max(120),
@@ -11,7 +12,6 @@ export const adEventSchema = z.object({
 });
 
 export type AdEventPayload = z.infer<typeof adEventSchema>;
-import { isValidAdSurfaceSlot } from "@/lib/advertising/placements";
 export { isValidAdSurfaceSlot } from "@/lib/advertising/placements";
 
 
