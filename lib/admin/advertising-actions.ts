@@ -10,7 +10,7 @@ async function updateStatus(table: "business_promotions" | "advertising_requests
   const id = String(idValue || "");
   const status = String(statusValue || "").toUpperCase();
   const reason = String(reasonValue || "").trim();
-  const transitions = table === "business_promotions" ? promotionTransitions : requestTransitions;
+  const transitions = table === "business_promotions" ? BUSINESS_PROMOTION_TRANSITIONS : ADVERTISING_REQUEST_TRANSITIONS;
   if (!z.string().uuid().safeParse(id).success || !Object.hasOwn(transitions, status)
     || reason.length < 8 || reason.length > 500) {
     redirect("/dashboard/admin/publicidade?result=error");
