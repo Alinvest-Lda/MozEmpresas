@@ -15,6 +15,6 @@ export const AD_SURFACE_SLOTS = {
 export type AdSurface = keyof typeof AD_SURFACE_SLOTS;
 
 export function isValidAdSurfaceSlot(surface:string,slot:string):boolean {
-  return (AD_SURFACE_SLOTS as Record<string,readonly (readonly [string,string])[]>)[surface]
-    ?.some(([allowedSlot])=>allowedSlot===slot)??false;
+  const slots=AD_SURFACE_SLOTS[surface as AdSurface];
+  return slots?.some(([allowedSlot])=>allowedSlot===slot)??false;
 }
