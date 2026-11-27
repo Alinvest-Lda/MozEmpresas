@@ -38,14 +38,14 @@ const schema = z.object({
   if(!validSlots[payload.surface]?.includes(payload.slot)){
     ctx.addIssue({code:z.ZodIssueCode.custom,message:"A posição não está disponível no espaço seleccionado.",path:["slot"]});
   }
-  const parseCampaignDate=(value:string|undefined):number|null=>{
+  const parseCampaignDate=(value:string|undefined,isEnd=false):number|null=>{
     if(!value)return null;
-    const normalized=/^\d{4}-\d{2}-\d{2}$/.test(value)?value+"T00:00:00+02:00":/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)?value:value+"+02:00";
+    const normalized=/^\d{4}-\d{2}-\d{2}$/.test(value)?value+(isEnd?"T23:59:59.999+02:00":"T00:00:00+02:00") :/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)?value:value+"+02:00";
     const timestamp=Date.parse(normalized);
     return Number.isFinite(timestamp)?timestamp:null;
   };
   const start= parseCampaignDate(payload.startsAt);
-  const end=parseCampaignDate(payload.endsAt);
+  const end=parseCampaignDate(payload.endsAt,true);
   if(payload.startsAt && start===null){
     ctx.addIssue({code:z.ZodIssueCode.custom,message:"Data inválida.",path:["startsAt"]});
   }
@@ -94,14 +94,14 @@ export const POST = withApiObservability("api.advertising_request", async (reque
 
   try {
     const payload = parsed.data;
-    const toMaputoIso=(value:string|undefined)=>{
+    const toMaputoIso=(value:string|undefined,isEnd=false)=>{
       if(!value)return null;
-      const normalized=/^\d{4}-\d{2}-\d{2}$/.test(value)?value+"T00:00:00+02:00":/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)?value:value+"+02:00";
+      const normalized=/^\d{4}-\d{2}-\d{2}$/.test(value)?value+(isEnd?"T23:59:59.999+02:00":"T00:00:00+02:00"):/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)?value:value+"+02:00";
       const date=new Date(normalized);
       return Number.isFinite(date.getTime())?date.toISOString():null;
     };
     const startsAt=toMaputoIso(payload.startsAt);
-    const endsAt=toMaputoIso(payload.endsAt);
+    const endsAt=toMaputoIso(payload.endsAt,true);
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
