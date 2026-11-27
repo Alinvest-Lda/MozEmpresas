@@ -2613,6 +2613,7 @@ button,input,select,textarea{font-size:16px}
 .directory-results-summary strong{font-size:27px}
 .directory-marketplace-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding-top:22px}
 .marketplace-infeed-ad{grid-column:1/-1;min-width:0}
+.opportunities-infeed-ad{grid-column:1/-1;min-width:0}
 .directory-marketplace-card{min-width:0;display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
 .directory-marketplace-card:hover{border-color:#9dbab5;box-shadow:0 12px 28px #172c2a0c;transform:translateY(-2px)}
 .directory-marketplace-visual{position:relative;aspect-ratio:4/2.65;overflow:hidden;background:#edf2f0}
