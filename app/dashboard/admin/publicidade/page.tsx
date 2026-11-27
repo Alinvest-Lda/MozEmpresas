@@ -13,7 +13,7 @@ type Campaign = {
   price_mzn?: number | null; budget?: number | null; currency?: string | null; payment_method?: string | null; payment_reference?: string | null; paid_at?: string | null;
   impressions_count?: number | null; clicks_count?: number | null; target_url?: string | null;
   business?: { name?: string | null } | { name?: string | null }[] | null;
-  payment?: { id: string; status: string; payment_method: string; payment_reference: string; amount_mzn: number }[] | null;
+  payment?: { id: string; status: string; payment_method: string; payment_reference: string; amount_mzn: number; confirmed_at?: string | null }[] | null;
 };
 type AdvertisingRequest = {
   id: string; company_name: string; contact_name: string; email: string; phone: string | null;
@@ -238,6 +238,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
             const payment = c.payment?.[0];
             return <>
               {payment ? <div className={styles.destination}><strong>Cobrança anterior: {label(payment.status)}</strong><p>{payment.payment_method} · {fmtNumber(payment.amount_mzn)} MZN · Referência {payment.payment_reference}</p></div> : null}
+              {payment?.status==="PAID" && payment.payment_method==="BANK_TRANSFER" && c.status==="APPROVED" && payment.confirmed_at ? (() => { const activationDeadline=new Date(new Date(payment.confirmed_at).getTime()+24*60*60*1000); const expired=activationDeadline.getTime()<=now.getTime(); return <div className={styles.resultNotice + (expired ? " "+styles.resultError : "")}><strong>{expired?"Prazo de activação ultrapassado":"Prazo de activação: 24 horas"}</strong><p>{expired?"A campanha não foi activada dentro de 24 horas após a confirmação da transferência. Está elegível para cancelamento e reembolso manual.":"Activar a campanha antes de "+activationDeadline.toLocaleString("pt-MZ")+"; se não for activada, ficará elegível para cancelamento e reembolso manual após o prazo."}</p></div>; })() : null}
               {(!payment || payment.status === "FAILED") && ["REQUESTED","APPROVED"].includes(c.status ?? "") ? <form action={issuePartnerAdPayment} className={styles.moderationForm}>
                   <input type="hidden" name="id" value={c.id}/>
                   <label><span>Preço acordado (MZN)</span><Input name="price_mzn" type="number" min={1} step="0.01" defaultValue={c.price_mzn ?? ""} placeholder="Obrigatório se o formato tiver preço sob proposta"/></label>
