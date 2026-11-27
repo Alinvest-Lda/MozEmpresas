@@ -148,7 +148,7 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 3. T03: finish partner campaign payment retry, payment method reconciliation, and user-visible cancellation/refund outcomes.
 4. T04: move search/status/deadline filters and global counts to database-side pagination; expose a complete settlement and audit trail in the back office.
 5. T05: finalize attribution/conversion policy and verify event counts against the deployed event pipeline; current CTR is interaction, not ROI.
-6. T06: trace all public placements and remove/convert legacy renderers only after confirming every call site and placement contract.
+6. T06: source-level placement coverage is now implemented for HOME (HERO/BILLBOARD/EXCLUSIVE), DIRECTORY (BILLBOARD/FEATURED/CONTEXT/INFEED), MARKETPLACE (BILLBOARD/FEATURED/EXCLUSIVE/INFEED) and OPPORTUNITIES (BILLBOARD/FEATURED/INFEED). Remaining T06 gate is deployment/runtime verification and confirming there are no external consumers of the retained `home_ad_slots` compatibility RPC before removal.
 7. T07: reconcile partner financial documents, M-Pesa, bank transfers, credit ledger and compensating refunds end-to-end.
 8. T08: close expired/paused/cancelled campaign transitions and scheduling automation, including race-safe expiry.
 9. T09: complete the advertiser recovery journey for failed, pending, rejected and expired campaigns.
