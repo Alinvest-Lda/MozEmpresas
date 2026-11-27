@@ -13,13 +13,17 @@ begin
 $old$;
   v_new:=$new$
   update public.partner_ad_payment_orders set status='PAID',confirmed_at=now(),updated_at=now() where id=v_order.id;
-  insert into public.notifications(user_id,type,title,body,resource_type,resource_id)
+  begin
+    insert into public.notifications(user_id,type,title,body,resource_type,resource_id)
   select members.user_id,'ADVERTISING','Transferência bancária confirmada',
     'A transferência bancária da campanha "'||left(c.title,120)||'" foi confirmada. A campanha aguarda activação dentro do período contratado.',
     'PARTNER_AD_CAMPAIGN',c.id
   from public.partner_ad_campaigns c
   join public.partner_account_members members on members.account_id=c.account_id
-  where c.id=v_payment.campaign_id and members.active=true and members.user_id is not null;
+    where c.id=v_payment.campaign_id and members.active=true and members.user_id is not null;
+  exception when others then
+    raise warning 'F398 notification failed for campaign %: %',v_payment.campaign_id,sqlerrm;
+  end;
 $new$;
 
   if position(v_old in v_definition)=0 then
