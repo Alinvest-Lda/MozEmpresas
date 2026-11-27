@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PublicAd } from "@/components/public-ad";
 
 const categories = [
   ["Construção e engenharia","Obras, projectos e manutenção"],
@@ -46,6 +47,7 @@ export default async function Home() {
     .eq("status", "ACTIVE");
   return (
     <main className="home-v2">
+      <div className="container"><PublicAd surface="HOME" slot="HERO" /></div>
 
       <section className="home-v2-billboard home-v2-billboard-top">
         <div className="container">
