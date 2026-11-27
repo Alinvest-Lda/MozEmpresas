@@ -243,3 +243,7 @@ No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, access
 ### B6-T03 / T09 — partner campaign request recovery (27/11/2026)
 - The partner campaign request form now prevents duplicate submission, captures network/unexpected RPC failures, restores the submit state in every outcome, and resets the captured form element safely after a successful request. Previously an uncaught network exception could leave the form permanently pending. Commit `e75dfb80b85aa9bc84fb22f8041cfe397ef8dabe`.
 - Source-only; no tests, builds, SQL execution, migration application, or deployment performed.
+
+### B6-T03 / T09 — partner audience target validation (27/11/2026)
+- Partner campaign requests now validate the same target contract enforced by the database before sending: maximum 20 entries, approved target types only, non-empty values and a 160-character limit. This avoids silently discarded target types and database-side truncation of oversized values. Commit `59cf890a7e0cd45b4073d2bd3bde34837b5187cd`.
+- Source-only; no tests, builds, SQL execution, migration application, or deployment performed.
