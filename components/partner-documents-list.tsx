@@ -13,13 +13,14 @@ export default function PartnerDocumentsList({documents}:{documents:PartnerDocum
   const [error,setError] = useState<string|null>(null);
   const [busy, startTransition] = useTransition();
   const groups = documents.reduce<Record<string,PartnerDocumentItem[]>>((acc,doc)=>{const key=doc.parent_type||"GENERAL"; (acc[key] ||= []).push(doc); return acc;}, {});
+  const latestVersions = documents.reduce<Record<string,number>>((acc,doc)=>{const key=doc.series_key || doc.id; acc[key]=Math.max(acc[key]||0,doc.version_number||0); return acc;}, {});
   return <div className="partner-document-list" aria-label="Arquivo de documentos da organização">
     {error && <p role="alert" className="notice">{error}</p>}
     {Object.entries(groups).map(([group,items])=><section key={group} aria-labelledby={"partner-docs-"+group}>
       <h3 id={"partner-docs-"+group}>{parentLabel[group]||"Documentação geral"}</h3>
       <ul className="partner-document-group" style={{listStyle:"none",padding:0,margin:0}}>
       {items.map(doc=><li key={doc.id}><article className="partner-document-row">
-        <div className="partner-document-main"><span>{typeLabel[doc.document_type] || doc.document_type} · Versão {doc.version_number}</span>
+        <div className="partner-document-main"><span>{typeLabel[doc.document_type] || doc.document_type} · Versão {doc.version_number} · {doc.version_number === latestVersions[doc.series_key] ? "Versão actual" : "Histórico"}</span>
           <strong>{doc.title}</strong><small>{doc.original_filename} · {sizeLabel(doc.size_bytes)} · {dateLabel(doc.created_at)}</small>
           {doc.notes && <p>{doc.notes}</p>}
         </div>
