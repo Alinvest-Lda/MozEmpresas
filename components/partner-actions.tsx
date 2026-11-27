@@ -15,7 +15,7 @@
   const{error}=await createClient().rpc("partner_ad_request",{p_product_id:productId,p_title:String(f.get("title")||""),p_objective:String(f.get("objective")||""),p_starts_at:start.toISOString(),p_ends_at:end.toISOString(),p_targets:ts,p_payment_method:String(f.get("payment_method")||"MPESA")});
   if(error){
    const messages:Record<string,string>={FORBIDDEN:"O seu papel não permite solicitar campanhas.",INVALID_CAMPAIGN_DATES:"O período indicado não é válido.",CAMPAIGN_EXCEEDS_PRODUCT_DURATION:"O período excede a duração deste formato.",AD_SPACE_UNAVAILABLE:"Este espaço já tem uma campanha sobreposta. Escolha outro período.",PARTNER_ACCOUNT_REQUIRED:"Não foi possível identificar a conta Parceiro.",PARTNER_CREDIT_WALLET_NOT_LINKED:"A conta Parceiro ainda não está associada a uma empresa com carteira de créditos.",PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED:"Este formato ainda não tem preço em créditos configurado.",PARTNER_CREDIT_WALLET_NOT_FOUND:"Não foi encontrada uma carteira empresarial associada.",INSUFFICIENT_CREDITS:"O saldo de créditos disponível é insuficiente.",INVALID_PAYMENT_METHOD:"Seleccione M-Pesa ou créditos."};
-   setE(messages[error.message]||"Não foi possível enviar o pedido. "+error.message);
+   setE(messages[error.message]||"Não foi possível enviar o pedido. Verifique os dados, confirme se o formato ainda está disponível ou contacte o suporte.");
   }else{setOk("Pedido enviado para análise. A activação depende de confirmação da equipa MozEmpresas.");x.currentTarget.reset();r.refresh();}
   setP(false);
  }
