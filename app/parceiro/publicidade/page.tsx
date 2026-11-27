@@ -14,7 +14,9 @@ export default async function PartnerAds(){
     s.rpc("partner_ad_products_list"),
     s.rpc("partner_ad_campaigns_list"),
     s.rpc("partner_ad_campaign_metrics"),
-    s.from("partner_ad_payment_orders").select("campaign_id,status,payment_method,payment_reference,amount_mzn,credits_charged,confirmed_at").order("created_at",{ascending:false})
+    campaigns?.length
+      ? s.from("partner_ad_payment_orders").select("campaign_id,status,payment_method,payment_reference,amount_mzn,credits_charged,confirmed_at").in("campaign_id",campaigns.map((campaign:any)=>campaign.id)).order("created_at",{ascending:false})
+      : Promise.resolve({data:[],error:null})
   ]);
   const metricsByCampaign=new Map<string,{impressions:number;clicks:number}>((campaignMetrics??[]).map((x:any)=>[x.campaign_id,{impressions:Number(x.impressions??0),clicks:Number(x.clicks??0)}] as [string,{impressions:number;clicks:number}]));
   const paymentsByCampaign=new Map<string,any>();(paymentOrders??[]).forEach((x:any)=>{if(!paymentsByCampaign.has(x.campaign_id))paymentsByCampaign.set(x.campaign_id,x)});
