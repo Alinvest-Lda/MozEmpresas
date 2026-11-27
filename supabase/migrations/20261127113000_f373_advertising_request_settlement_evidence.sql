@@ -83,9 +83,9 @@ begin
 
     perform set_config('app.advertising_admin_reason',v_reason,true);
     if p_new_status='PAID' then
-      if p_payment_method not in ('MPESA','BANK_TRANSFER','CASH','OTHER')
+      if p_payment_method is null or p_payment_method not in ('MPESA','BANK_TRANSFER','CASH','OTHER')
         or v_reference is null or length(v_reference)<4 or length(v_reference)>160
-        or p_paid_amount_mzn is null or p_paid_amount_mzn<=0 then
+        or p_paid_amount_mzn is null or p_paid_amount_mzn<=0 or p_paid_amount_mzn>=1000000000000 then
         raise exception 'ADVERTISING_REQUEST_SETTLEMENT_EVIDENCE_REQUIRED' using errcode='22023';
       end if;
       update public.advertising_requests
@@ -106,3 +106,27 @@ $function$;
 
 revoke all on function public.admin_update_advertising_status(text,uuid,text,text,text,text,numeric) from public,anon;
 grant execute on function public.admin_update_advertising_status(text,uuid,text,text,text,text,numeric) to authenticated;
+
+create or replace function public.guard_advertising_request_settlement_evidence()
+returns trigger
+language plpgsql
+set search_path=pg_catalog,public,pg_temp
+as $$
+begin
+  if old.paid_at is not null and (
+    new.payment_method is distinct from old.payment_method
+    or new.payment_reference is distinct from old.payment_reference
+    or new.paid_amount_mzn is distinct from old.paid_amount_mzn
+    or new.paid_at is distinct from old.paid_at
+    or new.verified_by is distinct from old.verified_by
+  ) then
+    raise exception 'ADVERTISING_SETTLEMENT_EVIDENCE_IMMUTABLE' using errcode='23514';
+  end if;
+  return new;
+end;
+$$;
+revoke all on function public.guard_advertising_request_settlement_evidence() from public,anon,authenticated;
+drop trigger if exists advertising_request_settlement_evidence_guard on public.advertising_requests;
+create trigger advertising_request_settlement_evidence_guard
+before update on public.advertising_requests
+for each row execute function public.guard_advertising_request_settlement_evidence();
