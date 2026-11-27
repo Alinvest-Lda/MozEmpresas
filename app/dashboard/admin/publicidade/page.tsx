@@ -35,6 +35,13 @@ function partnerNextStatuses(status: string | null, paymentStatus?: string | nul
   return [];
 }
 const requestStatuses = ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT", "PAID", "APPROVED", "REJECTED", "CANCELLED"];
+const requestNextStatuses:Record<string,string[]> = {
+  NEW:["CONTACTED","CANCELLED"],
+  CONTACTED:["PROPOSAL","CANCELLED"],
+  PROPOSAL:["AWAITING_PAYMENT","REJECTED","CANCELLED"],
+  AWAITING_PAYMENT:["PAID","REJECTED","CANCELLED"],
+  PAID:["APPROVED"],
+};
 const statusLabels: Record<string, string> = {
   PENDING: "Pendente", REQUESTED: "Solicitada", UNDER_REVIEW: "Em análise", NEW: "Novo pedido", ENDED: "Encerrada",
   ACTIVE: "Activa", RUNNING: "Em execução", PUBLISHED: "Publicada", PAUSED: "Pausada",
@@ -280,7 +287,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
           {r.payment_reference?<p className={styles.destination}>Pagamento: {r.payment_method||"—"} · Referência {r.payment_reference}</p>:null}
           <form action={updateAdvertisingRequest} className={styles.moderationForm}>
             <input type="hidden" name="id" value={r.id}/>
-            <label><span>Estado comercial</span><Select name="status" defaultValue={r.status ?? "NEW"}>{requestStatuses.map(s=><option key={s} value={s}>{label(s)}</option>)}</Select></label>
+            <label><span>Estado comercial</span><Select name="status" defaultValue={r.status ?? "NEW"}>{[r.status ?? "NEW",...(requestNextStatuses[r.status ?? "NEW"] ?? [])].map(s=><option key={s} value={s}>{label(s)}</option>)}</Select></label>
             <label><span>Forma de pagamento (obrigatória para marcar Pago)</span><Select name="payment_method" defaultValue={r.payment_method||"MPESA"}><option value="MPESA">M-Pesa</option><option value="BANK_TRANSFER">Transferência bancária</option><option value="CASH">Numerário</option><option value="OTHER">Outro meio</option></Select></label>
             <label><span>Referência do pagamento (mín. 4 caracteres)</span><Input name="payment_reference" minLength={4} maxLength={160} defaultValue={r.payment_reference||""} placeholder="Referência comprovativa"/></label>
             <label><span>Valor liquidado (MZN)</span><Input name="paid_amount_mzn" type="number" min={0.01} step="0.01" defaultValue={r.paid_amount_mzn??""} placeholder="Valor efectivamente recebido"/></label>
