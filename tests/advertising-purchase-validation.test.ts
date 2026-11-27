@@ -19,6 +19,7 @@ describe("advertising purchase validation", () => {
     expect(parseMaputoLocalDateTime("2026-11-02T13:00")).toBe("2026-11-02T11:00:00.000Z");
     expect(parseMaputoLocalDateTime("2026-11-02T13:00Z")).toBe("2026-11-02T13:00:00.000Z");
     expect(maputoDateTimeLocalInputValue(new Date("2026-11-02T10:00:00.000Z"))).toBe("2026-11-02T12:00");
+    expect(maputoDateTimeLocalInputValue(new Date("2026-11-02T10:00:30.000Z"))).toBe("2026-11-02T12:01");
   });
 
   it("interprets local date-time values in Maputo time and rejects past or invalid dates", () => {
