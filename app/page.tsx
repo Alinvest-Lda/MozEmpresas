@@ -15,10 +15,6 @@ const categories = [
 export default async function Home() {
   const supabase = (await import("@/lib/supabase/server")).createClient;
   const s = await supabase();
-  const { data: homeAds } = await s.rpc("home_ad_slots");
-  const ads = (homeAds ?? []) as Array<{ campaign_id:string; product_code:string; slot:string; title:string|null; body:string|null; image_url:string|null; target_url:string|null; cta_label:string|null; alt_text:string|null }>;
-  const premiumAd = ads.find((ad) => ad.slot === "PREMIUM");
-  const exclusiveAd = ads.find((ad) => ad.slot === "EXCLUSIVE");
   const now = new Date().toISOString();
   const { data: featuredPromotions } = await s
     .from("business_promotions")
@@ -119,10 +115,11 @@ export default async function Home() {
             <div><span className="eyebrow">Em destaque</span><h2>O que está a acontecer no mercado.</h2></div>
             <p>Conteúdo, empresas, produtos e oportunidades apresentados no mesmo espaço.</p>
           </div>
+          <PublicAd surface="HOME" slot="EXCLUSIVE" variant="billboard" />
           <div className="home-v2-ad-mix-grid">
             {[
-              premiumAd ? {href:premiumAd.target_url||"/empresas",external:premiumAd.target_url?.startsWith("http")||false,image:premiumAd.image_url,title:premiumAd.title||"Empresa em destaque",body:premiumAd.body||"Conheça esta presença empresarial.",cta:premiumAd.cta_label||"Conhecer",alt:premiumAd.alt_text||premiumAd.title||"Empresa em destaque"} : {href:"/empresas",external:false,image:"https://images.pexels.com/photos/10375953/pexels-photo-10375953.jpeg?cs=srgb&dl=pexels-rdne-10375953.jpg&fm=jpg",title:"Empresas para conhecer.",body:"Pesquise organizações e encontre contactos, ofertas e parceiros em Moçambique.",cta:"Explorar empresas",alt:"Profissionais negros a trocar documentos numa reunião"},
-              exclusiveAd ? {href:exclusiveAd.target_url||"/marketplace",external:exclusiveAd.target_url?.startsWith("http")||false,image:exclusiveAd.image_url,title:exclusiveAd.title||"Oferta em destaque",body:exclusiveAd.body||"Descubra uma solução disponível no mercado.",cta:exclusiveAd.cta_label||"Ver oferta",alt:exclusiveAd.alt_text||exclusiveAd.title||"Oferta em destaque"} : {href:"/marketplace",external:false,image:"https://images.pexels.com/photos/9301291/pexels-photo-9301291.jpeg?cs=srgb&dl=pexels-mikhail-nilov-9301291.jpg&fm=jpg",title:"Produtos e serviços.",body:"Encontre soluções e fornecedores para as necessidades da sua actividade.",cta:"Explorar ofertas",alt:"Equipa negra reunida em ambiente profissional"},
+              {href:"/empresas",external:false,image:"https://images.pexels.com/photos/10375953/pexels-photo-10375953.jpeg?cs=srgb&dl=pexels-rdne-10375953.jpg&fm=jpg",title:"Empresas para conhecer.",body:"Pesquise organizações e encontre contactos, ofertas e parceiros em Moçambique.",cta:"Explorar empresas",alt:"Profissionais negros a trocar documentos numa reunião"},
+              {href:"/marketplace",external:false,image:"https://images.pexels.com/photos/9301291/pexels-photo-9301291.jpeg?cs=srgb&dl=pexels-mikhail-nilov-9301291.jpg&fm=jpg",title:"Produtos e serviços.",body:"Encontre soluções e fornecedores para as necessidades da sua actividade.",cta:"Explorar ofertas",alt:"Equipa negra reunida em ambiente profissional"},
               {href:"/oportunidades",external:false,image:"https://images.pexels.com/photos/5668496/pexels-photo-5668496.jpeg?cs=srgb&dl=pexels-sora-shimazaki-5668496.jpg&fm=jpg",title:"Oportunidades para avançar.",body:"Financiamento, desenvolvimento empresarial, iniciativas e capacitação.",cta:"Ver oportunidades",alt:"Profissional negra a analisar informação numa reunião"},
             ].map((card,index)=>(
               <a key={index} href={card.href} className={"home-v2-ad-card home-v2-ad-card-"+(index+1)} target={card.external?"_blank":undefined} rel={card.external?"noreferrer":undefined}>
