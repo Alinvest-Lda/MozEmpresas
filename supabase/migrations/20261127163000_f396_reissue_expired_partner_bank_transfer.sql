@@ -30,7 +30,7 @@ $old$;
       raise exception 'CAMPAIGN_PAYMENT_ALREADY_ISSUED';
     end if;
   end if;
-$ new$;
+$new$;
 
   if position(v_old in v_definition)=0 then
     raise exception 'F396_PAYMENT_REISSUE_GUARD_NOT_FOUND';
