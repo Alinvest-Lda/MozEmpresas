@@ -3,7 +3,9 @@ import {
   calculateCampaignCredits,
   calculateCampaignPrice,
   isUuid,
+  maputoDateTimeLocalInputValue,
   normalizeCampaignTargets,
+  parseMaputoLocalDateTime,
   parseMaputoCampaignStart,
 } from "../lib/advertising/purchase-validation";
 
@@ -11,6 +13,12 @@ describe("advertising purchase validation", () => {
   it("accepts UUIDs and rejects malformed identifiers", () => {
     expect(isUuid("60000000-0000-4000-8000-000000000001")).toBe(true);
     expect(isUuid("not-a-uuid")).toBe(false);
+  });
+
+  it("parses local date-time values independently of the device timezone", () => {
+    expect(parseMaputoLocalDateTime("2026-11-02T13:00")).toBe("2026-11-02T11:00:00.000Z");
+    expect(parseMaputoLocalDateTime("2026-11-02T13:00Z")).toBe("2026-11-02T13:00:00.000Z");
+    expect(maputoDateTimeLocalInputValue(new Date("2026-11-02T10:00:00.000Z"))).toBe("2026-11-02T12:00");
   });
 
   it("interprets local date-time values in Maputo time and rejects past or invalid dates", () => {
