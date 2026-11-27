@@ -22,9 +22,16 @@ function visitorKey(){
 export function PublicAd({surface,slot="BILLBOARD",variant="standard",className="",context={},interests=[]}:Props){
  const[ad,setAd]=useState<Ad|null>(null);
  useEffect(()=>{
-  const key=visitorKey(); if(!key)return;
-  fetch("/api/ads/decision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({visitorKey:key,surface,slot,context,interests})})
-   .then(r=>r.ok?r.json():null).then(v=>{if(v?.ad)setAd(v.ad)}).catch(()=>{});
+  let active=true;
+  const controller=new AbortController();
+  setAd(null);
+  const key=visitorKey();
+  if(!key)return ()=>{active=false;controller.abort();};
+  fetch("/api/ads/decision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({visitorKey:key,surface,slot,context,interests}),signal:controller.signal})
+   .then(r=>r.ok?r.json():null)
+   .then(v=>{if(active)setAd(v?.ad??null)})
+   .catch(()=>{if(active)setAd(null)});
+  return ()=>{active=false;controller.abort();};
  },[surface,slot,JSON.stringify(context),JSON.stringify(interests)]);
  if(!ad)return null;
  const click=()=>{
