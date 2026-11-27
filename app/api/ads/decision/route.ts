@@ -16,6 +16,8 @@ export const POST = withApiObservability("api.ads_decision", async (request: Req
  const rate = await enforceRateLimit(request, { scope: "ads-decision", limit: 30, windowSeconds: 60 });
  if (!rate.allowed) return rateLimitResponse(rate.unavailable);
 
+ const declaredLength=Number(request.headers.get("content-length")||0);
+ if(declaredLength>16_384) return NextResponse.json({error:"Pedido de publicidade demasiado grande."},{status:413});
  const parsed = schema.safeParse(await request.json().catch(() => null));
  if (!parsed.success) return NextResponse.json({error:"Pedido de publicidade inválido."},{status:400});
 
@@ -34,10 +36,11 @@ export const POST = withApiObservability("api.ads_decision", async (request: Req
   if(ad){
     const sql = getPostgresClient();
     if (sql) {
-      await sql.unsafe(
-        "select public.record_ad_delivery_event_f370($1,$2,$3,$4,$5,$6,'IMPRESSION',$7::jsonb)",
+      const rows=await sql.unsafe(
+        "select public.record_ad_delivery_event_f370($1,$2,$3,$4,$5,$6,'IMPRESSION',$7::jsonb) as recorded",
         [payload.visitorKey, user?.id ?? null, ad.campaign_source, ad.campaign_id, payload.surface, payload.slot, JSON.stringify(context)],
-      );
+      ) as {recorded:boolean}[];
+      if(!rows.length || typeof rows[0]?.recorded!=="boolean") return NextResponse.json({error:"Não foi possível confirmar o registo da impressão."},{status:500});
     } else {
       const admin = createAdminClient();
       if (!admin) return rateLimitResponse(true);
