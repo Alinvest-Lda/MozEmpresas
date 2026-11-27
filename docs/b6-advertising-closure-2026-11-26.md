@@ -439,3 +439,5 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - F412 acrescenta reconciliação automática: marca como `FAILED` as transferências bancárias pendentes cujo `expires_at` terminou, anula documentos ainda `ISSUED`, liberta a ordem de pagamento de parceiro para reemissão e notifica os membros activos da conta. O job de 15 minutos passa a executar a reconciliação conjunta de campanhas e pagamentos.
 - As áreas administrativa e do parceiro distinguem a expiração bancária de uma falha M-Pesa genérica.
 - Commits `2e214d38cd5effe8dcd4c4321e6e77ab383772ac`, `6f1a2a9371683c6a14b455837a255750cd5e99cb`, `b55b83f1d9ec712405a5ada117d371a2806d1299` e `ec2bba6ccfcadb10fab93221a80e697a789ccb94`. Migração e job não aplicados/confirmados em ambiente.
+
+- A renovação do prazo de um pedido que já estava em `AWAITING_PAYMENT` não alterava o estado e, por isso, não era capturada pelo trigger histórico de transições. A F405 passou também a registar a renovação em `advertising_admin_events`, com actor, razão e estado anterior/novo, sem duplicar eventos de transição normal. Commit `024d2c45c921f24eb2c733db444ec633770ca951`.
