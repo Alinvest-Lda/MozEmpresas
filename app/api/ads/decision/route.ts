@@ -18,7 +18,11 @@ export const POST = withApiObservability("api.ads_decision", async (request: Req
 
  const declaredLength=Number(request.headers.get("content-length")||0);
  if(declaredLength>16_384) return NextResponse.json({error:"Pedido de publicidade demasiado grande."},{status:413});
- const parsed = schema.safeParse(await request.json().catch(() => null));
+ const rawBody=await request.text().catch(()=>"");
+ if(rawBody.length>16_384) return NextResponse.json({error:"Pedido de publicidade demasiado grande."},{status:413});
+ let body:unknown=null;
+ try{body=JSON.parse(rawBody);}catch{}
+ const parsed = schema.safeParse(body);
  if (!parsed.success) return NextResponse.json({error:"Pedido de publicidade inválido."},{status:400});
 
  try{
