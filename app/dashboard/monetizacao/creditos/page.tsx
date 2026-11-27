@@ -208,6 +208,7 @@ export default async function CreditosPage({
                 <small>{money(request.amount_mzn)} · {request.payment_method || "Pagamento"} · {dateTime(request.created_at)}</small>
                 {request.payment_reference ? <div className="credit-payment-reference"><strong>Referência de pagamento: {request.payment_reference}</strong><span>Indique exactamente esta referência ao efectuar o pagamento e guarde o comprovativo. O saldo só será creditado após confirmação.</span></div> : null}
                 {request.payment_method === "MPESA" && request.status === "PAYMENT_PENDING" ? <small>O pedido está registado e aguarda confirmação do pagamento. A referência identifica este pedido; não representa, por si só, confirmação de transferência.</small> : null}
+                {request.payment_method === "BANK_TRANSFER" && ["REQUESTED","PAYMENT_PENDING","PENDING"].includes(request.status) ? <small>Confirmação da transferência bancária dentro de 24 horas após o pedido: até {dateTime(new Date(new Date(request.created_at).getTime()+24*60*60*1000).toISOString())}. Após esse prazo, a aprovação é bloqueada e será necessário novo pedido.</small> : null}
               </div>
               <span>{purchaseStatusLabels[request.status] || request.status}</span>
             </div>
