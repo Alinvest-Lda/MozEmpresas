@@ -32,7 +32,8 @@ begin
   if v_promotion.status='CANCELLED' then
     return jsonb_build_object('promotion_id',p_promotion_id,'status','CANCELLED','already_processed',true,'credits_refunded',0);
   end if;
-  if v_promotion.status not in ('PENDING','ACTIVE') or v_promotion.starts_at is null or v_promotion.starts_at<=now() then
+  if v_promotion.status not in ('PENDING','ACTIVE') or v_promotion.starts_at is null
+    or (v_promotion.starts_at<=now() and not (v_promotion.status='PENDING' and v_promotion.ends_at<=now())) then
     raise exception 'CANCELLATION_NOT_ALLOWED';
   end if;
   if v_promotion.payment_method='CREDITS' then
