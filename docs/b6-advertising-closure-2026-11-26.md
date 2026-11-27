@@ -478,3 +478,5 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - O limite de resolução de contas parceiras por empresa passou também a ser contado; quando excedido, a fila assinala explicitamente que a pesquisa não é exaustiva. Commit `e825459dc8dea8648ae0fab51db5f3bcbe1ae0ad`.
 
 - O formulário de parceiro removia a validação de duração com uma tolerância de `0,02` dias (cerca de 29 minutos), enquanto a RPC aplicava o limite exacto do produto. A tolerância foi removida para que a validação cliente e servidor usem o mesmo limite. Commit `e30836177a0ebba3a0c4148a994097fad3d25bbc`.
+
+- A resolução de IDs de empresas/contas na pesquisa administrativa foi limitada a 200 resultados para manter o filtro OR dentro de um tamanho seguro; quando a correspondência ultrapassa esse limite, a fila sinaliza que o resultado é parcial e requer uma pesquisa mais específica. Commit `bb4fdaf1645e76859d7f4fe2b093f8572b6cb532`.
