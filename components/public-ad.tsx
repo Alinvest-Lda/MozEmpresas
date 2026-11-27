@@ -23,13 +23,15 @@ function visitorKey(){
 
 export function PublicAd({surface,slot="BILLBOARD",variant="standard",className="",context={},interests=[]}:Props){
  const[ad,setAd]=useState<Ad|null>(null);
+ const boundedContext=Object.fromEntries(Object.entries(context).slice(0,20).map(([key,value])=>[key.slice(0,80),String(value).slice(0,160)]));
+ const boundedInterests=[...new Set(interests.map(value=>value.trim().slice(0,100)).filter(Boolean))].slice(0,20);
  useEffect(()=>{
   let active=true;
   const controller=new AbortController();
   setAd(null);
   const key=visitorKey();
   if(!key)return ()=>{active=false;controller.abort();};
-  fetch("/api/ads/decision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({visitorKey:key,surface,slot,context,interests}),signal:controller.signal})
+  fetch("/api/ads/decision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({visitorKey:key,surface,slot,context:boundedContext,interests:boundedInterests}),signal:controller.signal})
    .then(r=>r.ok?r.json():null)
    .then(v=>{if(active)setAd(v?.ad??null)})
    .catch(()=>{if(active)setAd(null)});
@@ -38,7 +40,7 @@ export function PublicAd({surface,slot="BILLBOARD",variant="standard",className=
  if(!ad)return null;
  const click=()=>{
   const key=visitorKey();
-  void fetch("/api/ads/event",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({visitorKey:key,campaignSource:ad.campaign_source,campaignId:ad.campaign_id,surface,slot,eventType:"CLICK",context})}).catch(()=>{});
+  void fetch("/api/ads/event",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({visitorKey:key,campaignSource:ad.campaign_source,campaignId:ad.campaign_id,surface,slot,eventType:"CLICK",context:boundedContext})}).catch(()=>{});
  };
  if(variant==="billboard") return <aside className={"public-ad public-ad-billboard "+className} aria-label={ad.campaign_source==="partner"?"Publicidade de parceiro":"Publicidade empresarial"}>
   {ad.image_url?<img className="public-ad-billboard-image" src={ad.image_url} alt={ad.alt_text||ad.headline||ad.title}/>:<div className="public-ad-billboard-image-fallback"/>}
