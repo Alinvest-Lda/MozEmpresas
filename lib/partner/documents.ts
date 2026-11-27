@@ -46,6 +46,18 @@ export async function createPartnerDocumentDownload(documentId: string): Promise
     if (docError || !doc) return { url: null, error: "Documento não encontrado ou sem acesso." };
     const { data: signed, error: signedError } = await admin.storage.from("partner-documents").createSignedUrl(doc.storage_path, 120);
     if (signedError || !signed?.signedUrl) return { url: null, error: "Não foi possível gerar o acesso temporário." };
+
+    const actorUserId = context.user?.id;
+    if (!actorUserId) return { url: null, error: "Acesso documental não autorizado." };
+    const { error: auditError } = await admin.from("partner_document_access_audit").insert({
+      account_id: partner.account_id,
+      document_id: documentId,
+      actor_user_id: actorUserId,
+      event_type: "SIGNED_URL_ISSUED",
+      expires_in_seconds: 120,
+    });
+    if (auditError) return { url: null, error: "Não foi possível registar o acesso documental. Tente novamente." };
+
     return { url: signed.signedUrl, error: null };
   } catch {
     return { url: null, error: "Não foi possível gerar o acesso temporário." };
