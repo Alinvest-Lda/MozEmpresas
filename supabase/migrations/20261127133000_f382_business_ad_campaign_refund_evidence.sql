@@ -60,6 +60,7 @@ begin
   else
     raise exception 'PAYMENT_METHOD_NOT_SUPPORTED';
   end if;
+  perform set_config('app.advertising_admin_reason',v_reason,true);
   update public.business_promotions set status='CANCELLED',updated_at=now() where id=v_promotion.id;
   insert into public.business_promotion_cancellations(promotion_id,business_id,payment_method,credits_refunded,reason,actor_user_id,external_refund_reference)
   values(v_promotion.id,v_promotion.business_id,coalesce(v_promotion.payment_method,'MPESA'),v_refund,v_reason,v_actor,v_external_reference);
