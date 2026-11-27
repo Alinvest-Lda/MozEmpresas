@@ -76,7 +76,8 @@ The partner workspace navigation is shared from `partnerNavGroups` across deskto
 ### B7-T07 additional refinement — contextual document grouping
 - Partner document list now groups files by their parent context (organization, engagement, contract, campaign, service request, or generic) instead of presenting one undifferentiated list. Document size/date rendering now handles malformed metadata safely, and download buttons expose pending state to assistive technology. Commit `ee2cf4c`.
 - T07 download accountability: successful issuance of a 120-second signed document URL now writes an immutable `SIGNED_URL_ISSUED` event to `partner_document_access_audit`, scoped to the partner account, document and authenticated actor. The signed URL is not stored. If the audit insert fails, the URL is not returned. Application change commit `e7744f7`; migration `20261127100000_f371_partner_document_download_audit.sql` commit `e0fd9f5`. This remains source-level implementation until the migration is applied and the access path is operationally verified.
-- Still not closed: complete version-history presentation, expiry/revocation visibility, audit review surface/retention policy, migration application and validation.
+- Version history now distinguishes the latest version in each immutable document series from historical versions, using the database-assigned `series_key` and `version_number`. Commits `939bee7`, `f18cfd0`.
+- Still not closed: expiry/revocation visibility, an administrative audit review surface/retention policy, migration application and validation.
 
 ### Additional B7-T02 implementation refinements
 - Repaired three literal escaped-newline sequences in the partner opportunity editor source that interrupted normal TypeScript/JSX source layout. Commit `15fb25b`.
@@ -84,7 +85,7 @@ The partner workspace navigation is shared from `partnerNavGroups` across deskto
 - These changes improve source integrity and recovery but do not close T02: atomic server-side lifecycle enforcement, notifications, and remaining lifecycle elements are still open. No tests, CI, SQL execution, E2E, accessibility audit or deployment were performed.
 
 - T02: the server action for publishing/reopening an opportunity now reloads its opening and closing dates and rejects a transition to PUBLISHED when the opening is still in the future or the closing deadline has passed; the workspace explains the date-specific rejection. This protects status changes even when the action is submitted outside the editor. Commits `64e1aee`, `eb4e7fb`.
-- T02 remains open: the status compare-and-set is still a client-side Supabase update with RLS, not a dedicated transactional server-side lifecycle RPC; notifications and the remaining task elements are not fully closed. No tests or validation were run.
+- T02 remains open: the notifications and the remaining lifecycle elements still require implementation and review. No tests or validation were run.
 
 - T03/T09: the partner opportunity applications page now defines and aggregates the auxiliary business/profile/event query errors before rendering its partial-data warning. This repairs an undefined reference in the page and makes the warning derive from the actual auxiliary query outcomes. Commit `3afdd1f`. No tests or build validation were run.
 
