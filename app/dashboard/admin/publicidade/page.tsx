@@ -183,7 +183,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     if (!matchesQuery([c.title, c.headline, c.advertiser, c.origin, c.position].join(" "))) return false;
     const end = c.ends_at ? new Date(c.ends_at).getTime() : NaN;
     if (deadline === "sem-prazo" && c.ends_at) return false;
-    if (deadline === "expirado" && !(c.status === "ACTIVE" && Number.isFinite(end) && end < now.getTime())) return false;
+    if (deadline === "expirado" && !(Number.isFinite(end) && end < now.getTime())) return false;
     if (deadline === "proximo" && !(Number.isFinite(end) && end >= now.getTime() && end <= now.getTime() + 7 * 86400000)) return false;
     if (deadline === "futuro" && !(Number.isFinite(end) && end > now.getTime() + 7 * 86400000)) return false;
     return true;
