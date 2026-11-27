@@ -10,7 +10,7 @@ alter table public.ad_products
     (placement='DIRECTORY' and slot in ('BILLBOARD','FEATURED','INFEED','CONTEXT')) or
     (placement='MARKETPLACE' and slot in ('BILLBOARD','FEATURED','EXCLUSIVE','INFEED')) or
     (placement='OPPORTUNITIES' and slot in ('BILLBOARD','FEATURED','INFEED'))
-  ) not valid;
+    )) not valid;
 
 alter table public.partner_ad_products
   drop constraint if exists partner_ad_products_public_surface_slot_pair_f408;
