@@ -23,7 +23,7 @@ const requestTransitions: Record<string, readonly string[]> = {
   CANCELLED: [],
 };
 
-async function updateStatus(table: "business_promotions" | "advertising_requests", idValue: FormDataEntryValue | null, statusValue: FormDataEntryValue | null, reasonValue: FormDataEntryValue | null, origin: string) {
+async function updateStatus(table: "business_promotions" | "advertising_requests", idValue: FormDataEntryValue | null, statusValue: FormDataEntryValue | null, reasonValue: FormDataEntryValue | null, origin: string, settlement?: { method: FormDataEntryValue | null; reference: FormDataEntryValue | null; amount: FormDataEntryValue | null }) {
   const id = String(idValue || "");
   const status = String(statusValue || "").toUpperCase();
   const reason = String(reasonValue || "").trim();
@@ -40,6 +40,9 @@ async function updateStatus(table: "business_promotions" | "advertising_requests
     p_entity_id: id,
     p_new_status: status,
     p_reason: reason,
+    p_payment_method: settlement?.method ? String(settlement.method).toUpperCase() : null,
+    p_payment_reference: settlement?.reference ? String(settlement.reference).trim() : null,
+    p_paid_amount_mzn: settlement?.amount && String(settlement.amount).trim() !== "" ? Number(settlement.amount) : null,
   });
   if (error) {
     const code = error.message.includes("ADVERTISING_PAYMENT_NOT_SETTLED") ? "payment-not-settled"
@@ -86,7 +89,11 @@ export async function moderatePartnerCampaign(formData: FormData) {
 }
 
 export async function updateAdvertisingRequest(formData: FormData) {
-  return updateStatus("advertising_requests", formData.get("id"), formData.get("status"), formData.get("reason"), "pedidos");
+  return updateStatus("advertising_requests", formData.get("id"), formData.get("status"), formData.get("reason"), "pedidos", {
+    method: formData.get("payment_method"),
+    reference: formData.get("payment_reference"),
+    amount: formData.get("paid_amount_mzn"),
+  });
 }
 
 export async function cancelBusinessPromotion(formData: FormData) {
