@@ -419,3 +419,7 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - F408/F409 impediam novas vendas e activaçōes de inventário inválido, mas o motor de decisão e o escritor atómico de eventos ainda aceitavam qualquer par de valores enumerados se uma campanha legada tivesse a mesma combinação.
 - F410 filtra os candidatos do motor de decisão por pares canónicos e rejeita eventos com superfície/posição incompatível. A API de decisão e a validação TypeScript usam a mesma matriz; foi acrescentado um caso de regressão para uma posição conhecida na superfície errada.
 - Commits `53db1aa2835b17a9b44892787b36bbb0c266ad67`, `c55ad17970a6fc74ec85e39bd2e86a594b7f62a6`, `1056a852ffd301a80bb34ac097d60aece731d064` e `8269da0a7328f8425c9c724cc667c282edefa5ff`. Migração não aplicada; teste não executado.
+
+### B6 — consolidação da matriz de posições publicitárias (27/11/2026)
+- A mesma matriz de superfície/posição estava duplicada no formulário comercial, API de pedidos, API de decisão, validação de eventos e filtro do catálogo empresarial. Foi criada uma definição TypeScript partilhada e os cinco consumidores passaram a reutilizá-la; as migrações SQL mantêm a cópia equivalente necessária no lado da base de dados.
+- Commits `17c83f5d113d0174a0e4e37b28b1579e5caaa69b`, `67e842e354757d74d331ba66330a3401465d59ed`, `ee144f13db0b3800952530b1d79cb1ba1b1b3f7d`, `7484ff3c6288d41094905433f42a8bbacec67aad`, `d7d63e15dc04dde32b80dee5f16f706b2e614678`, `2bbcd7b6258973f8eab7164e5ae34352c8c09e7c` e `1296aceb3a977b31f62e72bcff40d189846af07f`.
