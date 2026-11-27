@@ -410,3 +410,5 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - As constraints de catálogo F408 protegem novas alterações, mas produtos legados inválidos ainda podiam ser apresentados, cobrados ou activados por funções administrativas que consultam directamente o produto/campanha.
 - F409 acrescenta guardas nas RPCs de emissão de cobrança e activação de campanhas empresariais e de parceiros; o painel traduz o erro para uma mensagem que identifica a combinação superfície/posição inválida.
 - Commits `78d73c7059aac9ec02b8c0d31525024306cbd6fd`, `e51d10354cfd2f4114cf9b80a19fbb6d0c0efb80` e `7806c1cff51eaf9c5c5eabc529d37aed15507efa`. Migração não aplicada.
+
+- A mesma mensagem de inventário não entregável foi ligada também às Server Actions de emissão de cobrança e transição de campanhas de parceiros, evitando que o erro SQL chegue ao operador como erro genérico. Commit `f81b25b6486900a906f308d9a1f1fbd200eef9fb`.
