@@ -11,7 +11,7 @@ begin
     raise exception 'F397_BUSINESS_CANCELLATION_STATUS_GUARD_NOT_FOUND';
   end if;
   v_definition:=replace(v_definition,v_old,v_new);
-  if position(''PAUSED''' in v_definition)=0 then
+  if position('PAUSED' in v_definition)=0 then
     raise exception 'F397_REWRITE_INCOMPLETE';
   end if;
   execute v_definition;
