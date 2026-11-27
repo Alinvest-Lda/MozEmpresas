@@ -19,6 +19,12 @@ describe("advertising purchase validation", () => {
     expect(parseMaputoCampaignStart("invalid", now)).toBeNull();
   });
 
+  it("interprets date-only campaign starts as Maputo midnight", () => {
+    const now = new Date("2026-11-01T12:00:00.000Z");
+    expect(parseMaputoCampaignStart("2026-11-02", now)).toBe("2026-11-01T22:00:00.000Z");
+    expect(parseMaputoCampaignStart("2026-11-01", now)).toBeNull();
+  });
+
   it("trims, de-duplicates and bounds target values", () => {
     expect(normalizeCampaignTargets([" Maputo ", "Maputo", "Matola"])).toEqual(["Maputo", "Matola"]);
     expect(normalizeCampaignTargets(Array.from({ length: 11 }, (_, index) => String(index)))).toBeNull();
