@@ -31,11 +31,11 @@ export function PublicAd({surface,slot="BILLBOARD",variant="standard",className=
   const key=visitorKey();
   void fetch("/api/ads/event",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({visitorKey:key,campaignSource:ad.campaign_source,campaignId:ad.campaign_id,surface,slot,eventType:"CLICK",context})}).catch(()=>{});
  };
- if(variant==="billboard") return <aside className={"public-ad public-ad-billboard "+className} aria-label="Publicidade de parceiro">
+ if(variant==="billboard") return <aside className={"public-ad public-ad-billboard "+className} aria-label={ad.campaign_source==="partner"?"Publicidade de parceiro":"Publicidade empresarial"}>
   {ad.image_url?<img className="public-ad-billboard-image" src={ad.image_url} alt={ad.alt_text||ad.headline||ad.title}/>:<div className="public-ad-billboard-image-fallback"/>}
   <div className="public-ad-billboard-overlay"/>
   <div className="public-ad-billboard-content">
-   <span className="public-ad-billboard-kicker">Parceiro exclusivo</span>
+   <span className="public-ad-billboard-kicker">{ad.campaign_source==="partner"?"Parceiro em destaque":"Publicidade empresarial"}</span>
    <div className="public-ad-billboard-copy"><h2>{ad.headline||ad.title}</h2>{ad.body&&<p>{ad.body}</p>}</div>
    {ad.target_url&&<a href={ad.target_url} onClick={click} className="public-ad-billboard-cta">{ad.cta_label||"Saber mais"} <b>→</b></a>}
   </div>
