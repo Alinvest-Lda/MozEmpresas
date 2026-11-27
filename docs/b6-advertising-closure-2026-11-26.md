@@ -94,7 +94,9 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - The same intake now requires HTTPS for creative-image and destination URLs, and bounds the supplied date string length.
 - Public proposal intake now dynamically offers only slot choices compatible with the selected surface, with matching server-side validation so clients cannot submit impossible surface/slot combinations.
 - Blank optional budget and CPM inputs are now stored as unset rather than being silently coerced to zero. Commit `1ba49fc`.
-- Campaign dates now reject past calendar days while allowing the current date for proposals; the comparison is calendar-day based, not a midnight timestamp comparison. Commits `60094d9`, `881be7e`.
+- Campaign dates now reject past calendar days while allowing the current date for proposals; the comparison is calendar-day based, not a midnight timestamp comparison.
+- Logged-in public ad requesters can now have the request linked to a matching business they own or manage (owner/admin/operator), without attaching an arbitrary same-name business when the match is ambiguous. Commit `6dd31b2`.
+ Commits `60094d9`, `881be7e`.
 
  Commits `7e22bb6`, `8cc60aa`.
  Commit `fb926b6`.
