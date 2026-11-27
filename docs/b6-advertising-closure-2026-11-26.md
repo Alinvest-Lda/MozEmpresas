@@ -482,3 +482,5 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - A resolução de IDs de empresas/contas na pesquisa administrativa foi limitada a 200 resultados para manter o filtro OR dentro de um tamanho seguro; quando a correspondência ultrapassa esse limite, a fila sinaliza que o resultado é parcial e requer uma pesquisa mais específica. Commit `bb4fdaf1645e76859d7f4fe2b093f8572b6cb532`.
 
 - O indicador de pedidos a aguardar atenção contava apenas os registos carregados na página actual, apesar de o rótulo poder ser interpretado como total da fila. O rótulo passou a declarar explicitamente o âmbito da página. Commit `dd697c9b61b7972d5e37691dc140fdf8be8ed1a0`.
+
+- O contador da fila passou a incluir pedidos de publicidade já pagos que aguardam aprovação e campanhas de parceiros aprovadas mas ainda sem liquidação confirmada, evitando subcontagem das acções pendentes. Commit `3e677917e4bcbb43293f8f34f94da34c26f83df4`.
