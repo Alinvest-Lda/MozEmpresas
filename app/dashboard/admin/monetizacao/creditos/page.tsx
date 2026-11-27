@@ -182,17 +182,18 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
           {requestRows.length ? <div className={styles.list}>{requestRows.map((request) => {
             const status = String(request.status || "").toUpperCase();
             const pending = ["REQUESTED", "PAYMENT_PENDING", "PENDING"].includes(status);
+            const bankTransferExpired = request.payment_method==="BANK_TRANSFER" && pending && new Date(request.created_at).getTime()+24*60*60*1000<=Date.now();
             return <article className={styles.row} key={request.id}>
               <div className={styles.primary}><strong>{businessNames.get(request.business_id) || "Empresa não identificada"}</strong><span>{Number(request.credits).toLocaleString("pt-MZ")} créditos · {money(request.amount_mzn)}</span><small>{dateTime(request.created_at)} · {request.payment_method || "Método não indicado"} · Ref. {request.payment_reference || "não atribuída"}{request.provider_transaction_id ? " · Transacção " + request.provider_transaction_id : ""}{request.payment_confirmed_at ? " · Confirmado " + dateTime(request.payment_confirmed_at) : ""} · {request.proof_path ? <a href={`/api/admin/credit-purchases/${request.id}/proof`} target="_blank" rel="noopener noreferrer">Consultar comprovativo</a> : "Sem comprovativo"}</small>{request.notes ? <small>Nota: {request.notes}</small> : null}
               {request.payment_method==="BANK_TRANSFER" && ["REQUESTED","PAYMENT_PENDING","PENDING"].includes(status) ? <small>Prazo de confirmação: {dateTime(new Date(new Date(request.created_at).getTime()+24*60*60*1000).toISOString())}. Se ultrapassado, a aprovação por transferência está bloqueada.</small> : null}</div>
               <span className={`${styles.status} ${pending ? styles.pending : status === "APPROVED" || status === "PAID" ? styles.approved : styles.neutral}`}>{statusLabel[status] || status || "Sem estado"}</span>
               {["REQUESTED", "PAYMENT_PENDING"].includes(status) ? <div className={styles.decisionArea}>
-                <form action={decideCreditPurchase} className={styles.decisionForm}>
+                {bankTransferExpired ? <p className={styles.notice}>Prazo de 24 horas expirado. A aprovação está bloqueada; recuse este pedido para permitir uma nova solicitação.</p> : <form action={decideCreditPurchase} className={styles.decisionForm}>
                   <input type="hidden" name="request_id" value={request.id} />
                   <input type="hidden" name="decision" value="APPROVE" />
                   <input className={styles.decisionNotes} name="notes" maxLength={2000} placeholder="Nota interna (opcional)" aria-label="Nota interna para aprovação" />
                   <button className={styles.approveButton} type="submit">Confirmar pagamento e creditar</button>
-                </form>
+                </form>}
                 <form action={decideCreditPurchase} className={styles.decisionForm}>
                   <input type="hidden" name="request_id" value={request.id} />
                   <input type="hidden" name="decision" value="REJECT" />
