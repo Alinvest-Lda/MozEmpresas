@@ -1,11 +1,11 @@
 "use client";
 import { useMemo, useState } from "react";
+import { calculateCampaignCredits, calculateCampaignPrice } from "@/lib/advertising/purchase-validation";
 type Product={id:string;name:string;placement:string;duration_days:number;direct_price_mzn:number|string;credit_price:number|null;description?:string|null};
 const placementLabel:Record<string,string>={DIRECTORY:"Directório",MARKETPLACE:"Marketplace",HOME:"Página inicial",OPPORTUNITIES:"Oportunidades"};
 const placementDescription:Record<string,string>={DIRECTORY:"Dê mais visibilidade à sua empresa dentro do Directório.",MARKETPLACE:"Coloque uma oferta em evidência para quem procura produtos e serviços.",HOME:"Ganhe exposição nas áreas de maior visibilidade da página inicial.",OPPORTUNITIES:"Apresente a sua marca junto de oportunidades relevantes para organizações."};
 const locationOptions=["Maputo","Matola","Gaza","Inhambane","Sofala","Manica","Tete","Zambézia","Nampula","Cabo Delgado","Niassa"];
 function money(v:number|string){return Number(v).toLocaleString("pt-MZ")+" MZN";}
-function calculate(p:Product|undefined,l:number,c:number){if(!p)return{price:0,credits:0};const factor=1+(l?0.1:0)+(c?0.1:0);return{price:Number((Number(p.direct_price_mzn)*factor).toFixed(2)),credits:Math.ceil(Number(p.credit_price)*factor)};}
 function cleanName(name:string){return name.replace(/\s·\s(7|14|30) dias$/i,"");}
 export function AdvertisingPurchaseForm({businesses,products,categories,wallets,creditAction,mpesaAction}:{businesses:{id:string;name:string}[];products:Product[];categories:{name:string}[];wallets:Record<string,number>;creditAction:(f:FormData)=>Promise<void>;mpesaAction:(f:FormData)=>Promise<void>}){
  const placements=["DIRECTORY","MARKETPLACE","HOME","OPPORTUNITIES"].filter(place=>products.some(p=>p.placement===place));
@@ -14,7 +14,7 @@ export function AdvertisingPurchaseForm({businesses,products,categories,wallets,
  const durations=Array.from(new Set(placementProducts.map(p=>p.duration_days))).sort((a,b)=>a-b);
  const [duration,setDuration]=useState<number>(durations[0]??7); const [productId,setProductId]=useState(placementProducts.find(p=>p.duration_days===duration)?.id??placementProducts[0]?.id??"");
  const [businessId,setBusinessId]=useState(businesses[0]?.id??""); const [locations,setLocations]=useState<string[]>([]); const [cats,setCats]=useState<string[]>([]); const [submitting,setSubmitting]=useState(false);
- const options=useMemo(()=>placementProducts.filter(p=>p.duration_days===duration),[placementProducts,duration]); const product=options.find(p=>p.id===productId)??options[0]; const calc=calculate(product,locations.length,cats.length); const hasCreditPrice=Boolean(product&&Number.isFinite(Number(product.credit_price))&&Number(product.credit_price)>0); const creditBalance=wallets[businessId]??0; const canPayWithCredits=hasCreditPrice&&creditBalance>=calc.credits;
+ const options=useMemo(()=>placementProducts.filter(p=>p.duration_days===duration),[placementProducts,duration]); const product=options.find(p=>p.id===productId)??options[0]; const calc={price:calculateCampaignPrice(product?.direct_price_mzn,locations,cats)??0,credits:calculateCampaignCredits(product?.credit_price,locations,cats)??0}; const hasCreditPrice=Boolean(product&&Number.isFinite(Number(product.credit_price))&&Number(product.credit_price)>0); const creditBalance=wallets[businessId]??0; const canPayWithCredits=hasCreditPrice&&creditBalance>=calc.credits;
  const chooseDuration=(next:number)=>{setDuration(next);const nextProduct=placementProducts.find(p=>p.duration_days===next);if(nextProduct)setProductId(nextProduct.id);};
  const choosePlacement=(next:string)=>{setPlacement(next);const nextProducts=products.filter(p=>p.placement===next&&Number(p.direct_price_mzn)>0);const nextDurations=Array.from(new Set(nextProducts.map(p=>p.duration_days))).sort((a,b)=>a-b);const nextDuration=nextDurations[0]??7;setDuration(nextDuration);setProductId(nextProducts.find(p=>p.duration_days===nextDuration)?.id??"");};
  const toggle=(value:string,setter:(v:string[])=>void,current:string[])=>setter(current.includes(value)?current.filter(x=>x!==value):[...current,value]);
