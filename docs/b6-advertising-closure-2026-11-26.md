@@ -235,3 +235,7 @@ No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, access
 - Corrected the Maputo-local start-date parser for date-only inputs. The previous parser appended a timezone directly to `YYYY-MM-DD`, which is not a valid ISO date-time representation; date-only values now resolve to local midnight in the Maputo UTC+02:00 zone, while explicit timestamps/timezones retain their supplied time semantics. Commit `101872c1be9c562388890b7adae54ff7ee0bf4ba`.
 - Corrected the partner advertising workspace payment lookup. Its previous `Promise.all` initializer referenced the `campaigns` binding before the destructuring assignment had completed, triggering a temporal-dead-zone runtime error. Campaigns are now loaded first and payment orders are queried only for those campaign IDs. Commit `131f5dc38f359e4fec95b6b84de595223ea2978f`.
 - Both corrections are source-only. No tests, builds, SQL execution, migration application, or deployment were performed.
+
+### B6-T09 — public advertising request date validation hardening (27/11/2026)
+- Reworked public advertising request date parsing to handle date-only values as Maputo-local midnight, validate timestamps before any formatting operation, compare calendar dates in the Maputo UTC+02:00 timezone, and reject invalid periods without allowing an invalid date to throw during schema refinement. Commit `d6353f1f54b437771613361102942b67933b43db`.
+- Source-only correction; no tests, builds, SQL execution, migration application, or deployment were performed.
