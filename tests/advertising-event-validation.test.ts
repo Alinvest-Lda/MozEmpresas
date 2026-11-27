@@ -57,7 +57,9 @@ describe("isEligibleCampaign", () => {
     expect(isEligibleCampaign({ ...eligibleCampaign, surface: "DIRECTORY" }, validPayload, now)).toBe(false);
   });
 
-  it("allows campaign slot/surface to be unspecified when the model does not constrain them", () => {
-    expect(isEligibleCampaign({ ...eligibleCampaign, slot: null, surface: null }, validPayload, now)).toBe(true);
+  it("rejects campaigns without a canonical slot or surface", () => {
+    expect(isEligibleCampaign({ ...eligibleCampaign, slot: null, surface: null }, validPayload, now)).toBe(false);
+    expect(isEligibleCampaign({ ...eligibleCampaign, slot: null }, validPayload, now)).toBe(false);
+    expect(isEligibleCampaign({ ...eligibleCampaign, surface: null }, validPayload, now)).toBe(false);
   });
 });
