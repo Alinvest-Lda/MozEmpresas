@@ -50,12 +50,12 @@ const schema = z.object({
       ctx.addIssue({code:z.ZodIssueCode.custom,message:"Data inválida.",path:[field]});
     }
   }
-  const now=Date.now();
-  if(payload.startsAt && new Date(payload.startsAt).getTime()<now){
+  const today=new Date().toISOString().slice(0,10);
+  if(payload.startsAt && new Date(payload.startsAt).toISOString().slice(0,10)<today){
     ctx.addIssue({code:z.ZodIssueCode.custom,message:"A data de início não pode estar no passado.",path:["startsAt"]});
   }
-  if(payload.endsAt && new Date(payload.endsAt).getTime()<=now){
-    ctx.addIssue({code:z.ZodIssueCode.custom,message:"A data de fim deve ser futura.",path:["endsAt"]});
+  if(payload.endsAt && new Date(payload.endsAt).toISOString().slice(0,10)<today){
+    ctx.addIssue({code:z.ZodIssueCode.custom,message:"A data de fim não pode estar no passado.",path:["endsAt"]});
   }
 });
 
