@@ -239,3 +239,7 @@ No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, access
 ### B6-T09 — public advertising request date validation hardening (27/11/2026)
 - Reworked public advertising request date parsing to handle date-only values as Maputo-local midnight, validate timestamps before any formatting operation, compare calendar dates in the Maputo UTC+02:00 timezone, and reject invalid periods without allowing an invalid date to throw during schema refinement. Commit `d6353f1f54b437771613361102942b67933b43db`.
 - Source-only correction; no tests, builds, SQL execution, migration application, or deployment were performed.
+
+### B6-T03 / T09 — partner campaign request recovery (27/11/2026)
+- The partner campaign request form now prevents duplicate submission, captures network/unexpected RPC failures, restores the submit state in every outcome, and resets the captured form element safely after a successful request. Previously an uncaught network exception could leave the form permanently pending. Commit `e75dfb80b85aa9bc84fb22f8041cfe397ef8dabe`.
+- Source-only; no tests, builds, SQL execution, migration application, or deployment performed.
