@@ -254,3 +254,9 @@ Este lote fecha em conjunto três pontos de consistência entre formulário, API
 - **Checkout empresarial:** o ID submetido acompanha o produto realmente seleccionado para a duração activa; deixou de existir fallback silencioso para um produto de outra duração. Quando o catálogo não contém formatos pagos elegíveis, o formulário apresenta estado vazio explícito e não permite iniciar uma compra sem produto. Commit `d00bce94f1958a0adb7cb84c1bff303f9563bfaf`.
 - **Entrega pública:** ao mudar de superfície/posição/audiência, a peça anterior é removida enquanto a nova decisão é carregada; pedidos antigos são abortados e respostas tardias não podem repor uma peça fora do contexto actual. Commit `5a06e0f2333efcd70f84c6a9d8d69aab780b1334`.
 - Este lote é apenas de código-fonte. Não foram executados testes, builds, validações SQL, migrações ou publicação.
+
+### B6 — lote funcional: reconciliação integral do fim de campanha (27/11/2026)
+- A revisão do ciclo de vida identificou que a função unificada de expiração terminava campanhas empresariais apenas em estado `ACTIVE`; campanhas `PAUSED` que ultrapassassem o fim contratado continuavam reservadas e não eram libertadas pelo reconciliador.
+- Adicionada a migração F393, que passa a encerrar campanhas empresariais em `ACTIVE` ou `PAUSED` quando `ends_at <= clock_timestamp()`, mantendo o encerramento idempotente das campanhas de parceiros e as permissões restritas a `service_role`. Commit `51288e335b5d3a3bc137eeba18108ebc5b4301db`.
+- A migração histórica F376 foi restaurada sem alteração permanente, preservando a sequência de migrações já existente. Commit de restauração `91716982e0ffa52379dc30e620a41e57105cce9f`.
+- A F393 está apenas no repositório; não foi aplicada. A execução efectiva depende da aplicação das migrações e da disponibilidade do agendador configurado.
