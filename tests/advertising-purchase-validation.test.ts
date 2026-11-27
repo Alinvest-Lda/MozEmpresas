@@ -28,7 +28,7 @@ describe("advertising purchase validation", () => {
 
   it("calculates credit cost with the same targeting factor as the MZN price", () => {
     expect(calculateCampaignCredits(100, ["Maputo"], ["Construção"])).toBe(120);
-    expect(calculateCampaignCredits(null, [], [])).toBe(0);
+    expect(calculateCampaignCredits(null, [], [])).toBeNull();
   });
 
   it("trims, de-duplicates and bounds target values", () => {
