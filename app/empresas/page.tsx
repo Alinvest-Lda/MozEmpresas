@@ -199,6 +199,9 @@ export default async function Empresas({
           </div>
           <PublicAd surface="DIRECTORY" slot="FEATURED" context={{query:q,location,category}} interests={[q,category].filter(Boolean)} />
         </section>
+        <section className="directory-context-ad" aria-label="Publicidade contextual">
+          <PublicAd surface="DIRECTORY" slot="CONTEXT" context={{query:q,location,category,placement:"context"}} interests={[q,category,"context"].filter(Boolean)} />
+        </section>
 
         <section className="directory-results">
           <div className="directory-results-head">
