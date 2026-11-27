@@ -13,7 +13,7 @@ type Campaign = {
   price_mzn?: number | null; budget?: number | null; currency?: string | null; payment_method?: string | null; payment_reference?: string | null; paid_at?: string | null;
   impressions_count?: number | null; clicks_count?: number | null; target_url?: string | null;
   business?: { name?: string | null } | { name?: string | null }[] | null;
-  payment?: { id: string; status: string; payment_method: string; payment_reference: string; amount_mzn: number; confirmed_at?: string | null }[] | null;
+  payment?: { id: string; status: string; payment_method: string; payment_reference: string; amount_mzn: number; confirmed_at?: string | null; campaign_id?: string; created_at?: string }[] | null;
 };
 type AdvertisingRequest = {
   id: string; company_name: string; contact_name: string; email: string; phone: string | null;
@@ -110,7 +110,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     ["title","headline","target_url","placement"]
   ).range(pageStart,pageStart+99);
   const partnerQueueQuery=applyQueueFilters(
-    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn,confirmed_at)",{count:"exact"}).order("created_at",{ascending:false}),
+    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url",{count:"exact"}).order("created_at",{ascending:false}),
     ["title","headline","target_url","surface"]
   ).range(pageStart,pageStart+99);
   const requestQueueQuery=applyQueueFilters(
@@ -134,7 +134,22 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   ]);
 
   const allBusiness = (businessCampaigns ?? []) as Campaign[];
-  const allPartner = (partnerCampaigns ?? []) as Campaign[];
+  const partnerCampaignRows = (partnerCampaigns ?? []) as Campaign[];
+  const partnerCampaignIds = partnerCampaignRows.map(campaign=>campaign.id);
+  const {data:partnerPaymentOrders,error:partnerPaymentOrdersError}=partnerCampaignIds.length
+    ? await supabase.from("partner_ad_payment_orders")
+      .select("id,campaign_id,status,payment_method,payment_reference,amount_mzn,confirmed_at,created_at")
+      .in("campaign_id",partnerCampaignIds)
+      .order("created_at",{ascending:false})
+    : {data:[],error:null};
+  const latestPartnerPaymentByCampaign=new Map<string,NonNullable<typeof partnerPaymentOrders>[number]>();
+  for(const payment of partnerPaymentOrders??[]){
+    if(!latestPartnerPaymentByCampaign.has(payment.campaign_id)) latestPartnerPaymentByCampaign.set(payment.campaign_id,payment);
+  }
+  const allPartner = partnerCampaignRows.map(campaign=>({
+    ...campaign,
+    payment:latestPartnerPaymentByCampaign.has(campaign.id)?[latestPartnerPaymentByCampaign.get(campaign.id)!]:[],
+  })) as Campaign[];
   const allRequests = (requests ?? []) as AdvertisingRequest[];
   const activeQueueCounts = origin==="empresarial" ? [businessTotalCount]
     : origin==="parceiro" ? [partnerTotalCount]
@@ -201,7 +216,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const totalImpressions = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
   const totalClicks = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
   const pendingCount = allBusiness.filter(c => c.status === "PENDING").length + allPartner.filter(c => ["REQUESTED", "PENDING", "UNDER_REVIEW"].includes(c.status ?? "")).length + allRequests.filter(r => ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT"].includes(r.status ?? "")).length;
-  const error = businessError || partnerError || requestError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError || deliveryMetricsError;
+  const error = businessError || partnerError || requestError || partnerPaymentOrdersError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError || deliveryMetricsError;
 
   return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
     <header className={styles.hero}>
