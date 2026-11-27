@@ -111,6 +111,7 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - Partner campaigns paid but left in `APPROVED` until their contracted end date can now be cancelled/refunded after expiry even when their start date has passed. The action still requires a confirmed payment order and the existing external refund reference for M-Pesa/bank transfer; credit refunds remain ledger-compensated. Migration `f383` commits `3ee781b`, `b3ca7f4`; admin interface `a254e5b`.
 
 ### B6-T01 / T02 — catalogue-to-delivery contract
+- The business advertiser catalogue now labels the Opportunities placement in Portuguese rather than exposing the raw enum value. Commit `6feeee1`.
 - Catalogue surfaces now fail closed in the partner request catalogue and business advertiser product picker when a paid format lacks a valid canonical surface/slot. This prevents the UI from offering a format that the database cannot deliver. Commits `1b74e9d`, `70b0948`.
 
 - A critical delivery gap was found: business credit and M-Pesa purchase RPCs persisted the product placement but omitted the product `slot`. The decision engine requires an exact surface/slot match, so newly purchased business campaigns could remain undeliverable despite successful purchase. Both purchase paths now persist `v_product.slot`; the M-Pesa override in `f381` carries the same fix. Commits `6c65691`, `b89f449`.
