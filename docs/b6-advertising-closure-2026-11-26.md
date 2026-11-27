@@ -370,3 +370,9 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 ### B6 — correcção do intervalo inclusivo de datas dos pedidos públicos (27/11/2026)
 - O formulário comercial recolhe datas de calendário sem hora. A normalização anterior interpretava início e fim à meia-noite, tornando impossível um pedido de um único dia e terminando campanhas no início da data final.
 - O início passa a ser meia-noite de Maputo e o fim passa a ser o último milissegundo da data final em Maputo. A mesma interpretação é usada na validação e no valor persistido. Commit `f2a6f1b0ae3aa14fe4408e895da3448d53ac8cca`.
+
+### B6 — lote funcional: activação de campanhas empresariais pagas por créditos (27/11/2026)
+- A compra empresarial por créditos criava a campanha directamente em `ACTIVE`, mesmo quando o início contratado era futuro. O motor de entrega respeitava a data, mas o estado administrativo não.
+- F406 mantém o débito atómico e cria a campanha em `ACTIVE` apenas quando o período já começou; caso contrário, mantém `PENDING` para activação administrativa quando a data for atingida. A função recebe também `search_path` catalog-first e mantém execução apenas para utilizadores autenticados.
+- O histórico do anunciante passa a distinguir créditos debitados de campanhas ainda a aguardar activação.
+- Commits `e7f7d6d1c26e53ee17b8f44791e1fe0a029969f0`, `81feff66a66fd9bde8b141f157a22384e603ea6e` e `f7f3357dff1634aca269036ca144b158e8fed6a2`. Migração não aplicada.
