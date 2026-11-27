@@ -4,24 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getSuperAdminContext } from "@/lib/auth/super-admin";
-
-const promotionTransitions: Record<string, readonly string[]> = {
-  DRAFT: ["PENDING"],
-  PENDING: ["ACTIVE", "PAUSED", "EXPIRED"],
-  ACTIVE: ["PAUSED", "EXPIRED"],
-  PAUSED: ["ACTIVE", "EXPIRED"],
-  EXPIRED: [],
-};
-const requestTransitions: Record<string, readonly string[]> = {
-  NEW: ["CONTACTED", "CANCELLED"],
-  CONTACTED: ["PROPOSAL", "CANCELLED"],
-  PROPOSAL: ["AWAITING_PAYMENT", "REJECTED", "CANCELLED"],
-  AWAITING_PAYMENT: ["AWAITING_PAYMENT", "PAID", "REJECTED", "CANCELLED"],
-  PAID: ["APPROVED"],
-  APPROVED: [],
-  REJECTED: [],
-  CANCELLED: [],
-};
+import { BUSINESS_PROMOTION_TRANSITIONS, ADVERTISING_REQUEST_TRANSITIONS } from "@/lib/advertising/state-machine";
 
 async function updateStatus(table: "business_promotions" | "advertising_requests", idValue: FormDataEntryValue | null, statusValue: FormDataEntryValue | null, reasonValue: FormDataEntryValue | null, origin: string, settlement?: { method: FormDataEntryValue | null; reference: FormDataEntryValue | null; amount: FormDataEntryValue | null }) {
   const id = String(idValue || "");
