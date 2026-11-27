@@ -225,3 +225,8 @@ No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, access
 - Public audience targeting input is now deduplicated, normalized, bounded to 20 distinct entries per field and 120 characters per entry. Oversized lists receive a controlled 400 response rather than being passed into the database. Commit `d7a11ad`.
 - Admin partner-campaign cancellation now maps the F392 24-hour activation-window guard to a clear user-facing message, rather than a generic cancellation failure. Commits `81b908f` and `cd0914a`.
 - Source-only changes. No tests, builds, SQL validation, database migration application, or deployment performed.
+
+
+### B6-T09 — Event validation fallback correction
+- Static inspection of the ad event endpoint found a fallback-mode schema mismatch: business promotions were fetched without their `placement` field, while eligibility requires a normalized surface. The fallback now fetches `placement` and maps it to the eligibility surface; partner campaigns continue to use their explicit `surface`. This prevents valid business ad events from being rejected when the direct Postgres connection is unavailable. Commit `0b9c345`.
+- Source-only; no runtime or database validation.
