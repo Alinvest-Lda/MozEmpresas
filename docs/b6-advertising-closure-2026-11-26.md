@@ -376,3 +376,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - F406 mantém o débito atómico e cria a campanha em `ACTIVE` apenas quando o período já começou; caso contrário, mantém `PENDING` para activação administrativa quando a data for atingida. A função recebe também `search_path` catalog-first e mantém execução apenas para utilizadores autenticados.
 - O histórico do anunciante passa a distinguir créditos debitados de campanhas ainda a aguardar activação.
 - Commits `e7f7d6d1c26e53ee17b8f44791e1fe0a029969f0`, `81feff66a66fd9bde8b141f157a22384e603ea6e` e `f7f3357dff1634aca269036ca144b158e8fed6a2`. Migração não aplicada.
+
+### B6 — lote funcional: bloqueio de activação antecipada de campanhas empresariais (27/11/2026)
+- Depois de diferir campanhas empresariais pagas por créditos para `PENDING` quando têm início futuro, a revisão identificou que a RPC administrativa ainda verificava apenas a data final; um operador podia activá-las antes da data contratada.
+- F407 exige que `starts_at <= now() < ends_at` para activar campanhas empresariais e devolve um erro específico quando o início ainda não chegou. A Server Action converte esse erro numa mensagem operacional já suportada pelo painel.
+- Commits `1c48d34237dedd61f644158725507de13627ff70` e `2444ccaa3bc2cef5e5c565eaeb8026631a0303e8`. Migração não aplicada.
