@@ -217,3 +217,11 @@ No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, access
 - The advertising request and credit purchase deadline checks were also changed from brittle dynamic function-definition rewrites to explicit `CREATE OR REPLACE FUNCTION` definitions copied from their established migrations, with only the deadline guard added. Commits `9c73206` and `5948365`.
 - Static inventory of transfer-enabled flows: partner back-office invoices/financial payments share the F392 confirmation RPC; public advertising requests have their own evidence-based PAID transition; credit purchase requests have a separate Super Admin decision RPC. Pending bank-transfer financial payment rows carry a 24h expiry, and the other two flows calculate the deadline from request creation. The service-order flow found in the source inventory uses its own payment channel and was not found to offer BANK_TRANSFER in the reviewed path.
 - These edits are source-only and were not tested or applied. The 24-hour rules are enforcement gates, not automatic activation, refund, or money movement. The fixed platform closure percentage remains **89%**.
+
+
+### B6-T08 — Purchase/request UI consistency fixes
+- Fixed a missing `submitting` state declaration in the self-service advertising purchase component that would prevent the purchase UI from compiling/rendering correctly, and constrained the displayed selected product to the currently selected duration/placement instead of accidentally using a stale product from another selection. Commit `f080452`.
+- Public advertising request API now accepts the `EXCLUSIVE` and `CONTEXT` slot values already offered by the surface-specific form validation, preventing legitimate requests for these positions from being rejected by the API schema. Commit `029b20d`.
+- Public audience targeting input is now deduplicated, normalized, bounded to 20 distinct entries per field and 120 characters per entry. Oversized lists receive a controlled 400 response rather than being passed into the database. Commit `d7a11ad`.
+- Admin partner-campaign cancellation now maps the F392 24-hour activation-window guard to a clear user-facing message, rather than a generic cancellation failure. Commits `81b908f` and `cd0914a`.
+- Source-only changes. No tests, builds, SQL validation, database migration application, or deployment performed.
