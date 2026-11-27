@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { purchaseAdCredits, requestAdMpesaPayment } from "@/lib/advertising/actions";
 import { AdvertisingPurchaseForm } from "@/components/advertising-purchase-form";
 
-const placement: Record<string, string> = { DIRECTORY:"Directório", MARKETPLACE:"Marketplace", HOME:"Página inicial" };
+const placement: Record<string, string> = { DIRECTORY:"Directório", MARKETPLACE:"Marketplace", HOME:"Página inicial", OPPORTUNITIES:"Oportunidades" };
 
 function money(value: number | string | null | undefined) {
   return value == null ? "—" : Number(value).toLocaleString("pt-MZ") + " MZN";
