@@ -76,21 +76,6 @@ begin
     perform set_config('app.advertising_admin_reason',v_reason,true);
     update public.business_promotions set status=p_new_status,updated_at=now() where id=p_entity_id;
 
-    if p_new_status in ('ACTIVE','PAUSED','EXPIRED') then
-      insert into public.notifications(user_id,type,title,body,resource_type,resource_id)
-      select recipients.user_id,'ADVERTISING',
-        case p_new_status when 'ACTIVE' then 'Campanha publicitária activada'
-          when 'PAUSED' then 'Campanha publicitária pausada' else 'Campanha publicitária expirada' end,
-        'A campanha "'||left(v_campaign_title,120)||'" passou para o estado "'||lower(p_new_status)||'".',
-        'BUSINESS_PROMOTION',p_entity_id
-      from (
-        select b.owner_id as user_id from public.businesses b where b.id=v_business_id
-        union
-        select bm.user_id from public.business_members bm
-        where bm.business_id=v_business_id and bm.role in ('owner','admin','operator')
-      ) recipients
-      where recipients.user_id is not null;
-    end if;
 
   elsif p_entity_type='ADVERTISING_REQUEST' then
     select status into v_old_status from public.advertising_requests where id=p_entity_id for update;
