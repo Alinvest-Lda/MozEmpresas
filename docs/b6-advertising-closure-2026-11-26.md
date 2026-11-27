@@ -307,3 +307,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - O painel administrativo passa a disponibilizar “Reemitir cobrança” apenas quando a transferência expirou, mantendo bloqueada a reemissão enquanto a cobrança ainda está dentro do prazo. A conta parceira passa a distinguir o prazo expirado de uma transferência ainda pendente.
 - Commits `36a43178827923ab210646aabe9cb62033e0c05b`, `d9f82261addca536c5e57d593e323fabfcae9579`, `9d4b19e99b41e62b2f702231c5f67db6995a472d` e `caa85ec88c032aaf7ef04719551c044c904cab72`.
 - Migração ainda não aplicada; o fluxo necessita de validação integrada após aplicação de F395/F396.
+
+### B6 — lote de coerência entre regras e testes de regressão (27/11/2026)
+- Corrigido um teste legado que aceitava campanhas sem superfície/posição canónica, em contradição com a regra de elegibilidade efectivamente aplicada pelo motor de entrega.
+- Acrescentado caso de regressão para datas de início sem hora, confirmando a interpretação de meia-noite no fuso de Maputo e a rejeição de datas locais já passadas.
+- Commits `599506ae9042f039a95fe6302db0707f91b60e51` e `6d2a1082170b32c9a39c2e1acf8681e005e50482`. Os testes foram actualizados, mas não executados.
