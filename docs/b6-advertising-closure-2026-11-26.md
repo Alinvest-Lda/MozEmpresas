@@ -399,3 +399,9 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 ### B6 — melhoria de entrada de datas no checkout empresarial (27/11/2026)
 - O campo de início de campanha empresarial passa a impedir no próprio selector a escolha de datas/horas anteriores ao momento local do utilizador, mantendo a validação definitiva no servidor.
 - Commit `7e1c381db0f4b4c55dd3f81d978fa130fed903b3`.
+
+### B6 — lote funcional: integridade entre catálogo e inventário publicitário entregue (27/11/2026)
+- A revisão transversal das páginas públicas confirmou os pares canónicos de superfície/posição, mas os catálogos empresariais e de parceiros apenas validavam se cada campo pertencia a uma lista geral. Isso permitia vender combinações que nenhuma página pública renderiza.
+- F408 introduz constraints de catálogo para pares válidos, valida o par nas RPCs de compra empresarial por créditos/M-Pesa e no pedido de campanha do parceiro, e filtra o catálogo do parceiro para devolver apenas formatos entregáveis.
+- O checkout empresarial também deixa de apresentar produtos pagos com combinações de superfície/posição sem destino público.
+- Commits `0c78ff7e25af8d264d158b318262ab32e25aacae` e `7d46749e3593a70831bd0041c084368a52b55f63`. Migração não aplicada.
