@@ -85,6 +85,8 @@ export async function moderatePartnerCampaign(formData: FormData) {
       "CAMPAIGN_PAYMENT_NOT_SETTLED",
       "CAMPAIGN_PAYMENT_STILL_PENDING",
       "CAMPAIGN_END_DATE_NOT_REACHED",
+      "CAMPAIGN_START_DATE_NOT_REACHED",
+      "ADVERTISING_CAMPAIGN_WINDOW_CLOSED",
       "CAMPAIGN_NOT_FOUND",
     ].find((code) => error.message.includes(code));
     redirect("/dashboard/admin/publicidade?result=" + (known || "error"));
