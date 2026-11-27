@@ -355,3 +355,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - A confirmação M-Pesa podia liquidar uma campanha sem alterar o estado quando a data de início era futura; nesse caso, o evento de estado não gerava notificação e o parceiro não recebia confirmação explícita do pagamento.
 - F403 acrescenta notificação de liquidação aos membros activos da conta parceira após a confirmação do callback, independentemente de a campanha poder ser activada imediatamente ou ter de aguardar a data contratada.
 - Commit `483a3f5f45a43f5c2cbc0a1d14b5dede86af95c4`. Migração não aplicada.
+
+### B6 — lote funcional: recuperação de falhas M-Pesa e comunicação ao parceiro (27/11/2026)
+- O callback de falha M-Pesa actualizava a ordem para `FAILED`, mas não notificava os membros da conta; a falha podia ficar visível apenas quando o parceiro abrisse o painel.
+- F404 envia uma notificação após a transição efectiva para `FAILED`, informando que a tentativa não foi concluída e que pode ser emitida nova cobrança. Retornos idempotentes de falhas já processadas não geram notificações duplicadas.
+- Commit `0be97096fcfd9f882222c11077064cc1edc4a879`. Migração não aplicada.
