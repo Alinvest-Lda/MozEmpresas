@@ -14,7 +14,7 @@ security definer
 set search_path = pg_catalog, public, pg_temp
 as $function$
 declare
-  v_now timestamptz := clock_timestamp();
+  v_now timestamptz;
   v_lock_key text;
   v_campaign_status text;
   v_campaign_starts_at timestamptz;
@@ -43,6 +43,7 @@ begin
       into v_campaign_status,v_campaign_starts_at,v_campaign_ends_at,v_campaign_surface,v_campaign_slot
     from public.partner_ad_campaigns where id=p_campaign_id for share;
   end if;
+  v_now:=clock_timestamp();
   if not found or v_campaign_status<>'ACTIVE'
     or v_campaign_starts_at is null or v_campaign_ends_at is null
     or v_campaign_starts_at>v_now or v_campaign_ends_at<=v_now
