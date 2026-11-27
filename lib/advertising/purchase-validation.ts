@@ -8,7 +8,8 @@ export function parseMaputoCampaignStart(value: string, now = new Date()): strin
   const input = value.trim();
   if (!input) return null;
   const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(input);
-  const parsed = new Date(hasTimezone ? input : input + "+02:00");
+  const localInput = /^\d{4}-\d{2}-\d{2}$/.test(input) ? `${input}T00:00:00` : input;
+  const parsed = new Date(hasTimezone ? localInput : localInput + "+02:00");
   if (!Number.isFinite(parsed.getTime()) || parsed.getTime() < now.getTime()) return null;
   return parsed.toISOString();
 }
