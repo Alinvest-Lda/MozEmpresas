@@ -40,9 +40,9 @@ async function updateStatus(table: "business_promotions" | "advertising_requests
     p_entity_id: id,
     p_new_status: status,
     p_reason: reason,
-    p_payment_method: settlement?.method ? String(settlement.method).toUpperCase() : null,
-    p_payment_reference: settlement?.reference ? String(settlement.reference).trim() : null,
-    p_paid_amount_mzn: settlement?.amount && String(settlement.amount).trim() !== "" ? Number(settlement.amount) : null,
+    p_payment_method: table === "advertising_requests" && status === "PAID" && settlement?.method ? String(settlement.method).toUpperCase() : null,
+    p_payment_reference: table === "advertising_requests" && status === "PAID" && settlement?.reference ? String(settlement.reference).trim() : null,
+    p_paid_amount_mzn: table === "advertising_requests" && status === "PAID" && settlement?.amount && String(settlement.amount).trim() !== "" ? Number(settlement.amount) : null,
   });
   if (error) {
     const code = error.message.includes("ADVERTISING_PAYMENT_NOT_SETTLED") ? "payment-not-settled"
