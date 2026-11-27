@@ -1,14 +1,14 @@
 "use client";
 import { useMemo, useState } from "react";
 type Product={id:string;name:string;placement:string;duration_days:number;direct_price_mzn:number|string;credit_price:number;description?:string|null};
-const placementLabel:Record<string,string>={DIRECTORY:"Directório",MARKETPLACE:"Marketplace",HOME:"Página inicial"};
-const placementDescription:Record<string,string>={DIRECTORY:"Dê mais visibilidade à sua empresa dentro do Directório.",MARKETPLACE:"Coloque uma oferta em evidência para quem procura produtos e serviços.",HOME:"Ganhe exposição nas áreas de maior visibilidade da página inicial."};
+const placementLabel:Record<string,string>={DIRECTORY:"Directório",MARKETPLACE:"Marketplace",HOME:"Página inicial",OPPORTUNITIES:"Oportunidades"};
+const placementDescription:Record<string,string>={DIRECTORY:"Dê mais visibilidade à sua empresa dentro do Directório.",MARKETPLACE:"Coloque uma oferta em evidência para quem procura produtos e serviços.",HOME:"Ganhe exposição nas áreas de maior visibilidade da página inicial.",OPPORTUNITIES:"Apresente a sua marca junto de oportunidades relevantes para organizações."};
 const locationOptions=["Maputo","Matola","Gaza","Inhambane","Sofala","Manica","Tete","Zambézia","Nampula","Cabo Delgado","Niassa"];
 function money(v:number|string){return Number(v).toLocaleString("pt-MZ")+" MZN";}
 function calculate(p:Product|undefined,l:number,c:number){if(!p)return{price:0,credits:0};const factor=1+(l?0.1:0)+(c?0.1:0);return{price:Number((Number(p.direct_price_mzn)*factor).toFixed(2)),credits:Math.ceil(Number(p.credit_price)*factor)};}
 function cleanName(name:string){return name.replace(/\s·\s(7|14|30) dias$/i,"");}
 export function AdvertisingPurchaseForm({businesses,products,categories,wallets,creditAction,mpesaAction}:{businesses:{id:string;name:string}[];products:Product[];categories:{name:string}[];wallets:Record<string,number>;creditAction:(f:FormData)=>Promise<void>;mpesaAction:(f:FormData)=>Promise<void>}){
- const placements=["DIRECTORY","MARKETPLACE","HOME"].filter(place=>products.some(p=>p.placement===place));
+ const placements=["DIRECTORY","MARKETPLACE","HOME","OPPORTUNITIES"].filter(place=>products.some(p=>p.placement===place));
  const firstPlacement=placements[0]??"DIRECTORY"; const [placement,setPlacement]=useState(firstPlacement);
  const placementProducts=products.filter(p=>p.placement===placement&&Number(p.direct_price_mzn)>0);
  const durations=Array.from(new Set(placementProducts.map(p=>p.duration_days))).sort((a,b)=>a-b);
@@ -34,6 +34,6 @@ export function AdvertisingPurchaseForm({businesses,products,categories,wallets,
    <div className="ad-target-block"><div className="ad-builder-label"><span>Actividade / categoria <small>+10%</small></span><small>{cats.length?cats.length+" seleccionada(s)":"Opcional"}</small></div><div className="ad-chip-grid">{categories.map(c=><label key={c.name} className={"ad-chip"+(cats.includes(c.name)?" selected":"")}><input type="checkbox" name="target_category" value={c.name} checked={cats.includes(c.name)} onChange={()=>toggle(c.name,setCats,cats)}/>{c.name}</label>)}</div></div>
   </section>
   <section className="ad-builder-summary"><div><span className="dashboard-kicker">03 · Resumo</span><h3>{product?cleanName(product.name):"Espaço publicitário"}</h3><p>{duration} dias · {locations.length||cats.length?"Audiência segmentada":"Audiência geral"} · {placementLabel[placement]}</p></div><div className="ad-builder-price"><small>Valor estimado</small><strong>{money(calc.price)}</strong><span>{canPayWithCredits?`ou ${calc.credits.toLocaleString("pt-MZ")} créditos`:"Pagamento por créditos indisponível neste formato"}</span></div></section>
-  <section className="ad-builder-actions"><div><strong>Como pretende pagar?</strong><p>Use o saldo de créditos ou solicite pagamento por M-Pesa.</p></div><div className="ad-builder-buttons"><button className="btn primary" type="submit" formAction={creditAction} disabled={!canPayWithCredits}>Activar com créditos</button><button className="btn" type="submit" formAction={mpesaAction}>Solicitar pagamento M-Pesa</button></div></section>
+  <section className="ad-builder-actions"><div><strong>Como pretende pagar?</strong><p>Use o saldo de créditos ou registe um pedido de pagamento por M-Pesa. O pedido fica pendente até a liquidação ser verificada; esta opção ainda não inicia uma cobrança automática no operador.</p></div><div className="ad-builder-buttons"><button className="btn primary" type="submit" formAction={creditAction} disabled={!canPayWithCredits}>Activar com créditos</button><button className="btn" type="submit" formAction={mpesaAction}>Solicitar pagamento M-Pesa</button></div></section>
  </form></div>;
 }
