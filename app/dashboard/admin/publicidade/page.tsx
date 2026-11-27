@@ -76,8 +76,8 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     { data: partnerProducts, error: partnerProductsError },
   ] = await Promise.all([
     supabase.from("business_promotions").select("id,title,headline,status,starts_at,ends_at,created_at,placement,slot,budget,currency,price_mzn,payment_method,payment_reference,paid_at,impressions_count,clicks_count,target_url,business:business_id(name)").order("created_at", { ascending: false }).range(pageStart, pageStart + 99),
-    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)").order("created_at", { ascending: false }).limit(100),
-    supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at,payment_method,payment_reference,paid_amount_mzn,paid_at").order("created_at", { ascending: false }).limit(100),
+    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)").order("created_at", { ascending: false }).range(pageStart, pageStart + 99),
+    supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at,payment_method,payment_reference,paid_amount_mzn,paid_at").order("created_at", { ascending: false }).range(pageStart, pageStart + 99),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "IMPRESSION"),
     supabase.from("ad_delivery_events").select("id", { count: "exact", head: true }).eq("event_type", "CLICK"),
     supabase.from("partner_ad_products").select("id,name,price_mzn,credit_price,active").order("name").limit(100),
