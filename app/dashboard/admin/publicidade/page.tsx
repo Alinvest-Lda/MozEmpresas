@@ -56,7 +56,8 @@ function label(status: string | null) { return status ? (statusLabels[status] ||
 type SearchParams = Promise<{ q?: string; origem?: string; estado?: string; prazo?: string; page?: string; result?: string; refund?: string; refundType?: string; reference?: string; method?: string }>;
 export default async function AdminAdvertisingPage({ searchParams }: { searchParams?: SearchParams }) {
   const params = searchParams ? await searchParams : {};
-  const q = (params.q ?? "").trim().slice(0, 100);
+  // Sanitise structural PostgREST OR/ILIKE characters so user search cannot widen the query.
+  const q = (params.q ?? "").replace(/[%,()_*\\\\]/g, " ").replace(/[\\u0000-\\u001f\\u007f]/g, " ").replace(/\\s+/g, " ").trim().slice(0, 100);
   const origin = ["empresarial", "parceiro", "pedido"].includes(params.origem ?? "") ? params.origem ?? "" : "";
   const status = [...new Set([...promotionStatuses, ...partnerStatuses, ...requestStatuses])].includes((params.estado ?? "").toUpperCase()) ? (params.estado ?? "").toUpperCase() : "";
   const deadline = ["expirado", "proximo", "futuro", "sem-prazo"].includes(params.prazo ?? "") ? params.prazo ?? "" : "";
