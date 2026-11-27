@@ -446,3 +446,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - Os pedidos de compra de créditos por transferência já eram bloqueados pela RPC depois de 24 horas, mas o painel administrativo continuava a apresentar o botão de aprovação e o cliente via apenas a data limite.
 - A área administrativa agora oculta a aprovação depois do prazo e orienta a recusa do pedido expirado para libertar uma nova solicitação; a área da empresa identifica explicitamente o prazo expirado e informa o passo seguinte.
 - Commits `4184693b3c35279cc0586c44ff98d0a3aed83fdf` e `9556a328cc752de737cb1a093d885e687ff78b24`.
+
+### B6 — correcção de fuso horário nos pedidos de campanhas de parceiros (27/11/2026)
+- O formulário de parceiro interpretava `datetime-local` no fuso configurado no dispositivo, enquanto o servidor e a operação comercial usam Maputo (UTC+02:00). Em dispositivos configurados noutro fuso, o período podia ser deslocado.
+- Os formulários empresarial e de parceiro passam a usar uma função comum para apresentar o mínimo no fuso de Maputo; o formulário de parceiro também converte explicitamente os valores locais para ISO no mesmo fuso antes de chamar a RPC.
+- Commits `653d3d2a043a027a9cbcecb3c3bdecf50303089d`, `cedc4ffd90fc23160c36ed8db7df65e13201982a`, `c250df21f49d32b80b97ee62dd4da40da79d738d` e `28b036d1c4d463f19208169b696db28e0801f600`. Testes actualizados, não executados.
