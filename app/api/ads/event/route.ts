@@ -74,6 +74,9 @@ export const POST = withApiObservability("api.ads_event", async (request: Reques
         p_context: event.context,
       });
       if (error) {
+        if (error.message.includes("AD_CAMPAIGN_NOT_ELIGIBLE")) {
+          return NextResponse.json({ error: "A campanha deixou de estar activa para este espaço e período." }, { status: 409 });
+        }
         if (error.message.includes("AD_CLICK_WITHOUT_IMPRESSION")) {
           return NextResponse.json({ error: "O clique não corresponde a uma impressão recente da campanha." }, { status: 409 });
         }
@@ -86,7 +89,13 @@ export const POST = withApiObservability("api.ads_event", async (request: Reques
     if (!recorded) return NextResponse.json({ ok: true, deduplicated: true });
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("AD_CAMPAIGN_NOT_ELIGIBLE")) {
+      return NextResponse.json({ error: "A campanha deixou de estar activa para este espaço e período." }, { status: 409 });
+    }
+    if (error instanceof Error && error.message.includes("AD_CLICK_WITHOUT_IMPRESSION")) {
+      return NextResponse.json({ error: "O clique não corresponde a uma impressão recente da campanha." }, { status: 409 });
+    }
     return NextResponse.json({ error: "Não foi possível processar o evento de publicidade." }, { status: 500 });
   }
 });
