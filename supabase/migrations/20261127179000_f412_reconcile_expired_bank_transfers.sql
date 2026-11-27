@@ -30,24 +30,28 @@ begin
     set status='VOID'
     where d.status='ISSUED' and d.id in (select document_id from expired where document_id is not null)
     returning d.id
-  ),
-  partner_notifications as (
-    insert into public.notifications(user_id,type,title,body,resource_type,resource_id)
-    select members.user_id,'ADVERTISING','Prazo de transferência bancária expirado',
-      'O prazo de 24 horas para confirmar a transferência da campanha "'||left(c.title,120)||'" terminou. A equipa responsável pode emitir uma nova cobrança.',
-      'PARTNER_AD_CAMPAIGN',c.id
-    from expired_orders eo
-    join public.partner_ad_campaigns c on c.id=eo.campaign_id
-    join public.partner_account_members members on members.account_id=c.account_id
-    where members.active=true and members.user_id is not null
-    returning id
   )
   select
     (select count(*) from expired),
     (select count(*) from expired_orders),
-    (select count(*) from voided_documents),
-    (select count(*) from partner_notifications)
-  into v_payment_count,v_order_count,v_document_count,v_notification_count;
+    (select count(*) from voided_documents)
+  into v_payment_count,v_order_count,v_document_count;
+
+  begin
+    insert into public.notifications(user_id,type,title,body,resource_type,resource_id)
+    select members.user_id,'ADVERTISING','Prazo de transferência bancária expirado',
+      'O prazo de 24 horas para confirmar a transferência da campanha "'||left(c.title,120)||'" terminou. A equipa responsável pode emitir uma nova cobrança.',
+      'PARTNER_AD_CAMPAIGN',c.id
+    from public.partner_ad_payment_orders o
+    join public.partner_ad_campaigns c on c.id=o.campaign_id
+    join public.partner_account_members members on members.account_id=c.account_id
+    where o.status='FAILED' and o.payment_method='BANK_TRANSFER' and o.updated_at=v_now
+      and members.active=true and members.user_id is not null;
+    get diagnostics v_notification_count=row_count;
+  exception when others then
+    v_notification_count:=0;
+    raise warning 'F412 partner expiry notification failed: %',sqlerrm;
+  end;
 
   return jsonb_build_object(
     'reconciled_at',v_now,
