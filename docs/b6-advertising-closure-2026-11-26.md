@@ -210,3 +210,10 @@ No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, access
 
 - Additional scope for F392: credit purchases by bank transfer are also limited to a 24-hour confirmation window. The credit purchase decision RPC rejects Super Admin approval after the window; the admin and advertiser histories now display the deadline. Commits `d24c063`, `0c1ebe3`, `862d3f5`, `5df4613`, `cf331ea`, `2a16669` (UI/source corrections are source-only, not validated).
 - Financial history for managed businesses now displays the pending bank-transfer payment expiry and warns when the 24-hour window has passed. Commit `2b149ff`.
+
+
+### B6-T07 — F392 source correction (27/11/2026)
+- Static comparison against the established F326L settlement RPC found that the first F392 rewrite had dropped campaign payment-order integrity checks, settlement amount reconciliation, and the `PAID` transition for partner campaign payment orders. The function was restored from the F326L implementation and the 24-hour deadline guard inserted without removing the original checks. Commit `fe2c1c6`.
+- The advertising request and credit purchase deadline checks were also changed from brittle dynamic function-definition rewrites to explicit `CREATE OR REPLACE FUNCTION` definitions copied from their established migrations, with only the deadline guard added. Commits `9c73206` and `5948365`.
+- Static inventory of transfer-enabled flows: partner back-office invoices/financial payments share the F392 confirmation RPC; public advertising requests have their own evidence-based PAID transition; credit purchase requests have a separate Super Admin decision RPC. Pending bank-transfer financial payment rows carry a 24h expiry, and the other two flows calculate the deadline from request creation. The service-order flow found in the source inventory uses its own payment channel and was not found to offer BANK_TRANSFER in the reviewed path.
+- These edits are source-only and were not tested or applied. The 24-hour rules are enforcement gates, not automatic activation, refund, or money movement. The fixed platform closure percentage remains **89%**.
