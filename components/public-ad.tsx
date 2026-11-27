@@ -9,8 +9,10 @@ function visitorKey(){
  if(typeof window==="undefined") return "";
  try {
   const key=window.localStorage.getItem("mozempresas_ad_visitor");
-  if(key) return key;
-  const value=(typeof crypto!=="undefined" && "randomUUID" in crypto ? crypto.randomUUID() : "visitor")+"-"+Math.random().toString(36).slice(2);
+  if(key && key.length>=16 && key.length<=120) return key;
+  const value=typeof crypto!=="undefined" && typeof crypto.randomUUID==="function"
+    ? crypto.randomUUID()
+    : "visitor-"+Math.random().toString(36).slice(2).padEnd(24,"0");
   window.localStorage.setItem("mozempresas_ad_visitor",value);
   return value;
  } catch {
