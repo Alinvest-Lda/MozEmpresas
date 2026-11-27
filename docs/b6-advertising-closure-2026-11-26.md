@@ -82,3 +82,35 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - B6-T05 follow-up: the ad decision endpoint now records impressions through the same atomic database function, in both direct-Postgres and service-role fallback paths. This closes the bypass where decision-generated impressions were still inserted directly and escaped the five-minute deduplication rule. Commit `5722a71`.
 
 - B6-T06: the homepage advertising hero no longer reads `business_promotions` directly or bypasses partner campaign selection and delivery telemetry. It now delegates to the canonical `PublicAd` decision/event component using `HOME` + `HERO`, so homepage delivery, impressions and clicks use the same eligibility and deduplication path. Commit `8ceb402`. Remaining placement work: inventory every live public surface/slot, confirm product-to-slot compatibility and retire only legacy renderers with confirmed unused call sites.
+
+
+## Deep closure batch — 27/11/2026
+
+### B6-T04 — operational queue and decision controls
+- The administrative advertising queue now supports bounded pagination by source (100 business campaigns, 100 partner campaigns and 100 public requests per page), with previous/next navigation while preserving the active filters. This removes the previous hard stop at the first 100 records and makes older operational records reachable. Commit `9ad7e4c`.
+- The page-level counts remain explicitly sample/page counts; this is not represented as a global total. Search and filter evaluation still applies to the loaded page window, so a future refinement is needed for fully database-side filtering and global counts.
+
+### B6-T07 — public advertising request settlement evidence
+- A public advertising request can no longer be moved from `AWAITING_PAYMENT` to `PAID` using a reason alone. The Super Admin operation now requires a payment channel, a payment reference and a positive settled amount in MZN.
+- Settlement evidence is persisted on the request with verifier and timestamp, shown in the operations queue and protected against subsequent mutation. A paid request may advance to `APPROVED`, but cannot be silently cancelled through the ordinary status action; a refund/reversal path must be separately evidenced.
+- The business-promotion moderation RPC retains its business-specific call shape; the obsolete four-argument overload is removed to prevent ambiguous resolution against the evidence-aware function.
+- Commits: migration `f373` `8e0caa7`, follow-up RPC hardening `173e1be`, immutable evidence guard `0390ea3`, server action `7610ce2` and compatibility correction `aaec750`, admin UI `9fb3506` and conditional evidence payload `06e5989`.
+
+### B6-T01 / T03 / T08 — capacity reservation integrity
+- Partner ad inventory capacity now includes `APPROVED` and `PAUSED` campaigns in overlap checks. An approved campaign reserves the contracted space while awaiting activation; pausing a campaign does not free capacity for a second sale. Commit `bac01aa`.
+- Business credit-backed ad purchases now count `PAUSED` campaigns in product-capacity checks, preventing a paused campaign from releasing inventory while it can still be resumed. Commit `28cee94`.
+- The partner and business changes are source-level database implementations; they remain dependent on migration application and operational verification.
+
+### Remaining B6 Definition of Done gates
+1. T01: reconcile every active product with a real public surface/slot and verify catalogue invariants in the deployed database.
+2. T02: finish the business M-Pesa request/callback and recovery trace, including ambiguous outcomes and duplicate retries.
+3. T03: finish partner campaign payment retry, payment method reconciliation, and user-visible cancellation/refund outcomes.
+4. T04: move search/status/deadline filters and global counts to database-side pagination; expose a complete settlement and audit trail in the back office.
+5. T05: finalize attribution/conversion policy and verify event counts against the deployed event pipeline; current CTR is interaction, not ROI.
+6. T06: trace all public placements and remove/convert legacy renderers only after confirming every call site and placement contract.
+7. T07: reconcile partner financial documents, M-Pesa, bank transfers, credit ledger and compensating refunds end-to-end.
+8. T08: close expired/paused/cancelled campaign transitions and scheduling automation, including race-safe expiry.
+9. T09: complete the advertiser recovery journey for failed, pending, rejected and expired campaigns.
+10. T10: finish cross-module consolidation and collect operational evidence.
+
+No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, accessibility audit or deployment were run. New migrations `f371` through `f375` are committed as source only and have not been applied.
