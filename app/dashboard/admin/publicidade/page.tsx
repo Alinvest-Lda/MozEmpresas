@@ -71,7 +71,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const queueNow=new Date();
   const queueNowIso=queueNow.toISOString();
   const queueFutureIso=new Date(queueNow.getTime()+7*24*60*60*1000).toISOString();
-  const safeQueueSearch=q.replace(/[%,()]/g," ").replace(/\s+/g," ").trim().slice(0,120);
+  const safeQueueSearch=q;
   const applyQueueFilters=(initial:any,fields:string[])=>{
     let query=initial;
     if(safeQueueSearch) query=query.or(fields.map(field=>field+".ilike.%"+safeQueueSearch+"%").join(","));
