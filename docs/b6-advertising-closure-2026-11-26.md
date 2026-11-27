@@ -247,3 +247,10 @@ No tests, CI, E2E, SQL execution, RLS validation, telemetry verification, access
 ### B6-T03 / T09 — partner audience target validation (27/11/2026)
 - Partner campaign requests now validate the same target contract enforced by the database before sending: maximum 20 entries, approved target types only, non-empty values and a 160-character limit. This avoids silently discarded target types and database-side truncation of oversized values. Commit `59cf890a7e0cd45b4073d2bd3bde34837b5187cd`.
 - Source-only; no tests, builds, SQL execution, migration application, or deployment performed.
+
+### B6 — lote funcional: checkout empresarial, datas e entrega pública (27/11/2026)
+Este lote fecha em conjunto três pontos de consistência entre formulário, API e apresentação pública:
+- **Pedidos comerciais:** datas introduzidas como data local de Moçambique são agora normalizadas para ISO UTC antes da persistência, tanto no caminho PostgreSQL directo como no fallback Supabase. A validação e o valor gravado passam a usar a mesma interpretação UTC+02:00; timestamps com fuso explícito preservam esse fuso. Commit `83218563573e8ad653a538ed4e59cb24628ca5df`.
+- **Checkout empresarial:** o ID submetido acompanha o produto realmente seleccionado para a duração activa; deixou de existir fallback silencioso para um produto de outra duração. Quando o catálogo não contém formatos pagos elegíveis, o formulário apresenta estado vazio explícito e não permite iniciar uma compra sem produto. Commit `d00bce94f1958a0adb7cb84c1bff303f9563bfaf`.
+- **Entrega pública:** ao mudar de superfície/posição/audiência, a peça anterior é removida enquanto a nova decisão é carregada; pedidos antigos são abortados e respostas tardias não podem repor uma peça fora do contexto actual. Commit `5a06e0f2333efcd70f84c6a9d8d69aab780b1334`.
+- Este lote é apenas de código-fonte. Não foram executados testes, builds, validações SQL, migrações ou publicação.
