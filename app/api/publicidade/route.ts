@@ -40,7 +40,7 @@ const schema = z.object({
   }
   const parseCampaignDate=(value:string|undefined):number|null=>{
     if(!value)return null;
-    const normalized=/^\d{4}-\d{2}-\d{2}$/.test(value)?value+"T00:00:00+02:00":value;
+    const normalized=/^\d{4}-\d{2}-\d{2}$/.test(value)?value+"T00:00:00+02:00":/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)?value:value+"+02:00";
     const timestamp=Date.parse(normalized);
     return Number.isFinite(timestamp)?timestamp:null;
   };
@@ -94,6 +94,14 @@ export const POST = withApiObservability("api.advertising_request", async (reque
 
   try {
     const payload = parsed.data;
+    const toMaputoIso=(value:string|undefined)=>{
+      if(!value)return null;
+      const normalized=/^\d{4}-\d{2}-\d{2}$/.test(value)?value+"T00:00:00+02:00":/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)?value:value+"+02:00";
+      const date=new Date(normalized);
+      return Number.isFinite(date.getTime())?date.toISOString():null;
+    };
+    const startsAt=toMaputoIso(payload.startsAt);
+    const endsAt=toMaputoIso(payload.endsAt);
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -120,7 +128,7 @@ export const POST = withApiObservability("api.advertising_request", async (reque
       businessId, payload.companyName, payload.contactName, payload.email, payload.phone || null,
       payload.surface, payload.slot, payload.creativeType, payload.packageName, payload.headline || null,
       payload.body || null, payload.imageUrl || null, payload.targetUrl || null, payload.ctaLabel || null,
-      payload.altText || null, payload.startsAt || null, payload.endsAt || null, payload.message || null,
+      payload.altText || null, startsAt, endsAt, payload.message || null,
       payload.audienceMode, payload.budget ?? null, payload.bidCpm ?? null, payload.frequencyCap,
       targetInterests,
       targetLocations,
