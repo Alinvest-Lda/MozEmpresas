@@ -433,3 +433,9 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - Uma tentativa M-Pesa falhada pode ser reemitida; um callback tardio da referência anterior podia procurar a ordem já reassociada à nova tentativa e devolver erro de ordem inexistente.
 - F411 faz os callbacks de confirmação/falha ignorarem explicitamente pagamentos já marcados como `FAILED`, sem alterar a cobrança actual, sem liquidar uma tentativa substituída e sem produzir notificações duplicadas.
 - Commit `770ffb62745708c9720d2c590b6cd2f315155e46`. Migração não aplicada.
+
+### B6 — lote operacional: expiração efectiva de transferências bancárias pendentes (27/11/2026)
+- A janela de 24 horas já bloqueava a confirmação e permitia reemissão, mas os registos financeiros/documentos podiam permanecer indefinidamente em `PENDING/ISSUED` quando não havia reemissão imediata.
+- F412 acrescenta reconciliação automática: marca como `FAILED` as transferências bancárias pendentes cujo `expires_at` terminou, anula documentos ainda `ISSUED`, liberta a ordem de pagamento de parceiro para reemissão e notifica os membros activos da conta. O job de 15 minutos passa a executar a reconciliação conjunta de campanhas e pagamentos.
+- As áreas administrativa e do parceiro distinguem a expiração bancária de uma falha M-Pesa genérica.
+- Commits `2e214d38cd5effe8dcd4c4321e6e77ab383772ac`, `6f1a2a9371683c6a14b455837a255750cd5e99cb`, `b55b83f1d9ec712405a5ada117d371a2806d1299` e `ec2bba6ccfcadb10fab93221a80e697a789ccb94`. Migração e job não aplicados/confirmados em ambiente.
