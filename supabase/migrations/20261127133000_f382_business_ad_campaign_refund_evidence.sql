@@ -64,7 +64,12 @@ begin
   update public.business_promotions set status='CANCELLED',updated_at=now() where id=v_promotion.id;
   insert into public.business_promotion_cancellations(promotion_id,business_id,payment_method,credits_refunded,reason,actor_user_id,external_refund_reference)
   values(v_promotion.id,v_promotion.business_id,coalesce(v_promotion.payment_method,'MPESA'),v_refund,v_reason,v_actor,v_external_reference);
-  return jsonb_build_object('promotion_id',v_promotion.id,'status','CANCELLED','already_processed',false,'credits_refunded',v_refund);
+  return jsonb_build_object(
+    'promotion_id',v_promotion.id,'status','CANCELLED','already_processed',false,
+    'credits_refunded',v_refund,
+    'refund_type',case when v_promotion.payment_method='CREDITS' then 'CREDIT_REFUND' when v_promotion.payment_method='MPESA' and v_promotion.paid_at is not null then 'MPESA_REFUND' else 'NO_REFUND' end,
+    'external_reference',v_external_reference
+  );
 end;
 $$;
 revoke all on function public.admin_cancel_business_promotion(uuid,text) from public,anon,authenticated;
