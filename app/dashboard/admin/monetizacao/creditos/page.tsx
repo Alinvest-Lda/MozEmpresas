@@ -131,6 +131,7 @@ export default async function AdminCreditsPage({ searchParams }: { searchParams:
           forbidden: "Não tem autorização para executar esta operação.",
           invalid: "Os dados da decisão são inválidos.",
           failed: "Não foi possível concluir a decisão. Verifique o estado do pedido e tente novamente.",
+          "bank-transfer-expired": "O prazo de 24 horas para confirmar a transferência bancária deste pedido terminou. A aprovação está bloqueada.",
         } as Record<string, string>)[params.decision] || "Operação concluída."}</div> : null}
 
         <section className={styles.metrics} aria-label="Indicadores de créditos">
