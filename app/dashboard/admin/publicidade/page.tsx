@@ -134,7 +134,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     eventsByAdvertisingEntity.set(event.entity_id, list);
   }
   const campaigns = [
-    ...allBusiness.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.budget) + " " + (c.currency || ""), table: "business", allowed: promotionStatuses }); }),
+    ...allBusiness.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Empresarial", originKey: "empresarial", position: c.placement || "Não definido", advertiser: businessName(c), price: c.price_mzn == null && c.budget == null ? "Sem orçamento indicado" : fmtNumber(c.price_mzn ?? c.budget) + " MZN", table: "business", allowed: promotionStatuses }); }),
     ...allPartner.map((raw) => { const c=withDeliveryMetrics(raw); return ({ ...c, origin: "Parceiro", originKey: "parceiro", position: c.surface || "Não definido", advertiser: "Conta parceira", price: c.price_mzn == null ? "Preço não indicado" : fmtNumber(c.price_mzn) + " MZN", table: "partner", allowed: partnerNextStatuses(c.status, c.payment?.[0]?.status, c.ends_at) }); }),
   ].sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
   const matchesQuery = (value: string) => !q || value.toLocaleLowerCase("pt").includes(q.toLocaleLowerCase("pt"));
@@ -234,6 +234,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
             <button className="btn" type="submit">Cancelar campanha e estornar</button>
             <small>Créditos são devolvidos automaticamente. Para M-Pesa ou transferência bancária, execute o reembolso externamente e registe a referência antes de cancelar.</small>
           </form> : null}
+          {c.table === "business" && c.payment_method === "MPESA" && c.paid_at ? <div className={styles.destination}><strong>Liquidação M-Pesa confirmada</strong><p>{fmtNumber(c.price_mzn)} MZN · Referência {c.payment_reference||"não indicada"} · {fmtDate(c.paid_at)}</p></div> : null}
           {c.table === "business" && c.status === "PENDING" && c.payment_method === "MPESA" && !c.paid_at ? <form action={confirmBusinessPromotionMpesaPayment} className={styles.moderationForm}>
             <input type="hidden" name="id" value={c.id}/>
             <label><span>Referência M-Pesa confirmada</span><Input name="payment_reference" minLength={4} maxLength={160} required placeholder="Referência da transacção recebida"/></label>
