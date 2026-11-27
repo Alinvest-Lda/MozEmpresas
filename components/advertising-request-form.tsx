@@ -3,17 +3,26 @@
 import { useState } from "react";
 
 const surfaces=[["HOME","Página inicial"],["DIRECTORY","Directório"],["MARKETPLACE","Produtos e serviços"],["OPPORTUNITIES","Oportunidades"]] as const;
-const slots=[["HERO","Hero / topo"],["BILLBOARD","Billboard / faixa"],["FEATURED","Destaque contextual"],["INFEED","Dentro do conteúdo"]] as const;
+const slotsBySurface:Record<(typeof surfaces)[number][0],readonly (readonly [string,string])[]>={
+ HOME:[["HERO","Hero / topo"],["BILLBOARD","Billboard / faixa"],["EXCLUSIVE","Exclusivo"]],
+ DIRECTORY:[["BILLBOARD","Billboard / faixa"],["FEATURED","Destaque contextual"],["INFEED","Dentro do conteúdo"],["CONTEXT","Contextual"]],
+ MARKETPLACE:[["BILLBOARD","Billboard / faixa"],["FEATURED","Destaque contextual"],["EXCLUSIVE","Exclusivo"],["INFEED","Dentro do conteúdo"]],
+ OPPORTUNITIES:[["BILLBOARD","Billboard / faixa"],["FEATURED","Destaque contextual"],["INFEED","Dentro do conteúdo"]],
+};
 const creative=[["BANNER","Banner"],["NATIVE","Conteúdo nativo"],["CARD","Cartão patrocinado"],["TEXT","Texto patrocinado"]] as const;
 
 export function AdvertisingRequestForm(){
  const[sent,setSent]=useState(false),[pending,setPending]=useState(false),[error,setError]=useState("");
+ const[selectedSurface,setSelectedSurface]=useState<(typeof surfaces)[number][0]>("DIRECTORY");
+ const[selectedSlot,setSelectedSlot]=useState("BILLBOARD");
+ const availableSlots=slotsBySurface[selectedSurface];
+ const safeSlot=availableSlots.some(([value])=>value===selectedSlot)?selectedSlot:availableSlots[0][0];
  async function submit(formData:FormData){if(pending||sent)return;setPending(true);setError("");try{const response=await fetch("/api/publicidade",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.fromEntries(formData.entries()))});const result=await response.json().catch(()=>null);if(!response.ok){setError(result?.error||"Não foi possível enviar o pedido.");return}setSent(true)}catch{setError("Não foi possível contactar o servidor. Verifique a ligação e tente novamente.")}finally{setPending(false)}}
  if(sent)return <div className="notice"><strong>Pedido recebido.</strong><br/>A equipa comercial confirmará o espaço, formato, período e materiais antes da activação.</div>;
  return <form action={submit} className="auth-card" style={{maxWidth:760}}>
   <div className="toolbar"><div className="field" style={{flex:1}}><label>Empresa</label><input name="companyName" required/></div><div className="field" style={{flex:1}}><label>Pessoa de contacto</label><input name="contactName" required/></div></div>
   <div className="toolbar"><div className="field" style={{flex:1}}><label>Email</label><input name="email" type="email" required/></div><div className="field" style={{flex:1}}><label>Telefone</label><input name="phone"/></div></div>
-  <div className="toolbar"><div className="field" style={{flex:1}}><label>Onde quer aparecer?</label><select name="surface" defaultValue="DIRECTORY">{surfaces.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></div><div className="field" style={{flex:1}}><label>Posição</label><select name="slot" defaultValue="BILLBOARD">{slots.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></div></div>
+  <div className="toolbar"><div className="field" style={{flex:1}}><label>Onde quer aparecer?</label><select name="surface" value={selectedSurface} onChange={e=>{const next=e.target.value as (typeof surfaces)[number][0];setSelectedSurface(next);setSelectedSlot(slotsBySurface[next][0][0]);}}>{surfaces.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></div><div className="field" style={{flex:1}}><label>Posição</label><select name="slot" value={safeSlot} onChange={e=>setSelectedSlot(e.target.value)}>{availableSlots.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></div></div>
   <div className="toolbar"><div className="field" style={{flex:1}}><label>Formato</label><select name="creativeType" defaultValue="BANNER">{creative.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></div><div className="field" style={{flex:1}}><label>Nome da campanha</label><input name="packageName" required placeholder="Ex.: Campanha institucional"/></div></div>
   <div className="toolbar"><div className="field" style={{flex:1}}><label>Modelo de distribuição</label><select name="audienceMode" defaultValue="CONTEXTUAL"><option value="CONTEXTUAL">Contextual</option><option value="INTEREST">Por interesses</option><option value="BROAD">Alcance amplo</option></select></div><div className="field" style={{flex:1}}><label>Frequência máxima / visitante</label><input name="frequencyCap" type="number" min="1" max="20" defaultValue="2"/></div></div>
   <div className="toolbar"><div className="field" style={{flex:1}}><label>Início</label><input name="startsAt" type="date"/></div><div className="field" style={{flex:1}}><label>Fim</label><input name="endsAt" type="date"/></div></div>
