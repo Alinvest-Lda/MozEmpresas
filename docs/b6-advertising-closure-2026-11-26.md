@@ -115,6 +115,7 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 ### B6-T08 — expiry reconciliation
 - Added service-role-only, idempotent database function `reconcile_advertising_campaign_expiry_f376()`. It transitions expired active business promotions to `EXPIRED` and expired active/paused partner campaigns to `ENDED`, setting explicit system reasons so the existing immutable lifecycle event triggers capture automated expiry. Commit `c33c0bf`.
 - Added conditional scheduling migration `f379`: when `pg_cron` is available it registers one idempotently named job to reconcile expiry every 15 minutes; when the extension is unavailable it emits a notice and leaves the external scheduler requirement explicit. Commit `10ff422`. The migration has not been applied, so scheduler availability and job registration are not yet confirmed.
+- Follow-up dependency trace found an existing partner-only expiry cron (`F369`) that also inserted status events manually despite an existing status trigger. Migration `f380` replaces that legacy function with a wrapper around the unified reconciler and consolidates both schedules into one 15-minute job, avoiding parallel expiry jobs and duplicate event writes. Commit `7bdf7ae`. This consolidation is source-only until migrations are applied.
 
 ### Remaining B6 Definition of Done gates
 1. T01: reconcile every active product with a real public surface/slot and verify catalogue invariants in the deployed database.
