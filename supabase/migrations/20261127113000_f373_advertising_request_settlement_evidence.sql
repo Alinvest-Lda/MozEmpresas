@@ -79,6 +79,7 @@ begin
       else false end;
     if not v_allowed then raise exception 'INVALID_ADVERTISING_STATUS_TRANSITION' using errcode='23514'; end if;
 
+    perform set_config('app.advertising_admin_reason',v_reason,true);
     if p_new_status='PAID' then
       if p_payment_method not in ('MPESA','BANK_TRANSFER','CASH','OTHER')
         or v_reference is null or length(v_reference)<4 or length(v_reference)>160
@@ -95,7 +96,6 @@ begin
       end if;
       update public.advertising_requests set status=p_new_status,updated_at=now() where id=p_entity_id;
     end if;
-    perform set_config('app.advertising_admin_reason',v_reason,true);
   else
     raise exception 'INVALID_ADVERTISING_ENTITY_TYPE' using errcode='22023';
   end if;
