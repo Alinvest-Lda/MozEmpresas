@@ -428,3 +428,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - O formulário calculava localmente o acréscimo por segmentação, enquanto a biblioteca de validação mantinha uma segunda implementação apenas para MZN. A lógica TypeScript foi consolidada na biblioteca partilhada para preço em MZN e créditos, com a mesma regra de acréscimo e tratamento explícito de preço ausente.
 - O checkout passou a reutilizar os dois cálculos e os testes de regressão cobrem a equivalência do factor de segmentação e a indisponibilidade de preço ausente. Os testes não foram executados.
 - Commits `155b5195834f776458f72058f2b7719b9037f559`, `00f997fc367bcd5039ee4cc0cd1553d26b0ea58b`, `5d7e9700a8dcb9ef097bdbae5635df970d6eda17`, `9f70d1860df319a7a423e2f0225a6a632a64c46c` e `94c86133f76d143ab1a06eae2c719ff0335d4289`.
+
+### B6 — lote funcional: callbacks M-Pesa atrasados após reemissão (27/11/2026)
+- Uma tentativa M-Pesa falhada pode ser reemitida; um callback tardio da referência anterior podia procurar a ordem já reassociada à nova tentativa e devolver erro de ordem inexistente.
+- F411 faz os callbacks de confirmação/falha ignorarem explicitamente pagamentos já marcados como `FAILED`, sem alterar a cobrança actual, sem liquidar uma tentativa substituída e sem produzir notificações duplicadas.
+- Commit `770ffb62745708c9720d2c590b6cd2f315155e46`. Migração não aplicada.
