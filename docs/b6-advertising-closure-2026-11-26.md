@@ -106,6 +106,12 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 - The Super Admin campaign table no longer relies on denormalized `impressions_count` / `clicks_count` columns for its per-campaign totals. A bounded, role-checked RPC aggregates the authoritative `ad_delivery_events` rows for the campaigns on the current page, with a supporting index. If the RPC fails, campaign metrics and CTR are suppressed rather than shown as zero. Commits `0c53dfc`, `8c2d0cb`, `b867b3b`, `4c27770`.
 - This aligns the admin campaign view with the event pipeline, but does not yet establish commercial conversion attribution or ROI.
 
+### B6-T05 / T06 — atomic eligibility and public inventory coverage
+- The event persistence function now locks and re-reads the campaign row in the same transaction that records the impression/click. It rejects events if the campaign is no longer active, is outside its start/end window, or does not exactly match the submitted surface and slot. This closes the pause/expiry race between the API eligibility read and event insert. Commit `bbc1368`.
+- The event API maps a campaign that became ineligible during that transaction to HTTP 409, rather than reporting a generic server error. Commit `3aad633`.
+- Homepage `HOME/HERO` and `HOME/BILLBOARD` inventory now use the canonical delivery component; directory featured placements no longer query and render active promotions directly, and instead use the canonical decision/event path. Marketplace now exposes `BILLBOARD` and `FEATURED` alongside its existing `EXCLUSIVE` slot; Opportunities exposes `FEATURED` alongside its existing `BILLBOARD`. Commits `e563bc9`, `4c1f655`, `bcd1eb5`, `fa5825e`, `7ca44cc`.
+- Remaining placement gap: partner `INFEED` and `CONTEXT` formats still need genuine feed/category insertion points; the legacy `home_ad_slots` card source also needs a dependency trace before replacement.
+
 ### B6-T08 — expiry reconciliation
 - Added service-role-only, idempotent database function `reconcile_advertising_campaign_expiry_f376()`. It transitions expired active business promotions to `EXPIRED` and expired active/paused partner campaigns to `ENDED`, setting explicit system reasons so the existing immutable lifecycle event triggers capture automated expiry. Commit `c33c0bf`.
 - The function is not scheduled or executed. A production scheduler/cron invocation and deployed operational verification remain open.
