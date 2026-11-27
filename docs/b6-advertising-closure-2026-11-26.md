@@ -337,3 +337,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 ### B6 — lote de segurança das rotinas de pagamento de publicidade (27/11/2026)
 - A revisão das funções privilegiadas de emissão, confirmação e falha de pagamentos de campanhas identificou que ainda mantinham o caminho de resolução herdado `public, pg_temp`. F401 define explicitamente `pg_catalog, public, pg_temp` nas três RPCs, sem alterar a lógica de liquidação ou as permissões de execução.
 - Commit `6063f6fb2dd9aa7fad7ef2386c40e654b3b84437`. Migração não aplicada.
+
+### B6 — lote operacional: robustez da instalação do agendador de expiração (27/11/2026)
+- A criação do agendador dependia de instalar `pg_cron` num schema explicitamente indicado como `pg_catalog`, embora a rotina utilize o schema próprio `cron`. A criação passou a respeitar o schema predefinido da extensão e F402 garante a instalação quando disponível, remove a duplicação do job pelo nome e agenda uma única reconciliação a cada 15 minutos.
+- Quando `pg_cron` ou `cron.job` não estão disponíveis, a migração deixa um aviso explícito de que é necessário um agendador externo; não declara o processo activo.
+- Commits `30270f35f9cc87660a2f92891c163545110ec164` e `3d552febdbddb46b809de8428289f7d4455a2a44`. A existência efectiva da extensão/job só poderá ser confirmada após aplicação e verificação no ambiente.
