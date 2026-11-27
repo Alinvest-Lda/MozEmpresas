@@ -451,3 +451,5 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - O formulário de parceiro interpretava `datetime-local` no fuso configurado no dispositivo, enquanto o servidor e a operação comercial usam Maputo (UTC+02:00). Em dispositivos configurados noutro fuso, o período podia ser deslocado.
 - Os formulários empresarial e de parceiro passam a usar uma função comum para apresentar o mínimo no fuso de Maputo; o formulário de parceiro também converte explicitamente os valores locais para ISO no mesmo fuso antes de chamar a RPC.
 - Commits `653d3d2a043a027a9cbcecb3c3bdecf50303089d`, `cedc4ffd90fc23160c36ed8db7df65e13201982a`, `c250df21f49d32b80b97ee62dd4da40da79d738d` e `28b036d1c4d463f19208169b696db28e0801f600`. Testes actualizados, não executados.
+
+- O mínimo de data/hora dos campos foi arredondado para o minuto seguinte quando o relógio contém segundos, evitando que a própria opção mínima já esteja no passado no momento da submissão. Commits `8563658894c906162b86dda8542a323a07134e3c` e `496584f3c45b35f732c858353e9b85e9606afbb3`.
