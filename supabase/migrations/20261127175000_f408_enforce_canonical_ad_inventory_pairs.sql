@@ -5,6 +5,7 @@ alter table public.ad_products
   add constraint ad_products_paid_surface_slot_pair_f408
   check (
     not active or access_type<>'PAID' or
+    (placement is not null and slot is not null and (
     (placement='HOME' and slot in ('HERO','BILLBOARD','EXCLUSIVE')) or
     (placement='DIRECTORY' and slot in ('BILLBOARD','FEATURED','INFEED','CONTEXT')) or
     (placement='MARKETPLACE' and slot in ('BILLBOARD','FEATURED','EXCLUSIVE','INFEED')) or
@@ -17,6 +18,7 @@ alter table public.partner_ad_products
   add constraint partner_ad_products_public_surface_slot_pair_f408
   check (
     not active or surface='PARTNER_INTELLIGENCE' or
+    (surface is not null and slot is not null and (
     (surface='HOME' and slot in ('HERO','BILLBOARD','EXCLUSIVE')) or
     (surface='DIRECTORY' and slot in ('BILLBOARD','FEATURED','INFEED','CONTEXT')) or
     (surface='MARKETPLACE' and slot in ('BILLBOARD','FEATURED','EXCLUSIVE','INFEED')) or
@@ -35,7 +37,7 @@ begin
     into v_definition;
   v_old:=$old$  if not found then raise exception 'PRODUCT_UNAVAILABLE'; end if;$old$;
   v_new:=$new$  if not found then raise exception 'PRODUCT_UNAVAILABLE'; end if;
-  if not (
+  if v_product.placement is null or v_product.slot is null or not (
     (v_product.placement='HOME' and v_product.slot in ('HERO','BILLBOARD','EXCLUSIVE')) or
     (v_product.placement='DIRECTORY' and v_product.slot in ('BILLBOARD','FEATURED','INFEED','CONTEXT')) or
     (v_product.placement='MARKETPLACE' and v_product.slot in ('BILLBOARD','FEATURED','EXCLUSIVE','INFEED')) or
@@ -66,7 +68,7 @@ begin
    or v_slot is null or v_slot not in ('HERO','BILLBOARD','EXCLUSIVE','FEATURED','INFEED','CONTEXT') then
   raise exception 'AD_PRODUCT_NOT_DELIVERABLE';
  end if;$old$;
-  v_new:=$new$ if not (
+  v_new:=$new$ if v_surface is null or v_slot is null or not (
    (v_surface='HOME' and v_slot in ('HERO','BILLBOARD','EXCLUSIVE')) or
    (v_surface='DIRECTORY' and v_slot in ('BILLBOARD','FEATURED','INFEED','CONTEXT')) or
    (v_surface='MARKETPLACE' and v_slot in ('BILLBOARD','FEATURED','EXCLUSIVE','INFEED')) or
