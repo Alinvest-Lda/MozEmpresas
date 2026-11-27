@@ -21,36 +21,17 @@ export async function changeOpportunityStatus(formData: FormData) {
   if (!isValidOpportunityId(id) || !["PUBLISHED", "CLOSED", "ARCHIVED", "DRAFT"].includes(status)) {
     redirect("/parceiro/oportunidades?error=status");
   }
-  const { supabase, accountId } = await partnerOwner();
-
-  const { data: currentOpportunity, error: readError } = await supabase
-    .from("opportunities")
-    .select("id,status,opens_at,closes_at")
-    .eq("id", id)
-    .eq("partner_account_id", accountId)
-    .maybeSingle();
-  if (readError || !currentOpportunity || !canTransitionOpportunity(currentOpportunity.status, status)) {
-    redirect("/parceiro/oportunidades?error=status");
-  }
-  if (status === "PUBLISHED") {
-    const now = Date.now();
-    const opensAt = currentOpportunity.opens_at ? new Date(currentOpportunity.opens_at).getTime() : null;
-    const closesAt = currentOpportunity.closes_at ? new Date(currentOpportunity.closes_at).getTime() : null;
-    if ((opensAt !== null && (!Number.isFinite(opensAt) || opensAt > now)) ||
-      (closesAt !== null && (!Number.isFinite(closesAt) || closesAt <= now))) {
+  const { supabase } = await partnerOwner();
+  const { error } = await supabase.rpc("partner_change_opportunity_status_f372", {
+    p_opportunity_id: id,
+    p_new_status: status,
+  });
+  if (error) {
+    if (error.message?.includes("OPPORTUNITY_OUTSIDE_PUBLICATION_WINDOW")) {
       redirect("/parceiro/oportunidades?error=deadline");
     }
+    redirect("/parceiro/oportunidades?error=status");
   }
-
-  const { data: updatedOpportunity, error } = await supabase
-    .from("opportunities")
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("partner_account_id", accountId)
-    .eq("status", currentOpportunity.status)
-    .select("id")
-    .maybeSingle();
-  if (error || !updatedOpportunity) redirect("/parceiro/oportunidades?error=status");
   revalidatePath("/parceiro/oportunidades");
   revalidatePath("/oportunidades");
   redirect("/parceiro/oportunidades?updated=1");
@@ -62,34 +43,12 @@ export async function changeOpportunityApplicationStatus(formData: FormData) {
   if (!isValidOpportunityId(id) || !["UNDER_REVIEW", "SHORTLISTED", "ACCEPTED", "REJECTED"].includes(status)) {
     redirect("/parceiro/oportunidades/candidaturas?error=status");
   }
-  const { supabase, accountId } = await partnerOwner();
-
-  const { data: application, error: applicationError } = await supabase
-    .from("opportunity_applications")
-    .select("id,opportunity_id,status")
-    .eq("id", id)
-    .maybeSingle();
-  if (applicationError || !application || !canTransitionPartnerApplication(application.status, status)) {
-    redirect("/parceiro/oportunidades/candidaturas?error=status");
-  }
-
-  const { data: ownedOpportunity, error: ownershipError } = await supabase
-    .from("opportunities")
-    .select("id")
-    .eq("id", application.opportunity_id)
-    .eq("partner_account_id", accountId)
-    .maybeSingle();
-  if (ownershipError || !ownedOpportunity) redirect("/parceiro/oportunidades/candidaturas?error=status");
-
-  const { data: updatedApplication, error } = await supabase
-    .from("opportunity_applications")
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("opportunity_id", application.opportunity_id)
-    .eq("status", application.status)
-    .select("id")
-    .maybeSingle();
-  if (error || !updatedApplication) redirect("/parceiro/oportunidades/candidaturas?error=status");
+  const { supabase } = await partnerOwner();
+  const { error } = await supabase.rpc("partner_change_application_status_f372", {
+    p_application_id: id,
+    p_new_status: status,
+  });
+  if (error) redirect("/parceiro/oportunidades/candidaturas?error=status");
   revalidatePath("/parceiro/oportunidades/candidaturas");
   redirect("/parceiro/oportunidades/candidaturas?updated=1");
 }
