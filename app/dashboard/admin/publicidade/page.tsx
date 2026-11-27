@@ -18,7 +18,7 @@ type Campaign = {
 type AdvertisingRequest = {
   id: string; company_name: string; contact_name: string; email: string; phone: string | null;
   placement: string | null; package_name: string | null; status: string | null;
-  starts_at: string | null; ends_at: string | null; created_at: string | null;
+  starts_at: string | null; ends_at: string | null; created_at: string | null; bank_transfer_expires_at?: string | null;
   payment_method?: string | null; payment_reference?: string | null; paid_amount_mzn?: number | null; paid_at?: string | null;
 };
 const promotionStatuses = ["PENDING", "ACTIVE", "PAUSED", "EXPIRED"];
@@ -50,7 +50,7 @@ const requestNextStatuses:Record<string,string[]> = {
   NEW:["CONTACTED","CANCELLED"],
   CONTACTED:["PROPOSAL","CANCELLED"],
   PROPOSAL:["AWAITING_PAYMENT","REJECTED","CANCELLED"],
-  AWAITING_PAYMENT:["PAID","REJECTED","CANCELLED"],
+  AWAITING_PAYMENT:["AWAITING_PAYMENT","PAID","REJECTED","CANCELLED"],
   PAID:["APPROVED"],
 };
 const statusLabels: Record<string, string> = {
@@ -114,7 +114,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     ["title","headline","target_url","surface"]
   ).range(pageStart,pageStart+99);
   const requestQueueQuery=applyQueueFilters(
-    supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at,payment_method,payment_reference,paid_amount_mzn,paid_at",{count:"exact"}).order("created_at",{ascending:false}),
+    supabase.from("advertising_requests").select("id,company_name,contact_name,email,phone,placement,package_name,status,starts_at,ends_at,created_at,bank_transfer_expires_at,payment_method,payment_reference,paid_amount_mzn,paid_at",{count:"exact"}).order("created_at",{ascending:false}),
     ["company_name","contact_name","email","phone","package_name","placement"]
   ).range(pageStart,pageStart+99);
 
@@ -317,17 +317,17 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
         </article>)}
         {filteredRequests.map((r) => <article className={styles.campaignCard} key={"request-" + r.id}>
           <div className={styles.campaignTop}><div className={styles.campaignMain}><span className={styles.campaignKicker}>Pedido de publicidade · {r.placement || "Posição não indicada"}</span><h3>{r.company_name}</h3><p>{r.contact_name} · {r.email}{r.phone ? " · " + r.phone : ""}</p></div><span className={styles.status}>{label(r.status)}</span></div>
-          <div className={styles.campaignMeta}><span><small>Pacote</small><strong>{r.package_name || "Não indicado"}</strong></span><span><small>Início solicitado</small><strong>{fmtDate(r.starts_at)}</strong></span><span><small>Fim solicitado</small><strong>{fmtDate(r.ends_at)}</strong></span><span><small>Recebido</small><strong>{fmtDate(r.created_at)}</strong></span>{r.paid_at?<span><small>Liquidação registada</small><strong>{fmtDate(r.paid_at)} · {fmtNumber(r.paid_amount_mzn)} MZN</strong></span>:null}</div>
+          <div className={styles.campaignMeta}><span><small>Pacote</small><strong>{r.package_name || "Não indicado"}</strong></span><span><small>Início solicitado</small><strong>{fmtDate(r.starts_at)}</strong></span><span><small>Fim solicitado</small><strong>{fmtDate(r.ends_at)}</strong></span><span><small>Recebido</small><strong>{fmtDate(r.created_at)}</strong></span>{r.paid_at?<span><small>Liquidação registada</small><strong>{fmtDate(r.paid_at)} · {fmtNumber(r.paid_amount_mzn)} MZN</strong></span>:null}{r.status==="AWAITING_PAYMENT"&&r.bank_transfer_expires_at?<span><small>Prazo transferência bancária</small><strong>{new Date(r.bank_transfer_expires_at).toLocaleString("pt-MZ")}{new Date(r.bank_transfer_expires_at).getTime()<=now.getTime()?" · Expirado":""}</strong></span>:null}</div>
           {r.payment_reference?<p className={styles.destination}>Pagamento: {r.payment_method||"—"} · Referência {r.payment_reference}</p>:null}
           <form action={updateAdvertisingRequest} className={styles.moderationForm}>
             <input type="hidden" name="id" value={r.id}/>
-            <label><span>Estado comercial</span><Select name="status" defaultValue={r.status ?? "NEW"}>{[r.status ?? "NEW",...(requestNextStatuses[r.status ?? "NEW"] ?? [])].map(s=><option key={s} value={s}>{label(s)}</option>)}</Select></label>
+            <label><span>Estado comercial</span><Select name="status" defaultValue={r.status ?? "NEW"}>{[r.status ?? "NEW",...(requestNextStatuses[r.status ?? "NEW"] ?? [])].map(s=><option key={s} value={s}>{s==="AWAITING_PAYMENT"&&s===(r.status??"NEW")?"Renovar prazo de pagamento (24h)":label(s)}</option>)}</Select></label>
             <label><span>Forma de pagamento (obrigatória para marcar Pago)</span><Select name="payment_method" defaultValue={r.payment_method||"MPESA"}><option value="MPESA">M-Pesa</option><option value="BANK_TRANSFER">Transferência bancária</option><option value="CASH">Numerário</option><option value="OTHER">Outro meio</option></Select></label>
             <label><span>Referência do pagamento (mín. 4 caracteres)</span><Input name="payment_reference" minLength={4} maxLength={160} defaultValue={r.payment_reference||""} placeholder="Referência comprovativa"/></label>
             <label><span>Valor liquidado (MZN)</span><Input name="paid_amount_mzn" type="number" min={0.01} step="0.01" defaultValue={r.paid_amount_mzn??""} placeholder="Valor efectivamente recebido"/></label>
             <label><span>Justificação obrigatória</span><Input name="reason" minLength={8} maxLength={500} required placeholder="Motivo da decisão (mín. 8 caracteres)"/></label>
-            <button className="btn primary" type="submit">Actualizar pedido</button>
-            <small>O estado Pago exige referência, valor e meio de pagamento. Depois de Pago, só é permitida a aprovação; não se apaga a evidência de liquidação.</small>
+            <button className="btn primary" type="submit">{r.status==="AWAITING_PAYMENT"?"Actualizar / renovar prazo":"Actualizar pedido"}</button>
+            <small>O estado Pago exige referência, valor e meio de pagamento. Ao renovar “Aguarda pagamento”, o prazo de transferência bancária reinicia por 24 horas. Depois de Pago, só é permitida a aprovação; não se apaga a evidência de liquidação.</small>
           </form>
           <details className={styles.history}><summary>Histórico de decisões · {(eventsByAdvertisingEntity.get(r.id) ?? []).length}</summary>{(eventsByAdvertisingEntity.get(r.id) ?? []).map((event:any)=><p key={event.id}>{event.old_status} → {event.new_status} · {fmtDate(event.created_at)}<br/>Justificação: {event.action_reason}</p>)}</details>
         </article>)}
