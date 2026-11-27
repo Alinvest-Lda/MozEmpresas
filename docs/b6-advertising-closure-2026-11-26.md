@@ -89,6 +89,8 @@ B6 is now initiated with the above grounded inventory and 10-task closure struct
 ### B6-T04 — operational queue and decision controls
 - Both public advertising API endpoints now stream-limit request bodies to 16 KiB before JSON parsing, including chunked requests; decision and event payloads still undergo strict schema validation.
 - The public advertising proposal intake also now streams a 16 KiB body limit before JSON parsing, rejects invalid date windows (end must be after start when both are supplied), and caps budget/CPM inputs to avoid pathological values. Commit `a31085b`.
+- Corrective queue-search decision: removed the 100-name business lookup from campaign filtering because it could produce incomplete filtered totals for advertisers beyond that sample. Search now stays on fields available directly in the queue; company-name search remains intentionally unsupported until it can be implemented without truncation. Commit `c326da5.
+
  Commits `d4e6c2a`, `17e0286`, `2326724`, `5fcefa5`, `e0c4527`.
 - Partner campaign moderation and lifecycle changes now notify active members of the partner account for approval, rejection, activation, pause and termination, including the reason captured by the admin action. Migration `f390`, commit `fde5995`.
 
