@@ -11,7 +11,7 @@ create or replace function public.admin_cancel_business_promotion(p_promotion_id
 returns jsonb
 language plpgsql
 security definer
-set search_path=public,pg_temp
+set search_path=pg_catalog,public,pg_temp
 as $$
 declare
   v_actor uuid := auth.uid();
