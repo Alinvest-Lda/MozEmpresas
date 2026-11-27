@@ -1,4 +1,4 @@
-"use client";import{useState}from"react";import type{FormEvent}from"react";import{useRouter}from"next/navigation";import{createClient}from"@/lib/supabase/client";function F({error,ok}:{error:string;ok:string}){return <>{error&&<p className="partner-form-error">{error}</p>}{ok&&<p className="partner-form-ok">{ok}</p>}</>}export function PartnerAdRequestForm({productId,productName,productPrice,durationDays,creditPrice,creditPaymentAvailable}:{productId:string;productName:string;productPrice:number|null;durationDays:number|null;creditPrice:number|null;creditPaymentAvailable:boolean}){
+"use client";import{useState}from"react";import type{FormEvent}from"react";import{useRouter}from"next/navigation";import{maputoDateTimeLocalInputValue,parseMaputoLocalDateTime}from"@/lib/advertising/purchase-validation";import{createClient}from"@/lib/supabase/client";function F({error,ok}:{error:string;ok:string}){return <>{error&&<p className="partner-form-error">{error}</p>}{ok&&<p className="partner-form-ok">{ok}</p>}</>}export function PartnerAdRequestForm({productId,productName,productPrice,durationDays,creditPrice,creditPaymentAvailable}:{productId:string;productName:string;productPrice:number|null;durationDays:number|null;creditPrice:number|null;creditPaymentAvailable:boolean}){
  const r=useRouter();const[p,setP]=useState(false),[e,setE]=useState(""),[ok,setOk]=useState("");
  async function sub(x:FormEvent<HTMLFormElement>){
   x.preventDefault();if(p)return;setP(true);setE("");setOk("");
@@ -6,9 +6,10 @@
   try{
    const f=new FormData(form);
    const startRaw=String(f.get("starts_at")||""),endRaw=String(f.get("ends_at")||"");
-   const start=new Date(startRaw),end=new Date(endRaw);
-   if(!startRaw||!endRaw||Number.isNaN(start.getTime())||Number.isNaN(end.getTime())||start.getTime()<Date.now()||end<=start){
-    setE("Indique um período válido, com início futuro e fim posterior ao início.");return;
+   const startIso=parseMaputoLocalDateTime(startRaw),endIso=parseMaputoLocalDateTime(endRaw);
+   const start=startIso?new Date(startIso):new Date(NaN),end=endIso?new Date(endIso):new Date(NaN);
+   if(!startRaw||!endRaw||!startIso||!endIso||Number.isNaN(start.getTime())||Number.isNaN(end.getTime())||start.getTime()<Date.now()||end<=start){
+    setE("Indique um período válido no fuso de Moçambique, com início futuro e fim posterior ao início.");return;
    }
    if(durationDays&&((end.getTime()-start.getTime())/86400000)>durationDays+0.02){
     setE("Este formato permite no máximo "+durationDays+" dias.");return;
@@ -21,7 +22,7 @@
     setE("Cada critério deve usar um tipo válido (SECTOR, PROVINCE, CITY, COMPANY_SIZE, INTENT ou CATEGORY) e um valor até 160 caracteres.");
     return;
    }
-   const{error}=await createClient().rpc("partner_ad_request",{p_product_id:productId,p_title:String(f.get("title")||""),p_objective:String(f.get("objective")||""),p_starts_at:start.toISOString(),p_ends_at:end.toISOString(),p_targets:ts,p_payment_method:String(f.get("payment_method")||"MPESA")});
+   const{error}=await createClient().rpc("partner_ad_request",{p_product_id:productId,p_title:String(f.get("title")||""),p_objective:String(f.get("objective")||""),p_starts_at:startIso,p_ends_at:endIso,p_targets:ts,p_payment_method:String(f.get("payment_method")||"MPESA")});
    if(error){
     const messages:Record<string,string>={FORBIDDEN:"O seu papel não permite solicitar campanhas.",INVALID_CAMPAIGN_DATES:"O período indicado não é válido.",CAMPAIGN_EXCEEDS_PRODUCT_DURATION:"O período excede a duração deste formato.",AD_SPACE_UNAVAILABLE:"Este espaço já tem uma campanha sobreposta. Escolha outro período.",PARTNER_ACCOUNT_REQUIRED:"Não foi possível identificar a conta Parceiro.",PARTNER_CREDIT_WALLET_NOT_LINKED:"A conta Parceiro ainda não está associada a uma empresa com carteira de créditos.",PARTNER_AD_CREDIT_PRICE_NOT_CONFIGURED:"Este formato ainda não tem preço em créditos configurado.",PARTNER_CREDIT_WALLET_NOT_FOUND:"Não foi encontrada uma carteira empresarial associada.",INSUFFICIENT_CREDITS:"O saldo de créditos disponível é insuficiente.",INVALID_PAYMENT_METHOD:"Seleccione M-Pesa ou créditos."};
     setE(messages[error.message]||"Não foi possível enviar o pedido. Verifique os dados, confirme se o formato ainda está disponível ou contacte o suporte.");
@@ -35,7 +36,7 @@
   <label>Forma de pagamento<select name="payment_method" defaultValue="MPESA"><option value="MPESA">M-Pesa · {productPrice!=null?Number(productPrice).toLocaleString("pt-MZ")+" MZN":"preço sob proposta"}</option>{creditPaymentAvailable&&creditPrice!=null?<option value="CREDITS">{creditPrice.toLocaleString("pt-MZ")} créditos · débito após aprovação</option>:null}</select>{!creditPaymentAvailable?<small>Pagamento por créditos indisponível nesta conta/formato; pode continuar por M-Pesa.</small>:null}</label>
   <label>Nome da campanha<input name="title" required maxLength={160} placeholder="Ex.: Campanha institucional Q4"/></label>
   <label>Objectivo<textarea name="objective" required rows={3} placeholder="O que pretende alcançar?"/></label>
-  <div className="partner-form-two"><label>Início<input name="starts_at" type="datetime-local" required min={new Date(Date.now()+60000-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16)}/></label><label>Fim<input name="ends_at" type="datetime-local" required/></label></div>
+  <div className="partner-form-two"><label>Início<input name="starts_at" type="datetime-local" required min={maputoDateTimeLocalInputValue()}/></label><label>Fim<input name="ends_at" type="datetime-local" required/></label></div>
   <label>Alvos opcionais<small>Uma linha por alvo: PROVINCE:Maputo ou CATEGORY:Tecnologia</small><textarea name="targets" rows={3}/></label>
   <F error={e} ok={ok}/><button className="btn primary" disabled={p}>{p?"A enviar…":"Enviar pedido para análise →"}</button>
  </form>;
