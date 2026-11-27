@@ -465,3 +465,8 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - Os mapas de transição de pedidos, campanhas empresariais e campanhas de parceiros estavam duplicados entre o painel e as Server Actions, com risco de divergência entre opções apresentadas e transições aceites.
 - Foi criada uma máquina de estado partilhada para pedidos, campanhas empresariais e campanhas de parceiros; o painel e as Server Actions reutilizam agora os mesmos mapas e regras de elegibilidade. Foi acrescentada cobertura para pagamento, janela contratada e renovação do prazo.
 - Commits `a45a9a8e6dd5c1df6d05f7bce89c8146ed7d3f4c`, `915bc4c24cc33d782cbc4633bb71fba8d4927c5e`, `2b7c037b16b5829737c0504d3fb19ef9258540df` e `6b9ea6d86d807d0c9a8106def024f2f983ff6915`. Testes não executados.
+
+### B6 — melhoria operacional: pesquisa de campanhas pelo nome da empresa anunciante (27/11/2026)
+- A pesquisa administrativa de campanhas empresariais cobria título, headline, URL e posição, mas não o nome da empresa associada, tornando a localização de campanhas por anunciante incompleta.
+- O painel passou a resolver primeiro os IDs de empresas correspondentes ao termo e a incluir esses IDs na mesma expressão OR da fila empresarial, preservando filtros, contagem e paginação. Se a pesquisa de empresas falhar ou ultrapassar o limite de resolução, o painel assinala os dados como incompletos em vez de apresentar um resultado como definitivo.
+- Commit `056672bd04681da22c1c4b93f4e8dd0de2f256ed`.
