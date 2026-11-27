@@ -75,7 +75,8 @@ The partner workspace navigation is shared from `partnerNavGroups` across deskto
 
 ### B7-T07 additional refinement — contextual document grouping
 - Partner document list now groups files by their parent context (organization, engagement, contract, campaign, service request, or generic) instead of presenting one undifferentiated list. Document size/date rendering now handles malformed metadata safely, and download buttons expose pending state to assistive technology. Commit `ee2cf4c`.
-- Still not closed: download audit evidence, actual parent-context values/schema consistency, version history UX, expiry/revocation visibility and validation.
+- T07 download accountability: successful issuance of a 120-second signed document URL now writes an immutable `SIGNED_URL_ISSUED` event to `partner_document_access_audit`, scoped to the partner account, document and authenticated actor. The signed URL is not stored. If the audit insert fails, the URL is not returned. Application change commit `e7744f7`; migration `20261127100000_f371_partner_document_download_audit.sql` commit `e0fd9f5`. This remains source-level implementation until the migration is applied and the access path is operationally verified.
+- Still not closed: complete version-history presentation, expiry/revocation visibility, audit review surface/retention policy, migration application and validation.
 
 ### Additional B7-T02 implementation refinements
 - Repaired three literal escaped-newline sequences in the partner opportunity editor source that interrupted normal TypeScript/JSX source layout. Commit `15fb25b`.
