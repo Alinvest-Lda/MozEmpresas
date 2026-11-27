@@ -2,7 +2,7 @@
 do $schedule$
 begin
   if exists(select 1 from pg_available_extensions where name='pg_cron') then
-    execute 'create extension if not exists pg_cron with schema pg_catalog';
+    execute 'create extension if not exists pg_cron';
     if exists(select 1 from pg_namespace where nspname='cron') then
       execute 'select cron.unschedule(jobid) from cron.job where jobname = ''mozempresas-advertising-expiry''';
       execute $job$
