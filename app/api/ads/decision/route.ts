@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { withApiObservability } from "@/lib/observability/api";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
+import { isValidAdSurfaceSlot } from "@/lib/advertising/event-validation";
 import { createAdminClient, enforceRateLimit, getPostgresClient, rateLimitResponse } from "@/lib/security/rate-limit";
 
 const schema=z.object({
@@ -41,6 +42,7 @@ export const POST = withApiObservability("api.ads_decision", async (request: Req
 
  try{
   const payload=parsed.data;
+  if(!isValidAdSurfaceSlot(payload.surface,payload.slot)) return NextResponse.json({error:"A posição publicitária não existe nesta superfície."},{status:400});
   const supabase=await createClient();
   const {data:{user},error:userError}=await supabase.auth.getUser();
   if(userError) return NextResponse.json({error:"Não foi possível validar a sessão."},{status:500});
