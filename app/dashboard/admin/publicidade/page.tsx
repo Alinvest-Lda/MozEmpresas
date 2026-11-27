@@ -57,7 +57,7 @@ type SearchParams = Promise<{ q?: string; origem?: string; estado?: string; praz
 export default async function AdminAdvertisingPage({ searchParams }: { searchParams?: SearchParams }) {
   const params = searchParams ? await searchParams : {};
   // Sanitise structural PostgREST OR/ILIKE characters so user search cannot widen the query.
-  const q = (params.q ?? "").replace(/[%,()_*\\\\]/g, " ").replace(/[\\u0000-\\u001f\\u007f]/g, " ").replace(/\\s+/g, " ").trim().slice(0, 100);
+  const q = (params.q ?? "").replace(/[%,()_*\\]/g, " ").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 100);
   const origin = ["empresarial", "parceiro", "pedido"].includes(params.origem ?? "") ? params.origem ?? "" : "";
   const status = [...new Set([...promotionStatuses, ...partnerStatuses, ...requestStatuses])].includes((params.estado ?? "").toUpperCase()) ? (params.estado ?? "").toUpperCase() : "";
   const deadline = ["expirado", "proximo", "futuro", "sem-prazo"].includes(params.prazo ?? "") ? params.prazo ?? "" : "";
