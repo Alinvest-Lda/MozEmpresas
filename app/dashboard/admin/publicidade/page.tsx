@@ -110,7 +110,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     ["title","headline","target_url","placement"]
   ).range(pageStart,pageStart+99);
   const partnerQueueQuery=applyQueueFilters(
-    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn)",{count:"exact"}).order("created_at",{ascending:false}),
+    supabase.from("partner_ad_campaigns").select("id,title,headline,status,starts_at,ends_at,created_at,surface,slot,price_mzn,payment_method_preference,impressions_count,clicks_count,target_url,payment:partner_ad_payment_orders(id,status,payment_method,payment_reference,amount_mzn,confirmed_at)",{count:"exact"}).order("created_at",{ascending:false}),
     ["title","headline","target_url","surface"]
   ).range(pageStart,pageStart+99);
   const requestQueueQuery=applyQueueFilters(
