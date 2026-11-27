@@ -81,7 +81,8 @@ export const POST = withApiObservability("api.ads_event", async (request: Reques
         "select public.record_ad_delivery_event_f370($1,$2,$3,$4,$5,$6,$7,$8::jsonb) as recorded",
         [event.visitor_key, event.user_id, event.campaign_source, event.campaign_id, event.surface, event.slot, event.event_type, JSON.stringify(event.context)],
       ) as { recorded: boolean }[];
-      recorded = Boolean(rows[0]?.recorded);
+      if(!rows.length || typeof rows[0]?.recorded!=="boolean") return NextResponse.json({error:"Não foi possível confirmar o registo do evento."},{status:500});
+      recorded = rows[0].recorded;
     } else if (admin) {
       const { data, error } = await admin.rpc("record_ad_delivery_event_f370", {
         p_visitor_key: event.visitor_key,
@@ -102,7 +103,8 @@ export const POST = withApiObservability("api.ads_event", async (request: Reques
         }
         return NextResponse.json({ error: "Não foi possível registar o evento." }, { status: 500 });
       }
-      recorded = data === true;
+      if(typeof data!=="boolean") return NextResponse.json({error:"Não foi possível confirmar o registo do evento."},{status:500});
+      recorded = data;
     } else {
       return rateLimitResponse(true);
     }
