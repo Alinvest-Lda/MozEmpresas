@@ -106,8 +106,10 @@ export const POST = withApiObservability("api.advertising_request", async (reque
       }
     }
 
-    const targetInterests = (payload.targetInterests || "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
-    const targetLocations = (payload.targetLocations || "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
+    const normalizeAudienceList=(raw:string|undefined,maxItems=20)=>{const items=[...new Set((raw||"").split(",").map(v=>v.trim().toLowerCase()).filter(Boolean))];return items.length<=maxItems&&items.every(v=>v.length<=120)?items:null;};
+    const targetInterests=normalizeAudienceList(payload.targetInterests);
+    const targetLocations=normalizeAudienceList(payload.targetLocations);
+    if(targetInterests===null||targetLocations===null) return NextResponse.json({error:"Limite de segmentação excedido. Use até 20 critérios por campo."},{status:400});
     const values = [
       businessId, payload.companyName, payload.contactName, payload.email, payload.phone || null,
       payload.surface, payload.slot, payload.creativeType, payload.packageName, payload.headline || null,
