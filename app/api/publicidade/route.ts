@@ -50,6 +50,13 @@ const schema = z.object({
       ctx.addIssue({code:z.ZodIssueCode.custom,message:"Data inválida.",path:[field]});
     }
   }
+  const now=Date.now();
+  if(payload.startsAt && new Date(payload.startsAt).getTime()<now){
+    ctx.addIssue({code:z.ZodIssueCode.custom,message:"A data de início não pode estar no passado.",path:["startsAt"]});
+  }
+  if(payload.endsAt && new Date(payload.endsAt).getTime()<=now){
+    ctx.addIssue({code:z.ZodIssueCode.custom,message:"A data de fim deve ser futura.",path:["endsAt"]});
+  }
 });
 
 export const POST = withApiObservability("api.advertising_request", async (request: Request) => {
