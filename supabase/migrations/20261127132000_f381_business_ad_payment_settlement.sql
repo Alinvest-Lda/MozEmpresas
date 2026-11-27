@@ -186,6 +186,18 @@ begin
   set payment_reference=v_reference,paid_at=now(),updated_at=now()
   where id=v_promotion.id;
 
+  insert into public.notifications(user_id,type,title,body,resource_type,resource_id)
+  select recipients.user_id,'ADVERTISING','Pagamento de publicidade confirmado',
+    'O pagamento M-Pesa da campanha "'||left(v_promotion.title,120)||'" foi confirmado. A campanha aguarda activação administrativa.',
+    'BUSINESS_PROMOTION',v_promotion.id
+  from (
+    select b.owner_id as user_id from public.businesses b where b.id=v_promotion.business_id
+    union
+    select bm.user_id from public.business_members bm
+    where bm.business_id=v_promotion.business_id and bm.role in ('owner','admin','operator')
+  ) recipients
+  where recipients.user_id is not null;
+
   return jsonb_build_object('promotion_id',v_promotion.id,'payment_reference',v_reference,
     'amount_mzn',p_amount_mzn,'paid_at',now(),'status','PENDING');
 end;
