@@ -12,6 +12,8 @@ declare
  v_duration integer;
  v_capacity integer;
  v_credit_price integer;
+ v_surface text;
+ v_slot text;
  v_existing integer;
  v_business uuid;
  v_balance integer;
