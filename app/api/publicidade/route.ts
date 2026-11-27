@@ -93,14 +93,17 @@ export const POST = withApiObservability("api.advertising_request", async (reque
 
     let businessId: string | null = null;
     if (user) {
-      const { data: business } = await supabase
-        .from("businesses")
-        .select("id")
-        .eq("owner_id", user.id)
-        .ilike("name", payload.companyName)
-        .limit(1)
-        .maybeSingle();
-      businessId = business?.id ?? null;
+      const [{data:ownedBusinesses,error:ownedError},{data:businessMemberships,error:membershipError}]=await Promise.all([
+        supabase.from("businesses").select("id").eq("owner_id",user.id).ilike("name",payload.companyName).is("archived_at",null).limit(2),
+        supabase.from("business_members").select("business_id").eq("user_id",user.id).in("role",["owner","admin","operator"]),
+      ]);
+      if(!ownedError&&!membershipError){
+        const candidateIds=[...new Set([...(ownedBusinesses??[]).map(b=>b.id),...(businessMemberships??[]).map(m=>m.business_id)])];
+        if(candidateIds.length){
+          const {data:matches,error:matchError}=await supabase.from("businesses").select("id").in("id",candidateIds).ilike("name",payload.companyName).is("archived_at",null).limit(2);
+          if(!matchError&&matches?.length===1) businessId=matches[0].id;
+        }
+      }
     }
 
     const targetInterests = (payload.targetInterests || "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
