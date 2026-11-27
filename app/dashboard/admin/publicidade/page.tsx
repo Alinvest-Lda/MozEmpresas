@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { Input, Select } from "@/components/ui";
-import { moderateBusinessPromotion, moderatePartnerCampaign, updateAdvertisingRequest, cancelBusinessPromotion, confirmBusinessPromotionMpesaPayment, issuePartnerAdPayment, cancelPartnerAdCampaign } from "@/lib/admin/advertising-actions";
+import { moderateBusinessPromotion, moderatePartnerCampaign, updateAdvertisingRequest, cancelBusinessPromotion, confirmBusinessPromotionMpesaPayment, issuePartnerAdPayment, cancelPartnerAdCampaign, confirmPartnerAdBankTransfer } from "@/lib/admin/advertising-actions";
 import { updatePartnerAdCreditPrice } from "@/lib/admin/partner-billing-actions";
 import styles from "./publicidade.module.css";
 
@@ -13,7 +13,7 @@ type Campaign = {
   price_mzn?: number | null; budget?: number | null; currency?: string | null; payment_method?: string | null; payment_reference?: string | null; paid_at?: string | null;
   impressions_count?: number | null; clicks_count?: number | null; target_url?: string | null;
   business?: { name?: string | null } | { name?: string | null }[] | null;
-  payment?: { id: string; status: string; payment_method: string; payment_reference: string; amount_mzn: number; confirmed_at?: string | null; campaign_id?: string; created_at?: string }[] | null;
+  payment?: { id: string; status: string; payment_method: string; payment_reference: string; amount_mzn: number; confirmed_at?: string | null; campaign_id?: string; created_at?: string; financial_payment_id?: string | null; expires_at?: string | null }[] | null;
 };
 type AdvertisingRequest = {
   id: string; company_name: string; contact_name: string; email: string; phone: string | null;
@@ -138,13 +138,20 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const partnerCampaignIds = partnerCampaignRows.map(campaign=>campaign.id);
   const {data:partnerPaymentOrders,error:partnerPaymentOrdersError}=partnerCampaignIds.length
     ? await supabase.from("partner_ad_payment_orders")
-      .select("id,campaign_id,status,payment_method,payment_reference,amount_mzn,confirmed_at,created_at")
+      .select("id,campaign_id,status,payment_method,payment_reference,amount_mzn,confirmed_at,created_at,financial_payment_id")
       .in("campaign_id",partnerCampaignIds)
       .order("created_at",{ascending:false})
     : {data:[],error:null};
-  const latestPartnerPaymentByCampaign=new Map<string,NonNullable<typeof partnerPaymentOrders>[number]>();
+  const financialPaymentIds=[...new Set((partnerPaymentOrders??[]).map(payment=>payment.financial_payment_id).filter((id):id is string=>Boolean(id)))];
+  const {data:partnerFinancialPayments,error:partnerFinancialPaymentsError}=financialPaymentIds.length
+    ? await supabase.from("financial_payments").select("id,expires_at").in("id",financialPaymentIds)
+    : {data:[],error:null};
+  const financialPaymentById=new Map((partnerFinancialPayments??[]).map(payment=>[payment.id,payment]));
+  const latestPartnerPaymentByCampaign=new Map<string,NonNullable<typeof partnerPaymentOrders>[number] & {expires_at:string|null}>();
   for(const payment of partnerPaymentOrders??[]){
-    if(!latestPartnerPaymentByCampaign.has(payment.campaign_id)) latestPartnerPaymentByCampaign.set(payment.campaign_id,payment);
+    if(!latestPartnerPaymentByCampaign.has(payment.campaign_id)){
+      latestPartnerPaymentByCampaign.set(payment.campaign_id,{...payment,expires_at:payment.financial_payment_id?financialPaymentById.get(payment.financial_payment_id)?.expires_at??null:null});
+    }
   }
   const allPartner = partnerCampaignRows.map(campaign=>({
     ...campaign,
@@ -215,7 +222,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const totalImpressions = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions_count ?? 0), 0);
   const totalClicks = businessError || partnerError || deliveryMetricsError ? null : filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks_count ?? 0), 0);
   const pendingCount = allBusiness.filter(c => c.status === "PENDING").length + allPartner.filter(c => ["REQUESTED", "PENDING", "UNDER_REVIEW"].includes(c.status ?? "")).length + allRequests.filter(r => ["NEW", "CONTACTED", "PROPOSAL", "AWAITING_PAYMENT"].includes(r.status ?? "")).length;
-  const error = businessError || partnerError || requestError || partnerPaymentOrdersError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError || deliveryMetricsError;
+  const error = businessError || partnerError || requestError || partnerPaymentOrdersError || partnerFinancialPaymentsError || impressionEventsError || clickEventsError || partnerProductsError || partnerStatusEventsError || advertisingAdminEventsError || deliveryMetricsError;
 
   return <main className={`dashboard-main admin-workspace ${styles.page}`}><div className={`dashboard-content ${styles.content}`}>
     <header className={styles.hero}>
