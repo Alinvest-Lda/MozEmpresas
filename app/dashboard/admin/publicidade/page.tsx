@@ -168,7 +168,6 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
     if (nextPage > 0) query.set("page", String(nextPage));
     return "/dashboard/admin/publicidade" + (query.size ? "?" + query.toString() : "");
   };
-  const partnerCampaignIds = allPartner.map((campaign) => campaign.id);
   const administrativeAdIds = [...allBusiness.map((campaign) => campaign.id), ...allRequests.map((request) => request.id)];
   const { data: deliveryMetrics, error: deliveryMetricsError } = await supabase.rpc("admin_advertising_delivery_metrics_f377", {
     p_business_campaign_ids: allBusiness.map((campaign) => campaign.id),
