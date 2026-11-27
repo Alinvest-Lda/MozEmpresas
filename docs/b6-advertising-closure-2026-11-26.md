@@ -270,3 +270,8 @@ Este lote fecha em conjunto três pontos de consistência entre formulário, API
 - A reconciliação entre interface, Server Action e RPC identificou que o painel oferecia `CANCELLED` para pedidos já marcados como `PAID`, embora a função transaccional F392 só permita a transição `PAID → APPROVED` para preservar a evidência de liquidação.
 - Alinhada a matriz de transições da Server Action com a regra transaccional e limitada a lista de opções do painel aos estados permitidos para o estado actual do pedido. O operador deixa de poder seleccionar transições que o servidor necessariamente rejeitaria. Commits `239240b1e47ea395185fd776fae167b67e007483` e `f0125e9436cd3f7e29e18d92e801bb17865b04e5`.
 - Fonte apenas; não foram executados testes, builds ou operações de base de dados.
+
+### B6 — lote funcional: elegibilidade visível de cancelamento e reembolso bancário (27/11/2026)
+- O painel apresentava a acção de cancelamento de campanhas de parceiros pagas por transferência bancária antes de terminar a janela de activação de 24 horas. A base de dados recusava correctamente a operação, mas a interface permitia iniciar uma acção inelegível.
+- A elegibilidade passou a considerar o método de pagamento, estado da campanha e hora de confirmação: para campanhas `APPROVED` pagas por transferência bancária, o formulário de cancelamento só aparece depois de decorridas 24 horas; para os restantes casos mantém-se a regra de campanha futura ou aprovada já expirada. Commit `d8e0cc579408f9993f3acb79b88c3fe6362b0cee`.
+- Código-fonte actualizado; sem testes, build, execução SQL ou aplicação de migrações.
