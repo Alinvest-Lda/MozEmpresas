@@ -366,3 +366,7 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - F405 cria `bank_transfer_expires_at`, inicia o prazo quando o pedido entra em `AWAITING_PAYMENT`, permite ao Super Admin renovar esse estado para emitir novo prazo de 24 horas e valida a confirmação contra esse prazo específico. Os pedidos já em `AWAITING_PAYMENT` recebem uma janela inicial de 24 horas na migração.
 - A fila administrativa passa a apresentar a data/hora limite e o estado expirado, e oferece explicitamente a renovação do prazo.
 - Commits `a8926c6cc1f47850673a7acd894b6f32f4715fab`, `53a81977e0cd479a7c1bbff2c60d1efda99f13ae` e `1fb2ad421f28ee9443ad93912a861c482ba0165c`. Migração não aplicada.
+
+### B6 — correcção do intervalo inclusivo de datas dos pedidos públicos (27/11/2026)
+- O formulário comercial recolhe datas de calendário sem hora. A normalização anterior interpretava início e fim à meia-noite, tornando impossível um pedido de um único dia e terminando campanhas no início da data final.
+- O início passa a ser meia-noite de Maputo e o fim passa a ser o último milissegundo da data final em Maputo. A mesma interpretação é usada na validação e no valor persistido. Commit `f2a6f1b0ae3aa14fe4408e895da3448d53ac8cca`.
