@@ -27,7 +27,7 @@ export const POST = withApiObservability("api.ads_event", async (request: Reques
     let campaign: CampaignEligibility | null = null;
 
     if (sql) {
-      const surfaceSelect = payload.campaignSource === "partner" ? "surface" : "null::text as surface";
+      const surfaceSelect = payload.campaignSource === "partner" ? "surface" : "placement as surface";
       const rows = await sql.unsafe(
         `select status, starts_at, ends_at, slot, ${surfaceSelect} from public.${table} where id = $1 limit 1`,
         [payload.campaignId],
