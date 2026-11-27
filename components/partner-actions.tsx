@@ -11,7 +11,7 @@
    if(!startRaw||!endRaw||!startIso||!endIso||Number.isNaN(start.getTime())||Number.isNaN(end.getTime())||start.getTime()<Date.now()||end<=start){
     setE("Indique um período válido no fuso de Moçambique, com início futuro e fim posterior ao início.");return;
    }
-   if(durationDays&&((end.getTime()-start.getTime())/86400000)>durationDays+0.02){
+   if(durationDays&&((end.getTime()-start.getTime())/86400000)>durationDays){
     setE("Este formato permite no máximo "+durationDays+" dias.");return;
    }
    const targetLines=String(f.get("targets")||"").split("\n").map(v=>v.trim()).filter(Boolean);
