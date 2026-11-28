@@ -43,3 +43,15 @@ GitHub milestone CRUD is not exposed in the connected GitHub actions. To preserv
 - Do not create synthetic financial data in production.
 - Only change `.vercel-release` after explicit release approval and successful milestone gates.
 - After release, verify deployment READY, key public routes, authenticated critical flows, logs, and database scheduler health.
+
+
+## Configuration result and platform limitation (28/11/2026)
+
+- Vercel project ID: `prj_z8qIkzuCaHY2olVGS6qXIyj4adrY`.
+- Ignored Build Step was set to `git diff --quiet HEAD^ HEAD -- .vercel-release`.
+- This means source/test/docs commits without a change to the release marker are ignored by Vercel; GitHub Actions continues to run normally. A marker-changing commit proceeds to Vercel build.
+- Four deployments associated with the first non-release commits were returned as `CANCELED`, consistent with the ignore-build behavior. No production release was requested or promoted during this intervention.
+- Attempted to use Vercel Deployment Policies to restrict production deployment sources to CLI/API, but Vercel returned `403 pro_plan_required`; this control is unavailable on the current Hobby plan. No repeated attempt was made.
+- Native GitHub Milestone CRUD is not exposed by the connected GitHub actions. Therefore tracking records were created as issues #6–#10 with acceptance criteria; they are not represented as native GitHub Milestone objects.
+- CI run #2884 passed all four jobs, including the new `advertising-bank-transfer-lifecycle` isolated PostgreSQL job: https://github.com/Alinvest-Lda/MozEmpresas/actions/runs/46150304743.
+- New test files: `scripts/ci/setup-ad-payment-expiry.sql` and `scripts/ci/verify-ad-payment-expiry.sql`. The test exercises actual F392/F412 migrations, 24-hour expiry assignment, pending vs unexpired behavior, linked order failure, issued document voiding, idempotent repeat reconciliation, and clearing expiry after settlement.
