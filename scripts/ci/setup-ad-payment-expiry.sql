@@ -89,3 +89,39 @@ begin
  update public.advertising_requests set status=p_new_status,updated_at=now() where id=p_entity_id;
 end;
 $function$;
+
+
+-- Minimal but executable pre-F395 payment-issuance RPC. The real F395/F396 migrations
+-- rewrite this function definition exactly as they do in production.
+drop function if exists public.admin_issue_partner_ad_payment(uuid,text,numeric);
+create function public.admin_issue_partner_ad_payment(
+ p_campaign_id uuid,p_payment_method text,p_amount_mzn numeric
+) returns jsonb language plpgsql security definer set search_path=public,pg_temp as $function$
+declare
+ v_order record;
+ v_account record;
+ v_user uuid:=auth.uid();
+ v_amount numeric:=p_amount_mzn;
+ v_payment uuid;
+begin
+ if v_user is null or not public.is_super_admin() then raise exception 'FORBIDDEN'; end if;
+ if p_payment_method not in ('MPESA','CREDITS') then raise exception 'INVALID_PAYMENT_METHOD'; end if;
+ select account_id as id into v_account from public.partner_ad_campaigns where id=p_campaign_id;
+ select * into v_order from public.partner_ad_payment_orders where campaign_id=p_campaign_id for update;
+ if found and v_order.status not in ('FAILED') then raise exception 'CAMPAIGN_PAYMENT_ALREADY_ISSUED'; end if;
+ insert into public.financial_payments(
+  business_id,partner_account_id,user_id,amount_mzn,currency,method,status,reference,document_id,confirmed_at
+ ) values (
+  null,v_account.id,v_user,v_amount,'MZN',p_payment_method,'PENDING','CI-ISSUE:'||p_campaign_id::text,null,null
+ ) returning id into v_payment;
+ if v_order.id is null then
+  insert into public.partner_ad_payment_orders(id,campaign_id,payment_method,status,financial_payment_id,amount_mzn,financial_document_id,account_id)
+  values(gen_random_uuid(),p_campaign_id,p_payment_method,'PENDING',v_payment,v_amount,null,v_account.id);
+ else
+  update public.partner_ad_payment_orders set payment_method=p_payment_method,status='PENDING',
+   financial_payment_id=v_payment,amount_mzn=v_amount,financial_document_id=null,updated_at=now()
+  where id=v_order.id;
+ end if;
+ return jsonb_build_object('campaign_id',p_campaign_id,'payment_id',v_payment,'status','PENDING');
+end;
+$function$;
