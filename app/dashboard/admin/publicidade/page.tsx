@@ -86,7 +86,7 @@ export default async function AdminAdvertisingPage({ searchParams }: { searchPar
   const businessNameFilters=(businessNameSearch.data??[]).map(row=>row.id).filter(Boolean);
   const partnerAccountSearch=businessNameFilters.length
     ? await supabase.from("partner_accounts").select("id",{count:"exact"}).in("business_id",businessNameFilters).limit(200)
-    : {data:[],error:null};
+    : {data:[],count:null,error:null};
   const partnerAccountSearchError=Boolean(partnerAccountSearch.error)||(partnerAccountSearch.count??0)>200;
   const partnerAccountFilters=(partnerAccountSearch.data??[]).map(row=>row.id).filter(Boolean);
   const applyQueueFilters=(initial:any,fields:string[],extraOrFilters:string[]=[] )=>{

@@ -22,8 +22,8 @@ export default async function PartnerOpportunityApplicationsPage({searchParams}:
  const businessIds=[...new Set((applications||[]).map((x:any)=>x.applicant_business_id).filter(Boolean))];
  const applicantIds=[...new Set((applications||[]).map((x:any)=>x.applicant_user_id).filter(Boolean))];
  const [{data:businesses,error:businessesError},{data:profiles,error:profilesError}]=await Promise.all([
-  businessIds.length?supabase.from("businesses").select("id,name").in("id",businessIds):Promise.resolve({data:[]}),
-  applicantIds.length?supabase.from("profiles").select("id,full_name").in("id",applicantIds):Promise.resolve({data:[]})
+  businessIds.length?supabase.from("businesses").select("id,name").in("id",businessIds):Promise.resolve({data:[],error:null}),
+  applicantIds.length?supabase.from("profiles").select("id,full_name").in("id",applicantIds):Promise.resolve({data:[],error:null})
  ]);
  const oppById=new Map((opportunities||[]).map((x:any)=>[x.id,x]));
  const businessById=new Map((businesses||[]).map((x:any)=>[x.id,x.name]));

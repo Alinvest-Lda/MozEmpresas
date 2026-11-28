@@ -8,6 +8,14 @@ import { revokePartnerPortalAccess } from "@/lib/admin/partner-access-actions";
 
 export const dynamic = "force-dynamic";
 
+const accessMessages: Record<string, string> = {
+  invalid: "Pedido de revogação inválido. Reveja os dados.",
+  forbidden: "Apenas o Super Admin pode revogar acessos de parceiros.",
+  "not-found": "O acesso indicado já não existe ou não está disponível.",
+  revoke: "Não foi possível revogar o acesso. Tente novamente.",
+  revoked: "Acesso revogado com sucesso. O utilizador deixou de poder entrar no portal.",
+};
+
 const errorMessages: Record<string, string> = {
   validation: "O email ou o prazo indicado não é válido. Reveja os campos e tente novamente.",
   forbidden: "Apenas o Super Admin pode criar acessos dedicados de parceiros.",
