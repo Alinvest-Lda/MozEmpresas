@@ -1,4 +1,5 @@
 -- Isolated fixture for the F3.76 advertising campaign expiry reconciliation.
+create role service_role;
 create table public.business_promotions (
   id uuid primary key,
   status text not null,
