@@ -204,5 +204,13 @@ begin
     or not has_function_privilege('authenticated','public.admin_confirm_partner_bank_transfer(uuid,text)','EXECUTE') then
    raise exception 'F398 bank transfer confirmation grants are too broad or missing';
  end if;
+ if has_function_privilege('anon','public.confirm_mpesa_partner_ad_payment(text,text,numeric,text)','EXECUTE')
+    or not has_function_privilege('authenticated','public.confirm_mpesa_partner_ad_payment(text,text,numeric,text)','EXECUTE') then
+   raise exception 'F401 M-Pesa confirmation grants are too broad or missing';
+ end if;
+ if has_function_privilege('anon','public.fail_mpesa_partner_ad_payment(text,text,numeric,text)','EXECUTE')
+    or not has_function_privilege('authenticated','public.fail_mpesa_partner_ad_payment(text,text,numeric,text)','EXECUTE') then
+   raise exception 'F401 M-Pesa failure grants are too broad or missing';
+ end if;
 end
 $f401$;
