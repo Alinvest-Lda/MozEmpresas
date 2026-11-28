@@ -26,21 +26,21 @@ begin
     'if p_payment_method not in (''MPESA'',''CREDITS'',''BANK_TRANSFER'')'
   );
 
-  if v_definition !~ 'business_id\\s*,\\s*partner_account_id\\s*,\\s*user_id\\s*,\\s*amount_mzn\\s*,\\s*currency\\s*,\\s*method\\s*,\\s*status\\s*,\\s*reference\\s*,\\s*document_id\\s*,\\s*confirmed_at' then
+  if v_definition !~ 'business_id\s*,\s*partner_account_id\s*,\s*user_id\s*,\s*amount_mzn\s*,\s*currency\s*,\s*method\s*,\s*status\s*,\s*reference\s*,\s*document_id\s*,\s*confirmed_at' then
     raise exception 'F395_FINANCIAL_PAYMENT_COLUMNS_NOT_FOUND';
   end if;
   v_definition:=regexp_replace(
     v_definition,
-    'business_id\\s*,\\s*partner_account_id\\s*,\\s*user_id\\s*,\\s*amount_mzn\\s*,\\s*currency\\s*,\\s*method\\s*,\\s*status\\s*,\\s*reference\\s*,\\s*document_id\\s*,\\s*confirmed_at',
+    'business_id\s*,\s*partner_account_id\s*,\s*user_id\s*,\s*amount_mzn\s*,\s*currency\s*,\s*method\s*,\s*status\s*,\s*reference\s*,\s*document_id\s*,\s*confirmed_at',
     'business_id,partner_account_id,user_id,campaign_id,amount_mzn,currency,method,status,reference,document_id,confirmed_at'
   );
 
-  if v_definition !~ 'null\\s*,\\s*v_account\\.id\\s*,\\s*v_user\\s*,\\s*v_amount\\s*,\\s*''MZN''\\s*,\\s*p_payment_method' then
+  if v_definition !~ 'null\s*,\s*v_account\.id\s*,\s*v_user\s*,\s*v_amount\s*,\s*''MZN''\s*,\s*p_payment_method' then
     raise exception 'F395_FINANCIAL_PAYMENT_VALUES_NOT_FOUND';
   end if;
   v_definition:=regexp_replace(
     v_definition,
-    'null\\s*,\\s*v_account\\.id\\s*,\\s*v_user\\s*,\\s*v_amount\\s*,\\s*''MZN''\\s*,\\s*p_payment_method',
+    'null\s*,\s*v_account\.id\s*,\s*v_user\s*,\s*v_amount\s*,\s*''MZN''\s*,\s*p_payment_method',
     'null,v_account.id,v_user,p_campaign_id,v_amount,''MZN'',p_payment_method'
   );
 
