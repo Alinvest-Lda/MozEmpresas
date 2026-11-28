@@ -9,7 +9,7 @@ create schema if not exists auth;
 create or replace function auth.uid() returns uuid language sql stable as $$
   select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid
 $$;
-create or replace function public.is_super_admin() returns boolean language sql stable as $$ select false $$;
+create or replace function public.is_super_admin() returns boolean language sql stable as $ select auth.uid() is not null $;
 
 create table public.partner_ad_campaigns(
  id uuid primary key, title text not null default 'CI campaign', account_id uuid not null,
