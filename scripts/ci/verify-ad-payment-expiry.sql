@@ -65,9 +65,25 @@ begin
     raise exception 'F412 reconciliation is not idempotent: %',v_result;
   end if;
 
-  update public.financial_payments set status='CONFIRMED' where id=v_live_payment;
+  perform set_config('request.jwt.claim.sub',v_user::text,true);
+  perform public.admin_confirm_partner_bank_transfer(v_live_payment,'CI bank transfer settlement');
+  if (select status from public.financial_payments where id=v_live_payment)<>'CONFIRMED' then
+    raise exception 'F392 bank transfer confirmation did not settle payment';
+  end if;
   if (select expires_at from public.financial_payments where id=v_live_payment) is not null then
     raise exception 'F392 did not clear expiry after settlement';
+  end if;
+  if (select status from public.partner_ad_payment_orders where financial_payment_id=v_live_payment)<>'PAID' then
+    raise exception 'F392 bank transfer confirmation did not settle order';
+  end if;
+  if (select status from public.financial_documents where id=v_live_doc)<>'PAID' then
+    raise exception 'F392 bank transfer confirmation did not settle document';
+  end if;
+  if (select status from public.partner_ad_campaigns where id=v_live_campaign)<>'APPROVED' then
+    raise exception 'F392 bank transfer confirmation did not approve campaign';
+  end if;
+  if not exists(select 1 from public.notifications where resource_id=v_live_campaign and title='Transferência bancária confirmada') then
+    raise exception 'F398 did not notify partner after confirmation';
   end if;
 end
 $test$;
