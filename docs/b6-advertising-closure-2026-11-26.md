@@ -527,7 +527,7 @@ This pass records verification evidence and remaining operational gates. It does
 - Authenticated E2E journeys for business and partner campaign purchase, settlement, moderation, cancellation/recovery and telemetry attribution.
 - Browser-level responsive/accessibility checks on public and authenticated advertising surfaces.
 
-No production migration, ledger repair, RLS change or real-payment action was executed during this pass. The technical CI/deployment gates are green; B6 remains operationally open until the remaining gates are completed in the target environment.
+The initial CI pass did not execute production migrations or real-payment actions. Subsequent production changes and evidence are recorded below. B6 remains operationally open until all remaining gates are completed in the target environment.
 
 
 ### Production database intervention — F376/F379 (28/11/2026)
@@ -540,3 +540,17 @@ The target Supabase project `MozEmpresas` (project ref `zikjvjzbbfzrelbkaaci`) w
 **Runtime verification:** migration history now records both migrations (versions `20261128113911` and `20261128113915`). Cron job `mozempresas-advertising-expiry` is present, active, scheduled `*/15 * * * *`, and executes `select public.reconcile_advertising_campaign_expiry_f376();`. Function privilege checks returned anon=false, authenticated=false, service_role=true. Manual reconciliation invocation completed successfully at `2026-11-28T11:39:30Z`, reporting 0 expired business promotions and 0 ended partner campaigns at that moment. This proves job/function setup and successful reconciliation invocation; it does not prove every advertising/payment journey.
 
 **B6 gate update:** F376/F379 production scheduler gate is now CLOSED. Remaining operational gates: F4.12/unified payment-expiry reconciliation and its scheduler confirmation; production financial/credit/M-Pesa reconciliation and settlement/refund/idempotency; authenticated campaign purchase/settlement/moderation/cancel/recovery and telemetry E2E; and responsive/accessibility browser checks. Do not declare B6 fully closed until these remaining gates have evidence.
+
+
+### Production intervention — F392/F412 (28/11/2026)
+
+- Located F3.92 and F4.12 migrations in the repository. The initial attempt to apply F3.92 failed atomically before any schema change because its refund-reference initialization contained a malformed `nullif(trim(coalesce(...)))` expression. Corrected the migration source in commit `84fc1062d525c70a0fb7c0579966f283d413e615` to `nullif(trim(coalesce(p_external_refund_reference,'')), '')` and successfully reapplied F3.92.
+- Successfully applied F4.12 `reconcile_expired_bank_transfers`, which marks pending bank transfers expired, marks linked partner orders failed, voids payable issued documents, and attempts notification creation. The unified scheduler now runs both F376 advertising expiry and F412 bank-transfer expiry.
+- Migration history confirms F392 (`20261128115402`) and F412 (`20261128115406`). Functions `set_bank_transfer_payment_expiry()`, `admin_confirm_partner_bank_transfer(uuid,text)`, `reconcile_bank_transfer_payment_expiry_f412()` and unified `reconcile_advertising_and_bank_transfer_expiry_f412()` are present.
+- Scheduler verified active: `mozempresas-advertising-expiry`, every 15 minutes, command `select public.reconcile_advertising_and_bank_transfer_expiry_f412();`.
+- Pending bank transfer counts: financial payments 0 (missing expiry 0); pending partner bank-transfer orders 0.
+- Manual unified reconciliation succeeded at `2026-11-28T11:54:19Z`: F376 expired promotions 0 and ended partner campaigns 0; F412 expired payments 0, failed orders 0, voided documents 0, notifications 0. This is an operational invocation, not proof of processing a live payment.
+- Security privileges verified: both F412 reconciliation functions and expiry trigger function are non-executable by anon/authenticated and executable by service_role.
+
+**Closed gates:** F376/F379 and F392/F412 production schema, confirmation window, and unified expiry scheduler setup/verification.
+**Still open:** authenticated admin payment-confirmation tests; controlled CI test for F392/F412 with expired and unexpired synthetic records; bank-transfer issue/reissue/campaign activation/refund E2E; full reconciliation (M-Pesa/credits/documents); telemetry and browser responsive/accessibility review. No synthetic financial data was inserted into production.
