@@ -71,11 +71,12 @@ create table public.advertising_admin_events(
  old_status text, new_status text, action_reason text, created_at timestamptz default now()
 );
 
--- Minimal base RPC with the exact pre-F405 anchors; F405 rewrites this function as it does in production.
-create or replace function public.admin_update_advertising_status(
+-- Minimal base RPC with the exact pre-F405 anchors and production-compatible VOID return type.
+drop function if exists public.admin_update_advertising_status(text,uuid,text,text,text,text,numeric);
+create function public.admin_update_advertising_status(
  p_entity_type text,p_entity_id uuid,p_new_status text,p_reason text,
- p_payment_method text,p_payment_reference text,p_amount_mzn numeric
-) returns jsonb language plpgsql security definer set search_path=public,pg_temp as $function$
+ p_payment_method text,p_payment_reference text,p_paid_amount_mzn numeric
+) returns void language plpgsql security definer set search_path=public,pg_temp as $function$
 declare
  v_old_status text;
  v_reason text:=coalesce(p_reason,'');
@@ -86,6 +87,5 @@ begin
    raise exception 'INVALID_TRANSITION' using errcode='23514';
  end if;
  update public.advertising_requests set status=p_new_status,updated_at=now() where id=p_entity_id;
- return jsonb_build_object('id',p_entity_id,'status',p_new_status);
 end;
 $function$;
