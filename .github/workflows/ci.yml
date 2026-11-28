@@ -170,3 +170,38 @@ jobs:
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/ci/setup-ad-expiry.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261127123000_f376_advertising_campaign_expiry_reconciliation.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/ci/verify-ad-expiry.sql
+
+  advertising-bank-transfer-lifecycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup isolated financial fixtures
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/ci/setup-ad-payment-expiry.sql
+      - name: Apply advertising and bank-transfer expiry migrations
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261127123000_f376_advertising_campaign_expiry_reconciliation.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261127152000_f392_bank_transfer_24h_expiry_and_campaign_refund.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261127179000_f412_reconcile_expired_bank_transfers.sql
+      - name: Verify 24-hour expiry, linked order/document transitions and idempotency
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/ci/verify-ad-payment-expiry.sql
