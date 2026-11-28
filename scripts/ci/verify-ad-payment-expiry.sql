@@ -81,6 +81,7 @@ declare
  v_deadline timestamptz;
  v_failed boolean:=false;
 begin
+ perform set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
  insert into public.advertising_requests(id,status,created_at,payment_method,bank_transfer_expires_at)
  values(v_renew,'AWAITING_PAYMENT',now()-interval '3 days','BANK_TRANSFER',now()+interval '10 hours'),
        (v_expired,'AWAITING_PAYMENT',now()-interval '3 days','BANK_TRANSFER',now()-interval '1 second');
