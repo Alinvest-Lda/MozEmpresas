@@ -177,3 +177,32 @@ begin
  if not v_duplicate_blocked then raise exception 'F396 allowed duplicate live payment issuance'; end if;
 end
 $f396$;
+
+
+-- F401/F395/F398: privileged RPCs retain a fixed search_path and narrow execute grants.
+do $f401$
+declare
+ v_paths text[];
+ v_oid regprocedure;
+begin
+ foreach v_oid in array array[
+  'public.admin_issue_partner_ad_payment(uuid,text,numeric)'::regprocedure,
+  'public.admin_confirm_partner_bank_transfer(uuid,text)'::regprocedure,
+  'public.confirm_mpesa_partner_ad_payment(text,text,numeric,text)'::regprocedure,
+  'public.fail_mpesa_partner_ad_payment(text,text,numeric,text)'::regprocedure
+ ] loop
+  select proconfig into v_paths from pg_proc where oid=v_oid;
+  if v_paths is null or not (array_to_string(v_paths,';') like '%search_path=pg_catalog, public, pg_temp%') then
+    raise exception 'F401 hardened search_path missing for %: %',v_oid,v_paths;
+  end if;
+ end loop;
+ if has_function_privilege('anon','public.admin_issue_partner_ad_payment(uuid,text,numeric)','EXECUTE')
+    or not has_function_privilege('authenticated','public.admin_issue_partner_ad_payment(uuid,text,numeric)','EXECUTE') then
+   raise exception 'F395 partner payment issuance grants are too broad or missing';
+ end if;
+ if has_function_privilege('anon','public.admin_confirm_partner_bank_transfer(uuid,text)','EXECUTE')
+    or not has_function_privilege('authenticated','public.admin_confirm_partner_bank_transfer(uuid,text)','EXECUTE') then
+   raise exception 'F398 bank transfer confirmation grants are too broad or missing';
+ end if;
+end
+$f401$;
