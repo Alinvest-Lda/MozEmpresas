@@ -1,0 +1,52 @@
+-- Isolated fixtures for the real F392/F412 migrations.
+do $$
+begin
+  if not exists(select 1 from pg_roles where rolname='anon') then create role anon; end if;
+  if not exists(select 1 from pg_roles where rolname='authenticated') then create role authenticated; end if;
+  if not exists(select 1 from pg_roles where rolname='service_role') then create role service_role; end if;
+end $$;
+create schema if not exists auth;
+create or replace function auth.uid() returns uuid language sql stable as $$
+  select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid
+$$;
+create or replace function public.is_super_admin() returns boolean language sql stable as $$ select false $$;
+
+create table public.partner_ad_campaigns(
+ id uuid primary key, title text not null default 'CI campaign', account_id uuid not null,
+ price_mzn numeric(14,2) not null default 1000, status text not null default 'REQUESTED',
+ starts_at timestamptz, ends_at timestamptz, updated_at timestamptz default now()
+);
+create table public.business_promotions(
+ id uuid primary key default gen_random_uuid(), status text not null, ends_at timestamptz
+);
+create table public.financial_documents(
+ id uuid primary key, amount_mzn numeric(14,2) not null, status text not null,
+ partner_account_id uuid not null
+);
+create table public.financial_payments(
+ id uuid primary key, business_id uuid, partner_account_id uuid, user_id uuid, campaign_id uuid,
+ amount_mzn numeric(14,2) not null, currency text not null default 'MZN',
+ method text not null, status text not null, reference text, document_id uuid,
+ confirmed_at timestamptz, created_at timestamptz not null default now(),
+ expires_at timestamptz, verified_by uuid, verified_at timestamptz, verification_notes text
+);
+create table public.partner_ad_payment_orders(
+ id uuid primary key, campaign_id uuid not null, payment_method text not null, status text not null,
+ financial_payment_id uuid, amount_mzn numeric(14,2) not null, financial_document_id uuid,
+ account_id uuid not null, business_id uuid, credits_charged numeric(14,2) default 0,
+ confirmed_at timestamptz, updated_at timestamptz default now(),
+ external_refund_reference text, provider_transaction_id text, payment_reference text
+);
+create table public.partner_account_members(account_id uuid,user_id uuid,active boolean default true);
+create table public.notifications(
+ id uuid primary key default gen_random_uuid(), user_id uuid, type text, title text, body text,
+ resource_type text, resource_id uuid
+);
+create table public.platform_members(user_id uuid,active boolean,role text);
+create table public.business_credit_wallets(id uuid primary key,business_id uuid,balance_credits numeric(14,2),updated_at timestamptz);
+create table public.credit_transactions(wallet_id uuid,type text,credits numeric(14,2),amount_mzn numeric(14,2),reference_type text,reference_id uuid,description text);
+create table public.partner_ad_payment_adjustments(
+ id uuid primary key default gen_random_uuid(),order_id uuid,campaign_id uuid,account_id uuid,
+ adjustment_type text,amount_mzn numeric(14,2),credits numeric(14,2),external_refund_reference text,
+ reason text,actor_user_id uuid
+);
