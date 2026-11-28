@@ -106,3 +106,58 @@ begin
  end if;
 end
 $f405$;
+
+
+-- F395/F396: a timed-out campaign payment can be reissued once, but a live attempt blocks duplicates.
+do $f396$
+declare
+ v_campaign uuid:='30000000-0000-4000-8000-000000000003';
+ v_account uuid:='10000000-0000-4000-8000-000000000001';
+ v_old_payment uuid:='50000000-0000-4000-8000-000000000003';
+ v_old_doc uuid:='40000000-0000-4000-8000-000000000003';
+ v_order uuid:='60000000-0000-4000-8000-000000000003';
+ v_new_payment uuid;
+ v_result jsonb;
+ v_duplicate_blocked boolean:=false;
+begin
+ perform set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
+ insert into public.partner_ad_campaigns(id,title,account_id,price_mzn,status)
+ values(v_campaign,'Reissue CI campaign',v_account,1500,'APPROVED');
+ insert into public.financial_documents(id,amount_mzn,status,partner_account_id)
+ values(v_old_doc,1500,'ISSUED',v_account);
+ insert into public.financial_payments(
+  id,partner_account_id,user_id,campaign_id,amount_mzn,currency,method,status,reference,document_id,created_at,expires_at
+ ) values(v_old_payment,v_account,'20000000-0000-4000-8000-000000000001',v_campaign,1500,'MZN',
+  'BANK_TRANSFER','PENDING','CI-OLD-TRANSFER',v_old_doc,now()-interval '26 hours',now()-interval '2 hours');
+ insert into public.partner_ad_payment_orders(
+  id,campaign_id,payment_method,status,financial_payment_id,amount_mzn,financial_document_id,account_id
+ ) values(v_order,v_campaign,'BANK_TRANSFER','PENDING',v_old_payment,1500,v_old_doc,v_account);
+
+ v_result:=public.admin_issue_partner_ad_payment(v_campaign,'BANK_TRANSFER',1500);
+ v_new_payment:=(v_result->>'payment_id')::uuid;
+
+ if (select status from public.financial_payments where id=v_old_payment)<>'FAILED' then
+   raise exception 'F396 did not fail expired previous payment';
+ end if;
+ if (select status from public.financial_documents where id=v_old_doc)<>'VOID' then
+   raise exception 'F396 did not void previous issued document';
+ end if;
+ if (select status from public.partner_ad_payment_orders where id=v_order)<>'PENDING'
+    or (select financial_payment_id from public.partner_ad_payment_orders where id=v_order)<>v_new_payment then
+   raise exception 'F396 did not replace expired order with new pending attempt';
+ end if;
+ if (select campaign_id from public.financial_payments where id=v_new_payment)<>v_campaign then
+   raise exception 'F395 did not attach campaign_id to new financial payment';
+ end if;
+ if (select expires_at from public.financial_payments where id=v_new_payment) < now()+interval '23 hours 59 minutes' then
+   raise exception 'F392 did not start a fresh 24h clock on reissue';
+ end if;
+
+ begin
+   perform public.admin_issue_partner_ad_payment(v_campaign,'BANK_TRANSFER',1500);
+ exception when others then
+   v_duplicate_blocked:=sqlerrm='CAMPAIGN_PAYMENT_ALREADY_ISSUED';
+ end;
+ if not v_duplicate_blocked then raise exception 'F396 allowed duplicate live payment issuance'; end if;
+end
+$f396$;
