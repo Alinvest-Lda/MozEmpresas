@@ -17,7 +17,21 @@ create table public.partner_ad_campaigns(
  starts_at timestamptz, ends_at timestamptz, updated_at timestamptz default now()
 );
 create table public.business_promotions(
- id uuid primary key default gen_random_uuid(), status text not null, ends_at timestamptz
+ id uuid primary key default gen_random_uuid(), status text not null, ends_at timestamptz,
+ payment_method text, credits_charged numeric(14,2), paid_at timestamptz,
+ starts_at timestamptz, updated_at timestamptz default now()
+);
+create table public.advertising_requests(
+ id uuid primary key, status text, created_at timestamptz default now(), payment_method text,
+ payment_reference text, paid_amount_mzn numeric(14,2), paid_at timestamptz,
+ verified_by uuid, updated_at timestamptz default now(), bank_transfer_expires_at timestamptz
+);
+create table public.credit_purchase_requests(
+ id uuid primary key, business_id uuid, package_id uuid, status text, payment_method text,
+ created_at timestamptz default now(), credits numeric(14,2), amount_mzn numeric(14,2), updated_at timestamptz default now()
+);
+create table public.credit_purchase_decision_events(
+ request_id uuid, actor_user_id uuid, previous_status text, new_status text, notes text
 );
 create table public.financial_documents(
  id uuid primary key, amount_mzn numeric(14,2) not null, status text not null,
@@ -43,8 +57,8 @@ create table public.notifications(
  resource_type text, resource_id uuid
 );
 create table public.platform_members(user_id uuid,active boolean,role text);
-create table public.business_credit_wallets(id uuid primary key,business_id uuid,balance_credits numeric(14,2),updated_at timestamptz);
-create table public.credit_transactions(wallet_id uuid,type text,credits numeric(14,2),amount_mzn numeric(14,2),reference_type text,reference_id uuid,description text);
+create table public.business_credit_wallets(id uuid primary key default gen_random_uuid(),business_id uuid unique,balance_credits numeric(14,2),updated_at timestamptz);
+create table public.credit_transactions(wallet_id uuid,package_id uuid,type text,credits numeric(14,2),amount_mzn numeric(14,2),reference_type text,reference_id uuid,description text);
 create table public.partner_ad_payment_adjustments(
  id uuid primary key default gen_random_uuid(),order_id uuid,campaign_id uuid,account_id uuid,
  adjustment_type text,amount_mzn numeric(14,2),credits numeric(14,2),external_refund_reference text,
