@@ -15,7 +15,7 @@ const eligibleCampaign: CampaignEligibility = {
   starts_at: "2026-10-01T00:00:00.000Z",
   ends_at: "2026-11-01T00:00:00.000Z",
   slot: "HERO",
-  surface: null,
+  surface: "HOME",
 };
 
 const now = new Date("2026-10-27T12:00:00.000Z");
