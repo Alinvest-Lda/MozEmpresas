@@ -80,7 +80,7 @@ create or replace function public.admin_cancel_partner_ad_campaign(p_campaign_id
 returns jsonb language plpgsql security definer set search_path=pg_catalog,public,pg_temp as $function$
 declare
  v_actor uuid:=auth.uid(); v_campaign public.partner_ad_campaigns%rowtype; v_order public.partner_ad_payment_orders%rowtype;
- v_wallet public.business_credit_wallets%rowtype; v_adjustment uuid; v_reference text:=nullif(trim(coalesce(p_external_refund_reference,'')));
+ v_wallet public.business_credit_wallets%rowtype; v_adjustment uuid; v_reference text:=nullif(trim(coalesce(p_external_refund_reference,'')), '');
  v_paid_at timestamptz; v_activation_deadline timestamptz;
 begin
  if v_actor is null or not exists(select 1 from public.platform_members pm where pm.user_id=v_actor and pm.active=true and pm.role='super_admin') then raise exception 'FORBIDDEN'; end if;
