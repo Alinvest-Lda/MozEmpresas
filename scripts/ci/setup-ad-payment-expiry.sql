@@ -38,7 +38,7 @@ create table public.financial_documents(
  partner_account_id uuid not null
 );
 create table public.financial_payments(
- id uuid primary key, business_id uuid, partner_account_id uuid, user_id uuid, campaign_id uuid,
+ id uuid primary key default gen_random_uuid(), business_id uuid, partner_account_id uuid, user_id uuid, campaign_id uuid,
  amount_mzn numeric(14,2) not null, currency text not null default 'MZN',
  method text not null, status text not null, reference text, document_id uuid,
  confirmed_at timestamptz, created_at timestamptz not null default now(),
