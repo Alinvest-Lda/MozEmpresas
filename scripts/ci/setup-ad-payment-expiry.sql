@@ -64,3 +64,28 @@ create table public.partner_ad_payment_adjustments(
  adjustment_type text,amount_mzn numeric(14,2),credits numeric(14,2),external_refund_reference text,
  reason text,actor_user_id uuid
 );
+
+
+create table public.advertising_admin_events(
+ id uuid primary key default gen_random_uuid(), entity_type text, entity_id uuid, actor_user_id uuid,
+ old_status text, new_status text, action_reason text, created_at timestamptz default now()
+);
+
+-- Minimal base RPC with the exact pre-F405 anchors; F405 rewrites this function as it does in production.
+create or replace function public.admin_update_advertising_status(
+ p_entity_type text,p_entity_id uuid,p_new_status text,p_reason text,
+ p_payment_method text,p_payment_reference text,p_amount_mzn numeric
+) returns jsonb language plpgsql security definer set search_path=public,pg_temp as $function$
+declare
+ v_old_status text;
+ v_reason text:=coalesce(p_reason,'');
+begin
+ select status into v_old_status from public.advertising_requests where id=p_entity_id for update;
+ if p_payment_method='BANK_TRANSFER' and exists(select 1 from public.advertising_requests ar where ar.id=p_entity_id and ar.created_at+interval '24 hours'<=now()) then raise exception 'BANK_TRANSFER_CONFIRMATION_EXPIRED' using errcode='23514'; end if;
+ if not (case v_old_status when 'AWAITING_PAYMENT' then p_new_status in ('PAID','REJECTED','CANCELLED') else false end) then
+   raise exception 'INVALID_TRANSITION' using errcode='23514';
+ end if;
+ update public.advertising_requests set status=p_new_status,updated_at=now() where id=p_entity_id;
+ return jsonb_build_object('id',p_entity_id,'status',p_new_status);
+end;
+$function$;
