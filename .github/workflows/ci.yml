@@ -201,6 +201,7 @@ jobs:
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261127123000_f376_advertising_campaign_expiry_reconciliation.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261127152000_f392_bank_transfer_24h_expiry_and_campaign_refund.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261127179000_f412_reconcile_expired_bank_transfers.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261127172000_f405_advertising_request_bank_transfer_deadline.sql
       - name: Verify 24-hour expiry, linked order/document transitions and idempotency
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
