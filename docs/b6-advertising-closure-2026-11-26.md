@@ -490,3 +490,41 @@ A reconciliação da F392 revelou que a confirmação bancária estava parcialme
 - Static review reconfirmed: event API has explicit 409 returns for campaign eligibility and click-without-impression; click CTA uses `keepalive:true`; event persistence is atomic through F370; decision impressions use the same RPC; product/surface-slot compatibility is centrally enforced; public request date refinement already treats date-only ends as Maputo end-of-day; expiry reconciliation F376 handles ACTIVE and PAUSED business/partner campaigns; F412 expires pending transfers, voids associated issued documents, fails partner orders, and is wired to the unified 15-minute scheduler migration.
 - Do not mark B6 production/operationally closed solely on source review: the scheduler and F376/F412 migrations have not been applied or verified in the target database; payment reconciliation, telemetry behavior, RLS/service-role boundaries, UI journeys and responsive/accessibility behavior remain unproven because tests/builds/E2E/SQL execution/deployments were intentionally not run.
 - The source-only pass is documented as implementation evidence, not a test report. B6's operational close gate remains explicit until verification is authorized and completed.
+
+## Final technical verification pass — 28/11/2026
+
+This pass records verification evidence and remaining operational gates. It does not overstate B6 as fully closed.
+
+### Repository and CI evidence
+- Final code/test baseline: commit `3cd6cf749279daeaba629f8fd859715fcd664ab4` on `main`.
+- GitHub Actions run #2869: all jobs passed.
+- `npm audit --audit-level=high`: passed.
+- Vitest: 19 test files, 106 tests passed.
+- Type check (`tsc --noEmit`): passed.
+- ESLint + Stylelint: passed.
+- Production build: compiled successfully and completed.
+- Isolated PostgreSQL migration-hardening checks: passed (SECURITY DEFINER search_path, marketplace RLS/order/notifications, atomic ad purchase inventory, partner membership/context).
+- Added isolated F3.76 advertising-expiry integration verification: passed. It checks expired ACTIVE business campaigns, future business campaigns, active/paused partner campaign expiry, already-ended/expired records and repeat-run idempotency.
+
+### Runtime smoke evidence
+- Production deployment `moz-empresas` on commit `3cd6cf7`: READY.
+- HTTP GET smoke checks returned 200 for `/`, `/empresas`, `/marketplace`, `/oportunidades` and `/parceiros`.
+- GET requests to `/api/ads/decision` and `/api/ads/event` returned 405 Method Not Allowed, as expected for POST-only event/decision endpoints. This verifies routing/method handling, not authenticated campaign delivery or telemetry end-to-end.
+
+### Changes made during the verification intervention
+- Added explicit Vitest alias resolution for `@/`.
+- Added the missing safe M-Pesa callback-audit error classifier module.
+- Corrected campaign-credit rounding to avoid floating-point ceiling drift.
+- Aligned partner opportunity management role checks with the tested owner/manager policy.
+- Corrected advertising eligibility fixture to include its required canonical surface.
+- Fixed TypeScript errors in partner-admin messages, query fallback typing, advertising campaign fallback fields and partner application auxiliary query error shapes.
+- Added a dedicated isolated PostgreSQL test fixture for F3.76 expiry reconciliation.
+
+### Operational gates still open
+- Target-database application and verification of F3.76/F4.12 reconciliation and the unified scheduler (F3.79/F4.02); CI exercises F3.76 on an isolated disposable database only. Scheduler availability and job registration must be confirmed in the target environment.
+- Production payment/credit/M-Pesa ledger reconciliation and end-to-end settlement/refund/idempotency scenarios.
+- Production RLS/service-role boundary review and verification against the actual deployed schema/permissions.
+- Authenticated E2E journeys for business and partner campaign purchase, settlement, moderation, cancellation/recovery and telemetry attribution.
+- Browser-level responsive/accessibility checks on public and authenticated advertising surfaces.
+
+No production migration, ledger repair, RLS change or real-payment action was executed during this pass. The technical CI/deployment gates are green; B6 remains operationally open until the remaining gates are completed in the target environment.
