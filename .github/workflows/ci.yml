@@ -143,3 +143,30 @@ jobs:
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/ci/setup-partner-account-hardening.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261101111659_harden_partner_account_memberships.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/ci/verify-partner-account-hardening.sql
+
+  advertising-lifecycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify advertising expiry reconciliation on isolated PostgreSQL
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/ci/setup-ad-expiry.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261127123000_f376_advertising_campaign_expiry_reconciliation.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/ci/verify-ad-expiry.sql
