@@ -55,3 +55,23 @@ GitHub milestone CRUD is not exposed in the connected GitHub actions. To preserv
 - Native GitHub Milestone CRUD is not exposed by the connected GitHub actions. Therefore tracking records were created as issues #6–#10 with acceptance criteria; they are not represented as native GitHub Milestone objects.
 - CI run #2884 passed all four jobs, including the new `advertising-bank-transfer-lifecycle` isolated PostgreSQL job: https://github.com/Alinvest-Lda/MozEmpresas/actions/runs/46150304743.
 - New test files: `scripts/ci/setup-ad-payment-expiry.sql` and `scripts/ci/verify-ad-payment-expiry.sql`. The test exercises actual F392/F412 migrations, 24-hour expiry assignment, pending vs unexpired behavior, linked order failure, issued document voiding, idempotent repeat reconciliation, and clearing expiry after settlement.
+
+
+## Evolution after the B6 workstream — whole-platform milestones
+
+B6.1–B6.4 are the first bounded workstream, not the permanent structure of the project. After B6 reaches its release gate, the same milestone discipline expands to the whole MozEmpresas platform, with cross-cutting milestones and module-level acceptance criteria. The next roadmap must cover, at minimum:
+
+1. **Platform foundation and architecture:** shared design system, configuration, environments, migrations, observability, backups, performance and resilience.
+2. **Identity, organisations and access:** authentication, organisation membership, roles, invitations, session/security controls and audit.
+3. **Company directory:** company profiles, ownership, verification, publication, search, categories and data quality.
+4. **Products and services marketplace:** catalogue, provider ownership, enquiries, discovery, moderation and lifecycle.
+5. **Opportunities:** publication, applications, eligibility, privacy, moderation and notifications.
+6. **Partners and institutional relationships:** partner onboarding, membership, entitlements, access, reporting and operational boundaries.
+7. **Commercialisation and monetisation:** advertising, campaigns, inventory, payments, credits, bank transfers, invoices, refunds and reconciliation.
+8. **Super Admin and platform operations:** users, organisations, content, moderation, support, campaigns, billing, notifications, security and operational dashboards.
+9. **Public experience and growth:** SEO, accessibility, responsive design, analytics, content and conversion.
+10. **Quality, security and release engineering:** end-to-end tests, RLS and privilege audits, dependency/supply-chain checks, incident recovery, staged releases and rollback.
+
+Each future milestone will define scope, dependencies, acceptance tests, operational owner, migration/backfill requirements, risk/rollback, and release gate. Cross-cutting controls (security, data integrity, accessibility, observability and performance) are not optional end-stage tasks; they are acceptance criteria for every affected module.
+
+The release issue remains a final, consolidated production release gate. A milestone can be technically complete without triggering a Vercel deployment. Do not create a new release marker until the full release issue is approved.
