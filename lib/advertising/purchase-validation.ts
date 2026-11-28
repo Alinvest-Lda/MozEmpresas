@@ -1,4 +1,4 @@
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9]{3}-[89ab][0-9]{3}-[0-9a-f]{12}$/i;
 
 export function isUuid(value: string): boolean {
   return UUID.test(value);
@@ -66,5 +66,5 @@ export function calculateCampaignCredits(
   const base = Number(baseCredits);
   if (!Number.isFinite(base) || base < 0) return null;
   const factor = 1 + (locations.length ? 0.1 : 0) + (categories.length ? 0.1 : 0);
-  return Math.ceil(base * factor);
+  return Math.ceil(Number((base * factor).toFixed(2)));
 }
