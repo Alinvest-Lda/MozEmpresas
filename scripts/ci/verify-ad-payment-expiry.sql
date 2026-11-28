@@ -86,7 +86,7 @@ begin
  values(v_renew,'AWAITING_PAYMENT',now()-interval '3 days','BANK_TRANSFER',now()+interval '10 hours'),
        (v_expired,'AWAITING_PAYMENT',now()-interval '3 days','BANK_TRANSFER',now()-interval '1 second');
 
- perform public.admin_update_advertising_status('ADVERTISING_REQUEST',v_renew,'AWAITING_PAYMENT','renew transfer request','BANK_TRANSFER',null,null);
+ perform public.admin_update_advertising_status('ADVERTISING_REQUEST',v_renew,'AWAITING_PAYMENT','renew transfer request',null,null,null);
  select bank_transfer_expires_at into v_deadline from public.advertising_requests where id=v_renew;
  if v_deadline < now()+interval '23 hours 59 minutes' or v_deadline > now()+interval '24 hours 1 minute' then
    raise exception 'F405 did not renew payment deadline to 24 hours: %',v_deadline;
