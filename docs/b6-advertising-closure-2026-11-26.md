@@ -528,3 +528,15 @@ This pass records verification evidence and remaining operational gates. It does
 - Browser-level responsive/accessibility checks on public and authenticated advertising surfaces.
 
 No production migration, ledger repair, RLS change or real-payment action was executed during this pass. The technical CI/deployment gates are green; B6 remains operationally open until the remaining gates are completed in the target environment.
+
+
+### Production database intervention — F376/F379 (28/11/2026)
+
+The target Supabase project `MozEmpresas` (project ref `zikjvjzbbfzrelbkaaci`) was inspected and confirmed ACTIVE_HEALTHY. The two previously pending advertising-expiry migrations were reviewed against their source SQL and then applied to the target production database:
+
+- `f376_advertising_campaign_expiry_reconciliation`: installs idempotent SECURITY DEFINER reconciliation for expired business promotions and partner ad campaigns; fixed search_path; EXECUTE revoked from PUBLIC/anon/authenticated and granted only to service_role.
+- `f379_schedule_advertising_expiry`: registers a 15-minute pg_cron job when pg_cron is available.
+
+**Runtime verification:** migration history now records both migrations (versions `20261128113911` and `20261128113915`). Cron job `mozempresas-advertising-expiry` is present, active, scheduled `*/15 * * * *`, and executes `select public.reconcile_advertising_campaign_expiry_f376();`. Function privilege checks returned anon=false, authenticated=false, service_role=true. Manual reconciliation invocation completed successfully at `2026-11-28T11:39:30Z`, reporting 0 expired business promotions and 0 ended partner campaigns at that moment. This proves job/function setup and successful reconciliation invocation; it does not prove every advertising/payment journey.
+
+**B6 gate update:** F376/F379 production scheduler gate is now CLOSED. Remaining operational gates: F4.12/unified payment-expiry reconciliation and its scheduler confirmation; production financial/credit/M-Pesa reconciliation and settlement/refund/idempotency; authenticated campaign purchase/settlement/moderation/cancel/recovery and telemetry E2E; and responsive/accessibility browser checks. Do not declare B6 fully closed until these remaining gates have evidence.
