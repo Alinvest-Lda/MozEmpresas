@@ -132,4 +132,9 @@ create or replace function public.confirm_mpesa_partner_ad_payment(
 ) returns jsonb language sql security definer set search_path=public,pg_temp as $$ select '{}'::jsonb $$;
 create or replace function public.fail_mpesa_partner_ad_payment(
  p_payment_reference text,p_provider_transaction_id text,p_amount_mzn numeric,p_currency text
-) returns jsonb language sql security definer set search_path=public,pg_temp as $$ select '{}'::jsonb $$;
+) returns jsonb language sql security definer set search_path=public,pg_temp as $ select '{}'::jsonb $;
+
+revoke all on function public.confirm_mpesa_partner_ad_payment(text,text,numeric,text) from public,anon,authenticated;
+grant execute on function public.confirm_mpesa_partner_ad_payment(text,text,numeric,text) to authenticated;
+revoke all on function public.fail_mpesa_partner_ad_payment(text,text,numeric,text) from public,anon,authenticated;
+grant execute on function public.fail_mpesa_partner_ad_payment(text,text,numeric,text) to authenticated;
