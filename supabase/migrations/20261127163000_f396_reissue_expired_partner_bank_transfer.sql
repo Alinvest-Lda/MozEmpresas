@@ -8,7 +8,7 @@ begin
   select pg_get_functiondef('public.admin_issue_partner_ad_payment(uuid,text,numeric)'::regprocedure)
     into v_definition;
 
-  v_pattern text:='select\\s+\\*\\s+into\\s+v_order\\s+from\\s+public\\.partner_ad_payment_orders\\s+where\\s+campaign_id=p_campaign_id\\s+for\\s+update\\s*;\\s*if\\s+found\\s+and\\s+v_order\\.status\\s+not\\s+in\\s*\\(\\s*''FAILED''\\s*\\)\\s+then\\s+raise\\s+exception\\s+''CAMPAIGN_PAYMENT_ALREADY_ISSUED''\\s*;\\s*end\\s+if\\s*;';
+  v_pattern text:='select\s+\\*\s+into\s+v_order\s+from\s+public\.partner_ad_payment_orders\s+where\s+campaign_id=p_campaign_id\s+for\s+update\s*;\s*if\s+found\s+and\s+v_order\.status\s+not\s+in\s*\\(\s*''FAILED''\s*\\)\s+then\s+raise\s+exception\s+''CAMPAIGN_PAYMENT_ALREADY_ISSUED''\s*;\s*end\s+if\s*;';
   v_new text;
 begin
   select pg_get_functiondef('public.admin_issue_partner_ad_payment(uuid,text,numeric)'::regprocedure)
@@ -36,7 +36,7 @@ $new$;
   if v_definition !~ v_pattern then
     raise exception 'F396_PAYMENT_REISSUE_GUARD_NOT_FOUND';
   end if;
-  v_definition:=regexp_replace(v_definition,v_pattern,replace(v_new,'''',''''''));
+  v_definition:=regexp_replace(v_definition,v_pattern,v_new);
   if position('fp.expires_at<=now()' in v_definition)=0 then
     raise exception 'F396_REWRITE_INCOMPLETE';
   end if;
