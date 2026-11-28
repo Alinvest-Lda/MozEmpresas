@@ -75,3 +75,16 @@ B6.1–B6.4 are the first bounded workstream, not the permanent structure of the
 Each future milestone will define scope, dependencies, acceptance tests, operational owner, migration/backfill requirements, risk/rollback, and release gate. Cross-cutting controls (security, data integrity, accessibility, observability and performance) are not optional end-stage tasks; they are acceptance criteria for every affected module.
 
 The release issue remains a final, consolidated production release gate. A milestone can be technically complete without triggering a Vercel deployment. Do not create a new release marker until the full release issue is approved.
+
+
+## F4.15 — Bank-transfer confirmation RPC search_path hardening (28/11/2026)
+
+The isolated CI security assertion identified that `admin_confirm_partner_bank_transfer(uuid,text)` still used `search_path=public, pg_temp` after F4.01, even though the issuance and M-Pesa provider RPCs used the hardened path. Added migration `20261128140000_f415_harden_bank_transfer_confirmation_search_path.sql` and applied it to production after source review.
+
+Production verification:
+- `proconfig = {search_path=pg_catalog, public, pg_temp}`
+- anon EXECUTE = false
+- authenticated EXECUTE = true
+- migration history contains `f415_harden_bank_transfer_confirmation_search_path`.
+
+This was a targeted privilege-preserving change; no function body or authorization check was altered.
