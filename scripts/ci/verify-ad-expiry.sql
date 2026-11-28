@@ -9,6 +9,7 @@ begin
   end if;
   if (result->>'partner_campaigns_ended')::integer<>2 then
     raise exception 'Expected active and paused partner campaigns to end, got %',result;
+  end if;
   if not exists(select 1 from public.business_promotions where id='76000000-0000-4000-8000-000000000001' and status='EXPIRED') then
     raise exception 'Expired business promotion was not reconciled';
   end if;
